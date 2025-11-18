@@ -11,9 +11,14 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <Heart className="w-6 h-6 text-primary fill-primary" />
-            <span className="text-xl font-semibold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-              Heartbeat Studio
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xl font-semibold leading-tight" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                Heartbeat Studio
+              </span>
+              <span className="text-xs text-muted-foreground leading-tight">
+                by Horton's Tech Innovations
+              </span>
+            </div>
           </div>
 
           <div className="hidden md:flex items-center gap-8">

@@ -1,5 +1,9 @@
 import HeroSection from '../HeroSection';
 
 export default function HeroSectionExample() {
-  return <HeroSection />;
+  return (
+    <div className="min-h-screen">
+      <HeroSection />
+    </div>
+  );
 }

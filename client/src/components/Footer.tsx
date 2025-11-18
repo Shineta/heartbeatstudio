@@ -8,9 +8,14 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Heart className="w-6 h-6 text-primary fill-primary" />
-              <span className="text-xl font-semibold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                Heartbeat Studio
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xl font-semibold leading-tight" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                  Heartbeat Studio
+                </span>
+                <span className="text-xs text-muted-foreground leading-tight">
+                  by Horton's Tech Innovations
+                </span>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground max-w-md">
               Create magic for the people you love—instantly. Beautiful, personalized celebrations powered by AI.
@@ -38,7 +43,7 @@ export default function Footer() {
 
         <div className="border-t pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 Heartbeat Studio. Made with love for celebrating the people who matter most.
+            © 2025 Horton's Tech Innovations. Made with love for celebrating the people who matter most.
           </p>
         </div>
       </div>
