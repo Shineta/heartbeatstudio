@@ -10,24 +10,41 @@ async function getCredentials() {
     ? 'depl ' + process.env.WEB_REPL_RENEWAL 
     : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
+  if (xReplitToken) {
+    try {
+      connectionSettings = await fetch(
+        'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
+        {
+          headers: {
+            'Accept': 'application/json',
+            'X_REPLIT_TOKEN': xReplitToken
+          }
+        }
+      ).then(res => res.json()).then(data => data.items?.[0]);
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+      if (connectionSettings?.settings?.api_key && connectionSettings?.settings?.from_email) {
+        return {
+          apiKey: connectionSettings.settings.api_key, 
+          email: connectionSettings.settings.from_email
+        };
       }
+    } catch (error) {
+      console.warn('Failed to fetch SendGrid credentials from connector, falling back to environment variables');
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || (!connectionSettings.settings.api_key || !connectionSettings.settings.from_email)) {
-    throw new Error('SendGrid not connected');
   }
-  return {apiKey: connectionSettings.settings.api_key, email: connectionSettings.settings.from_email};
+
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+
+  if (!apiKey) {
+    throw new Error('SendGrid API key not configured. Please add SENDGRID_API_KEY to Replit Secrets or configure the SendGrid integration.');
+  }
+  
+  if (!fromEmail) {
+    throw new Error('SendGrid from email not configured. Please add SENDGRID_FROM_EMAIL to Replit Secrets or configure the SendGrid integration.');
+  }
+
+  return { apiKey, email: fromEmail };
 }
 
 async function getUncachableSendGridClient() {
