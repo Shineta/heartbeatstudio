@@ -46,7 +46,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-primary fill-primary" />
+            <Heart className="w-6 h-6 text-primary fill-primary heartbeat" />
             <div className="flex flex-col">
               <span className="text-xl font-semibold leading-tight" style={{ fontFamily: 'Fredoka, sans-serif' }}>
                 Heartbeat Studio

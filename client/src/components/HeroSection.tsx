@@ -16,7 +16,7 @@ export default function HeroSection() {
         <div className="flex justify-center mb-6">
           <div className="inline-flex flex-col items-center gap-1 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-6 py-3">
             <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground" />
+              <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground heartbeat" />
               <span className="text-sm font-semibold text-primary-foreground">Heartbeat Studio</span>
             </div>
             <span className="text-xs text-primary-foreground/80">by Horton's Tech Innovations</span>

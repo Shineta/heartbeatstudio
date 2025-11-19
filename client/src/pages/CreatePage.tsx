@@ -338,7 +338,7 @@ export default function CreatePage() {
                           </>
                         ) : (
                           <>
-                            <Heart className="w-4 h-4 mr-2" />
+                            <Heart className="w-4 h-4 mr-2 heartbeat" />
                             Generate Card
                           </>
                         )}

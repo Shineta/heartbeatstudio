@@ -159,7 +159,7 @@ export default function AuthPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Heart className="w-8 h-8 text-primary" fill="currentColor" />
+            <Heart className="w-8 h-8 text-primary heartbeat" fill="currentColor" />
             <h1 className="text-2xl font-fredoka font-semibold text-primary">Heartbeat Studio</h1>
           </div>
           <CardTitle className="text-xl">

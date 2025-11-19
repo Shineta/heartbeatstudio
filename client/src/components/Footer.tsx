@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <Heart className="w-6 h-6 text-primary fill-primary" />
+              <Heart className="w-6 h-6 text-primary fill-primary heartbeat" />
               <div className="flex flex-col">
                 <span className="text-xl font-semibold leading-tight" style={{ fontFamily: 'Fredoka, sans-serif' }}>
                   Heartbeat Studio
