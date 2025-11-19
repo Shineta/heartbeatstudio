@@ -3,12 +3,41 @@ import { Button } from "@/components/ui/button";
 import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const typedUser = user as User | undefined;
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        window.location.href = '/';
+      } else {
+        toast({
+          title: 'Logout failed',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to logout. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
@@ -64,13 +93,13 @@ export default function Navigation() {
               <div className="hidden md:flex items-center gap-3">
                 <Button 
                   variant="ghost" 
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/auth'}
                   data-testid="button-sign-in"
                 >
                   Sign In
                 </Button>
                 <Button 
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/auth'}
                   data-testid="button-get-started"
                 >
                   Get Started
@@ -92,7 +121,7 @@ export default function Navigation() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => window.location.href = '/api/logout'}
+                  onClick={handleLogout}
                   data-testid="button-logout"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
@@ -151,13 +180,13 @@ export default function Navigation() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/auth'}
                 >
                   Sign In
                 </Button>
                 <Button 
                   className="w-full"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/auth'}
                 >
                   Get Started
                 </Button>

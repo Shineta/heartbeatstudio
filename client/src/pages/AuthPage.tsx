@@ -56,48 +56,70 @@ export default function AuthPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterForm) => {
+      console.log('[AuthPage] Submitting registration:', { email: data.email });
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
         credentials: 'include',
       });
+      console.log('[AuthPage] Registration response status:', response.status);
       if (!response.ok) {
         const error = await response.json();
+        console.error('[AuthPage] Registration failed:', error);
         throw new Error(error.message || 'Registration failed');
       }
-      return response.json();
+      const result = await response.json();
+      console.log('[AuthPage] Registration successful:', result);
+      return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    onSuccess: async () => {
+      console.log('[AuthPage] Registration mutation onSuccess called');
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      console.log('[AuthPage] Queries invalidated, showing toast');
       toast({ title: 'Welcome to Heartbeat Studio!', description: 'Your account has been created.' });
-      setLocation('/dashboard');
+      console.log('[AuthPage] Redirecting to /dashboard');
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 100);
     },
     onError: (error: any) => {
+      console.error('[AuthPage] Registration mutation error:', error);
       toast({ variant: 'destructive', title: 'Registration failed', description: error.message });
     },
   });
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
+      console.log('[AuthPage] Submitting login:', { email: data.email });
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
         credentials: 'include',
       });
+      console.log('[AuthPage] Login response status:', response.status);
       if (!response.ok) {
         const error = await response.json();
+        console.error('[AuthPage] Login failed:', error);
         throw new Error(error.message || 'Login failed');
       }
-      return response.json();
+      const result = await response.json();
+      console.log('[AuthPage] Login successful:', result);
+      return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    onSuccess: async () => {
+      console.log('[AuthPage] Login mutation onSuccess called');
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      console.log('[AuthPage] Queries invalidated, showing toast');
       toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
-      setLocation('/dashboard');
+      console.log('[AuthPage] Redirecting to /dashboard');
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 100);
     },
     onError: (error: any) => {
+      console.error('[AuthPage] Login mutation error:', error);
       toast({ variant: 'destructive', title: 'Login failed', description: error.message });
     },
   });

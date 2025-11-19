@@ -11,8 +11,13 @@ import type { User } from '@shared/schema';
 
 const PgSession = connectPgSimple(session);
 
-// Session secret from environment
-const SESSION_SECRET = process.env.SESSION_SECRET || 'your-secret-key-change-in-production';
+// Session secret from environment - REQUIRED for security
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+if (!SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required for secure session management. Please set it in your environment.');
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || SESSION_SECRET;
 
 // Google OAuth configuration
@@ -23,6 +28,9 @@ const BASE_URL = process.env.REPLIT_DEV_DOMAIN
   : 'http://localhost:5000';
 
 export async function setupAuth(app: Express) {
+  // SESSION_SECRET is guaranteed to exist due to check above
+  const sessionSecret = SESSION_SECRET as string;
+  
   // Session configuration
   app.use(
     session({
@@ -30,7 +38,7 @@ export async function setupAuth(app: Express) {
         conString: process.env.DATABASE_URL,
         tableName: 'sessions',
       }),
-      secret: SESSION_SECRET,
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {

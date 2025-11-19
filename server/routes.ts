@@ -44,11 +44,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName,
       });
       
-      req.login(user, (err) => {
+      // Regenerate session to prevent session fixation attacks
+      req.session.regenerate((err) => {
         if (err) {
-          return res.status(500).json({ message: 'Login failed after registration' });
+          return res.status(500).json({ message: 'Session regeneration failed' });
         }
-        res.json(user);
+        
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Login failed after registration' });
+          }
+          res.json(user);
+        });
       });
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -65,11 +72,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
-      req.login(user, (err) => {
+      
+      // Regenerate session to prevent session fixation attacks
+      req.session.regenerate((err) => {
         if (err) {
-          return res.status(500).json({ message: 'Login failed' });
+          return res.status(500).json({ message: 'Session regeneration failed' });
         }
-        res.json(user);
+        
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Login failed' });
+          }
+          res.json(user);
+        });
       });
     })(req, res, next);
   });
@@ -87,7 +102,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const token = generateMagicLinkToken(email);
-      const magicLink = `${BASE_URL}/auth/verify-magic-link?token=${token}`;
+      
+      // Store token in database for one-time use validation
+      await storage.createMagicLinkToken({
+        email,
+        token,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      });
+      
+      const magicLink = `${BASE_URL}/auth/verify?token=${token}`;
       
       await sendMagicLinkEmail(email, magicLink);
       
@@ -99,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify magic link
-  app.get('/api/auth/verify-magic-link', async (req: Request, res: Response) => {
+  app.get('/api/auth/verify', async (req: Request, res: Response) => {
     try {
       const token = req.query.token as string;
       
@@ -107,23 +130,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Token required' });
       }
       
-      const payload = verifyMagicLinkToken(token);
+      // Check if token exists in database and hasn't been used
+      const storedToken = await storage.getMagicLinkToken(token);
       
-      if (!payload) {
-        return res.status(401).json({ message: 'Invalid or expired token' });
+      if (!storedToken || storedToken.used) {
+        return res.status(401).json({ message: 'Invalid, expired, or already used token' });
       }
       
-      const user = await storage.getUserByEmail(payload.email);
+      // Verify JWT signature and check expiration
+      const payload = verifyMagicLinkToken(token);
+      
+      if (!payload || payload.email !== storedToken.email) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      // Mark token as used to prevent replay attacks
+      await storage.markMagicLinkTokenAsUsed(token);
+      
+      const user = await storage.getUserByEmail(storedToken.email);
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      req.login(user, (err) => {
+      // Regenerate session to prevent session fixation attacks
+      req.session.regenerate((err) => {
         if (err) {
-          return res.status(500).json({ message: 'Login failed' });
+          return res.status(500).json({ message: 'Session regeneration failed' });
         }
-        res.json(user);
+        
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Login failed' });
+          }
+          res.json(user);
+        });
       });
     } catch (error) {
       console.error("Magic link verification error:", error);
@@ -140,7 +181,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.get('/api/auth/google/callback',
       passport.authenticate('google', { failureRedirect: '/' }),
       (req: Request, res: Response) => {
-        res.redirect('/dashboard');
+        // Regenerate session to prevent session fixation attacks
+        req.session.regenerate((err) => {
+          if (err) {
+            console.error('Session regeneration failed during Google OAuth:', err);
+            return res.redirect('/?error=auth_failed');
+          }
+          
+          // Re-establish login after session regeneration
+          if (req.user) {
+            req.login(req.user, (err) => {
+              if (err) {
+                console.error('Login failed after Google OAuth:', err);
+                return res.redirect('/?error=auth_failed');
+              }
+              res.redirect('/dashboard');
+            });
+          } else {
+            res.redirect('/?error=auth_failed');
+          }
+        });
       }
     );
   }

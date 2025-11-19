@@ -3,12 +3,15 @@ import {
   users,
   lovedOnes,
   creations,
+  magicLinkTokens,
   type User,
   type UpsertUser,
   type LovedOne,
   type InsertLovedOne,
   type Creation,
   type InsertCreation,
+  type MagicLinkToken,
+  type InsertMagicLinkToken,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -21,6 +24,11 @@ export interface IStorage {
   createUser(user: Partial<UpsertUser>): Promise<User>;
   updateUser(id: string, user: Partial<UpsertUser>): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Magic link token operations
+  createMagicLinkToken(token: InsertMagicLinkToken): Promise<MagicLinkToken>;
+  getMagicLinkToken(token: string): Promise<MagicLinkToken | undefined>;
+  markMagicLinkTokenAsUsed(token: string): Promise<void>;
   
   // Loved ones operations
   getLovedOnesByUserId(userId: string): Promise<LovedOne[]>;
@@ -82,6 +90,23 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  // Magic link token operations
+  async createMagicLinkToken(tokenData: InsertMagicLinkToken): Promise<MagicLinkToken> {
+    const [token] = await db.insert(magicLinkTokens).values(tokenData).returning();
+    return token;
+  }
+
+  async getMagicLinkToken(token: string): Promise<MagicLinkToken | undefined> {
+    const [tokenData] = await db.select().from(magicLinkTokens).where(eq(magicLinkTokens.token, token));
+    return tokenData;
+  }
+
+  async markMagicLinkTokenAsUsed(token: string): Promise<void> {
+    await db.update(magicLinkTokens)
+      .set({ used: true })
+      .where(eq(magicLinkTokens.token, token));
   }
 
   // Loved ones operations
