@@ -22,11 +22,17 @@ async function getCredentials() {
         }
       ).then(res => res.json()).then(data => data.items?.[0]);
 
-      if (connectionSettings?.settings?.api_key && connectionSettings?.settings?.from_email) {
+      const connectorApiKey = connectionSettings?.settings?.api_key;
+      const connectorEmail = connectionSettings?.settings?.from_email;
+      
+      if (connectorApiKey && connectorEmail && connectorApiKey.startsWith('SG.')) {
+        console.log('Using SendGrid credentials from Replit connector');
         return {
-          apiKey: connectionSettings.settings.api_key, 
-          email: connectionSettings.settings.from_email
+          apiKey: connectorApiKey, 
+          email: connectorEmail
         };
+      } else {
+        console.warn('Replit connector returned invalid SendGrid credentials, falling back to environment variables');
       }
     } catch (error) {
       console.warn('Failed to fetch SendGrid credentials from connector, falling back to environment variables');
@@ -44,11 +50,27 @@ async function getCredentials() {
     throw new Error('SendGrid from email not configured. Please add SENDGRID_FROM_EMAIL to Replit Secrets or configure the SendGrid integration.');
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(fromEmail)) {
+    throw new Error(
+      `SENDGRID_FROM_EMAIL must be a valid email address, not an API key. ` +
+      `Current value appears to be a SendGrid API key. ` +
+      `Please update SENDGRID_FROM_EMAIL in Replit Secrets to your verified sender email (e.g., noreply@yourdomain.com or your personal email).`
+    );
+  }
+
+  console.log('Using SendGrid credentials from environment variables');
   return { apiKey, email: fromEmail };
 }
 
 async function getUncachableSendGridClient() {
   const {apiKey, email} = await getCredentials();
+  console.log('SendGrid credentials check:', {
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey?.substring(0, 3),
+    apiKeyLength: apiKey?.length,
+    fromEmail: email
+  });
   sgMail.setApiKey(apiKey);
   return {
     client: sgMail,
