@@ -179,28 +179,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }));
 
     app.get('/api/auth/google/callback',
-      passport.authenticate('google', { failureRedirect: '/' }),
-      (req: Request, res: Response) => {
-        // Regenerate session to prevent session fixation attacks
-        req.session.regenerate((err) => {
+      (req: Request, res: Response, next) => {
+        // Use custom callback to control session regeneration timing
+        passport.authenticate('google', (err: any, user: any, info: any) => {
           if (err) {
-            console.error('Session regeneration failed during Google OAuth:', err);
+            console.error('Google OAuth error:', err);
             return res.redirect('/?error=auth_failed');
           }
           
-          // Re-establish login after session regeneration
-          if (req.user) {
-            req.login(req.user, (err) => {
-              if (err) {
-                console.error('Login failed after Google OAuth:', err);
+          if (!user) {
+            console.error('Google OAuth: No user returned');
+            return res.redirect('/?error=auth_failed');
+          }
+          
+          // Regenerate session BEFORE logging in to prevent session fixation
+          // This creates a new session ID while preserving the session store
+          req.session.regenerate((regenerateErr) => {
+            if (regenerateErr) {
+              console.error('Session regeneration failed during Google OAuth:', regenerateErr);
+              return res.redirect('/?error=auth_failed');
+            }
+            
+            // Now establish login with the regenerated session
+            req.login(user, (loginErr) => {
+              if (loginErr) {
+                console.error('Login failed after Google OAuth:', loginErr);
                 return res.redirect('/?error=auth_failed');
               }
               res.redirect('/dashboard');
             });
-          } else {
-            res.redirect('/?error=auth_failed');
-          }
-        });
+          });
+        })(req, res, next);
       }
     );
   }

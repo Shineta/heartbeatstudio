@@ -21,6 +21,8 @@ export default function Navigation() {
       });
       
       if (response.ok) {
+        // Clear the user query cache to remove authentication state
+        queryClient.setQueryData(['/api/auth/user'], null);
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
         window.location.href = '/';
       } else {
