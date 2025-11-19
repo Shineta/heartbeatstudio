@@ -94,8 +94,9 @@ export const insertCreationSchema = createInsertSchema(creations).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  shareableLink: true,
 });
+
+export const updateCreationSchema = insertCreationSchema.partial();
 
 export type InsertCreation = z.infer<typeof insertCreationSchema>;
 export type Creation = typeof creations.$inferSelect;

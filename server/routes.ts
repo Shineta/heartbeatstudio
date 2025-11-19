@@ -285,9 +285,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      await storage.updateCreation(creation.id, { shareableLink });
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
-      res.json(creation);
+      res.json(updatedCreation || creation);
     } catch (error: any) {
       console.error("Error generating card:", error);
       res.status(500).json({ message: error.message || "Failed to generate card" });
@@ -339,9 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      await storage.updateCreation(creation.id, { shareableLink });
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
-      res.json(creation);
+      res.json(updatedCreation || creation);
     } catch (error: any) {
       console.error("Error generating song:", error);
       res.status(500).json({ message: error.message || "Failed to generate song" });

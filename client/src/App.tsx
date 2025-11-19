@@ -1,16 +1,26 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 import LandingPage from "@/pages/LandingPage";
+import AuthPage from "@/pages/AuthPage";
+import VerifyMagicLink from "@/pages/VerifyMagicLink";
 import RealDashboard from "@/pages/RealDashboard";
 import CreatePage from "@/pages/CreatePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && !location.startsWith('/auth/verify-magic-link')) {
+      setLocation('/auth');
+    }
+  }, [isAuthenticated, isLoading, location, setLocation]);
 
   if (isLoading) {
     return (
@@ -23,23 +33,13 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/" component={LandingPage} />
-        <Route component={() => {
-          window.location.href = "/api/login";
-          return <div className="min-h-screen flex items-center justify-center">Redirecting to login...</div>;
-        }} />
-      </Switch>
-    );
-  }
-
   return (
     <Switch>
-      <Route path="/" component={RealDashboard} />
-      <Route path="/dashboard" component={RealDashboard} />
-      <Route path="/create" component={CreatePage} />
+      <Route path="/" component={isAuthenticated ? RealDashboard : LandingPage} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/verify-magic-link" component={VerifyMagicLink} />
+      <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
+      <Route path="/create" component={isAuthenticated ? CreatePage : AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
