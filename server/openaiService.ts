@@ -43,7 +43,7 @@ export async function generateCardImage(params: {
   const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
 
   const response = await openai.images.generate({
-    model: "dall-e-3",
+    model: "gpt-image-1",
     prompt,
     size: "1024x1024",
     response_format: "b64_json",
@@ -96,7 +96,7 @@ export async function generateSongCover(params: {
   const prompt = `Create album cover art for a ${params.tone} ${params.genre || 'pop'} song titled "${params.title}". Vibrant, colorful, modern design with musical elements, hearts, and celebration motifs. Professional music album artwork style.`;
 
   const response = await openai.images.generate({
-    model: "dall-e-3",
+    model: "gpt-image-1",
     prompt,
     size: "1024x1024",
     response_format: "b64_json",
