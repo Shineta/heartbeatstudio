@@ -39,7 +39,7 @@ export async function generateCardImage(params: {
   recipientName: string;
   occasion?: string;
   tone: string;
-}): Promise<Buffer> {
+}): Promise<string> {
   const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
 
   const response = await openai.images.generate({
@@ -50,7 +50,7 @@ export async function generateCardImage(params: {
   });
 
   const base64 = response.data?.[0]?.b64_json ?? "";
-  return Buffer.from(base64, "base64");
+  return base64;
 }
 
 export async function generateSongLyrics(params: {
@@ -92,7 +92,7 @@ export async function generateSongCover(params: {
   title: string;
   tone: string;
   genre?: string;
-}): Promise<Buffer> {
+}): Promise<string> {
   const prompt = `Create album cover art for a ${params.tone} ${params.genre || 'pop'} song titled "${params.title}". Vibrant, colorful, modern design with musical elements, hearts, and celebration motifs. Professional music album artwork style.`;
 
   const response = await openai.images.generate({
@@ -103,5 +103,5 @@ export async function generateSongCover(params: {
   });
 
   const base64 = response.data?.[0]?.b64_json ?? "";
-  return Buffer.from(base64, "base64");
+  return base64;
 }

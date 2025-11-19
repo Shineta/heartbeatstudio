@@ -1,32 +1,170 @@
-// From blueprint:javascript_log_in_with_replit and custom implementation
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import passport from 'passport';
+import { z } from 'zod';
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
+import { sendMagicLinkEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
+
+const BASE_URL = process.env.REPLIT_DEV_DOMAIN 
+  ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+  : 'http://localhost:5000';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   const objectStorageService = new ObjectStorageService();
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // ========== AUTHENTICATION ROUTES ==========
+  
+  // Register with email/password
+  app.post('/api/auth/register', async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      const schema = z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+      });
+      
+      const { email, password, firstName, lastName } = schema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+      
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+      });
+      
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed after registration' });
+        }
+        res.json(user);
+      });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      res.status(400).json({ message: error.message || 'Registration failed' });
     }
   });
 
-  // Loved Ones routes
-  app.get('/api/loved-ones', isAuthenticated, async (req: any, res) => {
+  // Login with email/password
+  app.post('/api/auth/login', (req: Request, res: Response, next) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: 'Authentication error' });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        res.json(user);
+      });
+    })(req, res, next);
+  });
+
+  // Request magic link
+  app.post('/api/auth/magic-link', async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const schema = z.object({ email: z.string().email() });
+      const { email } = schema.parse(req.body);
+      
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        user = await storage.createUser({ email });
+      }
+      
+      const token = generateMagicLinkToken(email);
+      const magicLink = `${BASE_URL}/auth/verify-magic-link?token=${token}`;
+      
+      await sendMagicLinkEmail(email, magicLink);
+      
+      res.json({ message: 'Magic link sent to your email' });
+    } catch (error: any) {
+      console.error("Magic link error:", error);
+      res.status(400).json({ message: error.message || 'Failed to send magic link' });
+    }
+  });
+
+  // Verify magic link
+  app.get('/api/auth/verify-magic-link', async (req: Request, res: Response) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ message: 'Token required' });
+      }
+      
+      const payload = verifyMagicLinkToken(token);
+      
+      if (!payload) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
+      }
+      
+      const user = await storage.getUserByEmail(payload.email);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        res.json(user);
+      });
+    } catch (error) {
+      console.error("Magic link verification error:", error);
+      res.status(500).json({ message: 'Verification failed' });
+    }
+  });
+
+  // Google OAuth routes (only if configured)
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    app.get('/api/auth/google', passport.authenticate('google', { 
+      scope: ['profile', 'email'] 
+    }));
+
+    app.get('/api/auth/google/callback',
+      passport.authenticate('google', { failureRedirect: '/' }),
+      (req: Request, res: Response) => {
+        res.redirect('/dashboard');
+      }
+    );
+  }
+
+  // Get current user
+  app.get('/api/auth/user', isAuthenticated, async (req: Request, res: Response) => {
+    res.json(req.user);
+  });
+
+  // Logout
+  app.post('/api/auth/logout', (req: Request, res: Response) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Logout failed' });
+      }
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
+
+  // ========== LOVED ONES ROUTES ==========
+  
+  app.get('/api/loved-ones', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
       const lovedOnes = await storage.getLovedOnesByUserId(userId);
       res.json(lovedOnes);
     } catch (error) {
@@ -35,9 +173,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/loved-ones', isAuthenticated, async (req: any, res) => {
+  app.post('/api/loved-ones', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const validatedData = insertLovedOneSchema.parse({ ...req.body, userId });
       const lovedOne = await storage.createLovedOne(validatedData);
       res.json(lovedOne);
@@ -47,9 +185,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/loved-ones/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/loved-ones/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const existing = await storage.getLovedOneById(req.params.id);
       
       if (!existing) {
@@ -70,9 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/loved-ones/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/loved-ones/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const existing = await storage.getLovedOneById(req.params.id);
       
       if (!existing) {
@@ -91,10 +229,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Creation routes
-  app.get('/api/creations', isAuthenticated, async (req: any, res) => {
+  // ========== CREATION ROUTES ==========
+  
+  app.get('/api/creations', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const creations = await storage.getCreationsByUserId(userId);
       res.json(creations);
     } catch (error) {
@@ -104,9 +243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate AI Card
-  app.post('/api/generate/card', isAuthenticated, async (req: any, res) => {
+  app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { lovedOneId, tone, occasion } = req.body;
       
       let lovedOne;
@@ -119,29 +258,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relationship: lovedOne?.relationship || req.body.relationship || "friend",
         occasion,
         tone: tone || "sweet",
-        interests: lovedOne?.interests,
-        insideJokes: lovedOne?.insideJokes,
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
       });
 
-      const imageBuffer = await generateCardImage({
-        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
+      const cardImageBase64 = await generateCardImage({
         occasion,
         tone: tone || "sweet",
+        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
       });
 
-      const imageUrl = await objectStorageService.uploadBuffer(imageBuffer, 'card', 'image/png');
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        cardImageBase64,
+        `cards/${userId}`,
+        'card'
+      );
 
       const creation = await storage.createCreation({
         userId,
-        lovedOneId: lovedOneId || undefined,
+        lovedOneId: lovedOneId || null,
         type: 'card',
         tone: tone || 'sweet',
-        genre: undefined,
         title: cardContent.title,
         content: cardContent.message,
         imageUrl,
-        mediaUrl: undefined,
       });
+      
+      const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      await storage.updateCreation(creation.id, { shareableLink });
 
       res.json(creation);
     } catch (error: any) {
@@ -151,9 +295,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate AI Song
-  app.post('/api/generate/song', isAuthenticated, async (req: any, res) => {
+  app.post('/api/generate/song', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { lovedOneId, tone, genre, occasion } = req.body;
       
       let lovedOne;
@@ -161,35 +305,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lovedOne = await storage.getLovedOneById(lovedOneId);
       }
 
-      const songData = await generateSongLyrics({
+      const songLyrics = await generateSongLyrics({
         recipientName: lovedOne?.name || req.body.recipientName || "someone special",
         relationship: lovedOne?.relationship || req.body.relationship || "friend",
         occasion,
         tone: tone || "sweet",
         genre: genre || "pop",
-        interests: lovedOne?.interests,
-        insideJokes: lovedOne?.insideJokes,
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
       });
 
-      const coverBuffer = await generateSongCover({
-        title: songData.title,
-        tone: tone || "sweet",
+      const coverImageBase64 = await generateSongCover({
+        title: songLyrics.title,
         genre: genre || "pop",
+        tone: tone || "sweet",
       });
 
-      const coverUrl = await objectStorageService.uploadBuffer(coverBuffer, 'song-cover', 'image/png');
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        coverImageBase64,
+        `songs/${userId}`,
+        'cover'
+      );
 
       const creation = await storage.createCreation({
         userId,
-        lovedOneId: lovedOneId || undefined,
+        lovedOneId: lovedOneId || null,
         type: 'song',
         tone: tone || 'sweet',
         genre: genre || 'pop',
-        title: songData.title,
-        content: songData.lyrics,
-        imageUrl: coverUrl,
-        mediaUrl: undefined,
+        title: songLyrics.title,
+        content: songLyrics.lyrics,
+        imageUrl,
       });
+      
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      await storage.updateCreation(creation.id, { shareableLink });
 
       res.json(creation);
     } catch (error: any) {
@@ -198,53 +348,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public object serving
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
+  // Get shareable creation (public)
+  app.get('/api/share/:link', async (req: Request, res: Response) => {
     try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Public shareable creation view
-  app.get('/share/:link', async (req, res) => {
-    try {
-      const creation = await storage.getCreationByShareableLink(`/share/${req.params.link}`);
+      const creation = await storage.getCreationByShareableLink(req.params.link);
+      
       if (!creation) {
-        return res.status(404).send('Creation not found');
+        return res.status(404).json({ message: "Creation not found" });
       }
-      // Return a simple HTML page with the creation details
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${creation.title || 'Heartbeat Studio Creation'}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; text-align: center; }
-            img { max-width: 100%; border-radius: 12px; margin: 20px 0; }
-            h1 { color: #dc2626; }
-            .content { white-space: pre-wrap; line-height: 1.6; }
-          </style>
-        </head>
-        <body>
-          <h1>${creation.title}</h1>
-          ${creation.imageUrl ? `<img src="${creation.imageUrl}" alt="${creation.title}" />` : ''}
-          <div class="content">${creation.content}</div>
-          <p style="color: #666; margin-top: 40px;">Created with ❤️ by Horton's Tech Innovations</p>
-        </body>
-        </html>
-      `);
+      
+      res.json(creation);
     } catch (error) {
       console.error("Error fetching shared creation:", error);
-      res.status(500).send('Error loading creation');
+      res.status(500).json({ message: "Failed to fetch creation" });
     }
   });
 

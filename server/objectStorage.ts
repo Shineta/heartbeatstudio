@@ -101,6 +101,26 @@ export class ObjectStorageService {
     }
   }
 
+  async uploadBase64Image(base64Data: string, directory: string, prefix: string): Promise<string> {
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filename = `${prefix}-${randomUUID()}.png`;
+    const privateObjectDir = this.getPrivateObjectDir();
+    const fullPath = `${privateObjectDir}/${directory}/${filename}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    
+    await file.save(buffer, {
+      contentType: 'image/png',
+      metadata: {
+        cacheControl: 'public, max-age=31536000',
+      },
+    });
+    
+    return fullPath;
+  }
+
   async uploadBuffer(buffer: Buffer, filename: string, contentType: string): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     const objectId = randomUUID();
