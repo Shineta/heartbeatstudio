@@ -39,9 +39,17 @@ Preferred communication style: Simple, everyday language.
 - Session-based authentication using Passport.js with OpenID Connect
 
 **Authentication System**
-- Replit Auth integration via OpenID Connect strategy
+- Custom authentication with Passport.js supporting three methods:
+  1. Email/Password with bcrypt hashing
+  2. Passwordless Magic Links via SendGrid and JWT
+  3. Google OAuth 2.0
 - Session storage in PostgreSQL using connect-pg-simple
-- User session includes OAuth tokens (access_token, refresh_token)
+- Production-grade security measures:
+  - Required SESSION_SECRET (throws error if missing)
+  - Session regeneration on all auth flows to prevent session fixation attacks
+  - One-time use magic link tokens (marked as "used" in database)
+  - Secure httpOnly cookies
+  - Client-side cache clearing on logout
 - Authentication middleware (`isAuthenticated`) protects sensitive routes
 
 **Database Layer**
@@ -60,8 +68,16 @@ Preferred communication style: Simple, everyday language.
 **Core Entities**
 
 1. **Users Table**
-   - OAuth-based identity (id, email, name, profile image)
+   - Identity (id, email, name, profile image)
+   - Password field for email/password auth (nullable for OAuth-only users)
+   - googleId for Google OAuth integration
    - Created/updated timestamps for audit trail
+
+5. **Magic Link Tokens Table**
+   - JWT tokens for passwordless authentication
+   - One-time use enforcement via `used` boolean field
+   - Token expiration (1 hour)
+   - User and email references
 
 2. **Loved Ones Table**
    - User-owned profiles of people to celebrate
@@ -101,10 +117,14 @@ Preferred communication style: Simple, everyday language.
   - Used for generating card messages, song lyrics, and visual assets
 
 **Authentication**
-- **Replit Identity Platform**: OAuth 2.0 / OpenID Connect provider
-  - Discovery endpoint for dynamic configuration
-  - Session management with 1-week cookie TTL
-  - Secure session secret stored in environment variables
+- **Custom Multi-Method Authentication**:
+  - Email/Password: Bcrypt password hashing with salt
+  - Magic Links: JWT tokens sent via SendGrid (requires SENDGRID_API_KEY)
+  - Google OAuth: OAuth 2.0 via Google (requires GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+- **Session Management**:
+  - 1-week cookie TTL, httpOnly, secure in production
+  - SESSION_SECRET environment variable required (throws error if missing)
+  - Session fixation protection via regeneration on all auth flows
 
 **Database**
 - **Neon PostgreSQL**: Serverless Postgres database
