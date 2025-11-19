@@ -55,7 +55,19 @@ export default function AuthPage() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (data: RegisterForm) => apiRequest('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: async (data: RegisterForm) => {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ title: 'Welcome to Heartbeat Studio!', description: 'Your account has been created.' });
@@ -67,7 +79,19 @@ export default function AuthPage() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: (data: LoginForm) => apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: async (data: LoginForm) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
@@ -79,7 +103,19 @@ export default function AuthPage() {
   });
 
   const magicLinkMutation = useMutation({
-    mutationFn: (data: MagicLinkForm) => apiRequest('/api/auth/magic-link', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: async (data: MagicLinkForm) => {
+      const response = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send magic link');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       toast({ 
         title: 'Magic link sent!', 

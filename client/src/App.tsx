@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
-import VerifyMagicLink from "@/pages/VerifyMagicLink";
+import VerifyMagicLink from "@/pages/VerifyMagicLink.tsx";
 import RealDashboard from "@/pages/RealDashboard";
 import CreatePage from "@/pages/CreatePage";
 import NotFound from "@/pages/not-found";
