@@ -65,6 +65,10 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
       throw new Error(response.data.msg || 'Failed to query task status');
     }
 
+    if (i === 0 || i === 8) {
+      console.log(`[Suno Debug] Full response at poll ${i + 1}:`, JSON.stringify(response.data, null, 2));
+    }
+
     const { status, response: taskResponse, errorMessage } = response.data.data;
     lastStatus = status;
     lastError = errorMessage;
