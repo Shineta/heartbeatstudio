@@ -368,16 +368,27 @@ export default function CreatePage() {
                         className="w-full rounded-md"
                       />
                     )}
-                    <p className="whitespace-pre-wrap">{createdSong.content}</p>
+                    {createdSong.mediaUrl && (
+                      <div className="w-full">
+                        <audio controls className="w-full" data-testid="audio-player">
+                          <source src={createdSong.mediaUrl} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold mb-2">Lyrics:</h3>
+                      <p className="whitespace-pre-wrap text-muted-foreground">{createdSong.content}</p>
+                    </div>
                   </CardContent>
                   <CardFooter className="flex gap-3">
-                    <Button onClick={() => setCreatedSong(null)} variant="outline">
+                    <Button onClick={() => setCreatedSong(null)} variant="outline" data-testid="button-create-another">
                       Create Another
                     </Button>
                     <Button onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}${createdSong.shareableLink}`);
                       toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                    }}>
+                    }} data-testid="button-share">
                       Share
                     </Button>
                   </CardFooter>
