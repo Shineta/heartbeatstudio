@@ -40,8 +40,9 @@ async function pollTaskStatus(taskId: string, maxAttempts = 60): Promise<SunoTas
     await new Promise(resolve => setTimeout(resolve, 3000));
     
     const response = await axios.get<SunoTaskResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/query/${taskId}`,
+      `${SUNO_API_BASE_URL}/api/v1/query`,
       {
+        params: { id: taskId },
         headers: {
           'Authorization': `Bearer ${SUNO_API_KEY}`,
         }
