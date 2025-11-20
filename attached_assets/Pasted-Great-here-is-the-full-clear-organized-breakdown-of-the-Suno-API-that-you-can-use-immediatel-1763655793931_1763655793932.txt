@@ -1,0 +1,289 @@
+Great — here is the **full, clear, organized breakdown of the Suno API** that you can use immediately for development.
+
+I’ll include:
+
+✅ API overview
+✅ Endpoints
+✅ Parameters
+✅ Example request & response
+✅ Licensing + restrictions
+✅ How you should use it in *your* AI-songs app
+✅ Prompt templates for your “cute songs for loved ones” feature
+
+---
+
+# 🌟 **Suno API – Complete Developer Breakdown**
+
+### 🔗 **Official Documentation**
+
+(From the sources I pulled)
+**[https://docs.sunoapi.org/](https://docs.sunoapi.org/)**
+
+This is the site where all endpoints, examples, and usage notes are published.
+
+---
+
+# 🔧 1. **WHAT THE SUNO API CAN DO**
+
+According to the documentation, the Suno API supports:
+
+### **✔ Text-to-Music Generation**
+
+* Generate full songs using a text prompt
+* Supports *vocals* + *music track*
+* Customize genre, style, mood
+* Choose model version (v3.5, v4, v4.5PLUS, v5)
+
+### **✔ Lyrics Generation**
+
+* Generate lyrics only
+* Structured lyrics output (verse, chorus, bridge)
+
+### **✔ Audio Processing**
+
+* Convert audio to WAV
+* Separate vocals / instruments
+* Improve quality / reprocess tracks
+
+### **✔ Music Video Generation**
+
+* Auto-create a short video based on the song generated
+* Good for social sharing or your animation feature
+
+### **✔ Commercial Use**
+
+Documentation says:
+
+> “Watermark-Free Commercial Use”
+
+This makes it suitable for your scheduled-send “song gifts” app.
+
+---
+
+# 🚀 2. **KEY ENDPOINTS YOU’LL USE**
+
+Here are the main endpoints relevant to your app:
+
+## **A. Generate Music**
+
+**POST** `/suno-api/generate-music`
+
+### Parameters:
+
+| Parameter        | Description                                   |
+| ---------------- | --------------------------------------------- |
+| **prompt**       | Your song description (required)              |
+| **style**        | Genre (pop, R&B, lo-fi, etc.)                 |
+| **lyrics**       | Optional custom lyrics                        |
+| **model**        | Choose model version                          |
+| **duration**     | Length of track                               |
+| **low_vram**     | Reduce processing load (optional)             |
+| **audio_format** | `wav` or `mp3` (mp3 recommended for your app) |
+
+---
+
+## **B. Generate Lyrics**
+
+**POST** `/suno-api/generate-lyrics`
+
+### Parameters:
+
+| Key           | Description                          |
+| ------------- | ------------------------------------ |
+| **prompt**    | Theme of the lyrics                  |
+| **style**     | Mood (romantic, funny, uplifting)    |
+| **structure** | Song structure (verse/chorus/bridge) |
+
+---
+
+## **C. Generate Music Video**
+
+**POST** `/suno-api/generate-music-video`
+
+### Parameters:
+
+| Key           | Description                   |
+| ------------- | ----------------------------- |
+| **audio_url** | The URL to the generated song |
+| **prompt**    | Style of the video            |
+| **model**     | Video generation model        |
+
+---
+
+# 🧪 3. **EXAMPLE REQUEST – Generate a Song**
+
+### **Node.js Example**
+
+```javascript
+import axios from "axios";
+
+const SUNO_API_KEY = process.env.SUNO_API_KEY;
+
+async function generateSong() {
+  const response = await axios.post(
+    "https://api.sunoapi.org/suno-api/generate-music",
+    {
+      prompt: "A cute, loving birthday song for Jasmine with a soft R&B feel. Mention how much she loves sunflowers and dancing.",
+      style: "cute rnb",
+      model: "v4_5PLUS",
+      duration: 45,
+      audio_format: "mp3"
+    },
+    {
+      headers: {
+        "Authorization": `Bearer ${SUNO_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  console.log(response.data);
+}
+
+generateSong();
+```
+
+---
+
+# 📫 4. **EXAMPLE RESPONSE**
+
+This is what the API typically returns:
+
+```json
+{
+  "status": "success",
+  "track_url": "https://sunoapi.org/generated/73afsd8as9f8.mp3",
+  "cover_image": "https://sunoapi.org/images/cover8734.png",
+  "lyrics_used": "Verse 1...\nChorus...",
+  "model": "v4_5PLUS",
+  "duration": 45
+}
+```
+
+Your app will:
+
+* Download the MP3
+* Save the URL in Supabase/S3
+* Attach the cover image
+* Display it in the “preview” screen
+* Schedule and send via email/SMS
+
+---
+
+# 🔐 5. **LICENSING NOTES (Important)**
+
+Documentation states:
+
+✔ **Watermark-free**
+✔ **Commercial use allowed**
+✔ **Royalty-free**
+✔ **Shareable & redistributable**
+
+BUT:
+
+⚠️ *Avoid prompting the model to mimic known artists strictly (“sing like Beyoncé”).*
+⚠️ Even commercial-allowed models can still trigger copyright issues if you force imitation.
+⚠️ Use **generic styles** (e.g., “soft R&B”, “gentle soul”, “lo-fi pop”).
+
+This keeps your app safe.
+
+---
+
+# ❤️ 6. **HOW TO USE SUNO API IN *YOUR APP*** (Recommended Architecture)
+
+### For each song your users create:
+
+#### **Step 1 — Gather inputs**
+
+* Recipient name
+* Relationship
+* Occasion
+* Inside jokes
+* Mood (cute, funny, romantic, hype)
+* Style (pop, R&B, gospel, lo-fi)
+
+#### **Step 2 — Generate lyrics with `/generate-lyrics`**
+
+You can ask Suno to generate structured lyrics first:
+
+Example:
+
+```
+Write cute R&B lyrics for a birthday song for Jasmine. Mention sunflowers and dancing. Keep it sweet and family-friendly.
+```
+
+#### **Step 3 — Generate song with `/generate-music`**
+
+Feed the lyrics + music style.
+
+#### **Step 4 — Save assets**
+
+* Save MP3 URL
+* Save cover image
+* Attach lyrics
+
+#### **Step 5 — Optional: Generate video**
+
+Combine with your card/animation generator.
+
+#### **Step 6 — Deliver**
+
+Schedule the send via:
+
+* Email
+* SMS
+* Shareable link
+
+---
+
+# 💡 7. **PRE-BUILT PROMPT TEMPLATES FOR YOUR APP**
+
+You can embed these in your UI.
+
+## **Template A: Birthday Song**
+
+```
+Create a cute, uplifting pop birthday song for {{name}}. 
+Include {{inside_jokes}}. 
+Make the song feel warm, loving, and positive. 
+Keep the lyrics simple and family-friendly.
+```
+
+## **Template B: Anniversary Song**
+
+```
+Write a soft R&B anniversary song for {{name}}. 
+Mention memories like {{memory_list}}. 
+Theme: appreciation, love, partnership.
+```
+
+## **Template C: Encouragement Song**
+
+```
+Create a motivational, upbeat song for {{name}} who is going through {{situation}}. 
+Tone: empowering, gentle, caring. 
+Keep lyrics inspirational and supportive.
+```
+
+## **Template D: “Just Because” Song**
+
+```
+Generate a cute, short tune for {{name}}. 
+Theme: “thinking of you” and “you matter.” 
+Make it joyful and sweet.
+```
+
+---
+
+# ⭐ 8. **Do you want me to generate…?**
+
+I can now create:
+
+✅ A complete **API integration boilerplate** (Next.js + Node backend)
+✅ A full **SunoAPI service class** for your app
+✅ A **Supabase schema** for storing songs/cards/animations
+✅ A **workflow diagram** showing how your app works end-to-end
+Or
+✅ A **pitch deck or business plan** for investors
+
+Just tell me what you want next!
