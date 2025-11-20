@@ -49,8 +49,14 @@ export async function generateCardImage(params: {
   });
 
   const imageUrl = response.data?.[0]?.url;
+  const b64Json = response.data?.[0]?.b64_json;
+  
+  if (b64Json) {
+    return b64Json;
+  }
+  
   if (!imageUrl) {
-    throw new Error("No image URL returned from AI service");
+    throw new Error("No image URL or b64_json returned from AI service");
   }
 
   const imageResponse = await fetch(imageUrl);
@@ -107,9 +113,17 @@ export async function generateSongCover(params: {
     size: "1024x1024",
   });
 
+  console.log("Image generation response:", JSON.stringify(response.data?.[0], null, 2));
+
   const imageUrl = response.data?.[0]?.url;
+  const b64Json = response.data?.[0]?.b64_json;
+  
+  if (b64Json) {
+    return b64Json;
+  }
+  
   if (!imageUrl) {
-    throw new Error("No image URL returned from AI service");
+    throw new Error("No image URL or b64_json returned from AI service");
   }
 
   const imageResponse = await fetch(imageUrl);
