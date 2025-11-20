@@ -48,7 +48,14 @@ export async function generateCardImage(params: {
     size: "1024x1024",
   });
 
-  const base64 = response.data?.[0]?.b64_json ?? "";
+  const imageUrl = response.data?.[0]?.url;
+  if (!imageUrl) {
+    throw new Error("No image URL returned from AI service");
+  }
+
+  const imageResponse = await fetch(imageUrl);
+  const arrayBuffer = await imageResponse.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
   return base64;
 }
 
@@ -100,6 +107,13 @@ export async function generateSongCover(params: {
     size: "1024x1024",
   });
 
-  const base64 = response.data?.[0]?.b64_json ?? "";
+  const imageUrl = response.data?.[0]?.url;
+  if (!imageUrl) {
+    throw new Error("No image URL returned from AI service");
+  }
+
+  const imageResponse = await fetch(imageUrl);
+  const arrayBuffer = await imageResponse.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
   return base64;
 }
