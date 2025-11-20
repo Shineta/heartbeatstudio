@@ -69,11 +69,18 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
     lastStatus = status;
     lastError = errorMessage;
     
-    console.log(`[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status} for taskId: ${taskId}`);
+    const dataCount = taskResponse?.data?.length || 0;
+    const hasAudioUrl = taskResponse?.data?.[0]?.audio_url ? 'YES' : 'NO';
+    console.log(`[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`);
     
     if (status === 'SUCCESS' && taskResponse?.data && taskResponse.data.length > 0) {
-      console.log(`[Suno] Song generation completed successfully!`);
-      return taskResponse;
+      const firstTrack = taskResponse.data[0];
+      if (firstTrack.audio_url) {
+        console.log(`[Suno] Song generation completed successfully with audio URL!`);
+        return taskResponse;
+      } else {
+        console.log(`[Suno] Status is SUCCESS but audio_url not ready yet, continuing to poll...`);
+      }
     }
     
     if (status === 'FAILED') {
