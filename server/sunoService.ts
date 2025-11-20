@@ -94,6 +94,10 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
   const prompt = lyricsPrompt.join(' ');
 
   try {
+    const callbackUrl = process.env.REPL_SLUG 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
+      : 'https://example.com/callback';
+      
     const response = await axios.post<SunoGenerateResponse>(
       `${SUNO_API_BASE_URL}/api/v1/generate`,
       {
@@ -102,7 +106,8 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
         title: songTitle,
         customMode: true,
         instrumental: false,
-        model: 'V4_5PLUS'
+        model: 'V4_5PLUS',
+        callBackUrl: callbackUrl
       },
       {
         headers: {
