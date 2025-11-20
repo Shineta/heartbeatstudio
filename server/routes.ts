@@ -422,6 +422,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Song with OpenAI Only (Fallback - No Audio)
+  app.post('/api/generate/song/openai-only', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const parsed = insertCreationSchema.pick({ 
+        lovedOneId: true, 
+        tone: true, 
+        genre: true 
+      }).extend({
+        recipientName: z.string().optional(),
+        relationship: z.string().optional(),
+        occasion: z.string().optional(),
+      }).safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const { lovedOneId, tone, genre, occasion, recipientName, relationship } = parsed.data;
+      
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const { generateSongLyrics, generateSongCover } = await import('./openaiService');
+      
+      const songLyrics = await generateSongLyrics({
+        recipientName: lovedOne?.name || recipientName || "someone special",
+        relationship: lovedOne?.relationship || relationship || "friend",
+        occasion,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
+      });
+
+      const coverBase64 = await generateSongCover({
+        title: songLyrics.title,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+      });
+
+      const coverImageUrl = await objectStorageService.uploadBase64Image(
+        coverBase64,
+        `songs/${userId}`,
+        'cover'
+      );
+
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: 'song',
+        tone: tone || 'sweet',
+        genre: genre || 'pop',
+        title: songLyrics.title,
+        content: songLyrics.lyrics,
+        imageUrl: coverImageUrl || null,
+        mediaUrl: null,
+      });
+      
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
+
+      res.json(updatedCreation || creation);
+    } catch (error: any) {
+      console.error("Error generating song with OpenAI:", error);
+      res.status(500).json({ message: error.message || "Failed to generate song" });
+    }
+  });
+
   // Get shareable creation (public)
   app.get('/api/share/:link', async (req: Request, res: Response) => {
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation } from "@shared/schema";
+import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const cardFormSchema = z.object({
   lovedOneId: z.string().optional(),
@@ -38,6 +49,10 @@ export default function CreatePage() {
   const { toast } = useToast();
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
+  const [songGenerationTime, setSongGenerationTime] = useState(0);
+  const [showFallbackDialog, setShowFallbackDialog] = useState(false);
+  const [pendingSongData, setPendingSongData] = useState<z.infer<typeof songFormSchema> | null>(null);
+  const [sunoErrorMessage, setSunoErrorMessage] = useState<string>("");
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -66,7 +81,8 @@ export default function CreatePage() {
 
   const cardMutation = useMutation({
     mutationFn: async (data: z.infer<typeof cardFormSchema>) => {
-      return await apiRequest("POST", "/api/generate/card", data);
+      const res = await apiRequest("POST", "/api/generate/card", data);
+      return await res.json() as Creation;
     },
     onSuccess: (data: Creation) => {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
@@ -95,12 +111,64 @@ export default function CreatePage() {
 
   const songMutation = useMutation({
     mutationFn: async (data: z.infer<typeof songFormSchema>) => {
-      return await apiRequest("POST", "/api/generate/song", data);
+      const res = await apiRequest("POST", "/api/generate/song", data);
+      return await res.json() as Creation;
     },
     onSuccess: (data: Creation) => {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedSong(data);
+      setPendingSongData(null);
+      setSongGenerationTime(0);
       toast({ title: "Success", description: "Your song has been created!" });
+    },
+    onError: (error: Error, variables) => {
+      setSongGenerationTime(0);
+      
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      const errorMessage = error.message || "Unknown error occurred";
+      const errorLower = errorMessage.toLowerCase();
+      const isTimeout = errorLower.includes("timed out") || errorLower.includes("timeout");
+      const isRecoverableError = isTimeout || errorLower.includes("insufficient credits") || errorLower.includes("busy") || errorLower.includes("rate limit");
+      
+      if (isRecoverableError) {
+        setSunoErrorMessage(errorMessage);
+        setPendingSongData(variables);
+        setShowFallbackDialog(true);
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const openAIFallbackMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof songFormSchema>) => {
+      const res = await apiRequest("POST", "/api/generate/song/openai-only", data);
+      return await res.json() as Creation;
+    },
+    onSuccess: (data: Creation) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      setCreatedSong(data);
+      setPendingSongData(null);
+      setShowFallbackDialog(false);
+      toast({ 
+        title: "Success", 
+        description: "Your song lyrics and cover art have been created! (Audio not available with this method)" 
+      });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -114,13 +182,29 @@ export default function CreatePage() {
         }, 500);
         return;
       }
+      setShowFallbackDialog(false);
       toast({
         title: "Error",
-        description: "Failed to create song. Please try again.",
+        description: "Failed to create song with OpenAI. Please try again.",
         variant: "destructive",
       });
     },
   });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (songMutation.isPending && !openAIFallbackMutation.isPending) {
+      setSongGenerationTime(0);
+      interval = setInterval(() => {
+        setSongGenerationTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (interval) clearInterval(interval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [songMutation.isPending, openAIFallbackMutation.isPending]);
 
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
     cardMutation.mutate(data);
@@ -548,6 +632,35 @@ export default function CreatePage() {
                         )}
                       />
 
+                      {songMutation.isPending && (
+                        <Card className="bg-primary/5 border-primary/20">
+                          <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-center justify-center gap-3">
+                              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                              <div className="text-center">
+                                <p className="font-semibold text-lg">Composing Your Song...</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {songGenerationTime < 30 
+                                    ? "AI is writing beautiful lyrics for you"
+                                    : songGenerationTime < 90
+                                    ? "Creating music and vocals... This may take 1-3 minutes"
+                                    : songGenerationTime < 180
+                                    ? "Still working... Almost there!"
+                                    : "Taking longer than usual... Please be patient"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Time elapsed</span>
+                                <span className="font-medium">{Math.floor(songGenerationTime / 60)}:{(songGenerationTime % 60).toString().padStart(2, '0')}</span>
+                              </div>
+                              <Progress value={Math.min((songGenerationTime / 180) * 100, 95)} className="h-2" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
                       <Button type="submit" className="w-full" disabled={songMutation.isPending} data-testid="button-generate-song">
                         {songMutation.isPending ? (
                           <>
@@ -569,6 +682,77 @@ export default function CreatePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={showFallbackDialog} onOpenChange={setShowFallbackDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              Song Generation Failed
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                <p className="text-sm font-medium text-destructive">
+                  Error: {sunoErrorMessage}
+                </p>
+              </div>
+              <p>
+                The AI music service (Suno) couldn't complete your song. This can happen when the service is busy, experiencing high demand, or if there's a temporary issue.
+              </p>
+              <p className="font-medium">
+                Would you like to try a faster alternative? We can generate:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Beautiful personalized lyrics</li>
+                <li>AI-generated cover art</li>
+                <li className="text-muted-foreground">Note: Audio won't be available with this method</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowFallbackDialog(false);
+                setPendingSongData(null);
+              }}
+              data-testid="button-cancel-fallback"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (pendingSongData) {
+                  setShowFallbackDialog(false);
+                  songMutation.mutate(pendingSongData);
+                }
+              }}
+              disabled={songMutation.isPending}
+              data-testid="button-retry-suno"
+            >
+              Retry with Suno
+            </Button>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSongData) {
+                  openAIFallbackMutation.mutate(pendingSongData);
+                }
+              }}
+              disabled={openAIFallbackMutation.isPending}
+              data-testid="button-use-openai-fallback"
+            >
+              {openAIFallbackMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate Lyrics Only"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

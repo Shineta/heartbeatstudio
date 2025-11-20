@@ -26,7 +26,7 @@ interface SunoTaskResponse {
   msg: string;
   data: {
     taskId: string;
-    status: 'SUCCESS' | 'GENERATING' | 'FAILED';
+    status: 'SUCCESS' | 'GENERATING' | 'FAILED' | 'WAITING' | 'IN_QUEUE' | 'CREATED';
     response?: {
       data: Array<{
         id: string;
@@ -42,9 +42,14 @@ interface SunoTaskResponse {
   };
 }
 
-async function pollTaskStatus(taskId: string, maxAttempts = 20): Promise<SunoTaskResponse['data']['response']> {
+async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTaskResponse['data']['response']> {
+  let lastStatus: string = 'UNKNOWN';
+  let lastError: string | undefined;
+  
   for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, 30000));
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 10000));
+    }
     
     const response = await axios.get<SunoTaskResponse>(
       `${SUNO_API_BASE_URL}/api/v1/generate/record-info`,
@@ -61,17 +66,25 @@ async function pollTaskStatus(taskId: string, maxAttempts = 20): Promise<SunoTas
     }
 
     const { status, response: taskResponse, errorMessage } = response.data.data;
+    lastStatus = status;
+    lastError = errorMessage;
+    
+    console.log(`[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status} for taskId: ${taskId}`);
     
     if (status === 'SUCCESS' && taskResponse?.data && taskResponse.data.length > 0) {
+      console.log(`[Suno] Song generation completed successfully!`);
       return taskResponse;
     }
     
     if (status === 'FAILED') {
+      console.error(`[Suno] Song generation failed: ${errorMessage}`);
       throw new Error(errorMessage || 'Song generation failed');
     }
   }
   
-  throw new Error('Song generation timed out after 10 minutes');
+  const timeoutMessage = `Song generation timed out after 15 minutes. Last status: ${lastStatus}${lastError ? `. Error: ${lastError}` : ''}`;
+  console.error(`[Suno] ${timeoutMessage}`);
+  throw new Error(timeoutMessage);
 }
 
 export async function generateSong(params: GenerateSongParams): Promise<{ audioUrl: string; lyrics: string; title: string; coverImage?: string }> {
