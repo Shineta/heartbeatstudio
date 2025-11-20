@@ -374,7 +374,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lovedOne = await storage.getLovedOneById(lovedOneId);
       }
 
-      const songLyrics = await generateSongLyrics({
+      const { generateSong } = await import('./sunoService');
+      
+      const songResult = await generateSong({
         recipientName: lovedOne?.name || req.body.recipientName || "someone special",
         relationship: lovedOne?.relationship || req.body.relationship || "friend",
         occasion,
@@ -384,17 +386,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         insideJokes: lovedOne?.insideJokes || undefined,
       });
 
-      const coverImageBase64 = await generateSongCover({
-        title: songLyrics.title,
-        genre: genre || "pop",
-        tone: tone || "sweet",
-      });
-
-      const imageUrl = await objectStorageService.uploadBase64Image(
-        coverImageBase64,
-        `songs/${userId}`,
-        'cover'
-      );
+      let coverImageUrl = songResult.coverImage;
+      
+      if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
+        const coverResponse = await fetch(songResult.coverImage);
+        const coverBuffer = await coverResponse.arrayBuffer();
+        const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+        
+        coverImageUrl = await objectStorageService.uploadBase64Image(
+          coverBase64,
+          `songs/${userId}`,
+          'cover'
+        );
+      }
 
       const creation = await storage.createCreation({
         userId,
@@ -402,10 +406,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: 'song',
         tone: tone || 'sweet',
         genre: genre || 'pop',
-        title: songLyrics.title,
-        content: songLyrics.lyrics,
-        imageUrl,
-        mediaUrl: null,
+        title: songResult.title,
+        content: songResult.lyrics,
+        imageUrl: coverImageUrl || null,
+        mediaUrl: songResult.audioUrl,
       });
       
       const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;

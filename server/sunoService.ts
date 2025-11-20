@@ -134,15 +134,17 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
     
     const result = await pollTaskStatus(taskId);
     
-    if (!result.audioUrl) {
-      throw new Error('No audio URL returned from Suno API');
+    if (!result || !result.data || result.data.length === 0) {
+      throw new Error('No audio data returned from Suno API');
     }
 
+    const firstTrack = result.data[0];
+    
     return {
-      audioUrl: result.audioUrl,
-      lyrics: result.lyric || prompt,
-      title: result.title || songTitle,
-      coverImage: result.imageUrl
+      audioUrl: firstTrack.audio_url,
+      lyrics: firstTrack.lyric || prompt,
+      title: firstTrack.title || songTitle,
+      coverImage: firstTrack.image_url
     };
   } catch (error: any) {
     console.error('Suno API error:', error.response?.data || error.message);
