@@ -25,24 +25,31 @@ interface SunoTaskResponse {
   code: number;
   msg: string;
   data: {
-    status: string;
-    audioUrl?: string;
-    videoUrl?: string;
-    imageUrl?: string;
-    lyric?: string;
-    title?: string;
-    tags?: string;
+    taskId: string;
+    status: 'SUCCESS' | 'GENERATING' | 'FAILED';
+    response?: {
+      data: Array<{
+        id: string;
+        audio_url: string;
+        title: string;
+        tags: string;
+        duration: number;
+        lyric?: string;
+        image_url?: string;
+      }>;
+    };
+    errorMessage?: string;
   };
 }
 
-async function pollTaskStatus(taskId: string, maxAttempts = 60): Promise<SunoTaskResponse['data']> {
+async function pollTaskStatus(taskId: string, maxAttempts = 20): Promise<SunoTaskResponse['data']['response']> {
   for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
     
     const response = await axios.get<SunoTaskResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/query`,
+      `${SUNO_API_BASE_URL}/api/v1/generate/record-info`,
       {
-        params: { id: taskId },
+        params: { taskId },
         headers: {
           'Authorization': `Bearer ${SUNO_API_KEY}`,
         }
@@ -53,18 +60,18 @@ async function pollTaskStatus(taskId: string, maxAttempts = 60): Promise<SunoTas
       throw new Error(response.data.msg || 'Failed to query task status');
     }
 
-    const { status, audioUrl } = response.data.data;
+    const { status, response: taskResponse, errorMessage } = response.data.data;
     
-    if (status === 'complete' && audioUrl) {
-      return response.data.data;
+    if (status === 'SUCCESS' && taskResponse?.data && taskResponse.data.length > 0) {
+      return taskResponse;
     }
     
-    if (status === 'error' || status === 'failed') {
-      throw new Error('Song generation failed');
+    if (status === 'FAILED') {
+      throw new Error(errorMessage || 'Song generation failed');
     }
   }
   
-  throw new Error('Song generation timed out');
+  throw new Error('Song generation timed out after 10 minutes');
 }
 
 export async function generateSong(params: GenerateSongParams): Promise<{ audioUrl: string; lyrics: string; title: string; coverImage?: string }> {
