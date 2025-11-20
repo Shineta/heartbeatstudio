@@ -114,7 +114,13 @@ Preferred communication style: Simple, everyday language.
 - **OpenAI via Replit AI Integrations**: Text and image generation
   - Base URL and API key provided by Replit's managed service
   - Models: GPT-5 (chat completions), GPT-Image-1 (image generation)
-  - Used for generating card messages, song lyrics, and visual assets
+  - Used for generating card messages and visual assets
+- **Suno API**: AI song generation with vocals and music
+  - Endpoint: `https://api.sunoapi.org/suno-api/generate-music`
+  - Requires SUNO_API_KEY environment variable
+  - Generates complete songs (45 seconds) with vocals, music, lyrics, and cover art
+  - Model: v4_5PLUS for highest quality output
+  - Returns MP3 audio files, lyrics, and optional cover images
 
 **Authentication**
 - **Custom Multi-Method Authentication**:
