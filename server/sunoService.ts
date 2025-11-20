@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const SUNO_API_KEY = process.env.SUNO_API_KEY;
-const SUNO_API_BASE_URL = 'https://api.sunoapi.org';
+const SUNO_API_BASE_URL = process.env.SUNO_API_BASE_URL || 'https://api.sunoapi.org';
 
 interface GenerateSongParams {
   recipientName: string;
