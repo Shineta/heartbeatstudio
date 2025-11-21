@@ -26,16 +26,16 @@ interface SunoTaskResponse {
   msg: string;
   data: {
     taskId: string;
-    status: 'SUCCESS' | 'GENERATING' | 'FAILED' | 'WAITING' | 'IN_QUEUE' | 'CREATED';
+    status: 'SUCCESS' | 'GENERATING' | 'FAILED' | 'WAITING' | 'IN_QUEUE' | 'CREATED' | 'TEXT_SUCCESS' | 'FIRST_SUCCESS' | 'PENDING';
     response?: {
-      data: Array<{
+      sunoData: Array<{
         id: string;
-        audio_url: string;
+        audioUrl: string;
         title: string;
         tags: string;
         duration: number;
-        lyric?: string;
-        image_url?: string;
+        prompt?: string;
+        imageUrl?: string;
       }>;
     };
     errorMessage?: string;
@@ -73,17 +73,17 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
     lastStatus = status;
     lastError = errorMessage;
     
-    const dataCount = taskResponse?.data?.length || 0;
-    const hasAudioUrl = taskResponse?.data?.[0]?.audio_url ? 'YES' : 'NO';
+    const dataCount = taskResponse?.sunoData?.length || 0;
+    const hasAudioUrl = taskResponse?.sunoData?.[0]?.audioUrl ? 'YES' : 'NO';
     console.log(`[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`);
     
-    if (status === 'SUCCESS' && taskResponse?.data && taskResponse.data.length > 0) {
-      const firstTrack = taskResponse.data[0];
-      if (firstTrack.audio_url) {
+    if (status === 'SUCCESS' && taskResponse?.sunoData && taskResponse.sunoData.length > 0) {
+      const firstTrack = taskResponse.sunoData[0];
+      if (firstTrack.audioUrl) {
         console.log(`[Suno] Song generation completed successfully with audio URL!`);
         return taskResponse;
       } else {
-        console.log(`[Suno] Status is SUCCESS but audio_url not ready yet, continuing to poll...`);
+        console.log(`[Suno] Status is SUCCESS but audioUrl not ready yet, continuing to poll...`);
       }
     }
     
@@ -158,17 +158,17 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
     
     const result = await pollTaskStatus(taskId);
     
-    if (!result || !result.data || result.data.length === 0) {
+    if (!result || !result.sunoData || result.sunoData.length === 0) {
       throw new Error('No audio data returned from Suno API');
     }
 
-    const firstTrack = result.data[0];
+    const firstTrack = result.sunoData[0];
     
     return {
-      audioUrl: firstTrack.audio_url,
-      lyrics: firstTrack.lyric || prompt,
+      audioUrl: firstTrack.audioUrl,
+      lyrics: firstTrack.prompt || prompt,
       title: firstTrack.title || songTitle,
-      coverImage: firstTrack.image_url
+      coverImage: firstTrack.imageUrl
     };
   } catch (error: any) {
     console.error('Suno API error:', error.response?.data || error.message);
