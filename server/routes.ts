@@ -353,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl,
       });
       
-      const shareableLink = `/share/card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
       res.json(updatedCreation || creation);
@@ -412,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediaUrl: songResult.audioUrl,
       });
       
-      const shareableLink = `/share/song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
       res.json(updatedCreation || creation);
@@ -487,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediaUrl: null,
       });
       
-      const shareableLink = `/share/song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
       res.json(updatedCreation || creation);
