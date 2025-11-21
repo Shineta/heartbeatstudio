@@ -105,25 +105,21 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
 
   const songTitle = `${params.occasion || 'Special Song'} for ${params.recipientName}`;
   
-  const lyricsPrompt = [
-    `Write ${params.tone} song lyrics for ${params.recipientName}, my ${params.relationship}.`
-  ];
+  // First, generate actual lyrics using OpenAI
+  const { generateSongLyrics } = await import('./openaiService');
+  
+  const songLyrics = await generateSongLyrics({
+    recipientName: params.recipientName,
+    relationship: params.relationship,
+    occasion: params.occasion,
+    tone: params.tone,
+    genre: params.genre || 'pop',
+    interests: params.interests,
+    insideJokes: params.insideJokes,
+  });
 
-  if (params.occasion) {
-    lyricsPrompt.push(`Occasion: ${params.occasion}.`);
-  }
-
-  if (params.interests) {
-    lyricsPrompt.push(`Their interests: ${params.interests}.`);
-  }
-
-  if (params.insideJokes) {
-    lyricsPrompt.push(`Inside jokes: ${params.insideJokes}.`);
-  }
-
-  lyricsPrompt.push('Make it warm, loving, and family-friendly.');
-
-  const prompt = lyricsPrompt.join(' ');
+  // Use the generated lyrics as the prompt for Suno
+  const prompt = songLyrics.lyrics;
 
   try {
     const callbackUrl = process.env.REPL_SLUG 
@@ -135,7 +131,7 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
       {
         prompt,
         style: `${params.tone} ${params.genre || 'pop'}`,
-        title: songTitle,
+        title: songLyrics.title,
         customMode: true,
         instrumental: false,
         model: 'V4_5PLUS',
@@ -166,8 +162,8 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
     
     return {
       audioUrl: firstTrack.audioUrl,
-      lyrics: firstTrack.prompt || prompt,
-      title: firstTrack.title || songTitle,
+      lyrics: songLyrics.lyrics,
+      title: songLyrics.title,
       coverImage: firstTrack.imageUrl
     };
   } catch (error: any) {
