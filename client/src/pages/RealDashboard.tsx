@@ -309,12 +309,29 @@ export default function RealDashboard() {
                         {creation.type === 'song' ? 'Song' : 'Card'} • {creation.tone}
                       </p>
                       <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
+                      
+                      {creation.type === 'song' && creation.mediaUrl && (
+                        <div className="mb-4">
+                          <audio 
+                            controls 
+                            className="w-full mb-2"
+                            data-testid={`audio-player-${creation.id}`}
+                          >
+                            <source src={creation.mediaUrl} type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      )}
+                      
                       <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}${creation.shareableLink}`);
+                            const shareLink = creation.shareableLink?.startsWith('/share/') 
+                              ? creation.shareableLink 
+                              : `/share/${creation.shareableLink}`;
+                            navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
                             toast({ title: "Copied!", description: "Link copied to clipboard" });
                           }}
                           data-testid="button-share-creation"

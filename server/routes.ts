@@ -513,6 +513,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve public objects from object storage
+  app.get('/public-objects/*', async (req: Request, res: Response) => {
+    try {
+      const objectPath = req.path;
+      const file = await objectStorageService.getObjectEntityFile(objectPath);
+      await objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Object not found") {
+        return res.status(404).json({ message: "Object not found" });
+      }
+      console.error("Error serving public object:", error);
+      res.status(500).json({ message: "Failed to serve object" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
