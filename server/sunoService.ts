@@ -98,6 +98,77 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
   throw new Error(timeoutMessage);
 }
 
+// Generate song with provided lyrics (no OpenAI lyrics generation)
+export async function generateSongWithLyrics(params: {
+  title: string;
+  lyrics: string;
+  tone: string;
+  genre?: string;
+}): Promise<{ audioUrl: string; lyrics: string; title: string; coverImage?: string }> {
+  if (!SUNO_API_KEY) {
+    throw new Error('SUNO_API_KEY is not configured. Please add it to Replit Secrets.');
+  }
+
+  try {
+    const callbackUrl = process.env.REPL_SLUG 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
+      : 'https://example.com/callback';
+      
+    const response = await axios.post<SunoGenerateResponse>(
+      `${SUNO_API_BASE_URL}/api/v1/generate`,
+      {
+        prompt: params.lyrics,
+        style: `${params.tone} ${params.genre || 'pop'}`,
+        title: params.title,
+        customMode: true,
+        instrumental: false,
+        model: 'V4_5PLUS',
+        callBackUrl: callbackUrl
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${SUNO_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (response.data.code !== 200) {
+      throw new Error(response.data.msg || 'Failed to generate song');
+    }
+
+    const taskId = response.data.data.taskId;
+    console.log(`Song generation (with custom lyrics) started with taskId: ${taskId}`);
+    
+    const result = await pollTaskStatus(taskId);
+    
+    if (!result || !result.sunoData || result.sunoData.length === 0) {
+      throw new Error('No audio data returned from Suno API');
+    }
+
+    const firstTrack = result.sunoData[0];
+    
+    return {
+      audioUrl: firstTrack.audioUrl,
+      lyrics: params.lyrics,
+      title: params.title,
+      coverImage: firstTrack.imageUrl
+    };
+  } catch (error: any) {
+    console.error('Suno API error:', error.response?.data || error.message);
+    
+    if (error.response?.status === 401) {
+      throw new Error('Invalid Suno API key. Please check your SUNO_API_KEY in Replit Secrets.');
+    }
+    
+    if (error.response?.status === 429) {
+      throw new Error('Insufficient credits or rate limit exceeded.');
+    }
+
+    throw new Error(error.response?.data?.msg || error.message || 'Failed to generate song with Suno API');
+  }
+}
+
 export async function generateSong(params: GenerateSongParams): Promise<{ audioUrl: string; lyrics: string; title: string; coverImage?: string }> {
   if (!SUNO_API_KEY) {
     throw new Error('SUNO_API_KEY is not configured. Please add it to Replit Secrets.');

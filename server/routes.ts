@@ -363,6 +363,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Lyrics Preview Only (fast, no song creation)
+  app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { lovedOneId, tone, genre, occasion, recipientName, relationship } = req.body;
+      
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const lyrics = await generateSongLyrics({
+        recipientName: lovedOne?.name || recipientName || "someone special",
+        relationship: lovedOne?.relationship || relationship || "friend",
+        occasion,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
+      });
+
+      res.json(lyrics);
+    } catch (error: any) {
+      console.error("Error generating lyrics preview:", error);
+      res.status(500).json({ message: error.message || "Failed to generate lyrics" });
+    }
+  });
+
+  // Generate AI Song with Custom Lyrics
+  app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { lovedOneId, tone, genre, title, lyrics } = req.body;
+      
+      if (!lyrics || !title) {
+        return res.status(400).json({ message: "Lyrics and title are required" });
+      }
+
+      const { generateSongWithLyrics } = await import('./sunoService');
+      
+      const songResult = await generateSongWithLyrics({
+        title,
+        lyrics,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+      });
+
+      let coverImageUrl = songResult.coverImage;
+      
+      if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
+        const coverResponse = await fetch(songResult.coverImage);
+        const coverBuffer = await coverResponse.arrayBuffer();
+        const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+        
+        coverImageUrl = await objectStorageService.uploadBase64Image(
+          coverBase64,
+          `songs/${userId}`,
+          'cover'
+        );
+      }
+
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: 'song',
+        tone: tone || 'sweet',
+        genre: genre || 'pop',
+        title: songResult.title,
+        content: songResult.lyrics,
+        imageUrl: coverImageUrl || null,
+        mediaUrl: songResult.audioUrl,
+      });
+      
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
+
+      res.json(updatedCreation || creation);
+    } catch (error: any) {
+      console.error("Error generating song with lyrics:", error);
+      res.status(500).json({ message: error.message || "Failed to generate song" });
+    }
+  });
+
   // Generate AI Song
   app.post('/api/generate/song', isAuthenticated, async (req: Request, res: Response) => {
     try {

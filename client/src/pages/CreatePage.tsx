@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2 } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,6 +18,12 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
+
+interface LyricsPreview {
+  lyrics: string;
+  title: string;
+  description: string;
+}
 
 const cardFormSchema = z.object({
   lovedOneId: z.string().optional(),
@@ -40,6 +47,12 @@ export default function CreatePage() {
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
   const [songGenerationTime, setSongGenerationTime] = useState(0);
+  
+  // Lyrics preview state
+  const [lyricsPreview, setLyricsPreview] = useState<LyricsPreview | null>(null);
+  const [editedLyrics, setEditedLyrics] = useState<string>("");
+  const [editedTitle, setEditedTitle] = useState<string>("");
+  const [pendingSongData, setPendingSongData] = useState<z.infer<typeof songFormSchema> | null>(null);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -96,6 +109,79 @@ export default function CreatePage() {
     },
   });
 
+  // Generate lyrics preview only (fast)
+  const lyricsPreviewMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof songFormSchema>) => {
+      const res = await apiRequest("POST", "/api/generate/lyrics-preview", data);
+      return await res.json() as LyricsPreview;
+    },
+    onSuccess: (data: LyricsPreview, variables) => {
+      setLyricsPreview(data);
+      setEditedLyrics(data.lyrics);
+      setEditedTitle(data.title);
+      setPendingSongData(variables);
+      toast({ title: "Lyrics Ready!", description: "Review and edit your lyrics before creating the song." });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to generate lyrics. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create song with custom/edited lyrics
+  const songWithLyricsMutation = useMutation({
+    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string }) => {
+      const res = await apiRequest("POST", "/api/generate/song-with-lyrics", data);
+      return await res.json() as Creation;
+    },
+    onSuccess: (data: Creation) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      setCreatedSong(data);
+      setLyricsPreview(null);
+      setPendingSongData(null);
+      setEditedLyrics("");
+      setEditedTitle("");
+      setSongGenerationTime(0);
+      toast({ title: "Success", description: "Your song has been created!" });
+    },
+    onError: (error: Error) => {
+      setSongGenerationTime(0);
+      
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      const errorMessage = error.message || "Unknown error occurred";
+      toast({
+        title: "Song Generation Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
   const songMutation = useMutation({
     mutationFn: async (data: z.infer<typeof songFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/song", data);
@@ -134,7 +220,8 @@ export default function CreatePage() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (songMutation.isPending) {
+    const isPending = songMutation.isPending || songWithLyricsMutation.isPending;
+    if (isPending) {
       setSongGenerationTime(0);
       interval = setInterval(() => {
         setSongGenerationTime(prev => prev + 1);
@@ -145,10 +232,43 @@ export default function CreatePage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [songMutation.isPending]);
+  }, [songMutation.isPending, songWithLyricsMutation.isPending]);
 
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
     cardMutation.mutate(data);
+  };
+
+  // Generate lyrics preview first
+  const onGenerateLyrics = (data: z.infer<typeof songFormSchema>) => {
+    lyricsPreviewMutation.mutate(data);
+  };
+
+  // Create song with the edited lyrics
+  const onCreateSongWithLyrics = () => {
+    if (!pendingSongData || !editedLyrics || !editedTitle) return;
+    
+    songWithLyricsMutation.mutate({
+      lovedOneId: pendingSongData.lovedOneId,
+      tone: pendingSongData.tone,
+      genre: pendingSongData.genre,
+      title: editedTitle,
+      lyrics: editedLyrics,
+    });
+  };
+
+  // Regenerate lyrics with same data
+  const onRegenerateLyrics = () => {
+    if (pendingSongData) {
+      lyricsPreviewMutation.mutate(pendingSongData);
+    }
+  };
+
+  // Go back to form from lyrics preview
+  const onBackToForm = () => {
+    setLyricsPreview(null);
+    setPendingSongData(null);
+    setEditedLyrics("");
+    setEditedTitle("");
   };
 
   const onSongSubmit = (data: z.infer<typeof songFormSchema>) => {
@@ -411,7 +531,10 @@ export default function CreatePage() {
                       Create Another
                     </Button>
                     <Button onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}${createdSong.shareableLink}`);
+                      const shareLink = createdSong.shareableLink?.startsWith('/share/') 
+                        ? createdSong.shareableLink 
+                        : `/share/${createdSong.shareableLink}`;
+                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
                       toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
                     }} data-testid="button-share">
                       Share
@@ -419,6 +542,119 @@ export default function CreatePage() {
                   </CardFooter>
                 </Card>
               </div>
+            ) : lyricsPreview ? (
+              /* Lyrics Preview Step */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="w-5 h-5 text-primary" />
+                    Review Your Lyrics
+                  </CardTitle>
+                  <CardDescription>
+                    Edit the lyrics below if you'd like, then create your song!
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Song Title</label>
+                    <Input
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      placeholder="Song title"
+                      data-testid="input-edit-title"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Lyrics</label>
+                    <Textarea
+                      value={editedLyrics}
+                      onChange={(e) => setEditedLyrics(e.target.value)}
+                      placeholder="Song lyrics"
+                      className="min-h-[300px] font-mono text-sm"
+                      data-testid="textarea-edit-lyrics"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tip: Use [Verse], [Chorus], [Bridge] tags to structure your song
+                    </p>
+                  </div>
+
+                  {lyricsPreview.description && (
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground italic">
+                        "{lyricsPreview.description}"
+                      </p>
+                    </div>
+                  )}
+
+                  {(songWithLyricsMutation.isPending) && (
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                          <div className="text-center">
+                            <p className="font-semibold text-lg">Creating Your Song...</p>
+                            <p className="text-sm text-muted-foreground">
+                              {songGenerationTime < 30 
+                                ? "Sending lyrics to the music studio"
+                                : songGenerationTime < 90
+                                ? "Creating music and vocals... This may take 1-3 minutes"
+                                : songGenerationTime < 180
+                                ? "Still working... Almost there!"
+                                : "Taking longer than usual... Please be patient"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Time elapsed</span>
+                            <span className="font-medium">{Math.floor(songGenerationTime / 60)}:{(songGenerationTime % 60).toString().padStart(2, '0')}</span>
+                          </div>
+                          <Progress value={Math.min((songGenerationTime / 180) * 100, 95)} className="h-2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </CardContent>
+                <CardFooter className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    onClick={onBackToForm}
+                    disabled={songWithLyricsMutation.isPending}
+                    data-testid="button-back-to-form"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onRegenerateLyrics}
+                    disabled={lyricsPreviewMutation.isPending || songWithLyricsMutation.isPending}
+                    data-testid="button-regenerate-lyrics"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${lyricsPreviewMutation.isPending ? 'animate-spin' : ''}`} />
+                    {lyricsPreviewMutation.isPending ? 'Regenerating...' : 'Regenerate Lyrics'}
+                  </Button>
+                  <Button
+                    onClick={onCreateSongWithLyrics}
+                    disabled={songWithLyricsMutation.isPending || !editedLyrics || !editedTitle}
+                    className="flex-1"
+                    data-testid="button-create-song"
+                  >
+                    {songWithLyricsMutation.isPending ? (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                        Creating Song...
+                      </>
+                    ) : (
+                      <>
+                        <Music className="w-4 h-4 mr-2" />
+                        Create Song with These Lyrics
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
             ) : (
               <Card>
                 <CardHeader>
@@ -432,7 +668,7 @@ export default function CreatePage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...songForm}>
-                    <form onSubmit={songForm.handleSubmit(onSongSubmit)} className="space-y-6">
+                    <form onSubmit={songForm.handleSubmit(onGenerateLyrics)} className="space-y-6">
                       <FormField
                         control={songForm.control}
                         name="lovedOneId"
@@ -573,45 +809,32 @@ export default function CreatePage() {
                         )}
                       />
 
-                      {songMutation.isPending && (
+                      {lyricsPreviewMutation.isPending && (
                         <Card className="bg-primary/5 border-primary/20">
-                          <CardContent className="pt-6 space-y-4">
+                          <CardContent className="pt-6">
                             <div className="flex items-center justify-center gap-3">
                               <Loader2 className="w-6 h-6 animate-spin text-primary" />
                               <div className="text-center">
-                                <p className="font-semibold text-lg">Composing Your Song...</p>
+                                <p className="font-semibold text-lg">Writing Lyrics...</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {songGenerationTime < 30 
-                                    ? "AI is writing beautiful lyrics for you"
-                                    : songGenerationTime < 90
-                                    ? "Creating music and vocals... This may take 1-3 minutes"
-                                    : songGenerationTime < 180
-                                    ? "Still working... Almost there!"
-                                    : "Taking longer than usual... Please be patient"}
+                                  AI is crafting personalized lyrics for you
                                 </p>
                               </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Time elapsed</span>
-                                <span className="font-medium">{Math.floor(songGenerationTime / 60)}:{(songGenerationTime % 60).toString().padStart(2, '0')}</span>
-                              </div>
-                              <Progress value={Math.min((songGenerationTime / 180) * 100, 95)} className="h-2" />
                             </div>
                           </CardContent>
                         </Card>
                       )}
 
-                      <Button type="submit" className="w-full" disabled={songMutation.isPending} data-testid="button-generate-song">
-                        {songMutation.isPending ? (
+                      <Button type="submit" className="w-full" disabled={lyricsPreviewMutation.isPending} data-testid="button-generate-lyrics">
+                        {lyricsPreviewMutation.isPending ? (
                           <>
                             <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                            Creating Magic...
+                            Generating Lyrics...
                           </>
                         ) : (
                           <>
-                            <Music className="w-4 h-4 mr-2" />
-                            Generate Song
+                            <Edit className="w-4 h-4 mr-2" />
+                            Generate Lyrics Preview
                           </>
                         )}
                       </Button>
