@@ -667,6 +667,20 @@ export default function CreatePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border/50 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Music className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Song Length:</span> Each song is approximately 45 seconds long with full vocals and music.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Loader2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Generation Time:</span> Songs take 1-3 minutes to create. Please be patient while our AI composes your unique track.
+                      </p>
+                    </div>
+                  </div>
                   <Form {...songForm}>
                     <form onSubmit={songForm.handleSubmit(onGenerateLyrics)} className="space-y-6">
                       <FormField
