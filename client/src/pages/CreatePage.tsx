@@ -797,6 +797,8 @@ export default function CreatePage() {
                                   <SelectItem value="r&b">R&B</SelectItem>
                                   <SelectItem value="rap">Rap</SelectItem>
                                   <SelectItem value="ballad">Ballad</SelectItem>
+                                  <SelectItem value="gospel">Gospel</SelectItem>
+                                  <SelectItem value="christmas">Christmas</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
