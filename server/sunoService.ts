@@ -206,7 +206,7 @@ function getDetailedStyle(genre: string, tone: string): string {
   // that might confuse the AI (like "heartfelt" which can sound country)
   const genreStyles: Record<string, string> = {
     'gospel': 'gospel choir, church organ, spiritual, uplifting',
-    'black-gospel': 'traditional Black gospel, African American gospel choir, shouting, clapping, Hammond B3',
+    'black-gospel': 'BLACK GOSPEL CHOIR, female African American vocals, 12/8 worship groove, call and response, Hammond B3, tambourine, praise break',
     'christmas': 'Christmas carol, holiday bells, festive choir',
     'pop': `${tone} pop, catchy, modern`,
     'rock': `${tone} rock, electric guitar, drums`,
