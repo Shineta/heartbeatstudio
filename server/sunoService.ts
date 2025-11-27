@@ -26,7 +26,7 @@ interface SunoTaskResponse {
   msg: string;
   data: {
     taskId: string;
-    status: 'SUCCESS' | 'GENERATING' | 'FAILED' | 'WAITING' | 'IN_QUEUE' | 'CREATED' | 'TEXT_SUCCESS' | 'FIRST_SUCCESS' | 'PENDING';
+    status: 'SUCCESS' | 'GENERATING' | 'FAILED' | 'WAITING' | 'IN_QUEUE' | 'CREATED' | 'TEXT_SUCCESS' | 'FIRST_SUCCESS' | 'PENDING' | 'GENERATE_AUDIO_FAILED';
     response?: {
       sunoData: Array<{
         id: string;
@@ -39,6 +39,7 @@ interface SunoTaskResponse {
       }>;
     };
     errorMessage?: string;
+    errorCode?: number;
   };
 }
 
@@ -95,7 +96,7 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
       }
     }
     
-    if (status === 'FAILED') {
+    if (status === 'FAILED' || status === 'GENERATE_AUDIO_FAILED') {
       console.error(`[Suno] Song generation failed: ${errorMessage}`);
       throw new Error(errorMessage || 'Song generation failed');
     }
@@ -198,17 +199,18 @@ async function concatenateClips(clipIds: string[]): Promise<string> {
 }
 
 // Map genres to more descriptive style strings for better AI music generation
+// Note: Suno has a tag length limit, so keep styles concise
 function getDetailedStyle(genre: string, tone: string): string {
   const genreStyles: Record<string, string> = {
-    'gospel': 'traditional gospel, church choir, organ, soulful vocals, inspirational',
-    'black-gospel': 'Black gospel, traditional African American gospel, The Clark Sisters style, powerful harmonies, Hammond B3 organ, soulful melismatic vocals, choir, hand claps, praise and worship, uplifting spiritual',
-    'christmas': 'Christmas holiday music, festive, joyful, bells, winter wonderland',
-    'pop': 'modern pop, catchy melody, radio-friendly',
-    'rock': 'rock music, electric guitar, drums, energetic',
-    'country': 'country music, acoustic guitar, storytelling',
-    'r&b': 'R&B, rhythm and blues, smooth vocals, soulful',
-    'rap': 'hip hop, rap, rhythmic flow, beats',
-    'ballad': 'emotional ballad, slow tempo, heartfelt vocals, piano'
+    'gospel': 'gospel, choir, organ, soulful',
+    'black-gospel': 'Black gospel, soulful choir, Hammond organ, powerful vocals',
+    'christmas': 'Christmas, festive, joyful, holiday',
+    'pop': 'pop, catchy, radio-friendly',
+    'rock': 'rock, electric guitar, energetic',
+    'country': 'country, acoustic guitar',
+    'r&b': 'R&B, smooth, soulful',
+    'rap': 'hip hop, rap, beats',
+    'ballad': 'ballad, slow, piano, emotional'
   };
   
   const baseStyle = genreStyles[genre] || genreStyles['pop'];
