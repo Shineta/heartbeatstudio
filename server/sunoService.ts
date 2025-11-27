@@ -197,6 +197,24 @@ async function concatenateClips(clipIds: string[]): Promise<string> {
   return finalTrack.audioUrl;
 }
 
+// Map genres to more descriptive style strings for better AI music generation
+function getDetailedStyle(genre: string, tone: string): string {
+  const genreStyles: Record<string, string> = {
+    'gospel': 'traditional gospel, church choir, organ, soulful vocals, inspirational',
+    'black-gospel': 'Black gospel, traditional African American gospel, The Clark Sisters style, powerful harmonies, Hammond B3 organ, soulful melismatic vocals, choir, hand claps, praise and worship, uplifting spiritual',
+    'christmas': 'Christmas holiday music, festive, joyful, bells, winter wonderland',
+    'pop': 'modern pop, catchy melody, radio-friendly',
+    'rock': 'rock music, electric guitar, drums, energetic',
+    'country': 'country music, acoustic guitar, storytelling',
+    'r&b': 'R&B, rhythm and blues, smooth vocals, soulful',
+    'rap': 'hip hop, rap, rhythmic flow, beats',
+    'ballad': 'emotional ballad, slow tempo, heartfelt vocals, piano'
+  };
+  
+  const baseStyle = genreStyles[genre] || genreStyles['pop'];
+  return `${tone}, ${baseStyle}`;
+}
+
 // Generate song with provided lyrics (no OpenAI lyrics generation) - Extended version (~3 minutes)
 export async function generateSongWithLyrics(params: {
   title: string;
@@ -213,7 +231,8 @@ export async function generateSongWithLyrics(params: {
       ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
       : 'https://example.com/callback';
     
-    const style = `${params.tone} ${params.genre || 'pop'}`;
+    const style = getDetailedStyle(params.genre || 'pop', params.tone);
+    console.log(`[Suno] Using style: ${style}`);
     
     // Step 1: Generate initial clip (uses V4 for longer initial output)
     console.log(`[Suno] Starting extended song generation (~3 minutes) for: ${params.title}`);

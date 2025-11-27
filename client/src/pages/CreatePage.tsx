@@ -798,6 +798,7 @@ export default function CreatePage() {
                                   <SelectItem value="rap">Rap</SelectItem>
                                   <SelectItem value="ballad">Ballad</SelectItem>
                                   <SelectItem value="gospel">Gospel</SelectItem>
+                                  <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
                                   <SelectItem value="christmas">Christmas</SelectItem>
                                 </SelectContent>
                               </Select>
