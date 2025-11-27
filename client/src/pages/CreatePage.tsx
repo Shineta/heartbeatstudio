@@ -40,6 +40,7 @@ const songFormSchema = z.object({
   occasion: z.string().min(1, "Occasion is required"),
   tone: z.string().min(1, "Tone is required"),
   genre: z.string().min(1, "Genre is required"),
+  additionalNotes: z.string().optional(),
 });
 
 export default function CreatePage() {
@@ -76,6 +77,7 @@ export default function CreatePage() {
       occasion: "",
       tone: "sweet",
       genre: "pop",
+      additionalNotes: "",
     },
   });
 
@@ -818,6 +820,28 @@ export default function CreatePage() {
                                 </SelectContent>
                               </Select>
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={songForm.control}
+                        name="additionalNotes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Additional Notes (optional)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Add any special details to make your song unique. For example: 'This song is for a Christmas night celebration' or 'She just won a basketball game' or 'He recently lost his grandmother'"
+                                className="min-h-[100px] resize-none"
+                                {...field}
+                                data-testid="textarea-song-notes"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Share specific moments, achievements, or situations to personalize the lyrics
+                            </p>
                             <FormMessage />
                           </FormItem>
                         )}

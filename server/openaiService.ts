@@ -73,12 +73,14 @@ export async function generateSongLyrics(params: {
   genre?: string;
   interests?: string;
   insideJokes?: string;
+  additionalNotes?: string;
 }): Promise<{ lyrics: string; title: string; description: string }> {
   const prompt = `Write ${params.tone} song lyrics (30-60 seconds when sung) for ${params.recipientName}, my ${params.relationship}.
 ${params.occasion ? `Occasion: ${params.occasion}` : ''}
 ${params.genre ? `Genre: ${params.genre}` : ''}
 ${params.interests ? `Their interests: ${params.interests}` : ''}
 ${params.insideJokes ? `Inside jokes: ${params.insideJokes}` : ''}
+${params.additionalNotes ? `Special context: ${params.additionalNotes}` : ''}
 
 Create personalized, heartfelt lyrics with:
 - A catchy title (3-5 words)
@@ -86,6 +88,7 @@ Create personalized, heartfelt lyrics with:
 - Personal touches that celebrate them
 - ${params.tone} and ${params.genre || 'upbeat'} style
 - A brief description of the song's vibe
+${params.additionalNotes ? `- Incorporate the special context/situation mentioned above` : ''}
 
 Return as JSON with 'lyrics', 'title', and 'description' fields.`;
 

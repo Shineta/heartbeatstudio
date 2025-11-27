@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate Lyrics Preview Only (fast, no song creation)
   app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { lovedOneId, tone, genre, occasion, recipientName, relationship } = req.body;
+      const { lovedOneId, tone, genre, occasion, recipientName, relationship, additionalNotes } = req.body;
       
       let lovedOne;
       if (lovedOneId) {
@@ -381,6 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre: genre || "pop",
         interests: lovedOne?.interests || undefined,
         insideJokes: lovedOne?.insideJokes || undefined,
+        additionalNotes: additionalNotes || undefined,
       });
 
       res.json(lyrics);
