@@ -200,21 +200,28 @@ async function concatenateClips(clipIds: string[]): Promise<string> {
 
 // Map genres to more descriptive style strings for better AI music generation
 // Note: Suno has a tag length limit, so keep styles concise
+// Genre comes FIRST to ensure it's the dominant style influence
 function getDetailedStyle(genre: string, tone: string): string {
+  // For gospel genres, we use very specific tags without mixing in generic tones
+  // that might confuse the AI (like "heartfelt" which can sound country)
   const genreStyles: Record<string, string> = {
-    'gospel': 'gospel, choir, organ, soulful',
-    'black-gospel': 'Black gospel, soulful choir, Hammond organ, powerful vocals',
-    'christmas': 'Christmas, festive, joyful, holiday',
-    'pop': 'pop, catchy, radio-friendly',
-    'rock': 'rock, electric guitar, energetic',
-    'country': 'country, acoustic guitar',
-    'r&b': 'R&B, smooth, soulful',
-    'rap': 'hip hop, rap, beats',
-    'ballad': 'ballad, slow, piano, emotional'
+    'gospel': 'gospel choir, church organ, spiritual, uplifting',
+    'black-gospel': 'traditional Black gospel, African American gospel choir, shouting, clapping, Hammond B3',
+    'christmas': 'Christmas carol, holiday bells, festive choir',
+    'pop': `${tone} pop, catchy, modern`,
+    'rock': `${tone} rock, electric guitar, drums`,
+    'country': `${tone} country, acoustic guitar, Nashville`,
+    'r&b': `${tone} R&B, smooth, neo-soul`,
+    'rap': `${tone} hip hop, rap, 808 beats`,
+    'ballad': `${tone} ballad, piano, emotional, slow`
   };
   
-  const baseStyle = genreStyles[genre] || genreStyles['pop'];
-  return `${tone}, ${baseStyle}`;
+  // For gospel genres, don't mix in the tone as it can override the gospel sound
+  if (genre === 'gospel' || genre === 'black-gospel') {
+    return genreStyles[genre];
+  }
+  
+  return genreStyles[genre] || `${tone} pop, catchy`;
 }
 
 // Generate song with provided lyrics (no OpenAI lyrics generation) - Extended version (~3 minutes)
