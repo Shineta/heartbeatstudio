@@ -230,6 +230,7 @@ export async function generateSongWithLyrics(params: {
   lyrics: string;
   tone: string;
   genre?: string;
+  additionalNotes?: string;
 }): Promise<{ audioUrl: string; lyrics: string; title: string; coverImage?: string }> {
   if (!SUNO_API_KEY) {
     throw new Error('SUNO_API_KEY is not configured. Please add it to Replit Secrets.');
@@ -240,8 +241,19 @@ export async function generateSongWithLyrics(params: {
       ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
       : 'https://example.com/callback';
     
-    const style = getDetailedStyle(params.genre || 'pop', params.tone);
-    console.log(`[Suno] Using style: ${style}`);
+    // Check if additional notes contain style override (look for "style:" prefix)
+    let style: string;
+    const styleMatch = params.additionalNotes?.match(/style:\s*(.+?)(?:\n|$)/i);
+    
+    if (styleMatch && styleMatch[1]) {
+      // Use the custom style from notes, trim to avoid tag length issues
+      style = styleMatch[1].trim().substring(0, 100);
+      console.log(`[Suno] Using CUSTOM style from notes: ${style}`);
+    } else {
+      // Use detailed style based on genre
+      style = getDetailedStyle(params.genre || 'pop', params.tone);
+      console.log(`[Suno] Using auto-generated style: ${style}`);
+    }
     
     // Step 1: Generate initial clip (uses V4 for longer initial output)
     console.log(`[Suno] Starting extended song generation (~3 minutes) for: ${params.title}`);
