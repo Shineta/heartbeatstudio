@@ -42,6 +42,14 @@ interface SunoTaskResponse {
   };
 }
 
+interface SunoConcatResponse {
+  code: number;
+  msg: string;
+  data: {
+    taskId: string;
+  };
+}
+
 async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTaskResponse['data']['response']> {
   let lastStatus: string = 'UNKNOWN';
   let lastError: string | undefined;
@@ -98,7 +106,98 @@ async function pollTaskStatus(taskId: string, maxAttempts = 90): Promise<SunoTas
   throw new Error(timeoutMessage);
 }
 
-// Generate song with provided lyrics (no OpenAI lyrics generation)
+async function extendSong(params: {
+  audioId: string;
+  continueAt: number;
+  prompt: string;
+  style: string;
+  title: string;
+}): Promise<{ audioId: string; audioUrl: string; duration: number }> {
+  console.log(`[Suno Extend] Starting extension from ${params.continueAt}s for audioId: ${params.audioId}`);
+  
+  const callbackUrl = process.env.REPL_SLUG 
+    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
+    : 'https://example.com/callback';
+
+  const response = await axios.post<SunoGenerateResponse>(
+    `${SUNO_API_BASE_URL}/api/v1/generate/extend`,
+    {
+      audioId: params.audioId,
+      model: 'V4',
+      continueAt: params.continueAt,
+      prompt: params.prompt,
+      style: params.style,
+      title: params.title,
+      defaultParamFlag: true,
+      callBackUrl: callbackUrl
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${SUNO_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (response.data.code !== 200) {
+    throw new Error(response.data.msg || 'Failed to extend song');
+  }
+
+  const taskId = response.data.data.taskId;
+  console.log(`[Suno Extend] Extension started with taskId: ${taskId}`);
+  
+  const result = await pollTaskStatus(taskId);
+  
+  if (!result || !result.sunoData || result.sunoData.length === 0) {
+    throw new Error('No audio data returned from Suno extend API');
+  }
+
+  const track = result.sunoData[0];
+  console.log(`[Suno Extend] Extension completed: ${track.duration}s`);
+  
+  return {
+    audioId: track.id,
+    audioUrl: track.audioUrl,
+    duration: track.duration
+  };
+}
+
+async function concatenateClips(clipIds: string[]): Promise<string> {
+  console.log(`[Suno Concat] Concatenating ${clipIds.length} clips:`, clipIds);
+  
+  const response = await axios.post<SunoConcatResponse>(
+    `${SUNO_API_BASE_URL}/api/v1/generate/concat`,
+    {
+      clipId: clipIds[0],
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${SUNO_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (response.data.code !== 200) {
+    throw new Error(response.data.msg || 'Failed to concatenate clips');
+  }
+
+  const taskId = response.data.data.taskId;
+  console.log(`[Suno Concat] Concatenation started with taskId: ${taskId}`);
+  
+  const result = await pollTaskStatus(taskId, 60);
+  
+  if (!result || !result.sunoData || result.sunoData.length === 0) {
+    throw new Error('No audio data returned from Suno concat API');
+  }
+
+  const finalTrack = result.sunoData[0];
+  console.log(`[Suno Concat] Final song duration: ${finalTrack.duration}s`);
+  
+  return finalTrack.audioUrl;
+}
+
+// Generate song with provided lyrics (no OpenAI lyrics generation) - Extended version (~3 minutes)
 export async function generateSongWithLyrics(params: {
   title: string;
   lyrics: string;
@@ -113,16 +212,21 @@ export async function generateSongWithLyrics(params: {
     const callbackUrl = process.env.REPL_SLUG 
       ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
       : 'https://example.com/callback';
-      
+    
+    const style = `${params.tone} ${params.genre || 'pop'}`;
+    
+    // Step 1: Generate initial clip (uses V4 for longer initial output)
+    console.log(`[Suno] Starting extended song generation (~3 minutes) for: ${params.title}`);
+    
     const response = await axios.post<SunoGenerateResponse>(
       `${SUNO_API_BASE_URL}/api/v1/generate`,
       {
         prompt: params.lyrics,
-        style: `${params.tone} ${params.genre || 'pop'}`,
+        style: style,
         title: params.title,
         customMode: true,
         instrumental: false,
-        model: 'V4_5PLUS',
+        model: 'V4',
         callBackUrl: callbackUrl
       },
       {
@@ -138,21 +242,76 @@ export async function generateSongWithLyrics(params: {
     }
 
     const taskId = response.data.data.taskId;
-    console.log(`Song generation (with custom lyrics) started with taskId: ${taskId}`);
+    console.log(`[Suno] Initial clip generation started with taskId: ${taskId}`);
     
-    const result = await pollTaskStatus(taskId);
+    const initialResult = await pollTaskStatus(taskId);
     
-    if (!result || !result.sunoData || result.sunoData.length === 0) {
+    if (!initialResult || !initialResult.sunoData || initialResult.sunoData.length === 0) {
       throw new Error('No audio data returned from Suno API');
     }
 
-    const firstTrack = result.sunoData[0];
+    const initialTrack = initialResult.sunoData[0];
+    const initialDuration = initialTrack.duration || 60;
+    console.log(`[Suno] Initial clip completed: ${initialDuration}s, ID: ${initialTrack.id}`);
+    
+    // Target: ~180 seconds (3 minutes)
+    const targetDuration = 180;
+    let currentDuration = initialDuration;
+    let currentAudioId = initialTrack.id;
+    let clipIds = [initialTrack.id];
+    let extensionCount = 0;
+    const maxExtensions = 3;
+    
+    // Step 2: Extend until we reach target duration
+    while (currentDuration < targetDuration && extensionCount < maxExtensions) {
+      extensionCount++;
+      const continueAt = Math.max(currentDuration - 10, 30);
+      
+      console.log(`[Suno] Extension ${extensionCount}: Current duration ${currentDuration}s, continuing from ${continueAt}s`);
+      
+      try {
+        const extension = await extendSong({
+          audioId: currentAudioId,
+          continueAt: continueAt,
+          prompt: `Continue the song with the same style and energy. ${params.lyrics.slice(0, 200)}...`,
+          style: style,
+          title: `${params.title} Part ${extensionCount + 1}`
+        });
+        
+        currentAudioId = extension.audioId;
+        currentDuration += extension.duration - (currentDuration - continueAt);
+        clipIds.push(extension.audioId);
+        
+        console.log(`[Suno] Extension ${extensionCount} completed. New total duration: ~${currentDuration}s`);
+      } catch (extendError: any) {
+        console.error(`[Suno] Extension ${extensionCount} failed:`, extendError.message);
+        break;
+      }
+    }
+    
+    // Step 3: Get final audio URL
+    let finalAudioUrl = initialTrack.audioUrl;
+    
+    if (clipIds.length > 1) {
+      try {
+        console.log(`[Suno] Concatenating ${clipIds.length} clips into final song...`);
+        finalAudioUrl = await concatenateClips(clipIds);
+      } catch (concatError: any) {
+        console.error(`[Suno] Concatenation failed, using last extension:`, concatError.message);
+        const lastResult = await pollTaskStatus(taskId);
+        if (lastResult?.sunoData?.[0]?.audioUrl) {
+          finalAudioUrl = lastResult.sunoData[0].audioUrl;
+        }
+      }
+    }
+    
+    console.log(`[Suno] Extended song generation completed! Final URL ready.`);
     
     return {
-      audioUrl: firstTrack.audioUrl,
+      audioUrl: finalAudioUrl,
       lyrics: params.lyrics,
       title: params.title,
-      coverImage: firstTrack.imageUrl
+      coverImage: initialTrack.imageUrl
     };
   } catch (error: any) {
     console.error('Suno API error:', error.response?.data || error.message);
@@ -189,65 +348,11 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
     insideJokes: params.insideJokes,
   });
 
-  // Use the generated lyrics as the prompt for Suno
-  const prompt = songLyrics.lyrics;
-
-  try {
-    const callbackUrl = process.env.REPL_SLUG 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/suno-callback`
-      : 'https://example.com/callback';
-      
-    const response = await axios.post<SunoGenerateResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/generate`,
-      {
-        prompt,
-        style: `${params.tone} ${params.genre || 'pop'}`,
-        title: songLyrics.title,
-        customMode: true,
-        instrumental: false,
-        model: 'V4_5PLUS',
-        callBackUrl: callbackUrl
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${SUNO_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    if (response.data.code !== 200) {
-      throw new Error(response.data.msg || 'Failed to generate song');
-    }
-
-    const taskId = response.data.data.taskId;
-    console.log(`Song generation started with taskId: ${taskId}`);
-    
-    const result = await pollTaskStatus(taskId);
-    
-    if (!result || !result.sunoData || result.sunoData.length === 0) {
-      throw new Error('No audio data returned from Suno API');
-    }
-
-    const firstTrack = result.sunoData[0];
-    
-    return {
-      audioUrl: firstTrack.audioUrl,
-      lyrics: songLyrics.lyrics,
-      title: songLyrics.title,
-      coverImage: firstTrack.imageUrl
-    };
-  } catch (error: any) {
-    console.error('Suno API error:', error.response?.data || error.message);
-    
-    if (error.response?.status === 401) {
-      throw new Error('Invalid Suno API key. Please check your SUNO_API_KEY in Replit Secrets.');
-    }
-    
-    if (error.response?.status === 429) {
-      throw new Error('Insufficient credits or rate limit exceeded.');
-    }
-
-    throw new Error(error.response?.data?.msg || error.message || 'Failed to generate song with Suno API');
-  }
+  // Use generateSongWithLyrics for extended song generation
+  return generateSongWithLyrics({
+    title: songLyrics.title,
+    lyrics: songLyrics.lyrics,
+    tone: params.tone,
+    genre: params.genre,
+  });
 }

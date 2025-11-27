@@ -595,15 +595,17 @@ export default function CreatePage() {
                         <div className="flex items-center justify-center gap-3">
                           <Loader2 className="w-6 h-6 animate-spin text-primary" />
                           <div className="text-center">
-                            <p className="font-semibold text-lg">Creating Your Song...</p>
+                            <p className="font-semibold text-lg">Creating Your 3-Minute Song...</p>
                             <p className="text-sm text-muted-foreground">
-                              {songGenerationTime < 30 
-                                ? "Sending lyrics to the music studio"
-                                : songGenerationTime < 90
-                                ? "Creating music and vocals... This may take 1-3 minutes"
+                              {songGenerationTime < 60 
+                                ? "Starting the music studio..."
                                 : songGenerationTime < 180
-                                ? "Still working... Almost there!"
-                                : "Taking longer than usual... Please be patient"}
+                                ? "Creating initial track with vocals and music..."
+                                : songGenerationTime < 360
+                                ? "Extending song to full length... This takes time for quality!"
+                                : songGenerationTime < 540
+                                ? "Almost there! Finalizing your 3-minute masterpiece..."
+                                : "Taking longer than usual... Please be patient, great music takes time!"}
                             </p>
                           </div>
                         </div>
@@ -612,8 +614,11 @@ export default function CreatePage() {
                             <span className="text-muted-foreground">Time elapsed</span>
                             <span className="font-medium">{Math.floor(songGenerationTime / 60)}:{(songGenerationTime % 60).toString().padStart(2, '0')}</span>
                           </div>
-                          <Progress value={Math.min((songGenerationTime / 180) * 100, 95)} className="h-2" />
+                          <Progress value={Math.min((songGenerationTime / 600) * 100, 95)} className="h-2" />
                         </div>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Extended songs (3 min) typically take 5-10 minutes to generate
+                        </p>
                       </CardContent>
                     </Card>
                   )}
@@ -673,13 +678,13 @@ export default function CreatePage() {
                     <div className="flex items-start gap-2">
                       <Music className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                       <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Song Length:</span> Each song is approximately 45 seconds long with full vocals and music.
+                        <span className="font-medium text-foreground">Song Length:</span> Each song is approximately 3 minutes long with full vocals and music.
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <Loader2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                       <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Generation Time:</span> Songs take 1-3 minutes to create. Please be patient while our AI composes your unique track.
+                        <span className="font-medium text-foreground">Generation Time:</span> Songs take 5-10 minutes to create due to the extended length. Please be patient while our AI composes your unique track.
                       </p>
                     </div>
                   </div>
