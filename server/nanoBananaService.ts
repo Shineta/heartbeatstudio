@@ -16,8 +16,13 @@ interface NanoBananaTaskResponse {
   msg: string;
   data: {
     taskId: string;
-    status: number;  // 0=GENERATING, 1=SUCCESS, 2=CREATE_TASK_FAILED, 3=GENERATE_FAILED
-    imageUrls?: string[];
+    successFlag: number;  // 0=GENERATING, 1=SUCCESS, 2=CREATE_TASK_FAILED, 3=GENERATE_FAILED
+    response?: {
+      resultImageUrl?: string;
+      resultImageUrls?: string[];
+    } | null;
+    errorCode?: number | null;
+    errorMessage?: string | null;
   };
 }
 
@@ -100,25 +105,28 @@ async function pollTaskStatus(taskId: string, maxAttempts: number = 60): Promise
         throw new Error(msg || 'Failed to query task status');
       }
 
-      const { status, imageUrls } = data;
+      const { successFlag, response: taskResponse, errorMessage } = data;
 
-      console.log(`[NanoBanana Poll ${attempt}/${maxAttempts}] Status: ${status}`);
+      console.log(`[NanoBanana Poll ${attempt}/${maxAttempts}] Status: ${successFlag}`);
 
-      switch (status) {
+      switch (successFlag) {
         case 0:
           // Still generating
           continue;
         case 1:
-          // Success
-          if (imageUrls && imageUrls.length > 0) {
-            console.log(`[NanoBanana] Generation completed with ${imageUrls.length} images!`);
-            return imageUrls;
+          // Success - check for images in response
+          if (taskResponse?.resultImageUrls && taskResponse.resultImageUrls.length > 0) {
+            console.log(`[NanoBanana] Generation completed with ${taskResponse.resultImageUrls.length} images!`);
+            return taskResponse.resultImageUrls;
+          } else if (taskResponse?.resultImageUrl) {
+            console.log(`[NanoBanana] Generation completed with 1 image!`);
+            return [taskResponse.resultImageUrl];
           }
           throw new Error('No image URL in response');
         case 2:
-          throw new Error('Failed to create task');
+          throw new Error(errorMessage || 'Failed to create task');
         case 3:
-          throw new Error('Image generation failed');
+          throw new Error(errorMessage || 'Image generation failed');
         default:
           // Unknown status, keep polling
           continue;
