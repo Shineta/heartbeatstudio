@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
+import { generateGreetingCard, generateAnimation } from "./nanoBananaService";
 import { sendMagicLinkEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
@@ -311,19 +312,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Card
+  // Generate AI Card (using Nano Banana API)
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion } = req.body;
+      const { lovedOneId, tone, occasion, style } = req.body;
       
       let lovedOne;
       if (lovedOneId) {
         lovedOne = await storage.getLovedOneById(lovedOneId);
       }
 
+      const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
+
       const cardContent = await generateCardContent({
-        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
+        recipientName,
         relationship: lovedOne?.relationship || req.body.relationship || "friend",
         occasion,
         tone: tone || "sweet",
@@ -331,17 +334,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         insideJokes: lovedOne?.insideJokes || undefined,
       });
 
-      const cardImageBase64 = await generateCardImage({
-        occasion,
-        tone: tone || "sweet",
-        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
-      });
-
-      const imageUrl = await objectStorageService.uploadBase64Image(
-        cardImageBase64,
-        `cards/${userId}`,
-        'card'
-      );
+      let imageUrl: string;
+      
+      if (process.env.NANO_BANANA_API_KEY) {
+        console.log('[Card] Using Nano Banana API for image generation');
+        const nanoBananaImageUrl = await generateGreetingCard({
+          recipientName,
+          occasion: occasion || "celebration",
+          message: cardContent.message,
+          style: style || `${tone || 'sweet'}, warm, celebratory`,
+        });
+        imageUrl = nanoBananaImageUrl;
+      } else {
+        console.log('[Card] Using OpenAI for image generation (Nano Banana API key not set)');
+        const cardImageBase64 = await generateCardImage({
+          occasion,
+          tone: tone || "sweet",
+          recipientName,
+        });
+        imageUrl = await objectStorageService.uploadBase64Image(
+          cardImageBase64,
+          `cards/${userId}`,
+          'card'
+        );
+      }
 
       const creation = await storage.createCreation({
         userId,
@@ -360,6 +376,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating card:", error);
       res.status(500).json({ message: error.message || "Failed to generate card" });
+    }
+  });
+
+  // Generate AI Animation (using Nano Banana API)
+  app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { lovedOneId, tone, occasion, style, description } = req.body;
+      
+      if (!process.env.NANO_BANANA_API_KEY) {
+        return res.status(400).json({ message: "Animation generation requires Nano Banana API key" });
+      }
+      
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
+
+      console.log('[Animation] Using Nano Banana API for animation generation');
+      const animationImageUrl = await generateAnimation({
+        recipientName,
+        occasion: occasion || "celebration",
+        style: style || `${tone || 'sweet'}, colorful, animated style`,
+        description,
+      });
+
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: 'animation',
+        tone: tone || 'sweet',
+        title: `Animation for ${recipientName}`,
+        content: description || `A celebration animation for ${occasion || 'a special occasion'}`,
+        imageUrl: animationImageUrl,
+      });
+      
+      const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
+
+      res.json(updatedCreation || creation);
+    } catch (error: any) {
+      console.error("Error generating animation:", error);
+      res.status(500).json({ message: error.message || "Failed to generate animation" });
     }
   });
 
