@@ -3,6 +3,9 @@ import axios from 'axios';
 const NANO_BANANA_API_KEY = process.env.NANO_BANANA_API_KEY;
 const NANO_BANANA_BASE_URL = 'https://api.nanobananaapi.ai/api/v1/nanobanana';
 
+// Use Pro endpoint for higher quality images
+const USE_PRO_MODEL = true;
+
 interface NanoBananaGenerateResponse {
   code: number;
   msg: string;
@@ -44,11 +47,13 @@ export async function generateImage(params: {
     ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/nanobanana-callback`
     : 'https://example.com/callback';
 
+  const endpoint = USE_PRO_MODEL ? 'generate-pro' : 'generate';
+  console.log(`[NanoBanana] Using ${USE_PRO_MODEL ? 'PRO' : 'standard'} model`);
   console.log(`[NanoBanana] Generating image with prompt: ${prompt.substring(0, 100)}...`);
 
   try {
     const response = await axios.post<NanoBananaGenerateResponse>(
-      `${NANO_BANANA_BASE_URL}/generate`,
+      `${NANO_BANANA_BASE_URL}/${endpoint}`,
       {
         prompt,
         type: imageUrls && imageUrls.length > 0 ? 'IMAGETOIAMGE' : 'TEXTTOIAMGE',
