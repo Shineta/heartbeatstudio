@@ -567,6 +567,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Lyrics Preview Only (Fast - no audio generation)
+  app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { lovedOneId, tone, genre, additionalNotes } = req.body;
+      
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
+
+      const songLyrics = await generateSongLyrics({
+        recipientName,
+        relationship: lovedOne?.relationship || req.body.relationship || "friend",
+        occasion: req.body.occasion,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
+        additionalNotes,
+      });
+
+      res.json({
+        title: songLyrics.title,
+        lyrics: songLyrics.lyrics,
+        genre: genre || "pop",
+        tone: tone || "sweet",
+      });
+    } catch (error: any) {
+      console.error("Error generating lyrics preview:", error);
+      res.status(500).json({ message: error.message || "Failed to generate lyrics" });
+    }
+  });
+
+  // Generate Song with Pre-written/Edited Lyrics
+  app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { lovedOneId, title, lyrics, tone, genre } = req.body;
+
+      if (!title || !lyrics) {
+        return res.status(400).json({ message: "Title and lyrics are required" });
+      }
+
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const { generateSong } = await import('./sunoService');
+
+      // Generate song with the provided lyrics
+      const songResult = await generateSong({
+        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
+        relationship: lovedOne?.relationship || "friend",
+        occasion: req.body.occasion,
+        tone: tone || "sweet",
+        genre: genre || "pop",
+        customLyrics: lyrics,
+        customTitle: title,
+      });
+
+      // Upload cover image if provided
+      let coverImageUrl = null;
+      if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
+        const coverResponse = await fetch(songResult.coverImage);
+        const coverBuffer = await coverResponse.arrayBuffer();
+        const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+        
+        coverImageUrl = await objectStorageService.uploadBase64Image(
+          coverBase64,
+          `songs/${userId}`,
+          'cover'
+        );
+      }
+
+      // Use the user's edited title and lyrics (not Suno's return which might differ)
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: 'song',
+        tone: tone || 'sweet',
+        genre: genre || 'pop',
+        title: title,  // Use user's edited title
+        content: lyrics,  // Use user's edited lyrics
+        imageUrl: coverImageUrl || null,
+        mediaUrl: songResult.audioUrl,
+      });
+      
+      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
+
+      res.json(updatedCreation || creation);
+    } catch (error: any) {
+      console.error("Error generating song with lyrics:", error);
+      res.status(500).json({ message: error.message || "Failed to generate song" });
+    }
+  });
+
   // Generate Song with OpenAI Only (Fallback - No Audio)
   app.post('/api/generate/song/openai-only', isAuthenticated, async (req: Request, res: Response) => {
     try {

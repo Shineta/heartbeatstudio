@@ -43,10 +43,20 @@ const songFormSchema = z.object({
   additionalNotes: z.string().optional(),
 });
 
+const animationFormSchema = z.object({
+  lovedOneId: z.string().optional(),
+  recipientName: z.string().min(1, "Name is required"),
+  occasion: z.string().min(1, "Occasion is required"),
+  tone: z.string().min(1, "Tone is required"),
+  style: z.string().optional(),
+  description: z.string().optional(),
+});
+
 export default function CreatePage() {
   const { toast } = useToast();
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
+  const [createdAnimation, setCreatedAnimation] = useState<Creation | null>(null);
   const [songGenerationTime, setSongGenerationTime] = useState(0);
   
   // Lyrics preview state
@@ -81,6 +91,17 @@ export default function CreatePage() {
     },
   });
 
+  const animationForm = useForm<z.infer<typeof animationFormSchema>>({
+    resolver: zodResolver(animationFormSchema),
+    defaultValues: {
+      recipientName: "",
+      occasion: "",
+      tone: "sweet",
+      style: "",
+      description: "",
+    },
+  });
+
   const cardMutation = useMutation({
     mutationFn: async (data: z.infer<typeof cardFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/card", data);
@@ -106,6 +127,36 @@ export default function CreatePage() {
       toast({
         title: "Error",
         description: "Failed to create card. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const animationMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof animationFormSchema>) => {
+      const res = await apiRequest("POST", "/api/generate/animation", data);
+      return await res.json() as Creation;
+    },
+    onSuccess: (data: Creation) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      setCreatedAnimation(data);
+      toast({ title: "Success", description: "Your animation has been created!" });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create animation. Please try again.",
         variant: "destructive",
       });
     },
@@ -240,6 +291,10 @@ export default function CreatePage() {
     cardMutation.mutate(data);
   };
 
+  const onAnimationSubmit = (data: z.infer<typeof animationFormSchema>) => {
+    animationMutation.mutate(data);
+  };
+
   // Generate lyrics preview first
   const onGenerateLyrics = (data: z.infer<typeof songFormSchema>) => {
     lyricsPreviewMutation.mutate(data);
@@ -308,10 +363,14 @@ export default function CreatePage() {
         </div>
 
         <Tabs defaultValue="card" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="card" data-testid="tab-card">
               <Mail className="w-4 h-4 mr-2" />
               Greeting Card
+            </TabsTrigger>
+            <TabsTrigger value="animation" data-testid="tab-animation">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Animation
             </TabsTrigger>
             <TabsTrigger value="song" data-testid="tab-song">
               <Music className="w-4 h-4 mr-2" />
@@ -488,6 +547,217 @@ export default function CreatePage() {
                           <>
                             <Heart className="w-4 h-4 mr-2 heartbeat" />
                             Generate Card
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="animation">
+            {createdAnimation ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{createdAnimation.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {createdAnimation.imageUrl && (
+                      <img
+                        src={createdAnimation.imageUrl}
+                        alt={createdAnimation.title || "Animation"}
+                        className="w-full rounded-md"
+                      />
+                    )}
+                    <p className="whitespace-pre-wrap">{createdAnimation.content}</p>
+                  </CardContent>
+                  <CardFooter className="flex gap-3">
+                    <Button onClick={() => setCreatedAnimation(null)} variant="outline" data-testid="button-create-another-animation">
+                      Create Another
+                    </Button>
+                    <Button onClick={() => {
+                      const shareLink = createdAnimation.shareableLink?.startsWith('/share/')
+                        ? createdAnimation.shareableLink
+                        : `/share/${createdAnimation.shareableLink}`;
+                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                      toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                    }} data-testid="button-share-animation">
+                      Share
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    AI Animation Creator
+                  </CardTitle>
+                  <CardDescription>
+                    Create a personalized celebration animation with AI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...animationForm}>
+                    <form onSubmit={animationForm.handleSubmit(onAnimationSubmit)} className="space-y-6">
+                      <FormField
+                        control={animationForm.control}
+                        name="lovedOneId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Select Loved One (optional)</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  const loved = lovedOnes.find(l => l.id === value);
+                                  if (loved) {
+                                    animationForm.setValue("recipientName", loved.name);
+                                  }
+                                }}
+                                value={field.value}
+                              >
+                                <SelectTrigger data-testid="select-animation-loved-one">
+                                  <SelectValue placeholder="Choose from your loved ones" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {lovedOnes.map((loved) => (
+                                    <SelectItem key={loved.id} value={loved.id}>
+                                      {loved.name} ({loved.relationship})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="recipientName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Recipient Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Sarah" {...field} data-testid="input-animation-recipient" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="occasion"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Occasion</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-animation-occasion">
+                                  <SelectValue placeholder="Select an occasion" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="birthday">Birthday</SelectItem>
+                                  <SelectItem value="anniversary">Anniversary</SelectItem>
+                                  <SelectItem value="graduation">Graduation</SelectItem>
+                                  <SelectItem value="wedding">Wedding</SelectItem>
+                                  <SelectItem value="new_baby">New Baby</SelectItem>
+                                  <SelectItem value="promotion">Promotion</SelectItem>
+                                  <SelectItem value="thank_you">Thank You</SelectItem>
+                                  <SelectItem value="congratulations">Congratulations</SelectItem>
+                                  <SelectItem value="holiday">Holiday</SelectItem>
+                                  <SelectItem value="just_because">Just Because</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="tone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tone</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-animation-tone">
+                                  <SelectValue placeholder="Select a tone" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="sweet">Sweet</SelectItem>
+                                  <SelectItem value="funny">Funny</SelectItem>
+                                  <SelectItem value="romantic">Romantic</SelectItem>
+                                  <SelectItem value="heartfelt">Heartfelt</SelectItem>
+                                  <SelectItem value="playful">Playful</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="style"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Animation Style (optional)</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-animation-style">
+                                  <SelectValue placeholder="Select a style" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cartoon">Cartoon</SelectItem>
+                                  <SelectItem value="anime">Anime</SelectItem>
+                                  <SelectItem value="3d">3D Rendered</SelectItem>
+                                  <SelectItem value="watercolor">Watercolor</SelectItem>
+                                  <SelectItem value="pixar">Pixar Style</SelectItem>
+                                  <SelectItem value="realistic">Realistic</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Scene Description (optional)</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe what you'd like in the animation (e.g., 'Balloons flying, confetti falling, a birthday cake with candles')"
+                                {...field}
+                                data-testid="input-animation-description"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit" className="w-full" disabled={animationMutation.isPending} data-testid="button-generate-animation">
+                        {animationMutation.isPending ? (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                            Creating Animation...
+                          </>
+                        ) : (
+                          <>
+                            <Heart className="w-4 h-4 mr-2 heartbeat" />
+                            Generate Animation
                           </>
                         )}
                       </Button>

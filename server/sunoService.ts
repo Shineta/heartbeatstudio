@@ -11,6 +11,8 @@ interface GenerateSongParams {
   genre?: string;
   interests?: string;
   insideJokes?: string;
+  customLyrics?: string;
+  customTitle?: string;
 }
 
 interface SunoGenerateResponse {
@@ -373,9 +375,18 @@ export async function generateSong(params: GenerateSongParams): Promise<{ audioU
     throw new Error('SUNO_API_KEY is not configured. Please add it to Replit Secrets.');
   }
 
-  const songTitle = `${params.occasion || 'Special Song'} for ${params.recipientName}`;
-  
-  // First, generate actual lyrics using OpenAI
+  // If custom lyrics provided, use them directly
+  if (params.customLyrics && params.customTitle) {
+    console.log(`[Suno] Using custom lyrics provided by user for: ${params.customTitle}`);
+    return generateSongWithLyrics({
+      title: params.customTitle,
+      lyrics: params.customLyrics,
+      tone: params.tone,
+      genre: params.genre,
+    });
+  }
+
+  // Otherwise, generate lyrics using OpenAI
   const { generateSongLyrics } = await import('./openaiService');
   
   const songLyrics = await generateSongLyrics({
