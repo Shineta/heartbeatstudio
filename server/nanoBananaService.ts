@@ -14,12 +14,11 @@ interface NanoBananaGenerateResponse {
 interface NanoBananaTaskResponse {
   code: number;
   msg: string;
-  successFlag: number;
-  response?: {
-    resultImageUrl: string;
-    resultImageUrls?: string[];
+  data: {
+    taskId: string;
+    status: number;  // 0=GENERATING, 1=SUCCESS, 2=CREATE_TASK_FAILED, 3=GENERATE_FAILED
+    imageUrls?: string[];
   };
-  errorMessage?: string;
 }
 
 type ImageSize = '1:1' | '9:16' | '16:9' | '3:4' | '4:3' | '3:2' | '2:3' | '5:4' | '4:5' | '21:9';
@@ -90,30 +89,42 @@ async function pollTaskStatus(taskId: string, maxAttempts: number = 60): Promise
         }
       );
 
-      const { successFlag, response: taskResponse, errorMessage } = response.data;
+      // Debug: log full response on first few attempts
+      if (attempt <= 3) {
+        console.log(`[NanoBanana Debug] Full response:`, JSON.stringify(response.data, null, 2));
+      }
 
-      console.log(`[NanoBanana Poll ${attempt}/${maxAttempts}] Status: ${successFlag}`);
+      const { code, msg, data } = response.data;
+      
+      if (code !== 200) {
+        throw new Error(msg || 'Failed to query task status');
+      }
 
-      switch (successFlag) {
+      const { status, imageUrls } = data;
+
+      console.log(`[NanoBanana Poll ${attempt}/${maxAttempts}] Status: ${status}`);
+
+      switch (status) {
         case 0:
+          // Still generating
           continue;
         case 1:
-          if (taskResponse?.resultImageUrls && taskResponse.resultImageUrls.length > 0) {
-            console.log('[NanoBanana] Generation completed with multiple images!');
-            return taskResponse.resultImageUrls;
-          } else if (taskResponse?.resultImageUrl) {
-            console.log('[NanoBanana] Generation completed!');
-            return [taskResponse.resultImageUrl];
+          // Success
+          if (imageUrls && imageUrls.length > 0) {
+            console.log(`[NanoBanana] Generation completed with ${imageUrls.length} images!`);
+            return imageUrls;
           }
           throw new Error('No image URL in response');
         case 2:
+          throw new Error('Failed to create task');
         case 3:
-          throw new Error(errorMessage || 'Image generation failed');
+          throw new Error('Image generation failed');
         default:
+          // Unknown status, keep polling
           continue;
       }
     } catch (error: any) {
-      if (error.message?.includes('generation failed') || error.message?.includes('No image URL')) {
+      if (error.message?.includes('generation failed') || error.message?.includes('No image URL') || error.message?.includes('Failed to create')) {
         throw error;
       }
       console.error(`[NanoBanana] Poll error at attempt ${attempt}:`, error.message);
