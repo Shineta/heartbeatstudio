@@ -142,6 +142,18 @@ async function pollTaskStatus(taskId: string, maxAttempts: number = 60): Promise
   throw new Error('Image generation timed out');
 }
 
+const styleDescriptions: Record<string, string> = {
+  watercolor: "soft watercolor painting style with flowing colors, gentle washes, and artistic brushstrokes",
+  minimalist: "clean minimalist design with simple shapes, lots of white space, and elegant typography",
+  vintage: "vintage retro style with aged textures, ornate borders, classic typography, and nostalgic colors",
+  modern: "contemporary modern design with bold geometric shapes, vibrant colors, and sleek typography",
+  floral: "beautiful floral design with flowers, leaves, botanical elements, and natural colors",
+  illustrated: "hand-drawn illustration style with charming sketches, doodles, and artistic details",
+  elegant: "sophisticated elegant design with gold accents, refined typography, and luxurious details",
+  whimsical: "playful whimsical style with fun characters, bright colors, and imaginative elements",
+  "photo-realistic": "photorealistic style with realistic textures, lighting, and 3D depth",
+};
+
 export async function generateGreetingCard(params: {
   recipientName: string;
   occasion: string;
@@ -150,10 +162,14 @@ export async function generateGreetingCard(params: {
 }): Promise<string> {
   const { recipientName, occasion, message, style } = params;
 
+  const styleDescription = style && styleDescriptions[style] 
+    ? styleDescriptions[style] 
+    : styleDescriptions.watercolor;
+
   const prompt = `Create a beautiful greeting card design for ${occasion}. 
 The card should include the message: "${message}"
 For: ${recipientName}
-Style: ${style || 'warm, celebratory, elegant design with decorative borders and festive elements'}
+Art Style: ${styleDescription}
 The text should be clearly visible and beautifully styled. High quality, professional greeting card design.`;
 
   const images = await generateImage({

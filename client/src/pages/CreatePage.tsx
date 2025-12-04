@@ -31,6 +31,7 @@ const cardFormSchema = z.object({
   relationship: z.string().min(1, "Relationship is required"),
   occasion: z.string().min(1, "Occasion is required"),
   tone: z.string().min(1, "Tone is required"),
+  style: z.string().min(1, "Style is required"),
 });
 
 const songFormSchema = z.object({
@@ -76,6 +77,7 @@ export default function CreatePage() {
       relationship: "",
       occasion: "",
       tone: "sweet",
+      style: "watercolor",
     },
   });
 
@@ -529,6 +531,35 @@ export default function CreatePage() {
                                   <SelectItem value="romantic">Romantic</SelectItem>
                                   <SelectItem value="heartfelt">Heartfelt</SelectItem>
                                   <SelectItem value="playful">Playful</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={cardForm.control}
+                        name="style"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Card Style</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-card-style">
+                                  <SelectValue placeholder="Select style" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="watercolor">Watercolor</SelectItem>
+                                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                                  <SelectItem value="vintage">Vintage</SelectItem>
+                                  <SelectItem value="modern">Modern</SelectItem>
+                                  <SelectItem value="floral">Floral</SelectItem>
+                                  <SelectItem value="illustrated">Illustrated</SelectItem>
+                                  <SelectItem value="elegant">Elegant</SelectItem>
+                                  <SelectItem value="whimsical">Whimsical</SelectItem>
+                                  <SelectItem value="photo-realistic">Photo Realistic</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
