@@ -51,17 +51,29 @@ export async function generateImage(params: {
   console.log(`[NanoBanana] Using ${USE_PRO_MODEL ? 'PRO' : 'standard'} model`);
   console.log(`[NanoBanana] Generating image with prompt: ${prompt.substring(0, 100)}...`);
 
+  // Build request body based on endpoint type
+  const requestBody: Record<string, any> = {
+    prompt,
+    numImages,
+    callBackUrl: callbackUrl,
+  };
+
+  if (USE_PRO_MODEL) {
+    // Pro model uses 'resolution' instead of 'image_size' and 'type'
+    requestBody.resolution = '2K'; // Options: 1K, 2K, 4K
+  } else {
+    // Standard model uses 'type' and 'image_size'
+    requestBody.type = imageUrls && imageUrls.length > 0 ? 'IMAGETOIAMGE' : 'TEXTTOIAMGE';
+    requestBody.image_size = imageSize;
+    if (imageUrls && imageUrls.length > 0) {
+      requestBody.imageUrls = imageUrls;
+    }
+  }
+
   try {
     const response = await axios.post<NanoBananaGenerateResponse>(
       `${NANO_BANANA_BASE_URL}/${endpoint}`,
-      {
-        prompt,
-        type: imageUrls && imageUrls.length > 0 ? 'IMAGETOIAMGE' : 'TEXTTOIAMGE',
-        numImages,
-        image_size: imageSize,
-        callBackUrl: callbackUrl,
-        imageUrls: imageUrls || undefined,
-      },
+      requestBody,
       {
         headers: {
           'Authorization': `Bearer ${NANO_BANANA_API_KEY}`,
