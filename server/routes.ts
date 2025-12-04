@@ -344,7 +344,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: cardContent.message,
           style: style || `${tone || 'sweet'}, warm, celebratory`,
         });
-        imageUrl = nanoBananaImageUrl;
+        
+        // Download the temporary image and upload to our storage
+        console.log('[Card] Downloading Nano Banana image and uploading to storage...');
+        const imageResponse = await fetch(nanoBananaImageUrl);
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+        
+        imageUrl = await objectStorageService.uploadBase64Image(
+          imageBase64,
+          `cards/${userId}`,
+          'card'
+        );
+        console.log('[Card] Image uploaded to storage:', imageUrl);
       } else {
         console.log('[Card] Using OpenAI for image generation (Nano Banana API key not set)');
         const cardImageBase64 = await generateCardImage({
@@ -397,12 +409,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
 
       console.log('[Animation] Using Nano Banana API for animation generation');
-      const animationImageUrl = await generateAnimation({
+      const nanoBananaImageUrl = await generateAnimation({
         recipientName,
         occasion: occasion || "celebration",
         style: style || `${tone || 'sweet'}, colorful, animated style`,
         description,
       });
+
+      // Download the temporary image and upload to our storage
+      console.log('[Animation] Downloading Nano Banana image and uploading to storage...');
+      const imageResponse = await fetch(nanoBananaImageUrl);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+      
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        imageBase64,
+        `animations/${userId}`,
+        'animation'
+      );
+      console.log('[Animation] Image uploaded to storage:', imageUrl);
 
       const creation = await storage.createCreation({
         userId,
@@ -411,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tone: tone || 'sweet',
         title: `Animation for ${recipientName}`,
         content: description || `A celebration animation for ${occasion || 'a special occasion'}`,
-        imageUrl: animationImageUrl,
+        imageUrl,
       });
       
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
