@@ -402,9 +402,12 @@ export default function CreatePage() {
                       Create Another
                     </Button>
                     <Button onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}${createdCard.shareableLink}`);
+                      const shareLink = createdCard.shareableLink?.startsWith('/share/')
+                        ? createdCard.shareableLink
+                        : `/share/${createdCard.shareableLink}`;
+                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
                       toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                    }}>
+                    }} data-testid="button-share-card">
                       Share
                     </Button>
                   </CardFooter>
