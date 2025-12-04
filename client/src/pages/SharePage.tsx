@@ -124,11 +124,11 @@ export default function SharePage() {
           {/* Creation Card */}
           <Card className="overflow-hidden">
             {creation.imageUrl && (
-              <div className="w-full h-64 overflow-hidden">
+              <div className="w-full">
                 <img 
                   src={creation.imageUrl} 
                   alt={creation.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto"
                 />
               </div>
             )}
