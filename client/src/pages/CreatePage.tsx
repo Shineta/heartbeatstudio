@@ -509,6 +509,7 @@ export default function CreatePage() {
                                   <SelectItem value="congratulations">Congratulations</SelectItem>
                                   <SelectItem value="love">Love</SelectItem>
                                   <SelectItem value="friendship">Friendship</SelectItem>
+                                  <SelectItem value="missing-you">Missing You</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -707,6 +708,7 @@ export default function CreatePage() {
                                   <SelectItem value="congratulations">Congratulations</SelectItem>
                                   <SelectItem value="holiday">Holiday</SelectItem>
                                   <SelectItem value="just_because">Just Because</SelectItem>
+                                  <SelectItem value="missing_you">Missing You</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -1076,6 +1078,7 @@ export default function CreatePage() {
                                   <SelectItem value="congratulations">Congratulations</SelectItem>
                                   <SelectItem value="love">Love</SelectItem>
                                   <SelectItem value="friendship">Friendship</SelectItem>
+                                  <SelectItem value="missing-you">Missing You</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
