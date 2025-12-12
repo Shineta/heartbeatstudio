@@ -1,71 +1,148 @@
-// From blueprint:javascript_openai_ai_integrations
-import OpenAI from "openai";
-import { Buffer } from "node:buffer";
+// // From blueprint:javascript_openai_ai_integrations
+// import OpenAI from "openai";
+// import { Buffer } from "node:buffer";
 
-// This is using Replit's AI Integrations service
+// // This is using Replit's AI Integrations service
+// const openai = new OpenAI({
+//   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+//   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+// });
+
+// export async function generateCardContent(params: {
+//   recipientName: string;
+//   relationship: string;
+//   occasion?: string;
+//   tone: string;
+//   interests?: string;
+//   insideJokes?: string;
+// }): Promise<{ message: string; title: string }> {
+//   const prompt = `Create a heartfelt ${params.tone} greeting card message for ${params.recipientName}, my ${params.relationship}.
+// ${params.occasion ? `Occasion: ${params.occasion}` : ''}
+// ${params.interests ? `Their interests: ${params.interests}` : ''}
+// ${params.insideJokes ? `Inside jokes we share: ${params.insideJokes}` : ''}
+
+// Generate a warm, personalized message (2-4 sentences) and a short title (3-5 words).
+// Return as JSON with 'message' and 'title' fields.`;
+
+//   const response = await openai.chat.completions.create({
+//     model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+//     messages: [{ role: "user", content: prompt }],
+//     response_format: { type: "json_object" },
+//     max_completion_tokens: 8192,
+//   });
+
+//   const content = JSON.parse(response.choices[0]?.message?.content || '{"message": "", "title": ""}');
+//   return content;
+// }
+
+// export async function generateCardImage(params: {
+//   recipientName: string;
+//   occasion?: string;
+//   tone: string;
+// }): Promise<string> {
+//   const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
+
+//   const response = await openai.images.generate({
+//     model: "gpt-image-1",
+//     prompt,
+//     size: "1024x1024",
+//   });
+
+//   const imageUrl = response.data?.[0]?.url;
+//   const b64Json = response.data?.[0]?.b64_json;
+
+//   if (b64Json) {
+//     return b64Json;
+//   }
+
+//   if (!imageUrl) {
+//     throw new Error("No image URL or b64_json returned from AI service");
+//   }
+
+//   const imageResponse = await fetch(imageUrl);
+//   const arrayBuffer = await imageResponse.arrayBuffer();
+//   const base64 = Buffer.from(arrayBuffer).toString('base64');
+//   return base64;
+// }
+
+// export async function generateSongLyrics(params: {
+//   recipientName: string;
+//   relationship: string;
+//   occasion?: string;
+//   tone: string;
+//   genre?: string;
+//   interests?: string;
+//   insideJokes?: string;
+//   additionalNotes?: string;
+// }): Promise<{ lyrics: string; title: string; description: string }> {
+//   const prompt = `Write ${params.tone} song lyrics (30-60 seconds when sung) for ${params.recipientName}, my ${params.relationship}.
+// ${params.occasion ? `Occasion: ${params.occasion}` : ''}
+// ${params.genre ? `Genre: ${params.genre}` : ''}
+// ${params.interests ? `Their interests: ${params.interests}` : ''}
+// ${params.insideJokes ? `Inside jokes: ${params.insideJokes}` : ''}
+// ${params.additionalNotes ? `Special context: ${params.additionalNotes}` : ''}
+
+// Create personalized, heartfelt lyrics with:
+// - A catchy title (3-5 words)
+// - 2 verses and a chorus
+// - Personal touches that celebrate them
+// - ${params.tone} and ${params.genre || 'upbeat'} style
+// - A brief description of the song's vibe
+// ${params.additionalNotes ? `- Incorporate the special context/situation mentioned above` : ''}
+
+// Return as JSON with 'lyrics', 'title', and 'description' fields.`;
+
+//   const response = await openai.chat.completions.create({
+//     model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+//     messages: [{ role: "user", content: prompt }],
+//     response_format: { type: "json_object" },
+//     max_completion_tokens: 8192,
+//   });
+
+//   const content = JSON.parse(response.choices[0]?.message?.content || '{"lyrics": "", "title": "", "description": ""}');
+//   return content;
+// }
+
+// export async function generateSongCover(params: {
+//   title: string;
+//   tone: string;
+//   genre?: string;
+// }): Promise<string> {
+//   const prompt = `Create album cover art for a ${params.tone} ${params.genre || 'pop'} song titled "${params.title}". Vibrant, colorful, modern design with musical elements, hearts, and celebration motifs. Professional music album artwork style.`;
+
+//   const response = await openai.images.generate({
+//     model: "gpt-image-1",
+//     prompt,
+//     size: "1024x1024",
+//   });
+
+//   console.log("Image generation response:", JSON.stringify(response.data?.[0], null, 2));
+
+//   const imageUrl = response.data?.[0]?.url;
+//   const b64Json = response.data?.[0]?.b64_json;
+
+//   if (b64Json) {
+//     return b64Json;
+//   }
+
+//   if (!imageUrl) {
+//     throw new Error("No image URL or b64_json returned from AI service");
+//   }
+
+//   const imageResponse = await fetch(imageUrl);
+//   const arrayBuffer = await imageResponse.arrayBuffer();
+//   const base64 = Buffer.from(arrayBuffer).toString('base64');
+//   return base64;
+// }
+
+// openaiService.ts
+import OpenAI from "openai";
+
 const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function generateCardContent(params: {
-  recipientName: string;
-  relationship: string;
-  occasion?: string;
-  tone: string;
-  interests?: string;
-  insideJokes?: string;
-}): Promise<{ message: string; title: string }> {
-  const prompt = `Create a heartfelt ${params.tone} greeting card message for ${params.recipientName}, my ${params.relationship}.
-${params.occasion ? `Occasion: ${params.occasion}` : ''}
-${params.interests ? `Their interests: ${params.interests}` : ''}
-${params.insideJokes ? `Inside jokes we share: ${params.insideJokes}` : ''}
-
-Generate a warm, personalized message (2-4 sentences) and a short title (3-5 words).
-Return as JSON with 'message' and 'title' fields.`;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-    messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
-    max_completion_tokens: 8192,
-  });
-
-  const content = JSON.parse(response.choices[0]?.message?.content || '{"message": "", "title": ""}');
-  return content;
-}
-
-export async function generateCardImage(params: {
-  recipientName: string;
-  occasion?: string;
-  tone: string;
-}): Promise<string> {
-  const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
-
-  const response = await openai.images.generate({
-    model: "gpt-image-1",
-    prompt,
-    size: "1024x1024",
-  });
-
-  const imageUrl = response.data?.[0]?.url;
-  const b64Json = response.data?.[0]?.b64_json;
-  
-  if (b64Json) {
-    return b64Json;
-  }
-  
-  if (!imageUrl) {
-    throw new Error("No image URL or b64_json returned from AI service");
-  }
-
-  const imageResponse = await fetch(imageUrl);
-  const arrayBuffer = await imageResponse.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString('base64');
-  return base64;
-}
-
-export async function generateSongLyrics(params: {
+export interface GenerateSongLyricsParams {
   recipientName: string;
   relationship: string;
   occasion?: string;
@@ -73,64 +150,204 @@ export async function generateSongLyrics(params: {
   genre?: string;
   interests?: string;
   insideJokes?: string;
-  additionalNotes?: string;
-}): Promise<{ lyrics: string; title: string; description: string }> {
-  const prompt = `Write ${params.tone} song lyrics (30-60 seconds when sung) for ${params.recipientName}, my ${params.relationship}.
-${params.occasion ? `Occasion: ${params.occasion}` : ''}
-${params.genre ? `Genre: ${params.genre}` : ''}
-${params.interests ? `Their interests: ${params.interests}` : ''}
-${params.insideJokes ? `Inside jokes: ${params.insideJokes}` : ''}
-${params.additionalNotes ? `Special context: ${params.additionalNotes}` : ''}
-
-Create personalized, heartfelt lyrics with:
-- A catchy title (3-5 words)
-- 2 verses and a chorus
-- Personal touches that celebrate them
-- ${params.tone} and ${params.genre || 'upbeat'} style
-- A brief description of the song's vibe
-${params.additionalNotes ? `- Incorporate the special context/situation mentioned above` : ''}
-
-Return as JSON with 'lyrics', 'title', and 'description' fields.`;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-    messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
-    max_completion_tokens: 8192,
-  });
-
-  const content = JSON.parse(response.choices[0]?.message?.content || '{"lyrics": "", "title": "", "description": ""}');
-  return content;
 }
 
-export async function generateSongCover(params: {
+export interface GeneratedSongLyrics {
   title: string;
-  tone: string;
-  genre?: string;
-}): Promise<string> {
-  const prompt = `Create album cover art for a ${params.tone} ${params.genre || 'pop'} song titled "${params.title}". Vibrant, colorful, modern design with musical elements, hearts, and celebration motifs. Professional music album artwork style.`;
+  lyrics: string;
+}
 
-  const response = await openai.images.generate({
-    model: "gpt-image-1",
-    prompt,
-    size: "1024x1024",
+/**
+ * Normalize genre the same way we did on the Suno side.
+ * Any gospel-ish input becomes "black-gospel" so the prompt is consistent.
+ */
+function normalizeGenre(input?: string): string {
+  if (!input) return "black-gospel";
+
+  const g = input.toLowerCase().trim();
+
+  const gospelLike = [
+    "gospel",
+    "black-gospel",
+    "black gospel",
+    "worship",
+    "praise",
+    "praise & worship",
+    "praise and worship",
+    "church",
+    "choir",
+  ];
+
+  if (gospelLike.some((x) => g.includes(x))) {
+    return "black-gospel";
+  }
+
+  return g;
+}
+
+/**
+ * Build a strong, explicit instructions block for Black gospel lyrics,
+ * including a target LENGTH so it feels like a 3-minute song.
+ */
+function buildBlackGospelInstructionBlock(): string {
+  return `
+Write this as an AUTHENTIC BLACK GOSPEL worship song, as if it is being sung in a Black church TODAY.
+
+STYLE & SOUND:
+- Feel like a Black church service with a live choir, band, and Hammond B3 organ.
+- Use call-and-response structure between LEAD and CHOIR in some lines. For example:
+  LEAD: ...
+  CHOIR: ...
+- Capture praise break energy in at least one section (repeated short lines of praise).
+- Use contemporary but church-centered language (e.g., "hallelujah", "thank You, Lord", "You made a way", "You kept me", "You never left me").
+- Do NOT copy or closely imitate any specific existing gospel song or lyrics.
+
+STRUCTURE & LENGTH (IMPORTANT):
+- Aim for lyrics suitable for a ~3-minute song.
+- Include AT LEAST:
+  - Verse 1
+  - Verse 2
+  - Verse 3
+  - Chorus
+  - Bridge or Vamp
+- Each Verse should be 4–6 lines.
+- The Chorus should be 4–6 lines that are easy to repeat; you may mark it like:
+  [Chorus]
+  ...
+  (Repeat Chorus)
+- The Bridge or Vamp should feel like a praise break or build-up section with short, repeatable lines.
+- OVERALL LENGTH: at least 220 words of lyrics (you may go longer if it still feels singable).
+
+THEOLOGY & TONE:
+- Keep lyrics biblically and spiritually sound, but do not quote long Bible passages word-for-word.
+- Center on God's character (faithful, loving, way-maker, healer, protector) and what He has done.
+- Be uplifting, hopeful, and worshipful, not condemning.
+`.trim();
+}
+
+/**
+ * Helper to build the core prompt content from user params.
+ */
+function buildBasePrompt(
+  params: GenerateSongLyricsParams,
+  normalizedGenre: string,
+): string {
+  const {
+    recipientName,
+    relationship,
+    occasion,
+    tone,
+    interests,
+    insideJokes,
+  } = params;
+
+  const occasionText = occasion
+    ? `Occasion / context: ${occasion}.`
+    : "Occasion / context: general encouragement and love.";
+
+  const interestsText = interests
+    ? `Relevant interests, details, or themes to weave into the song: ${interests}.`
+    : "Relevant interests: none given. Focus on their life, journey, and faith.";
+
+  const jokesText = insideJokes
+    ? `Optional playful or personal inside jokes to tastefully reference (without being corny): ${insideJokes}.`
+    : "No explicit inside jokes were provided.";
+
+  return `
+Recipient: ${recipientName}
+Relationship to sender: ${relationship}
+Tone: ${tone}
+Genre target (normalized): ${normalizedGenre}
+${occasionText}
+${interestsText}
+${jokesText}
+`.trim();
+}
+
+/**
+ * Main lyric generator.
+ * Returns a JSON-parsed { title, lyrics } object.
+ */
+export async function generateSongLyrics(
+  params: GenerateSongLyricsParams,
+): Promise<GeneratedSongLyrics> {
+  const normalizedGenre = normalizeGenre(params.genre);
+
+  // Base prompt body describing the situation + recipient
+  const basePrompt = buildBasePrompt(params, normalizedGenre);
+
+  // If it's Black gospel, use the heavy gospel instruction block.
+  // Otherwise, we can still encourage a decent length.
+  const styleBlock =
+    normalizedGenre === "black-gospel"
+      ? buildBlackGospelInstructionBlock()
+      : `
+Write this as a modern, radio-ready ${normalizedGenre || "pop"} song.
+
+STRUCTURE & LENGTH:
+- Aim for lyrics suitable for a ~3-minute song.
+- Include at least: Verse 1, Verse 2, Chorus, and a Bridge or Middle 8.
+- Each Verse should be 4–6 lines.
+- The Chorus should be 4–6 lines and clearly labeled as [Chorus].
+- OVERALL LENGTH: at least 180–220 words of lyrics.
+
+GENERAL:
+- Keep it singable and emotionally aligned with the tone.
+- Do NOT copy any existing songs or lyrics.
+`.trim();
+
+  const systemPrompt = `
+You are a professional songwriter who specializes in writing fully structured lyrics.
+You return ONLY valid JSON that my code can parse.
+
+When the genre is "black-gospel", you write for an authentic contemporary Black church context.
+You respect the culture and voice: no stereotypes, no parody, no mockery.
+`.trim();
+
+  const userPrompt = `
+${basePrompt}
+
+${styleBlock}
+
+RETURN FORMAT (IMPORTANT):
+
+Return ONLY a JSON object with this exact shape (no extra commentary):
+
+{
+  "title": "Short, powerful song title here",
+  "lyrics": "Full song lyrics here with line breaks and section labels (e.g., [Verse 1], [Chorus], [Bridge], [Vamp])."
+}
+`.trim();
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    temperature: 0.9, // some creativity for lyrics
   });
 
-  console.log("Image generation response:", JSON.stringify(response.data?.[0], null, 2));
+  const raw = completion.choices[0]?.message?.content || "{}";
 
-  const imageUrl = response.data?.[0]?.url;
-  const b64Json = response.data?.[0]?.b64_json;
-  
-  if (b64Json) {
-    return b64Json;
-  }
-  
-  if (!imageUrl) {
-    throw new Error("No image URL or b64_json returned from AI service");
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.error("Failed to parse OpenAI lyrics JSON:", raw);
+    throw new Error("Failed to parse lyrics response from OpenAI");
   }
 
-  const imageResponse = await fetch(imageUrl);
-  const arrayBuffer = await imageResponse.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString('base64');
-  return base64;
+  if (!parsed.title || !parsed.lyrics) {
+    console.error("Lyrics JSON missing required fields:", parsed);
+    throw new Error("Lyrics response missing title or lyrics");
+  }
+
+  const result: GeneratedSongLyrics = {
+    title: parsed.title,
+    lyrics: parsed.lyrics,
+  };
+
+  return result;
 }
