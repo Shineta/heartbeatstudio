@@ -156,6 +156,7 @@ export default function SharePage() {
                 <div className="space-y-3">
                   <audio 
                     controls 
+                    autoPlay
                     className="w-full"
                     data-testid="audio-player"
                   >
