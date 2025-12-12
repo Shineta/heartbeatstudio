@@ -103,3 +103,27 @@ export const updateCreationSchema = insertCreationSchema.partial();
 
 export type InsertCreation = z.infer<typeof insertCreationSchema>;
 export type Creation = typeof creations.$inferSelect;
+
+// Mixtapes (collection of songs for a theme)
+export const mixtapes = pgTable("mixtapes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lovedOneId: varchar("loved_one_id").references(() => lovedOnes.id, { onDelete: 'set null' }),
+  title: varchar("title").notNull(),
+  theme: varchar("theme").notNull(), // 'wedding', 'anniversary', 'birthday-party', 'romantic-evening', 'friendship'
+  recipientName: varchar("recipient_name"),
+  songIds: text("song_ids").array(), // array of creation IDs
+  shareableLink: varchar("shareable_link").unique(),
+  status: varchar("status").notNull().default('pending'), // 'pending', 'generating', 'complete', 'failed'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMixtapeSchema = createInsertSchema(mixtapes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMixtape = z.infer<typeof insertMixtapeSchema>;
+export type Mixtape = typeof mixtapes.$inferSelect;
