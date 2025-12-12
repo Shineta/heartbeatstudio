@@ -4,6 +4,7 @@ import {
   lovedOnes,
   creations,
   magicLinkTokens,
+  mixtapes,
   type User,
   type UpsertUser,
   type LovedOne,
@@ -12,6 +13,8 @@ import {
   type InsertCreation,
   type MagicLinkToken,
   type InsertMagicLinkToken,
+  type Mixtape,
+  type InsertMixtape,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -44,6 +47,13 @@ export interface IStorage {
   createCreation(creation: InsertCreation): Promise<Creation>;
   updateCreation(id: string, creation: Partial<InsertCreation>): Promise<Creation | undefined>;
   deleteCreation(id: string): Promise<void>;
+  
+  // Mixtape operations
+  getMixtapesByUserId(userId: string): Promise<Mixtape[]>;
+  getMixtapeById(id: string): Promise<Mixtape | undefined>;
+  getMixtapeByShareableLink(link: string): Promise<Mixtape | undefined>;
+  createMixtape(mixtape: InsertMixtape): Promise<Mixtape>;
+  updateMixtape(id: string, mixtape: Partial<InsertMixtape>): Promise<Mixtape | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -180,6 +190,43 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCreation(id: string): Promise<void> {
     await db.delete(creations).where(eq(creations.id, id));
+  }
+
+  // Mixtape operations
+  async getMixtapesByUserId(userId: string): Promise<Mixtape[]> {
+    return await db
+      .select()
+      .from(mixtapes)
+      .where(eq(mixtapes.userId, userId))
+      .orderBy(desc(mixtapes.createdAt));
+  }
+
+  async getMixtapeById(id: string): Promise<Mixtape | undefined> {
+    const [mixtape] = await db.select().from(mixtapes).where(eq(mixtapes.id, id));
+    return mixtape;
+  }
+
+  async getMixtapeByShareableLink(link: string): Promise<Mixtape | undefined> {
+    const [mixtape] = await db.select().from(mixtapes).where(eq(mixtapes.shareableLink, link));
+    return mixtape;
+  }
+
+  async createMixtape(mixtape: InsertMixtape): Promise<Mixtape> {
+    const shareableLink = `mixtape-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const [created] = await db
+      .insert(mixtapes)
+      .values({ ...mixtape, shareableLink })
+      .returning();
+    return created;
+  }
+
+  async updateMixtape(id: string, mixtape: Partial<InsertMixtape>): Promise<Mixtape | undefined> {
+    const [updated] = await db
+      .update(mixtapes)
+      .set({ ...mixtape, updatedAt: new Date() })
+      .where(eq(mixtapes.id, id))
+      .returning();
+    return updated;
   }
 }
 
