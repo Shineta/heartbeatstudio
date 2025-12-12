@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRoute } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Download, Sparkles } from 'lucide-react';
+import { Heart, Download, Sparkles, Play } from 'lucide-react';
 import { Link } from 'wouter';
 
 interface Creation {
@@ -24,6 +24,15 @@ export default function SharePage() {
   const [creation, setCreation] = useState<Creation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [songStarted, setSongStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const handlePlaySong = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+      setSongStarted(true);
+    }
+  };
 
   useEffect(() => {
     const fetchSharedCreation = async () => {
@@ -153,10 +162,23 @@ export default function SharePage() {
             <CardContent className="space-y-6">
               {/* Song Audio Player */}
               {creation.type === 'song' && creation.mediaUrl && (
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {!songStarted && (
+                    <div className="flex justify-center py-6">
+                      <Button 
+                        size="lg" 
+                        onClick={handlePlaySong}
+                        className="h-20 px-12 text-xl gap-3 animate-pulse"
+                        data-testid="button-play-song"
+                      >
+                        <Play className="w-8 h-8" />
+                        Play Your Song
+                      </Button>
+                    </div>
+                  )}
                   <audio 
+                    ref={audioRef}
                     controls 
-                    autoPlay
                     className="w-full"
                     data-testid="audio-player"
                   >
