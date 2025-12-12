@@ -11,6 +11,7 @@ import VerifyMagicLink from "@/pages/VerifyMagicLink.tsx";
 import RealDashboard from "@/pages/RealDashboard";
 import CreatePage from "@/pages/CreatePage";
 import SharePage from "@/pages/SharePage";
+import MixtapePage from "@/pages/MixtapePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/" component={isAuthenticated ? RealDashboard : LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth/verify-magic-link" component={VerifyMagicLink} />
+      <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
       <Route path="/create" component={isAuthenticated ? CreatePage : AuthPage} />

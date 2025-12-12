@@ -9,14 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { LovedOne, Creation } from "@shared/schema";
+import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
 
 interface LyricsPreview {
@@ -53,12 +53,20 @@ const animationFormSchema = z.object({
   description: z.string().optional(),
 });
 
+const mixtapeFormSchema = z.object({
+  lovedOneId: z.string().optional(),
+  recipientName: z.string().min(1, "Name is required"),
+  theme: z.string().min(1, "Theme is required"),
+});
+
 export default function CreatePage() {
   const { toast } = useToast();
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
   const [createdAnimation, setCreatedAnimation] = useState<Creation | null>(null);
+  const [createdMixtape, setCreatedMixtape] = useState<Mixtape | null>(null);
   const [songGenerationTime, setSongGenerationTime] = useState(0);
+  const [mixtapeGenerationTime, setMixtapeGenerationTime] = useState(0);
   
   // Lyrics preview state
   const [lyricsPreview, setLyricsPreview] = useState<LyricsPreview | null>(null);
@@ -101,6 +109,14 @@ export default function CreatePage() {
       tone: "sweet",
       style: "",
       description: "",
+    },
+  });
+
+  const mixtapeForm = useForm<z.infer<typeof mixtapeFormSchema>>({
+    resolver: zodResolver(mixtapeFormSchema),
+    defaultValues: {
+      recipientName: "",
+      theme: "",
     },
   });
 
@@ -273,6 +289,41 @@ export default function CreatePage() {
     },
   });
 
+  const mixtapeMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
+      const res = await apiRequest("POST", "/api/generate/mixtape", data);
+      return await res.json() as Mixtape;
+    },
+    onSuccess: (data: Mixtape) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
+      setCreatedMixtape(data);
+      setMixtapeGenerationTime(0);
+      toast({ title: "Success", description: "Your mixtape is being created! This may take a few minutes." });
+    },
+    onError: (error: Error) => {
+      setMixtapeGenerationTime(0);
+      
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      const errorMessage = error.message || "Unknown error occurred";
+      toast({
+        title: "Mixtape Generation Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     const isPending = songMutation.isPending || songWithLyricsMutation.isPending;
@@ -289,12 +340,31 @@ export default function CreatePage() {
     };
   }, [songMutation.isPending, songWithLyricsMutation.isPending]);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (mixtapeMutation.isPending) {
+      setMixtapeGenerationTime(0);
+      interval = setInterval(() => {
+        setMixtapeGenerationTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (interval) clearInterval(interval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [mixtapeMutation.isPending]);
+
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
     cardMutation.mutate(data);
   };
 
   const onAnimationSubmit = (data: z.infer<typeof animationFormSchema>) => {
     animationMutation.mutate(data);
+  };
+
+  const onMixtapeSubmit = (data: z.infer<typeof mixtapeFormSchema>) => {
+    mixtapeMutation.mutate(data);
   };
 
   // Generate lyrics preview first
@@ -365,10 +435,10 @@ export default function CreatePage() {
         </div>
 
         <Tabs defaultValue="card" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="card" data-testid="tab-card">
               <Mail className="w-4 h-4 mr-2" />
-              Greeting Card
+              Card
             </TabsTrigger>
             <TabsTrigger value="animation" data-testid="tab-animation">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -377,6 +447,10 @@ export default function CreatePage() {
             <TabsTrigger value="song" data-testid="tab-song">
               <Music className="w-4 h-4 mr-2" />
               Song
+            </TabsTrigger>
+            <TabsTrigger value="mixtape" data-testid="tab-mixtape">
+              <ListMusic className="w-4 h-4 mr-2" />
+              Mixtape
             </TabsTrigger>
           </TabsList>
 
@@ -1189,6 +1263,230 @@ export default function CreatePage() {
                           <>
                             <Edit className="w-4 h-4 mr-2" />
                             Generate Lyrics Preview
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="mixtape">
+            {createdMixtape ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ListMusic className="w-5 h-5 text-primary" />
+                      {createdMixtape.title}
+                    </CardTitle>
+                    <CardDescription>
+                      Theme: {createdMixtape.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {createdMixtape.status === 'generating' ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                        <p className="text-lg font-medium">Creating Your Mixtape...</p>
+                        <p className="text-sm text-muted-foreground">
+                          Generating 3 themed songs. This may take 15-30 minutes.
+                        </p>
+                        <div className="mt-4 space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Time elapsed</span>
+                            <span className="font-medium">{Math.floor(mixtapeGenerationTime / 60)}:{(mixtapeGenerationTime % 60).toString().padStart(2, '0')}</span>
+                          </div>
+                          <Progress value={Math.min((mixtapeGenerationTime / 1800) * 100, 95)} className="h-2" />
+                        </div>
+                      </div>
+                    ) : createdMixtape.status === 'complete' ? (
+                      <div className="text-center py-4">
+                        <p className="text-lg font-medium text-green-600">Mixtape Ready!</p>
+                        <p className="text-sm text-muted-foreground">
+                          Your mixtape with {createdMixtape.songIds?.length || 3} songs is complete.
+                        </p>
+                      </div>
+                    ) : createdMixtape.status === 'failed' ? (
+                      <div className="text-center py-4">
+                        <p className="text-lg font-medium text-red-600">Generation Failed</p>
+                        <p className="text-sm text-muted-foreground">
+                          Something went wrong. Please try again.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-muted-foreground">
+                          Status: {createdMixtape.status}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex gap-3">
+                    <Button onClick={() => setCreatedMixtape(null)} variant="outline" data-testid="button-create-another-mixtape">
+                      Create Another
+                    </Button>
+                    {createdMixtape.shareableLink && (
+                      <Button onClick={() => {
+                        const shareLink = `/share/mixtape/${createdMixtape.shareableLink}`;
+                        navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                        toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                      }} data-testid="button-share-mixtape">
+                        Share
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ListMusic className="w-5 h-5 text-primary" />
+                    AI Mixtape Creator
+                  </CardTitle>
+                  <CardDescription>
+                    Create a themed collection of 3 personalized songs perfect for any occasion
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border/50 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <ListMusic className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">What's a Mixtape?</span> A curated collection of 3 AI-generated songs with complementary styles, perfect for special occasions.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Loader2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Generation Time:</span> Mixtapes take 15-30 minutes to create as we generate 3 full songs with vocals and music.
+                      </p>
+                    </div>
+                  </div>
+                  <Form {...mixtapeForm}>
+                    <form onSubmit={mixtapeForm.handleSubmit(onMixtapeSubmit)} className="space-y-6">
+                      <FormField
+                        control={mixtapeForm.control}
+                        name="lovedOneId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Select Loved One (optional)</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  const loved = lovedOnes.find(l => l.id === value);
+                                  if (loved) {
+                                    mixtapeForm.setValue("recipientName", loved.name);
+                                  }
+                                }}
+                                value={field.value}
+                              >
+                                <SelectTrigger data-testid="select-mixtape-loved-one">
+                                  <SelectValue placeholder="Choose from your loved ones" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {lovedOnes.map((loved) => (
+                                    <SelectItem key={loved.id} value={loved.id}>
+                                      {loved.name} ({loved.relationship})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={mixtapeForm.control}
+                        name="recipientName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Recipient Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Sarah" {...field} data-testid="input-mixtape-recipient" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={mixtapeForm.control}
+                        name="theme"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Theme</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-mixtape-theme">
+                                  <SelectValue placeholder="Select a theme for your mixtape" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="wedding">Wedding Celebration</SelectItem>
+                                  <SelectItem value="anniversary">Anniversary</SelectItem>
+                                  <SelectItem value="birthday-party">Birthday Party</SelectItem>
+                                  <SelectItem value="romantic-evening">Romantic Evening</SelectItem>
+                                  <SelectItem value="friendship">Friendship</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Each theme includes 3 songs with complementary genres and styles
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {mixtapeMutation.isPending && (
+                        <Card className="bg-primary/5 border-primary/20">
+                          <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-center justify-center gap-3">
+                              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                              <div className="text-center">
+                                <p className="font-semibold text-lg">Creating Your Mixtape...</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {mixtapeGenerationTime < 60 
+                                    ? "Starting the music studio..."
+                                    : mixtapeGenerationTime < 300
+                                    ? "Generating song 1 of 3..."
+                                    : mixtapeGenerationTime < 600
+                                    ? "Generating song 2 of 3..."
+                                    : mixtapeGenerationTime < 900
+                                    ? "Generating song 3 of 3..."
+                                    : "Finalizing your mixtape..."}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Time elapsed</span>
+                                <span className="font-medium">{Math.floor(mixtapeGenerationTime / 60)}:{(mixtapeGenerationTime % 60).toString().padStart(2, '0')}</span>
+                              </div>
+                              <Progress value={Math.min((mixtapeGenerationTime / 1800) * 100, 95)} className="h-2" />
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground">
+                              Mixtapes typically take 15-30 minutes to generate
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <Button type="submit" className="w-full" disabled={mixtapeMutation.isPending} data-testid="button-generate-mixtape">
+                        {mixtapeMutation.isPending ? (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                            Creating Mixtape...
+                          </>
+                        ) : (
+                          <>
+                            <Heart className="w-4 h-4 mr-2 heartbeat" />
+                            Generate Mixtape
                           </>
                         )}
                       </Button>
