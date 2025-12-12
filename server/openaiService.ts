@@ -139,7 +139,8 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
 });
 
 export interface GenerateSongLyricsParams {
@@ -150,6 +151,7 @@ export interface GenerateSongLyricsParams {
   genre?: string;
   interests?: string;
   insideJokes?: string;
+  additionalNotes?: string;
 }
 
 export interface GeneratedSongLyrics {
@@ -350,4 +352,75 @@ Return ONLY a JSON object with this exact shape (no extra commentary):
   };
 
   return result;
+}
+
+// Generate card content (message and title)
+export async function generateCardContent(params: {
+  recipientName: string;
+  relationship: string;
+  occasion?: string;
+  tone: string;
+  interests?: string;
+  insideJokes?: string;
+}): Promise<{ message: string; title: string }> {
+  const prompt = `Create a heartfelt ${params.tone} greeting card message for ${params.recipientName}, my ${params.relationship}.
+${params.occasion ? `Occasion: ${params.occasion}` : ''}
+${params.interests ? `Their interests: ${params.interests}` : ''}
+${params.insideJokes ? `Inside jokes we share: ${params.insideJokes}` : ''}
+
+Generate a warm, personalized message (2-4 sentences) and a short title (3-5 words).
+Return as JSON with 'message' and 'title' fields.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+
+  const content = JSON.parse(response.choices[0]?.message?.content || '{"message": "", "title": ""}');
+  return content;
+}
+
+// Generate card image (returns base64)
+export async function generateCardImage(params: {
+  recipientName: string;
+  occasion?: string;
+  tone: string;
+}): Promise<string> {
+  const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
+
+  const response = await openai.images.generate({
+    model: "dall-e-3",
+    prompt,
+    size: "1024x1024",
+    response_format: "b64_json",
+  });
+
+  const b64Json = response.data?.[0]?.b64_json;
+  if (!b64Json) {
+    throw new Error("No image data returned from AI service");
+  }
+  return b64Json;
+}
+
+// Generate song cover art (returns base64)
+export async function generateSongCover(params: {
+  title: string;
+  tone: string;
+  genre?: string;
+}): Promise<string> {
+  const prompt = `Create album cover art for a ${params.tone} ${params.genre || 'pop'} song titled "${params.title}". Vibrant, colorful, modern design with musical elements, hearts, and celebration motifs. Professional music album artwork style.`;
+
+  const response = await openai.images.generate({
+    model: "dall-e-3",
+    prompt,
+    size: "1024x1024",
+    response_format: "b64_json",
+  });
+
+  const b64Json = response.data?.[0]?.b64_json;
+  if (!b64Json) {
+    throw new Error("No image data returned from AI service");
+  }
+  return b64Json;
 }

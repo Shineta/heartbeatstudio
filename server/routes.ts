@@ -798,6 +798,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== MIXTAPE ROUTES ==========
+
+  // Get user's mixtapes
+  app.get('/api/mixtapes', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const mixtapes = await storage.getMixtapesByUserId(userId);
+      res.json(mixtapes);
+    } catch (error) {
+      console.error("Error fetching mixtapes:", error);
+      res.status(500).json({ message: "Failed to fetch mixtapes" });
+    }
+  });
+
+  // Theme-based song configurations for mixtapes
+  const MIXTAPE_THEMES: Record<string, { songs: Array<{ genre: string; tone: string; occasion: string }> }> = {
+    'wedding': {
+      songs: [
+        { genre: 'acoustic ballad', tone: 'romantic', occasion: 'first dance' },
+        { genre: 'pop', tone: 'sweet', occasion: 'wedding celebration' },
+        { genre: 'soul', tone: 'heartfelt', occasion: 'love dedication' },
+      ]
+    },
+    'anniversary': {
+      songs: [
+        { genre: 'jazz', tone: 'romantic', occasion: 'anniversary' },
+        { genre: 'r&b', tone: 'sweet', occasion: 'years together' },
+        { genre: 'acoustic', tone: 'heartfelt', occasion: 'love story' },
+      ]
+    },
+    'birthday-party': {
+      songs: [
+        { genre: 'pop', tone: 'fun', occasion: 'birthday' },
+        { genre: 'dance', tone: 'playful', occasion: 'birthday party' },
+        { genre: 'hip-hop', tone: 'funny', occasion: 'birthday celebration' },
+      ]
+    },
+    'romantic-evening': {
+      songs: [
+        { genre: 'jazz', tone: 'romantic', occasion: 'romantic evening' },
+        { genre: 'r&b', tone: 'sweet', occasion: 'love' },
+        { genre: 'soul ballad', tone: 'romantic', occasion: 'special night' },
+      ]
+    },
+    'friendship': {
+      songs: [
+        { genre: 'pop', tone: 'fun', occasion: 'friendship' },
+        { genre: 'indie', tone: 'heartfelt', occasion: 'best friends' },
+        { genre: 'folk', tone: 'sweet', occasion: 'friendship celebration' },
+      ]
+    },
+  };
+
+  // Generate Mixtape (creates multiple songs)
+  app.post('/api/generate/mixtape', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { lovedOneId, theme, recipientName, relationship } = req.body;
+
+      if (!theme || !MIXTAPE_THEMES[theme]) {
+        return res.status(400).json({ message: "Invalid or missing theme" });
+      }
+
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const recipient = lovedOne?.name || recipientName || "someone special";
+      const recipientRelationship = lovedOne?.relationship || relationship || "friend";
+
+      // Create mixtape record first with pending status
+      const themeConfig = MIXTAPE_THEMES[theme];
+      const themeTitle = theme.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      
+      const mixtape = await storage.createMixtape({
+        userId,
+        lovedOneId: lovedOneId || null,
+        title: `${themeTitle} Mixtape for ${recipient}`,
+        theme,
+        recipientName: recipient,
+        songIds: [],
+        status: 'generating',
+      });
+
+      // Generate songs sequentially (Suno API needs time)
+      const { generateSong } = await import('./sunoService');
+      const songIds: string[] = [];
+
+      for (const songConfig of themeConfig.songs) {
+        try {
+          const songResult = await generateSong({
+            recipientName: recipient,
+            relationship: recipientRelationship,
+            occasion: songConfig.occasion,
+            tone: songConfig.tone,
+            genre: songConfig.genre,
+            interests: lovedOne?.interests || undefined,
+            insideJokes: lovedOne?.insideJokes || undefined,
+          });
+
+          let coverImageUrl = songResult.coverImage;
+          if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
+            const coverResponse = await fetch(songResult.coverImage);
+            const coverBuffer = await coverResponse.arrayBuffer();
+            const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+            coverImageUrl = await objectStorageService.uploadBase64Image(
+              coverBase64,
+              `songs/${userId}`,
+              'cover'
+            );
+          }
+
+          const creation = await storage.createCreation({
+            userId,
+            lovedOneId: lovedOneId || null,
+            type: 'song',
+            tone: songConfig.tone,
+            genre: songConfig.genre,
+            title: songResult.title,
+            content: songResult.lyrics,
+            imageUrl: coverImageUrl || null,
+            mediaUrl: songResult.audioUrl,
+          });
+
+          const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+          await storage.updateCreation(creation.id, { shareableLink });
+          songIds.push(creation.id);
+
+          console.log(`[Mixtape] Generated song ${songIds.length}/${themeConfig.songs.length}: ${songResult.title}`);
+        } catch (songError: any) {
+          console.error(`[Mixtape] Error generating song:`, songError.message);
+          // Continue with next song even if one fails
+        }
+      }
+
+      // Update mixtape with generated song IDs
+      const updatedMixtape = await storage.updateMixtape(mixtape.id, {
+        songIds,
+        status: songIds.length > 0 ? 'complete' : 'failed',
+      });
+
+      // Fetch the songs to include in response
+      const songs = await Promise.all(
+        songIds.map(id => storage.getCreationById(id))
+      );
+
+      res.json({
+        mixtape: updatedMixtape,
+        songs: songs.filter(Boolean),
+      });
+    } catch (error: any) {
+      console.error("Error generating mixtape:", error);
+      res.status(500).json({ message: error.message || "Failed to generate mixtape" });
+    }
+  });
+
+  // Get shareable mixtape (public)
+  app.get('/api/share/mixtape/:link', async (req: Request, res: Response) => {
+    try {
+      const mixtape = await storage.getMixtapeByShareableLink(req.params.link);
+      
+      if (!mixtape) {
+        return res.status(404).json({ message: "Mixtape not found" });
+      }
+
+      // Fetch all songs in the mixtape
+      const songs = await Promise.all(
+        (mixtape.songIds || []).map(id => storage.getCreationById(id))
+      );
+
+      res.json({
+        mixtape,
+        songs: songs.filter(Boolean),
+      });
+    } catch (error) {
+      console.error("Error fetching shared mixtape:", error);
+      res.status(500).json({ message: "Failed to fetch mixtape" });
+    }
+  });
+
+  // Get mixtape by ID (authenticated)
+  app.get('/api/mixtapes/:id', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const mixtape = await storage.getMixtapeById(req.params.id);
+      
+      if (!mixtape) {
+        return res.status(404).json({ message: "Mixtape not found" });
+      }
+
+      if (mixtape.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Fetch all songs in the mixtape
+      const songs = await Promise.all(
+        (mixtape.songIds || []).map(id => storage.getCreationById(id))
+      );
+
+      res.json({
+        mixtape,
+        songs: songs.filter(Boolean),
+      });
+    } catch (error) {
+      console.error("Error fetching mixtape:", error);
+      res.status(500).json({ message: "Failed to fetch mixtape" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
