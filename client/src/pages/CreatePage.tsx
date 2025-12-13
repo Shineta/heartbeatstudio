@@ -1283,7 +1283,7 @@ export default function CreatePage() {
                       {createdMixtape.title}
                     </CardTitle>
                     <CardDescription>
-                      Theme: {createdMixtape.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      Theme: {createdMixtape.theme ? createdMixtape.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Custom'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
