@@ -292,13 +292,14 @@ export default function CreatePage() {
   const mixtapeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/mixtape", data);
-      return await res.json() as Mixtape;
+      const result = await res.json() as { mixtape: Mixtape; songs: Creation[] };
+      return result.mixtape;
     },
     onSuccess: (data: Mixtape) => {
       queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
       setCreatedMixtape(data);
       setMixtapeGenerationTime(0);
-      toast({ title: "Success", description: "Your mixtape is being created! This may take a few minutes." });
+      toast({ title: "Success", description: "Your mixtape has been created!" });
     },
     onError: (error: Error) => {
       setMixtapeGenerationTime(0);
