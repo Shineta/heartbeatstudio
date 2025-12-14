@@ -114,6 +114,7 @@ export const mixtapes = pgTable("mixtapes", {
   recipientName: varchar("recipient_name"),
   songIds: text("song_ids").array(), // array of creation IDs
   shareableLink: varchar("shareable_link").unique(),
+  cassetteCaseImageUrl: varchar("cassette_case_image_url"), // AI-generated cassette case cover
   status: varchar("status").notNull().default('pending'), // 'pending', 'generating', 'complete', 'failed'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -235,3 +235,33 @@ export async function editImage(params: {
 
   return images[0];
 }
+
+export async function generateCassetteCaseImage(params: {
+  title: string;
+  recipientName: string;
+  theme?: string;
+  coverArtUrl?: string;
+}): Promise<string> {
+  const { title, recipientName, theme, coverArtUrl } = params;
+
+  const themeStyle = theme ? `${theme} aesthetic` : 'romantic nostalgic';
+  
+  const prompt = `Create a photorealistic image of a vintage cassette tape case from the 1980s/1990s. 
+The cassette case should be a clear plastic J-card case viewed from the front.
+Inside the case, show the cover art insert with:
+- Title: "${title}"
+- "For ${recipientName}" written on it
+- ${themeStyle} style artwork
+- Vintage typography and design elements
+- Wear and aging effects for authenticity
+The cassette case should have realistic plastic reflections, the spine visible on the side, and look like a physical object photographed on a surface.
+Highly detailed, product photography style, nostalgic 80s/90s mix tape aesthetic.`;
+
+  const images = await generateImage({
+    prompt,
+    numImages: 1,
+    imageSize: '1:1'
+  });
+
+  return images[0];
+}

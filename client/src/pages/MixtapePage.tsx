@@ -139,54 +139,74 @@ export default function MixtapePage() {
 
         {/* Cassette Tape Case Visual */}
         <div className="relative mb-6">
-          <div className="bg-zinc-900 dark:bg-zinc-800 rounded-lg shadow-2xl overflow-hidden border border-zinc-700">
-            {/* Main album art area - takes up most of the case */}
-            <div className="aspect-square relative">
-              {currentSong?.imageUrl ? (
-                <img
-                  src={currentSong.imageUrl}
-                  alt={currentSong.title || "Album cover"}
-                  className="w-full h-full object-cover"
-                  data-testid="img-cassette-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 flex items-center justify-center">
-                  <ListMusic className="w-24 h-24 text-primary/50" />
-                </div>
-              )}
-              
-              {/* Subtle gradient overlay at bottom for text readability */}
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              
-              {/* Title overlay at bottom of cover art */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h2 className="text-xl font-bold text-white truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                  {mixtape.title}
-                </h2>
-                <p className="text-sm text-white/70">For {mixtape.recipientName}</p>
-              </div>
-
-              {/* Playing indicator */}
+          {/* Use AI-generated cassette case image if available */}
+          {mixtape.cassetteCaseImageUrl ? (
+            <div className="rounded-lg shadow-2xl overflow-hidden">
+              <img
+                src={mixtape.cassetteCaseImageUrl}
+                alt={`${mixtape.title} cassette case`}
+                className="w-full h-auto object-contain"
+                data-testid="img-cassette-cover"
+              />
+              {/* Playing indicator overlay */}
               {isPlaying && (
-                <div className="absolute top-4 right-4 flex gap-1 bg-black/50 px-2 py-1 rounded-full">
-                  <div className="w-1 h-4 bg-white animate-pulse rounded" />
-                  <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.2s' }} />
+                <div className="absolute top-4 right-4 flex gap-1 bg-black/60 px-3 py-2 rounded-full">
+                  <div className="w-1 h-5 bg-white animate-pulse rounded" />
+                  <div className="w-1 h-5 bg-white animate-pulse rounded" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-1 h-5 bg-white animate-pulse rounded" style={{ animationDelay: '0.2s' }} />
                 </div>
               )}
             </div>
+          ) : (
+            <div className="bg-zinc-900 dark:bg-zinc-800 rounded-lg shadow-2xl overflow-hidden border border-zinc-700">
+              {/* Main album art area - takes up most of the case */}
+              <div className="aspect-square relative">
+                {currentSong?.imageUrl ? (
+                  <img
+                    src={currentSong.imageUrl}
+                    alt={currentSong.title || "Album cover"}
+                    className="w-full h-full object-cover"
+                    data-testid="img-cassette-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 flex items-center justify-center">
+                    <ListMusic className="w-24 h-24 text-primary/50" />
+                  </div>
+                )}
+                
+                {/* Subtle gradient overlay at bottom for text readability */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                
+                {/* Title overlay at bottom of cover art */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h2 className="text-xl font-bold text-white truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                    {mixtape.title}
+                  </h2>
+                  <p className="text-sm text-white/70">For {mixtape.recipientName}</p>
+                </div>
 
-            {/* Bottom strip - cassette case style info bar */}
-            <div className="bg-zinc-800 dark:bg-zinc-700 px-4 py-3 flex items-center justify-between gap-2 border-t border-zinc-700 dark:border-zinc-600">
-              <div className="flex items-center gap-2 text-zinc-400 text-xs uppercase tracking-wider">
-                <ListMusic className="w-3 h-3" />
-                <span>{mixtape.songs.length} Tracks</span>
+                {/* Playing indicator */}
+                {isPlaying && (
+                  <div className="absolute top-4 right-4 flex gap-1 bg-black/50 px-2 py-1 rounded-full">
+                    <div className="w-1 h-4 bg-white animate-pulse rounded" />
+                    <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                )}
               </div>
-              <div className="text-zinc-400 text-xs uppercase tracking-wider">
-                {themeDisplay}
+
+              {/* Bottom strip - cassette case style info bar */}
+              <div className="bg-zinc-800 dark:bg-zinc-700 px-4 py-3 flex items-center justify-between gap-2 border-t border-zinc-700 dark:border-zinc-600">
+                <div className="flex items-center gap-2 text-zinc-400 text-xs uppercase tracking-wider">
+                  <ListMusic className="w-3 h-3" />
+                  <span>{mixtape.songs.length} Tracks</span>
+                </div>
+                <div className="text-zinc-400 text-xs uppercase tracking-wider">
+                  {themeDisplay}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Now Playing & Controls */}

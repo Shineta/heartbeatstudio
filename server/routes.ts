@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
-import { generateGreetingCard, generateAnimation } from "./nanoBananaService";
+import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 import { sendMagicLinkEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
@@ -960,10 +960,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update mixtape with generated song IDs
-      const updatedMixtape = await storage.updateMixtape(mixtape.id, {
+      let updatedMixtape = await storage.updateMixtape(mixtape.id, {
         songIds,
         status: songIds.length > 0 ? 'complete' : 'failed',
       });
+
+      // Generate cassette case image using nano banana (async, don't block response)
+      if (songIds.length > 0) {
+        generateCassetteCaseImage({
+          title: mixtape.title,
+          recipientName: mixtape.recipientName || 'Someone Special',
+          theme: mixtape.theme,
+        }).then(async (cassetteCaseImageUrl) => {
+          await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
+          console.log(`[Mixtape] Generated cassette case image for "${mixtape.title}"`);
+        }).catch((err) => {
+          console.error(`[Mixtape] Failed to generate cassette case image:`, err.message);
+        });
+      }
 
       // Fetch the songs to include in response
       const songs = await Promise.all(
@@ -1030,6 +1044,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching mixtape:", error);
       res.status(500).json({ message: "Failed to fetch mixtape" });
+    }
+  });
+
+  // Generate cassette case image for a mixtape
+  app.post('/api/mixtapes/:id/generate-cassette-cover', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const mixtape = await storage.getMixtapeById(req.params.id);
+      
+      if (!mixtape) {
+        return res.status(404).json({ message: "Mixtape not found" });
+      }
+
+      if (mixtape.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      console.log(`[Mixtape] Generating cassette case image for "${mixtape.title}"`);
+      
+      const cassetteCaseImageUrl = await generateCassetteCaseImage({
+        title: mixtape.title,
+        recipientName: mixtape.recipientName || 'Someone Special',
+        theme: mixtape.theme,
+      });
+
+      // Update the mixtape with the generated image
+      await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
+
+      res.json({ cassetteCaseImageUrl });
+    } catch (error: any) {
+      console.error("Error generating cassette case image:", error);
+      res.status(500).json({ message: error.message || "Failed to generate cassette case image" });
     }
   });
 
