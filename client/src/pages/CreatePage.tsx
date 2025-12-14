@@ -1292,6 +1292,30 @@ export default function CreatePage() {
 
                       <FormField
                         control={songForm.control}
+                        name="voice"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Voice (optional)</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-song-voice">
+                                  <SelectValue placeholder="Any voice" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="any">Any Voice</SelectItem>
+                                  <SelectItem value="male">Male</SelectItem>
+                                  <SelectItem value="female">Female</SelectItem>
+                                  <SelectItem value="duet">Duet (Male & Female)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={songForm.control}
                         name="additionalNotes"
                         render={({ field }) => (
                           <FormItem>
@@ -1759,6 +1783,29 @@ export default function CreatePage() {
                             />
                             <FormField
                               control={mixtapeForm.control}
+                              name="voice1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Voice (optional)</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-voice1">
+                                        <SelectValue placeholder="Any voice" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="any">Any Voice</SelectItem>
+                                        <SelectItem value="male">Male</SelectItem>
+                                        <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="duet">Duet</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
                               name="notes1"
                               render={({ field }) => (
                                 <FormItem>
@@ -1841,6 +1888,29 @@ export default function CreatePage() {
                             />
                             <FormField
                               control={mixtapeForm.control}
+                              name="voice2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Voice (optional)</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-voice2">
+                                        <SelectValue placeholder="Any voice" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="any">Any Voice</SelectItem>
+                                        <SelectItem value="male">Male</SelectItem>
+                                        <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="duet">Duet</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
                               name="notes2"
                               render={({ field }) => (
                                 <FormItem>
@@ -1914,6 +1984,29 @@ export default function CreatePage() {
                                         <SelectItem value="nostalgic">Nostalgic</SelectItem>
                                         <SelectItem value="uplifting">Uplifting</SelectItem>
                                         <SelectItem value="sentimental">Sentimental</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="voice3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Voice (optional)</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-voice3">
+                                        <SelectValue placeholder="Any voice" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="any">Any Voice</SelectItem>
+                                        <SelectItem value="male">Male</SelectItem>
+                                        <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="duet">Duet</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
