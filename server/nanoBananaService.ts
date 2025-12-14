@@ -236,6 +236,16 @@ export async function editImage(params: {
   return images[0];
 }
 
+// Theme-specific color palettes and visual elements for cassette tapes
+const cassetteThemeStyles: Record<string, string> = {
+  'romantic': 'pink and red color scheme, hearts, soft lighting, love theme',
+  'nostalgic': 'warm sepia tones, retro gradients, vintage aesthetic, faded colors',
+  'fun': 'bright neon colors, playful patterns, 80s Memphis style, confetti',
+  'chill': 'cool blue and purple gradient, lo-fi aesthetic, relaxed vibes, starry',
+  'hype': 'electric yellow and black, bold graphics, high energy, lightning bolts',
+  'emotional': 'deep blue and silver, moody lighting, raindrop effects, melancholic',
+};
+
 export async function generateCassetteCaseImage(params: {
   title: string;
   recipientName: string;
@@ -244,18 +254,22 @@ export async function generateCassetteCaseImage(params: {
 }): Promise<string> {
   const { title, recipientName, theme, coverArtUrl } = params;
 
-  const themeStyle = theme ? `${theme} aesthetic` : 'romantic nostalgic';
+  // Get theme-specific styling or default to romantic
+  const themeKey = theme?.toLowerCase() || 'romantic';
+  const themeStyle = cassetteThemeStyles[themeKey] || cassetteThemeStyles['romantic'];
   
-  const prompt = `Create a photorealistic image of a vintage cassette tape case from the 1980s/1990s. 
-The cassette case should be a clear plastic J-card case viewed from the front.
-Inside the case, show the cover art insert with:
-- Title: "${title}"
-- "For ${recipientName}" written on it
-- ${themeStyle} style artwork
-- Vintage typography and design elements
-- Wear and aging effects for authenticity
-The cassette case should have realistic plastic reflections, the spine visible on the side, and look like a physical object photographed on a surface.
-Highly detailed, product photography style, nostalgic 80s/90s mix tape aesthetic.`;
+  const prompt = `Product photography of a vintage audio cassette tape from the 1980s. 
+Three-quarter angle view showing the PHYSICAL CASSETTE TAPE with:
+- Two visible tape spools/reels with brown magnetic tape wound inside
+- Clear plastic window showing the tape reels
+- White label on the cassette body with handwritten text: "${title}" and "For ${recipientName}"
+- Classic cassette design with screw holes in corners
+- ${themeStyle}
+
+The cassette is sitting on a wooden desk surface with soft studio lighting. 
+Slight wear and nostalgic aging effects for authenticity.
+Sharp focus, realistic textures, vintage 80s mixtape aesthetic.
+NOT a CD, NOT vinyl, NOT a cassette case - this is the ACTUAL CASSETTE TAPE itself.`;
 
   const images = await generateImage({
     prompt,
