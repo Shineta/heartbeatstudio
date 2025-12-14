@@ -1243,6 +1243,8 @@ export default function CreatePage() {
                                   <SelectItem value="country">Country</SelectItem>
                                   <SelectItem value="r&b">R&B</SelectItem>
                                   <SelectItem value="rap">Rap</SelectItem>
+                                  <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                  <SelectItem value="trap">Trap</SelectItem>
                                   <SelectItem value="ballad">Ballad</SelectItem>
                                   <SelectItem value="gospel">Gospel</SelectItem>
                                   <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
@@ -1707,6 +1709,8 @@ export default function CreatePage() {
                                         <SelectItem value="acoustic">Acoustic</SelectItem>
                                         <SelectItem value="electronic">Electronic</SelectItem>
                                         <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
                                         <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
                                         <SelectItem value="black-gospel">Black Gospel</SelectItem>
@@ -1787,6 +1791,8 @@ export default function CreatePage() {
                                         <SelectItem value="acoustic">Acoustic</SelectItem>
                                         <SelectItem value="electronic">Electronic</SelectItem>
                                         <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
                                         <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
                                         <SelectItem value="black-gospel">Black Gospel</SelectItem>
@@ -1867,6 +1873,8 @@ export default function CreatePage() {
                                         <SelectItem value="acoustic">Acoustic</SelectItem>
                                         <SelectItem value="electronic">Electronic</SelectItem>
                                         <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
                                         <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
                                         <SelectItem value="black-gospel">Black Gospel</SelectItem>
