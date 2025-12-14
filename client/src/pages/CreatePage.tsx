@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -77,6 +77,12 @@ export default function CreatePage() {
   const [songGenerationTime, setSongGenerationTime] = useState(0);
   const [mixtapeGenerationTime, setMixtapeGenerationTime] = useState(0);
   
+  // Mixtape player state
+  const [mixtapeSongs, setMixtapeSongs] = useState<Creation[]>([]);
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
   // Lyrics preview state
   const [lyricsPreview, setLyricsPreview] = useState<LyricsPreview | null>(null);
   const [editedLyrics, setEditedLyrics] = useState<string>("");
@@ -86,6 +92,59 @@ export default function CreatePage() {
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
   });
+
+  // Fetch songs when mixtape is complete
+  useEffect(() => {
+    async function fetchMixtapeSongs() {
+      if (createdMixtape && createdMixtape.status === 'complete' && createdMixtape.id) {
+        try {
+          const res = await fetch(`/api/mixtapes/${createdMixtape.id}`, { credentials: 'include' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.songs) {
+              setMixtapeSongs(data.songs);
+              setCurrentSongIndex(0);
+              setIsPlaying(false);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching mixtape songs:", error);
+        }
+      }
+    }
+    fetchMixtapeSongs();
+  }, [createdMixtape?.status, createdMixtape?.id]);
+
+  // Sync audio state when track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      setIsPlaying(false);
+      audio.pause();
+      audio.load();
+    }
+  }, [currentSongIndex]);
+
+  const handlePrevious = () => {
+    setCurrentSongIndex((prev) => (prev > 0 ? prev - 1 : mixtapeSongs.length - 1));
+    setIsPlaying(false);
+  };
+
+  const handleNext = () => {
+    setCurrentSongIndex((prev) => (prev < mixtapeSongs.length - 1 ? prev + 1 : 0));
+    setIsPlaying(false);
+  };
+
+  const handlePlayPause = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+    }
+  };
 
   const cardForm = useForm<z.infer<typeof cardFormSchema>>({
     resolver: zodResolver(cardFormSchema),
@@ -1322,11 +1381,181 @@ export default function CreatePage() {
                         </div>
                       </div>
                     ) : createdMixtape.status === 'complete' ? (
-                      <div className="text-center py-4">
-                        <p className="text-lg font-medium text-green-600">Mixtape Ready!</p>
-                        <p className="text-sm text-muted-foreground">
-                          Your mixtape with {createdMixtape.songIds?.length || 3} songs is complete.
-                        </p>
+                      <div className="space-y-6">
+                        {/* Cassette Tape Visual */}
+                        <div className="relative">
+                          <div className="bg-gradient-to-b from-zinc-800 to-zinc-900 dark:from-zinc-700 dark:to-zinc-800 rounded-xl p-4 shadow-xl border-2 border-zinc-600 dark:border-zinc-500">
+                            {/* Cassette label area */}
+                            <div className="bg-gradient-to-b from-amber-100 to-amber-200 dark:from-amber-200 dark:to-amber-300 rounded-lg p-3 mb-4 relative overflow-hidden">
+                              {/* Decorative stripes */}
+                              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
+                              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
+                              
+                              {/* Label content */}
+                              <div className="text-center py-2">
+                                <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Side A</p>
+                                <h3 className="text-lg font-bold text-zinc-800 truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                                  {createdMixtape.title}
+                                </h3>
+                                <p className="text-sm text-zinc-600">For {createdMixtape.recipientName}</p>
+                              </div>
+                            </div>
+
+                            {/* Tape window area with reels */}
+                            <div className="bg-zinc-950 rounded-lg p-4 relative">
+                              <div className="flex items-center justify-between gap-4">
+                                {/* Left reel */}
+                                <div className={`w-16 h-16 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
+                                  <div className="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
+                                    <div className="w-2 h-2 rounded-full bg-zinc-400" />
+                                  </div>
+                                </div>
+
+                                {/* Center cover art window */}
+                                <div className="flex-1 relative">
+                                  <div className="aspect-[4/3] rounded-md overflow-hidden border-2 border-zinc-600 bg-zinc-800">
+                                    {mixtapeSongs[currentSongIndex]?.imageUrl ? (
+                                      <img
+                                        src={mixtapeSongs[currentSongIndex].imageUrl!}
+                                        alt={mixtapeSongs[currentSongIndex].title || "Song cover"}
+                                        className="w-full h-full object-cover"
+                                        data-testid="img-cassette-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <ListMusic className="w-10 h-10 text-zinc-600" />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Right reel */}
+                                <div className={`w-16 h-16 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
+                                  <div className="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
+                                    <div className="w-2 h-2 rounded-full bg-zinc-400" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bottom screw holes */}
+                            <div className="flex justify-between mt-3 px-2">
+                              <div className="w-2 h-2 rounded-full bg-zinc-600 border border-zinc-500" />
+                              <div className="w-2 h-2 rounded-full bg-zinc-600 border border-zinc-500" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Now Playing & Controls */}
+                        {mixtapeSongs.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="text-center">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Now Playing</p>
+                              <h3 className="text-lg font-semibold">{mixtapeSongs[currentSongIndex]?.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Track {currentSongIndex + 1} of {mixtapeSongs.length}
+                              </p>
+                            </div>
+
+                            {mixtapeSongs[currentSongIndex]?.mediaUrl && (
+                              <audio
+                                ref={audioRef}
+                                src={mixtapeSongs[currentSongIndex].mediaUrl!}
+                                className="w-full"
+                                controls
+                                onPlay={() => setIsPlaying(true)}
+                                onPause={() => setIsPlaying(false)}
+                                onEnded={handleNext}
+                                data-testid="audio-mixtape-player-embedded"
+                              />
+                            )}
+
+                            <div className="flex items-center justify-center gap-4">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={handlePrevious}
+                                data-testid="button-previous-embedded"
+                              >
+                                <SkipBack className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                onClick={handlePlayPause}
+                                data-testid="button-play-pause-embedded"
+                              >
+                                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={handleNext}
+                                data-testid="button-next-embedded"
+                              >
+                                <SkipForward className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Tracklist */}
+                        {mixtapeSongs.length > 0 && (
+                          <div className="border rounded-lg overflow-hidden">
+                            <div className="px-4 py-2 bg-muted/50 border-b">
+                              <h4 className="text-sm font-medium flex items-center gap-2">
+                                <ListMusic className="w-4 h-4 text-primary" />
+                                Tracklist
+                              </h4>
+                            </div>
+                            <div className="divide-y">
+                              {mixtapeSongs.map((song, index) => (
+                                <button
+                                  key={song.id}
+                                  onClick={() => {
+                                    setCurrentSongIndex(index);
+                                    setIsPlaying(false);
+                                  }}
+                                  className={`w-full flex items-center gap-3 p-3 text-left transition-colors hover-elevate ${
+                                    index === currentSongIndex ? 'bg-primary/10' : ''
+                                  }`}
+                                  data-testid={`button-track-${index}`}
+                                >
+                                  <div className="w-10 h-10 rounded overflow-hidden shrink-0">
+                                    {song.imageUrl ? (
+                                      <img
+                                        src={song.imageUrl}
+                                        alt={song.title || "Song cover"}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                                        <Music className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate text-sm">{song.title}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{song.genre}</p>
+                                  </div>
+                                  {index === currentSongIndex && isPlaying && (
+                                    <div className="flex gap-0.5">
+                                      <div className="w-1 h-3 bg-primary animate-pulse rounded" />
+                                      <div className="w-1 h-3 bg-primary animate-pulse rounded delay-75" />
+                                      <div className="w-1 h-3 bg-primary animate-pulse rounded delay-150" />
+                                    </div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {mixtapeSongs.length === 0 && (
+                          <div className="text-center py-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">Loading tracks...</p>
+                          </div>
+                        )}
                       </div>
                     ) : createdMixtape.status === 'failed' ? (
                       <div className="text-center py-4">
