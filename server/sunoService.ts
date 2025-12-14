@@ -414,6 +414,9 @@ import axios from "axios";
 const SUNO_API_KEY = process.env.SUNO_API_KEY;
 const SUNO_API_BASE_URL = "https://api.sunoapi.org";
 
+// Default vocal style applied to all songs when no specific voice is selected
+const DEFAULT_VOICE_STYLE = "soulful Black vocals, rich warm tone, ";
+
 interface GenerateSongParams {
   recipientName: string;
   relationship: string;
@@ -542,14 +545,14 @@ function buildBlackGospelStyle(): string {
 function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
   const genre = resolveGenre(rawGenre);
 
-  // Build voice descriptor prefix
-  let voicePrefix = '';
+  // Build voice descriptor prefix - always include soulful Black vocal styling
+  let voicePrefix = DEFAULT_VOICE_STYLE;
   if (voice === 'male') {
-    voicePrefix = 'deep male vocals, baritone singer, ';
+    voicePrefix = 'soulful Black male vocals, deep baritone, rich warm tone, ';
   } else if (voice === 'female') {
-    voicePrefix = 'soulful female vocals, alto singer, ';
+    voicePrefix = 'soulful Black female vocals, alto, rich warm tone, ';
   } else if (voice === 'duet') {
-    voicePrefix = 'male and female duet vocals, harmonies, ';
+    voicePrefix = 'soulful Black male and female duet, harmonies, rich warm tone, ';
   }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
