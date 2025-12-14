@@ -1470,6 +1470,8 @@ export default function CreatePage() {
                                   <SelectItem value="electronic">Electronic</SelectItem>
                                   <SelectItem value="hip-hop">Hip-Hop</SelectItem>
                                   <SelectItem value="classical">Classical</SelectItem>
+                                  <SelectItem value="gospel">Gospel</SelectItem>
+                                  <SelectItem value="black-gospel">Black Gospel</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
