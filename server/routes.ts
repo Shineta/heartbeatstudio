@@ -855,15 +855,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/mixtape', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, theme, recipientName, relationship, genre } = req.body;
+      const { lovedOneId, theme, recipientName, relationship, genre1, genre2, genre3 } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
         return res.status(400).json({ message: "Invalid or missing theme" });
       }
 
-      if (!genre) {
-        return res.status(400).json({ message: "Genre is required" });
+      if (!genre1 || !genre2 || !genre3) {
+        return res.status(400).json({ message: "All three genres are required" });
       }
+      
+      const genres = [genre1, genre2, genre3];
 
       let lovedOne;
       if (lovedOneId) {
@@ -891,15 +893,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { generateSong } = await import('./sunoService');
       const songIds: string[] = [];
 
-      for (const songConfig of themeConfig.songs) {
+      for (let i = 0; i < themeConfig.songs.length; i++) {
+        const songConfig = themeConfig.songs[i];
+        const songGenre = genres[i];
         try {
-          // Use user-selected genre instead of theme-based genre
+          // Use user-selected genre for each song
           const songResult = await generateSong({
             recipientName: recipient,
             relationship: recipientRelationship,
             occasion: songConfig.occasion,
             tone: songConfig.tone,
-            genre: genre, // User-selected genre
+            genre: songGenre, // User-selected genre for this specific song
             interests: lovedOne?.interests || undefined,
             insideJokes: lovedOne?.insideJokes || undefined,
           });
@@ -921,7 +925,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lovedOneId: lovedOneId || null,
             type: 'song',
             tone: songConfig.tone,
-            genre: genre, // User-selected genre
+            genre: songGenre, // User-selected genre for this specific song
             title: songResult.title,
             content: songResult.lyrics,
             imageUrl: coverImageUrl || null,
