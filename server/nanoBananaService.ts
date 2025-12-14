@@ -236,40 +236,24 @@ export async function editImage(params: {
   return images[0];
 }
 
-// Theme-specific color palettes and visual elements for cassette tapes
-const cassetteThemeStyles: Record<string, string> = {
-  'romantic': 'pink and red color scheme, hearts, soft lighting, love theme',
-  'nostalgic': 'warm sepia tones, retro gradients, vintage aesthetic, faded colors',
-  'fun': 'bright neon colors, playful patterns, 80s Memphis style, confetti',
-  'chill': 'cool blue and purple gradient, lo-fi aesthetic, relaxed vibes, starry',
-  'hype': 'electric yellow and black, bold graphics, high energy, lightning bolts',
-  'emotional': 'deep blue and silver, moody lighting, raindrop effects, melancholic',
-};
-
 export async function generateCassetteCaseImage(params: {
   title: string;
   recipientName: string;
   theme?: string;
   coverArtUrl?: string;
 }): Promise<string> {
-  const { title, recipientName, theme, coverArtUrl } = params;
+  const { title, recipientName, theme } = params;
 
-  // Get theme-specific styling or default to romantic
-  const themeKey = theme?.toLowerCase() || 'romantic';
-  const themeStyle = cassetteThemeStyles[themeKey] || cassetteThemeStyles['romantic'];
-  
-  const prompt = `Product photography of a vintage audio cassette tape from the 1980s. 
-Three-quarter angle view showing the PHYSICAL CASSETTE TAPE with:
-- Two visible tape spools/reels with brown magnetic tape wound inside
-- Clear plastic window showing the tape reels
-- White label on the cassette body with handwritten text: "${title}" and "For ${recipientName}"
-- Classic cassette design with screw holes in corners
-- ${themeStyle}
+  // Very explicit prompt - the AI must generate a cassette tape
+  const prompt = `A single vintage audio cassette tape photographed on a wooden table. 
+The cassette tape is a rectangular plastic cartridge with two circular tape reels visible through a transparent window in the center.
+The cassette has a white paper label on top with handwritten marker text saying "${title}" and "For ${recipientName}".
+Classic 1980s TDK or Maxell style compact cassette design.
+The cassette shows the characteristic rectangular shape with rounded corners, the two tape spools with brown magnetic tape, screw holes in the corners, and the textured grip patterns on the sides.
+Photorealistic product photography, studio lighting, shallow depth of field.
+This must be a COMPACT CASSETTE TAPE - the audio format used with Walkman and boomboxes - NOT a VHS tape, NOT a CD, NOT vinyl.`;
 
-The cassette is sitting on a wooden desk surface with soft studio lighting. 
-Slight wear and nostalgic aging effects for authenticity.
-Sharp focus, realistic textures, vintage 80s mixtape aesthetic.
-NOT a CD, NOT vinyl, NOT a cassette case - this is the ACTUAL CASSETTE TAPE itself.`;
+  console.log(`[NanoBanana] Generating cassette tape image for: ${title}`);
 
   const images = await generateImage({
     prompt,
