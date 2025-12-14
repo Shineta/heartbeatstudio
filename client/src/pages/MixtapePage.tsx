@@ -137,68 +137,54 @@ export default function MixtapePage() {
           </p>
         </div>
 
-        {/* Cassette Tape Visual */}
+        {/* Cassette Tape Case Visual */}
         <div className="relative mb-6">
-          <div className="bg-gradient-to-b from-zinc-800 to-zinc-900 dark:from-zinc-700 dark:to-zinc-800 rounded-xl p-4 shadow-xl border-2 border-zinc-600 dark:border-zinc-500">
-            {/* Cassette label area */}
-            <div className="bg-gradient-to-b from-amber-100 to-amber-200 dark:from-amber-200 dark:to-amber-300 rounded-lg p-3 mb-4 relative overflow-hidden">
-              {/* Decorative stripes */}
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
-              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
+          <div className="bg-zinc-900 dark:bg-zinc-800 rounded-lg shadow-2xl overflow-hidden border border-zinc-700">
+            {/* Main album art area - takes up most of the case */}
+            <div className="aspect-square relative">
+              {currentSong?.imageUrl ? (
+                <img
+                  src={currentSong.imageUrl}
+                  alt={currentSong.title || "Album cover"}
+                  className="w-full h-full object-cover"
+                  data-testid="img-cassette-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 flex items-center justify-center">
+                  <ListMusic className="w-24 h-24 text-primary/50" />
+                </div>
+              )}
               
-              {/* Label content */}
-              <div className="text-center py-2">
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Side A</p>
-                <h2 className="text-lg font-bold text-zinc-800 truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+              {/* Subtle gradient overlay at bottom for text readability */}
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              
+              {/* Title overlay at bottom of cover art */}
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h2 className="text-xl font-bold text-white truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
                   {mixtape.title}
                 </h2>
-                <p className="text-sm text-zinc-600">For {mixtape.recipientName}</p>
+                <p className="text-sm text-white/70">For {mixtape.recipientName}</p>
               </div>
+
+              {/* Playing indicator */}
+              {isPlaying && (
+                <div className="absolute top-4 right-4 flex gap-1 bg-black/50 px-2 py-1 rounded-full">
+                  <div className="w-1 h-4 bg-white animate-pulse rounded" />
+                  <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-1 h-4 bg-white animate-pulse rounded" style={{ animationDelay: '0.2s' }} />
+                </div>
+              )}
             </div>
 
-            {/* Tape window area with reels */}
-            <div className="bg-zinc-950 rounded-lg p-4 relative">
-              <div className="flex items-center justify-between gap-4">
-                {/* Left reel */}
-                <div className={`w-20 h-20 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
-                  <div className="w-10 h-10 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-zinc-400" />
-                  </div>
-                </div>
-
-                {/* Center cover art window */}
-                <div className="flex-1 relative">
-                  <div className="aspect-[4/3] rounded-md overflow-hidden border-2 border-zinc-600 bg-zinc-800">
-                    {currentSong?.imageUrl ? (
-                      <img
-                        src={currentSong.imageUrl}
-                        alt={currentSong.title || "Song cover"}
-                        className="w-full h-full object-cover"
-                        data-testid="img-cassette-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ListMusic className="w-12 h-12 text-zinc-600" />
-                      </div>
-                    )}
-                  </div>
-                  {/* Tape line effect */}
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-zinc-700 -translate-y-1/2 pointer-events-none opacity-30" />
-                </div>
-
-                {/* Right reel */}
-                <div className={`w-20 h-20 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
-                  <div className="w-10 h-10 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-zinc-400" />
-                  </div>
-                </div>
+            {/* Bottom strip - cassette case style info bar */}
+            <div className="bg-zinc-800 dark:bg-zinc-700 px-4 py-3 flex items-center justify-between gap-2 border-t border-zinc-700 dark:border-zinc-600">
+              <div className="flex items-center gap-2 text-zinc-400 text-xs uppercase tracking-wider">
+                <ListMusic className="w-3 h-3" />
+                <span>{mixtape.songs.length} Tracks</span>
               </div>
-            </div>
-
-            {/* Bottom screw holes */}
-            <div className="flex justify-between mt-3 px-2">
-              <div className="w-3 h-3 rounded-full bg-zinc-600 border border-zinc-500" />
-              <div className="w-3 h-3 rounded-full bg-zinc-600 border border-zinc-500" />
+              <div className="text-zinc-400 text-xs uppercase tracking-wider">
+                {themeDisplay}
+              </div>
             </div>
           </div>
         </div>
