@@ -526,16 +526,17 @@ function buildBlackGospelStyle(): string {
 function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
   const genre = normalizeGenre(rawGenre);
 
+  // IMPORTANT: Do NOT include artist names - Suno API rejects them
   const genreStyles: Record<string, string> = {
     // Gospel styles
     'black-gospel': buildBlackGospelStyle(),
     gospel: buildBlackGospelStyle(),
     
-    // R&B / Soul - very specific to avoid country sound
-    'r&b': 'R&B, smooth soul, 808 bass, synth pads, silky vocals, Usher style, modern R&B production, sensual groove',
-    'rnb': 'R&B, smooth soul, 808 bass, synth pads, silky vocals, Usher style, modern R&B production, sensual groove',
+    // R&B / Soul - very specific to avoid country sound (NO artist names!)
+    'r&b': 'R&B, smooth soul, 808 bass, synth pads, silky male vocals, modern R&B production, sensual groove',
+    'rnb': 'R&B, smooth soul, 808 bass, synth pads, silky male vocals, modern R&B production, sensual groove',
     'soul': 'classic soul, Motown sound, horn section, vintage R&B, warm bass, emotional vocals',
-    'neo-soul': 'neo-soul, Erykah Badu style, jazzy chords, warm rhodes piano, laid-back groove, conscious lyrics',
+    'neo-soul': 'neo-soul, jazzy chords, warm rhodes piano, laid-back groove, conscious lyrics, organic',
     
     // Pop styles
     'pop': `${tone} pop, synth-driven, catchy hooks, polished production, radio-friendly, bright melody`,
@@ -552,11 +553,11 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
     'country': `${tone} country, acoustic guitar, steel guitar, Nashville production, twangy vocals, fiddle`,
     'folk': 'folk, acoustic guitar, fingerpicking, warm vocals, storytelling, organic sound',
     
-    // Hip-hop / Rap - never mix in tone words like "sweet" or "romantic"
-    'rap': 'hip hop, rap vocals, 808 bass, trap hi-hats, hard-hitting beats, urban production, Drake style flow',
-    'hip-hop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, Kendrick Lamar style, east coast vibes',
-    'hiphop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, Kendrick Lamar style, east coast vibes',
-    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta trap, Future style',
+    // Hip-hop / Rap - no artist names, no mixed tones
+    'rap': 'hip hop, rap vocals, 808 bass, trap hi-hats, hard-hitting beats, urban production, confident flow',
+    'hip-hop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, east coast vibes, conscious rap',
+    'hiphop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, east coast vibes, conscious rap',
+    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta trap, aggressive energy',
     
     // Electronic styles
     'electronic': 'electronic, synth-heavy, digital production, futuristic sounds, dance beats',
@@ -578,7 +579,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
     'ballad': `${tone} ballad, piano-driven, emotional strings, slow tempo, heartfelt vocals, orchestral`,
     'acoustic': 'acoustic, unplugged, guitar-driven, intimate vocals, warm and natural sound',
     'reggae': 'reggae, off-beat rhythm, bass-heavy, island vibes, one drop beat, laid-back groove',
-    'funk': 'funk, slap bass, wah guitar, groovy drums, James Brown influence, tight rhythm section',
+    'funk': 'funk, slap bass, wah guitar, groovy drums, classic funk energy, tight rhythm section',
     'disco': 'disco, four-on-the-floor, string stabs, funky bassline, 70s dance energy',
     'metal': 'heavy metal, distorted guitars, double bass drums, aggressive vocals, power chords',
     'punk': 'punk rock, fast tempo, power chords, raw energy, DIY aesthetic',
