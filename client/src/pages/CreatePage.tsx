@@ -42,6 +42,7 @@ const songFormSchema = z.object({
   occasion: z.string().min(1, "Occasion is required"),
   tone: z.string().min(1, "Tone is required"),
   genre: z.string().min(1, "Genre is required"),
+  voice: z.string().optional(),
   additionalNotes: z.string().optional(),
 });
 
@@ -60,12 +61,15 @@ const mixtapeFormSchema = z.object({
   theme: z.string().min(1, "Theme is required"),
   genre1: z.string().min(1, "Genre for Song 1 is required"),
   tone1: z.string().min(1, "Tone for Song 1 is required"),
+  voice1: z.string().optional(),
   notes1: z.string().optional(),
   genre2: z.string().min(1, "Genre for Song 2 is required"),
   tone2: z.string().min(1, "Tone for Song 2 is required"),
+  voice2: z.string().optional(),
   notes2: z.string().optional(),
   genre3: z.string().min(1, "Genre for Song 3 is required"),
   tone3: z.string().min(1, "Tone for Song 3 is required"),
+  voice3: z.string().optional(),
   notes3: z.string().optional(),
 });
 
@@ -152,6 +156,7 @@ export default function CreatePage() {
       occasion: "",
       tone: "sweet",
       genre: "pop",
+      voice: "",
       additionalNotes: "",
     },
   });
@@ -174,12 +179,15 @@ export default function CreatePage() {
       theme: "",
       genre1: "pop",
       tone1: "sweet",
+      voice1: "",
       notes1: "",
       genre2: "r&b",
       tone2: "romantic",
+      voice2: "",
       notes2: "",
       genre3: "acoustic",
       tone3: "heartfelt",
+      voice3: "",
       notes3: "",
     },
   });
