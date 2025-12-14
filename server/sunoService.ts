@@ -521,21 +521,67 @@ function buildBlackGospelStyle(): string {
   ].join(', ');
 }
 
-// Map genres to style strings.
+// Map genres to style strings with detailed musical characteristics.
 // Gospel-related genres always use the dedicated Black gospel style.
 function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
   const genre = normalizeGenre(rawGenre);
 
   const genreStyles: Record<string, string> = {
+    // Gospel styles
     'black-gospel': buildBlackGospelStyle(),
     gospel: buildBlackGospelStyle(),
-    christmas: 'Christmas carol, holiday bells, soulful choir',
-    pop: `${tone} pop, catchy, modern production`,
-    rock: `${tone} rock, electric guitar, live drums`,
-    country: `${tone} country, acoustic guitar, Nashville style`,
-    'r&b': `${tone} R&B, neo-soul groove, warm vocals`,
-    rap: `${tone} hip hop, rap, 808 beats`,
-    ballad: `${tone} ballad, piano, emotional, slow`,
+    
+    // R&B / Soul - very specific to avoid country sound
+    'r&b': 'R&B, smooth soul, 808 bass, synth pads, silky vocals, Usher style, modern R&B production, sensual groove',
+    'rnb': 'R&B, smooth soul, 808 bass, synth pads, silky vocals, Usher style, modern R&B production, sensual groove',
+    'soul': 'classic soul, Motown sound, horn section, vintage R&B, warm bass, emotional vocals',
+    'neo-soul': 'neo-soul, Erykah Badu style, jazzy chords, warm rhodes piano, laid-back groove, conscious lyrics',
+    
+    // Pop styles
+    'pop': `${tone} pop, synth-driven, catchy hooks, polished production, radio-friendly, bright melody`,
+    'dance-pop': 'dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy',
+    'indie-pop': 'indie pop, dreamy guitars, lo-fi aesthetic, alternative vocals, quirky melody',
+    
+    // Rock styles
+    'rock': `${tone} rock, electric guitar riffs, live drums, bass groove, powerful vocals`,
+    'alternative': 'alternative rock, grunge influence, distorted guitars, emotional intensity',
+    'indie': 'indie rock, jangly guitars, DIY aesthetic, melodic vocals, garage band energy',
+    'classic-rock': 'classic rock, 70s style, blues-influenced guitar, analog warmth, powerful riffs',
+    
+    // Country styles - distinct from R&B
+    'country': `${tone} country, acoustic guitar, steel guitar, Nashville production, twangy vocals, fiddle`,
+    'folk': 'folk, acoustic guitar, fingerpicking, warm vocals, storytelling, organic sound',
+    
+    // Hip-hop / Rap
+    'rap': `${tone} hip hop, trap beats, 808 bass, hi-hats, rap flow, urban production`,
+    'hip-hop': `${tone} hip hop, boom bap drums, sample-based, lyrical flow, urban beats`,
+    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta style',
+    
+    // Electronic styles
+    'electronic': 'electronic, synth-heavy, digital production, futuristic sounds, dance beats',
+    'edm': 'EDM, build-ups, drops, festival energy, synth leads, four-on-the-floor',
+    'house': 'house music, four-on-the-floor, disco samples, deep bass, club vibes',
+    'lofi': 'lo-fi hip hop, vinyl crackle, jazzy samples, chill beats, study music',
+    
+    // Jazz / Blues
+    'jazz': 'jazz, swing rhythm, piano chords, upright bass, brass section, sophisticated harmony',
+    'blues': 'blues, 12-bar structure, blues guitar, soulful vocals, Hammond organ',
+    
+    // Latin styles
+    'latin': 'latin pop, reggaeton influence, tropical beats, Spanish flavor, danceable rhythm',
+    'reggaeton': 'reggaeton, dembow beat, latin trap, urban latino, perreo rhythm',
+    'salsa': 'salsa, Afro-Cuban rhythms, brass section, congas, piano montuno',
+    
+    // Other styles
+    'christmas': 'Christmas carol, sleigh bells, holiday warmth, festive choir, jingle bells, winter wonderland',
+    'ballad': `${tone} ballad, piano-driven, emotional strings, slow tempo, heartfelt vocals, orchestral`,
+    'acoustic': 'acoustic, unplugged, guitar-driven, intimate vocals, warm and natural sound',
+    'reggae': 'reggae, off-beat rhythm, bass-heavy, island vibes, one drop beat, laid-back groove',
+    'funk': 'funk, slap bass, wah guitar, groovy drums, James Brown influence, tight rhythm section',
+    'disco': 'disco, four-on-the-floor, string stabs, funky bassline, 70s dance energy',
+    'metal': 'heavy metal, distorted guitars, double bass drums, aggressive vocals, power chords',
+    'punk': 'punk rock, fast tempo, power chords, raw energy, DIY aesthetic',
+    'classical': 'classical crossover, orchestral arrangement, strings, piano, elegant composition',
   };
 
   // For gospel of any kind, we *ignore tone* and force Black gospel style
@@ -543,7 +589,24 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
     return buildBlackGospelStyle();
   }
 
-  return genreStyles[genre] || `${tone} pop, catchy`;
+  // Try exact match first
+  if (genreStyles[genre]) {
+    console.log(`[Suno] Genre "${genre}" matched to style: ${genreStyles[genre]}`);
+    return genreStyles[genre];
+  }
+
+  // Try partial match for common variations
+  const genreLower = genre.toLowerCase();
+  for (const [key, value] of Object.entries(genreStyles)) {
+    if (genreLower.includes(key) || key.includes(genreLower)) {
+      console.log(`[Suno] Genre "${genre}" partially matched to "${key}" style: ${value}`);
+      return value;
+    }
+  }
+
+  // Default fallback with better logging
+  console.log(`[Suno] Genre "${genre}" not found, using pop fallback`);
+  return `${tone} pop, synth-driven, catchy hooks, polished production`;
 }
 
 async function pollTaskStatus(
