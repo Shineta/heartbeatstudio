@@ -98,7 +98,7 @@ export default function MixtapePage() {
   }
 
   const currentSong = mixtape.songs[currentSongIndex];
-  const themeDisplay = mixtape.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const themeDisplay = mixtape.theme ? mixtape.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Custom';
 
   const handlePrevious = () => {
     setCurrentSongIndex((prev) => (prev > 0 ? prev - 1 : mixtape.songs.length - 1));
