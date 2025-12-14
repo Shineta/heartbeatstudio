@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -70,6 +71,7 @@ const mixtapeFormSchema = z.object({
 
 export default function CreatePage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
   const [createdAnimation, setCreatedAnimation] = useState<Creation | null>(null);
@@ -93,27 +95,12 @@ export default function CreatePage() {
     queryKey: ['/api/loved-ones'],
   });
 
-  // Fetch songs when mixtape is complete
+  // Auto-redirect to mixtape player when generation is complete
   useEffect(() => {
-    async function fetchMixtapeSongs() {
-      if (createdMixtape && createdMixtape.status === 'complete' && createdMixtape.id) {
-        try {
-          const res = await fetch(`/api/mixtapes/${createdMixtape.id}`, { credentials: 'include' });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.songs) {
-              setMixtapeSongs(data.songs);
-              setCurrentSongIndex(0);
-              setIsPlaying(false);
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching mixtape songs:", error);
-        }
-      }
+    if (createdMixtape && createdMixtape.status === 'complete' && createdMixtape.shareableLink) {
+      setLocation(`/share/mixtape/${createdMixtape.shareableLink}`);
     }
-    fetchMixtapeSongs();
-  }, [createdMixtape?.status, createdMixtape?.id]);
+  }, [createdMixtape?.status, createdMixtape?.shareableLink, setLocation]);
 
   // Sync audio state when track changes
   useEffect(() => {
