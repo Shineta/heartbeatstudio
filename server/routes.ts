@@ -855,7 +855,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/mixtape', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, theme, recipientName, relationship, genre1, genre2, genre3 } = req.body;
+      const { 
+        lovedOneId, theme, recipientName, relationship,
+        genre1, tone1, notes1,
+        genre2, tone2, notes2,
+        genre3, tone3, notes3
+      } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
         return res.status(400).json({ message: "Invalid or missing theme" });
@@ -864,8 +869,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!genre1 || !genre2 || !genre3) {
         return res.status(400).json({ message: "All three genres are required" });
       }
+
+      if (!tone1 || !tone2 || !tone3) {
+        return res.status(400).json({ message: "All three tones are required" });
+      }
       
       const genres = [genre1, genre2, genre3];
+      const tones = [tone1, tone2, tone3];
+      const notes = [notes1 || '', notes2 || '', notes3 || ''];
 
       let lovedOne;
       if (lovedOneId) {
@@ -896,16 +907,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < themeConfig.songs.length; i++) {
         const songConfig = themeConfig.songs[i];
         const songGenre = genres[i];
+        const songTone = tones[i];
+        const songNotes = notes[i];
         try {
-          // Use user-selected genre for each song
+          // Use user-selected genre, tone, and notes for each song
           const songResult = await generateSong({
             recipientName: recipient,
             relationship: recipientRelationship,
             occasion: songConfig.occasion,
-            tone: songConfig.tone,
+            tone: songTone, // User-selected tone for this specific song
             genre: songGenre, // User-selected genre for this specific song
             interests: lovedOne?.interests || undefined,
             insideJokes: lovedOne?.insideJokes || undefined,
+            additionalNotes: songNotes || undefined, // User notes for this song
           });
 
           let coverImageUrl = songResult.coverImage;
@@ -924,7 +938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId,
             lovedOneId: lovedOneId || null,
             type: 'song',
-            tone: songConfig.tone,
+            tone: songTone, // User-selected tone for this specific song
             genre: songGenre, // User-selected genre for this specific song
             title: songResult.title,
             content: songResult.lyrics,

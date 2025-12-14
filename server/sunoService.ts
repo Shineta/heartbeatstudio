@@ -425,6 +425,7 @@ interface GenerateSongParams {
   insideJokes?: string;
   customLyrics?: string;
   customTitle?: string;
+  additionalNotes?: string;
 }
 
 interface SunoGenerateResponse {

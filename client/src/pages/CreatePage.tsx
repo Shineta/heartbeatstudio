@@ -58,8 +58,14 @@ const mixtapeFormSchema = z.object({
   recipientName: z.string().min(1, "Name is required"),
   theme: z.string().min(1, "Theme is required"),
   genre1: z.string().min(1, "Genre for Song 1 is required"),
+  tone1: z.string().min(1, "Tone for Song 1 is required"),
+  notes1: z.string().optional(),
   genre2: z.string().min(1, "Genre for Song 2 is required"),
+  tone2: z.string().min(1, "Tone for Song 2 is required"),
+  notes2: z.string().optional(),
   genre3: z.string().min(1, "Genre for Song 3 is required"),
+  tone3: z.string().min(1, "Tone for Song 3 is required"),
+  notes3: z.string().optional(),
 });
 
 export default function CreatePage() {
@@ -121,8 +127,14 @@ export default function CreatePage() {
       recipientName: "",
       theme: "",
       genre1: "pop",
+      tone1: "sweet",
+      notes1: "",
       genre2: "r&b",
+      tone2: "romantic",
+      notes2: "",
       genre3: "acoustic",
+      tone3: "heartfelt",
+      notes3: "",
     },
   });
 
@@ -1450,110 +1462,248 @@ export default function CreatePage() {
                         )}
                       />
 
-                      <div className="space-y-4">
-                        <p className="text-sm font-medium">Choose a genre for each song</p>
+                      <div className="space-y-6">
+                        <p className="text-sm font-medium">Customize each song</p>
                         
-                        <FormField
-                          control={mixtapeForm.control}
-                          name="genre1"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Song 1 Genre</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <SelectTrigger data-testid="select-mixtape-genre1">
-                                    <SelectValue placeholder="Select genre for song 1" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pop">Pop</SelectItem>
-                                    <SelectItem value="rock">Rock</SelectItem>
-                                    <SelectItem value="r&b">R&B</SelectItem>
-                                    <SelectItem value="country">Country</SelectItem>
-                                    <SelectItem value="jazz">Jazz</SelectItem>
-                                    <SelectItem value="soul">Soul</SelectItem>
-                                    <SelectItem value="folk">Folk</SelectItem>
-                                    <SelectItem value="indie">Indie</SelectItem>
-                                    <SelectItem value="acoustic">Acoustic</SelectItem>
-                                    <SelectItem value="electronic">Electronic</SelectItem>
-                                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                    <SelectItem value="classical">Classical</SelectItem>
-                                    <SelectItem value="gospel">Gospel</SelectItem>
-                                    <SelectItem value="black-gospel">Black Gospel</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <Card className="p-4">
+                          <p className="font-medium mb-3">Song 1</p>
+                          <div className="space-y-3">
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="genre1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Genre</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-genre1">
+                                        <SelectValue placeholder="Select genre" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="r&b">R&B</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="acoustic">Acoustic</SelectItem>
+                                        <SelectItem value="electronic">Electronic</SelectItem>
+                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="gospel">Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="tone1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tone</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-tone1">
+                                        <SelectValue placeholder="Select tone" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="sweet">Sweet</SelectItem>
+                                        <SelectItem value="romantic">Romantic</SelectItem>
+                                        <SelectItem value="heartfelt">Heartfelt</SelectItem>
+                                        <SelectItem value="fun">Fun</SelectItem>
+                                        <SelectItem value="playful">Playful</SelectItem>
+                                        <SelectItem value="funny">Funny</SelectItem>
+                                        <SelectItem value="nostalgic">Nostalgic</SelectItem>
+                                        <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="sentimental">Sentimental</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="notes1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Notes (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Special details for this song..." {...field} data-testid="input-mixtape-notes1" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </Card>
 
-                        <FormField
-                          control={mixtapeForm.control}
-                          name="genre2"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Song 2 Genre</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <SelectTrigger data-testid="select-mixtape-genre2">
-                                    <SelectValue placeholder="Select genre for song 2" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pop">Pop</SelectItem>
-                                    <SelectItem value="rock">Rock</SelectItem>
-                                    <SelectItem value="r&b">R&B</SelectItem>
-                                    <SelectItem value="country">Country</SelectItem>
-                                    <SelectItem value="jazz">Jazz</SelectItem>
-                                    <SelectItem value="soul">Soul</SelectItem>
-                                    <SelectItem value="folk">Folk</SelectItem>
-                                    <SelectItem value="indie">Indie</SelectItem>
-                                    <SelectItem value="acoustic">Acoustic</SelectItem>
-                                    <SelectItem value="electronic">Electronic</SelectItem>
-                                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                    <SelectItem value="classical">Classical</SelectItem>
-                                    <SelectItem value="gospel">Gospel</SelectItem>
-                                    <SelectItem value="black-gospel">Black Gospel</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <Card className="p-4">
+                          <p className="font-medium mb-3">Song 2</p>
+                          <div className="space-y-3">
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="genre2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Genre</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-genre2">
+                                        <SelectValue placeholder="Select genre" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="r&b">R&B</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="acoustic">Acoustic</SelectItem>
+                                        <SelectItem value="electronic">Electronic</SelectItem>
+                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="gospel">Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="tone2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tone</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-tone2">
+                                        <SelectValue placeholder="Select tone" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="sweet">Sweet</SelectItem>
+                                        <SelectItem value="romantic">Romantic</SelectItem>
+                                        <SelectItem value="heartfelt">Heartfelt</SelectItem>
+                                        <SelectItem value="fun">Fun</SelectItem>
+                                        <SelectItem value="playful">Playful</SelectItem>
+                                        <SelectItem value="funny">Funny</SelectItem>
+                                        <SelectItem value="nostalgic">Nostalgic</SelectItem>
+                                        <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="sentimental">Sentimental</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="notes2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Notes (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Special details for this song..." {...field} data-testid="input-mixtape-notes2" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </Card>
 
-                        <FormField
-                          control={mixtapeForm.control}
-                          name="genre3"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Song 3 Genre</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <SelectTrigger data-testid="select-mixtape-genre3">
-                                    <SelectValue placeholder="Select genre for song 3" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pop">Pop</SelectItem>
-                                    <SelectItem value="rock">Rock</SelectItem>
-                                    <SelectItem value="r&b">R&B</SelectItem>
-                                    <SelectItem value="country">Country</SelectItem>
-                                    <SelectItem value="jazz">Jazz</SelectItem>
-                                    <SelectItem value="soul">Soul</SelectItem>
-                                    <SelectItem value="folk">Folk</SelectItem>
-                                    <SelectItem value="indie">Indie</SelectItem>
-                                    <SelectItem value="acoustic">Acoustic</SelectItem>
-                                    <SelectItem value="electronic">Electronic</SelectItem>
-                                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                    <SelectItem value="classical">Classical</SelectItem>
-                                    <SelectItem value="gospel">Gospel</SelectItem>
-                                    <SelectItem value="black-gospel">Black Gospel</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <Card className="p-4">
+                          <p className="font-medium mb-3">Song 3</p>
+                          <div className="space-y-3">
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="genre3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Genre</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-genre3">
+                                        <SelectValue placeholder="Select genre" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="r&b">R&B</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="acoustic">Acoustic</SelectItem>
+                                        <SelectItem value="electronic">Electronic</SelectItem>
+                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="gospel">Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="tone3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tone</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-tone3">
+                                        <SelectValue placeholder="Select tone" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="sweet">Sweet</SelectItem>
+                                        <SelectItem value="romantic">Romantic</SelectItem>
+                                        <SelectItem value="heartfelt">Heartfelt</SelectItem>
+                                        <SelectItem value="fun">Fun</SelectItem>
+                                        <SelectItem value="playful">Playful</SelectItem>
+                                        <SelectItem value="funny">Funny</SelectItem>
+                                        <SelectItem value="nostalgic">Nostalgic</SelectItem>
+                                        <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="sentimental">Sentimental</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="notes3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Notes (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Special details for this song..." {...field} data-testid="input-mixtape-notes3" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </Card>
                       </div>
 
                       {mixtapeMutation.isPending && (
