@@ -855,10 +855,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/mixtape', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, theme, recipientName, relationship } = req.body;
+      const { lovedOneId, theme, recipientName, relationship, genre } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
         return res.status(400).json({ message: "Invalid or missing theme" });
+      }
+
+      if (!genre) {
+        return res.status(400).json({ message: "Genre is required" });
       }
 
       let lovedOne;
@@ -889,12 +893,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const songConfig of themeConfig.songs) {
         try {
+          // Use user-selected genre instead of theme-based genre
           const songResult = await generateSong({
             recipientName: recipient,
             relationship: recipientRelationship,
             occasion: songConfig.occasion,
             tone: songConfig.tone,
-            genre: songConfig.genre,
+            genre: genre, // User-selected genre
             interests: lovedOne?.interests || undefined,
             insideJokes: lovedOne?.insideJokes || undefined,
           });
@@ -916,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lovedOneId: lovedOneId || null,
             type: 'song',
             tone: songConfig.tone,
-            genre: songConfig.genre,
+            genre: genre, // User-selected genre
             title: songResult.title,
             content: songResult.lyrics,
             imageUrl: coverImageUrl || null,

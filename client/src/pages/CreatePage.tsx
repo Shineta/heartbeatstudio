@@ -57,6 +57,7 @@ const mixtapeFormSchema = z.object({
   lovedOneId: z.string().optional(),
   recipientName: z.string().min(1, "Name is required"),
   theme: z.string().min(1, "Theme is required"),
+  genre: z.string().min(1, "Genre is required"),
 });
 
 export default function CreatePage() {
@@ -117,6 +118,7 @@ export default function CreatePage() {
     defaultValues: {
       recipientName: "",
       theme: "",
+      genre: "pop",
     },
   });
 
@@ -1437,7 +1439,42 @@ export default function CreatePage() {
                               </Select>
                             </FormControl>
                             <p className="text-xs text-muted-foreground">
-                              Each theme includes 3 songs with complementary genres and styles
+                              Each theme sets the mood and tone for your songs
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={mixtapeForm.control}
+                        name="genre"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Music Genre</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-mixtape-genre">
+                                  <SelectValue placeholder="Select genre for all songs" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pop">Pop</SelectItem>
+                                  <SelectItem value="rock">Rock</SelectItem>
+                                  <SelectItem value="r&b">R&B</SelectItem>
+                                  <SelectItem value="country">Country</SelectItem>
+                                  <SelectItem value="jazz">Jazz</SelectItem>
+                                  <SelectItem value="soul">Soul</SelectItem>
+                                  <SelectItem value="folk">Folk</SelectItem>
+                                  <SelectItem value="indie">Indie</SelectItem>
+                                  <SelectItem value="acoustic">Acoustic</SelectItem>
+                                  <SelectItem value="electronic">Electronic</SelectItem>
+                                  <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                  <SelectItem value="classical">Classical</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              All 3 songs in your mixtape will use this genre
                             </p>
                             <FormMessage />
                           </FormItem>
