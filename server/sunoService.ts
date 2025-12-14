@@ -526,38 +526,38 @@ function buildBlackGospelStyle(): string {
 function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
   const genre = normalizeGenre(rawGenre);
 
-  // IMPORTANT: Do NOT include artist names - Suno API rejects them
+  // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
   const genreStyles: Record<string, string> = {
     // Gospel styles
     'black-gospel': buildBlackGospelStyle(),
     gospel: buildBlackGospelStyle(),
     
-    // R&B / Soul - very specific to avoid country sound (NO artist names!)
-    'r&b': 'R&B, smooth soul, 808 bass, synth pads, silky male vocals, modern R&B production, sensual groove',
-    'rnb': 'R&B, smooth soul, 808 bass, synth pads, silky male vocals, modern R&B production, sensual groove',
-    'soul': 'classic soul, Motown sound, horn section, vintage R&B, warm bass, emotional vocals',
-    'neo-soul': 'neo-soul, jazzy chords, warm rhodes piano, laid-back groove, conscious lyrics, organic',
+    // R&B / Soul - smooth, sensual, modern production (no artist names - describe the sound)
+    'r&b': 'R&B, smooth falsetto vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, Toronto sound, introspective lyrics',
+    'rnb': 'R&B, smooth falsetto vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, Toronto sound, introspective lyrics',
+    'soul': 'classic soul, Motown sound, horn section, vintage R&B, warm bass, emotional vocals, 60s soul revival',
+    'neo-soul': 'neo-soul, jazzy chords, warm rhodes piano, laid-back groove, conscious lyrics, organic production, spiritual undertones',
     
     // Pop styles
     'pop': `${tone} pop, synth-driven, catchy hooks, polished production, radio-friendly, bright melody`,
-    'dance-pop': 'dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy',
+    'dance-pop': 'dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy, euphoric',
     'indie-pop': 'indie pop, dreamy guitars, lo-fi aesthetic, alternative vocals, quirky melody',
     
     // Rock styles
     'rock': `${tone} rock, electric guitar riffs, live drums, bass groove, powerful vocals`,
-    'alternative': 'alternative rock, grunge influence, distorted guitars, emotional intensity',
+    'alternative': 'alternative rock, grunge influence, distorted guitars, emotional intensity, 90s Seattle sound',
     'indie': 'indie rock, jangly guitars, DIY aesthetic, melodic vocals, garage band energy',
     'classic-rock': 'classic rock, 70s style, blues-influenced guitar, analog warmth, powerful riffs',
     
-    // Country styles - distinct from R&B
+    // Country styles
     'country': `${tone} country, acoustic guitar, steel guitar, Nashville production, twangy vocals, fiddle`,
     'folk': 'folk, acoustic guitar, fingerpicking, warm vocals, storytelling, organic sound',
     
-    // Hip-hop / Rap - no artist names, no mixed tones
-    'rap': 'hip hop, rap vocals, 808 bass, trap hi-hats, hard-hitting beats, urban production, confident flow',
-    'hip-hop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, east coast vibes, conscious rap',
-    'hiphop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, east coast vibes, conscious rap',
-    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta trap, aggressive energy',
+    // Hip-hop / Rap - describe the production style, not artists
+    'rap': 'hip hop, melodic rap flow, 808 bass, ambient pads, introspective delivery, Toronto R&B influenced, smooth vocal runs',
+    'hip-hop': 'hip hop, boom bap drums, jazz samples, complex rhyme schemes, storytelling, conscious lyrics, west coast g-funk bass',
+    'hiphop': 'hip hop, boom bap drums, jazz samples, complex rhyme schemes, storytelling, conscious lyrics, west coast g-funk bass',
+    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta bass, ad-libs, aggressive energy',
     
     // Electronic styles
     'electronic': 'electronic, synth-heavy, digital production, futuristic sounds, dance beats',
@@ -579,7 +579,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
     'ballad': `${tone} ballad, piano-driven, emotional strings, slow tempo, heartfelt vocals, orchestral`,
     'acoustic': 'acoustic, unplugged, guitar-driven, intimate vocals, warm and natural sound',
     'reggae': 'reggae, off-beat rhythm, bass-heavy, island vibes, one drop beat, laid-back groove',
-    'funk': 'funk, slap bass, wah guitar, groovy drums, classic funk energy, tight rhythm section',
+    'funk': 'funk, slap bass, wah guitar, groovy drums, tight pocket, horn stabs, syncopated rhythm',
     'disco': 'disco, four-on-the-floor, string stabs, funky bassline, 70s dance energy',
     'metal': 'heavy metal, distorted guitars, double bass drums, aggressive vocals, power chords',
     'punk': 'punk rock, fast tempo, power chords, raw energy, DIY aesthetic',
