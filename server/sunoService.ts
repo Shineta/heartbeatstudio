@@ -420,6 +420,7 @@ interface GenerateSongParams {
   occasion?: string;
   tone: string;
   genre?: string;
+  voice?: string;
   interests?: string;
   insideJokes?: string;
   customLyrics?: string;
@@ -538,8 +539,18 @@ function buildBlackGospelStyle(): string {
 }
 
 // Map genres to style strings with detailed musical characteristics.
-function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
+function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
   const genre = resolveGenre(rawGenre);
+
+  // Build voice descriptor prefix
+  let voicePrefix = '';
+  if (voice === 'male') {
+    voicePrefix = 'deep male vocals, baritone singer, ';
+  } else if (voice === 'female') {
+    voicePrefix = 'soulful female vocals, alto singer, ';
+  } else if (voice === 'duet') {
+    voicePrefix = 'male and female duet vocals, harmonies, ';
+  }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
   const genreStyles: Record<string, string> = {
@@ -625,15 +636,15 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
 
   // For gospel of any kind, force Black gospel style
   if (genre === "black-gospel" || genre === "gospel") {
-    return buildBlackGospelStyle();
+    return voicePrefix + buildBlackGospelStyle();
   }
 
   // Exact match
   if (genreStyles[genre]) {
     console.log(
-      `[Suno] Genre "${genre}" matched to style: ${genreStyles[genre]}`,
+      `[Suno] Genre "${genre}" matched to style: ${voicePrefix + genreStyles[genre]}`,
     );
-    return genreStyles[genre];
+    return voicePrefix + genreStyles[genre];
   }
 
   // Partial match for fuzzy cases
@@ -641,15 +652,15 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
   for (const [key, value] of Object.entries(genreStyles)) {
     if (genreLower.includes(key) || key.includes(genreLower)) {
       console.log(
-        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${value}`,
+        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${voicePrefix + value}`,
       );
-      return value;
+      return voicePrefix + value;
     }
   }
 
   // Default fallback
   console.log(`[Suno] Genre "${genre}" not found, using pop fallback`);
-  return `${tone} pop, synth-driven, catchy hooks, polished production`;
+  return voicePrefix + `${tone} pop, synth-driven, catchy hooks, polished production`;
 }
 
 async function pollTaskStatus(
@@ -829,6 +840,7 @@ export async function generateSongWithLyrics(params: {
   lyrics: string;
   tone: string;
   genre?: string;
+  voice?: string;
   additionalNotes?: string;
 }): Promise<{
   audioUrl: string;
@@ -859,7 +871,7 @@ export async function generateSongWithLyrics(params: {
       style = styleMatch[1].trim().substring(0, 100);
       console.log(`[Suno] Using CUSTOM style from notes: ${style}`);
     } else {
-      style = getDetailedStyle(resolvedGenre, params.tone);
+      style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
       console.log(`[Suno] Using auto-generated style: ${style}`);
     }
 
@@ -1043,6 +1055,7 @@ export async function generateSong(
       lyrics: params.customLyrics,
       tone: params.tone,
       genre: resolvedGenre,
+      voice: params.voice,
       additionalNotes: params.additionalNotes,
     });
   }
@@ -1064,6 +1077,7 @@ export async function generateSong(
     lyrics: songLyrics.lyrics,
     tone: params.tone,
     genre: resolvedGenre,
+    voice: params.voice,
     additionalNotes: params.additionalNotes,
   });
 }
