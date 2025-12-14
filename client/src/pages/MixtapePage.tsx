@@ -137,65 +137,121 @@ export default function MixtapePage() {
           </p>
         </div>
 
+        {/* Cassette Tape Visual */}
+        <div className="relative mb-6">
+          <div className="bg-gradient-to-b from-zinc-800 to-zinc-900 dark:from-zinc-700 dark:to-zinc-800 rounded-xl p-4 shadow-xl border-2 border-zinc-600 dark:border-zinc-500">
+            {/* Cassette label area */}
+            <div className="bg-gradient-to-b from-amber-100 to-amber-200 dark:from-amber-200 dark:to-amber-300 rounded-lg p-3 mb-4 relative overflow-hidden">
+              {/* Decorative stripes */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
+              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-amber-400 to-rose-400" />
+              
+              {/* Label content */}
+              <div className="text-center py-2">
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Side A</p>
+                <h2 className="text-lg font-bold text-zinc-800 truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                  {mixtape.title}
+                </h2>
+                <p className="text-sm text-zinc-600">For {mixtape.recipientName}</p>
+              </div>
+            </div>
+
+            {/* Tape window area with reels */}
+            <div className="bg-zinc-950 rounded-lg p-4 relative">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left reel */}
+                <div className={`w-20 h-20 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
+                  <div className="w-10 h-10 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-zinc-400" />
+                  </div>
+                </div>
+
+                {/* Center cover art window */}
+                <div className="flex-1 relative">
+                  <div className="aspect-[4/3] rounded-md overflow-hidden border-2 border-zinc-600 bg-zinc-800">
+                    {currentSong?.imageUrl ? (
+                      <img
+                        src={currentSong.imageUrl}
+                        alt={currentSong.title || "Song cover"}
+                        className="w-full h-full object-cover"
+                        data-testid="img-cassette-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ListMusic className="w-12 h-12 text-zinc-600" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Tape line effect */}
+                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-zinc-700 -translate-y-1/2 pointer-events-none opacity-30" />
+                </div>
+
+                {/* Right reel */}
+                <div className={`w-20 h-20 rounded-full bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
+                  <div className="w-10 h-10 rounded-full bg-zinc-700 border-2 border-zinc-500 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-zinc-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom screw holes */}
+            <div className="flex justify-between mt-3 px-2">
+              <div className="w-3 h-3 rounded-full bg-zinc-600 border border-zinc-500" />
+              <div className="w-3 h-3 rounded-full bg-zinc-600 border border-zinc-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Now Playing & Controls */}
         <Card className="mb-6">
-          <CardContent className="p-0">
-            {currentSong?.imageUrl && (
-              <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                <img
-                  src={currentSong.imageUrl}
-                  alt={currentSong.title || "Song cover"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          <CardContent className="p-6">
+            <div className="text-center mb-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Now Playing</p>
+              <h2 className="text-xl font-semibold">{currentSong?.title}</h2>
+              <p className="text-sm text-muted-foreground">
+                Track {currentSongIndex + 1} of {mixtape.songs.length}
+                {currentSong?.genre && ` • ${currentSong.genre}`}
+              </p>
+            </div>
+
+            {currentSong?.mediaUrl && (
+              <audio
+                ref={audioRef}
+                src={currentSong.mediaUrl}
+                className="w-full mb-4"
+                controls
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={handleNext}
+                data-testid="audio-mixtape-player"
+              />
             )}
-            <div className="p-6">
-              <div className="text-center mb-4">
-                <h2 className="text-xl font-semibold">{currentSong?.title}</h2>
-                <p className="text-sm text-muted-foreground">
-                  Song {currentSongIndex + 1} of {mixtape.songs.length}
-                  {currentSong?.genre && ` • ${currentSong.genre}`}
-                </p>
-              </div>
 
-              {currentSong?.mediaUrl && (
-                <audio
-                  ref={audioRef}
-                  src={currentSong.mediaUrl}
-                  className="w-full mb-4"
-                  controls
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  onEnded={handleNext}
-                  data-testid="audio-mixtape-player"
-                />
-              )}
-
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePrevious}
-                  data-testid="button-previous-song"
-                >
-                  <SkipBack className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  className="h-12 w-12"
-                  onClick={handlePlayPause}
-                  data-testid="button-play-pause"
-                >
-                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNext}
-                  data-testid="button-next-song"
-                >
-                  <SkipForward className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePrevious}
+                data-testid="button-previous-song"
+              >
+                <SkipBack className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                onClick={handlePlayPause}
+                data-testid="button-play-pause"
+              >
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNext}
+                data-testid="button-next-song"
+              >
+                <SkipForward className="w-4 h-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
