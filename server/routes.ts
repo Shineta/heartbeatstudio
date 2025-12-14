@@ -890,6 +890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const themeConfig = MIXTAPE_THEMES[theme];
       const themeTitle = theme.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       
+      const shareableMixtapeLink = `mixtape-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const mixtape = await storage.createMixtape({
         userId,
         lovedOneId: lovedOneId || null,
@@ -897,6 +898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         theme,
         recipientName: recipient,
         songIds: [],
+        shareableLink: shareableMixtapeLink,
         status: 'generating',
       });
 
