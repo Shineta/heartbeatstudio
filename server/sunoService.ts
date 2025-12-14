@@ -552,10 +552,11 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string): string {
     'country': `${tone} country, acoustic guitar, steel guitar, Nashville production, twangy vocals, fiddle`,
     'folk': 'folk, acoustic guitar, fingerpicking, warm vocals, storytelling, organic sound',
     
-    // Hip-hop / Rap
-    'rap': `${tone} hip hop, trap beats, 808 bass, hi-hats, rap flow, urban production`,
-    'hip-hop': `${tone} hip hop, boom bap drums, sample-based, lyrical flow, urban beats`,
-    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta style',
+    // Hip-hop / Rap - never mix in tone words like "sweet" or "romantic"
+    'rap': 'hip hop, rap vocals, 808 bass, trap hi-hats, hard-hitting beats, urban production, Drake style flow',
+    'hip-hop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, Kendrick Lamar style, east coast vibes',
+    'hiphop': 'hip hop, boom bap drums, sampled beats, lyrical rap flow, Kendrick Lamar style, east coast vibes',
+    'trap': 'trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta trap, Future style',
     
     // Electronic styles
     'electronic': 'electronic, synth-heavy, digital production, futuristic sounds, dance beats',
