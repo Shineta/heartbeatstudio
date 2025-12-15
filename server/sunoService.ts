@@ -414,16 +414,18 @@ import axios from "axios";
 const SUNO_API_KEY = process.env.SUNO_API_KEY;
 const SUNO_API_BASE_URL = "https://api.sunoapi.org";
 
-// Default vocal style applied to all songs when no specific voice is selected
-const DEFAULT_VOICE_STYLE = "soulful Black vocals, rich warm tone, ";
+// Global default: all songs assume soulful Black vocals
+const DEFAULT_VOICE_STYLE =
+  "soulful Black lead vocals, rich warm tone, gospel/R&B phrasing, ";
 
+// Types
 interface GenerateSongParams {
   recipientName: string;
   relationship: string;
   occasion?: string;
   tone: string;
   genre?: string;
-  voice?: string;
+  voice?: "male" | "female" | "duet"; // optional nuance, still always Black
   interests?: string;
   insideJokes?: string;
   customLyrics?: string;
@@ -483,8 +485,7 @@ interface SunoConcatResponse {
  * Resolve the genre into a canonical key that matches our style map.
  * - Any "gospel-like" genre → "black-gospel"
  * - Normalizes things like "hip hop" → "hiphop", "RNB" → "r&b", etc.
- * - If nothing is passed, default to "pop" (you can change this to "black-gospel"
- *   if you want your app default to always be gospel).
+ * - If nothing is passed, default to "pop".
  */
 function resolveGenre(input?: string): string {
   if (!input) return "pop";
@@ -507,31 +508,44 @@ function resolveGenre(input?: string): string {
 
   // Canonicalize common synonyms / variations
   if (g === "black gospel" || g === "black-gospel") return "black-gospel";
-  if (g === "hip hop" || g === "hip-hop") return "hiphop";
-  if (g === "hiphop") return "hiphop";
+  if (g === "hip hop" || g === "hip-hop") return "hip-hop";
+  if (g === "hiphop") return "hip-hop";
   if (g === "rap") return "rap";
+  if (g === "conscious rap" || g === "conscious-rap" || g === "conscious hip hop") return "conscious-rap";
 
-  if (g === "r&b" || g === "rnb" || g === "r and b" || g === "r n b") {
-    return "r&b";
-  }
+  if (g === "r&b" || g === "rnb" || g === "r and b" || g === "r n b") return "r&b";
+  if (g === "modern r&b" || g === "modern-r&b" || g === "contemporary r&b") return "modern-r&b";
+  if (g === "quiet storm" || g === "quiet-storm") return "quiet-storm";
+  if (g === "classic soul" || g === "classic-soul" || g === "70s soul" || g === "motown") return "classic-soul";
+  if (g === "neo soul" || g === "neo-soul" || g === "neosoul") return "neo-soul";
+  if (g === "soul blues" || g === "soul-blues") return "soul-blues";
+  if (g === "chicago blues" || g === "chicago-blues") return "chicago-blues";
 
-  if (g === "lofi" || g === "lo-fi") return "lofi";
+  if (g === "p funk" || g === "p-funk" || g === "pfunk" || g === "parliament" || g === "funkadelic") return "p-funk";
+  if (g === "modern funk" || g === "modern-funk") return "modern-funk";
+
+  if (g === "smooth jazz" || g === "smooth-jazz") return "smooth-jazz";
+  if (g === "jazz fusion" || g === "jazz-fusion") return "jazz-fusion";
+
+  if (g === "lofi" || g === "lo-fi" || g === "lo fi") return "lofi";
   if (g === "dance pop" || g === "dance-pop") return "dance-pop";
   if (g === "indie pop" || g === "indie-pop") return "indie-pop";
   if (g === "classic rock" || g === "classic-rock") return "classic-rock";
+  if (g === "blues rock" || g === "blues-rock") return "blues-rock";
+  if (g === "country soul" || g === "country-soul") return "country-soul";
 
   // Otherwise use the lowercased string as-is
   return g;
 }
 
 /**
- * Style builder specifically tuned for authentic Black gospel.
+ * Style builder specifically tuned for authentic Black gospel band/arrangement.
+ * (Vocal race/feel is handled by voicePrefix so we don’t double up.)
  */
-function buildBlackGospelStyle(): string {
+function buildBlackGospelBandStyle(): string {
   // Keep this reasonably short; Suno can be sensitive to very long tag strings
   return [
-    "BLACK GOSPEL CHOIR",
-    "African American lead vocals",
+    "church choir harmonies",
     "Hammond B3 organ",
     "live church band",
     "call and response",
@@ -541,129 +555,147 @@ function buildBlackGospelStyle(): string {
   ].join(", ");
 }
 
-// Map genres to style strings with detailed musical characteristics.
-function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
-  const genre = resolveGenre(rawGenre);
-
-  // Build voice descriptor prefix - always include soulful Black vocal styling
-  let voicePrefix = DEFAULT_VOICE_STYLE;
-  if (voice === 'male') {
-    voicePrefix = 'soulful Black male vocals, deep baritone, rich warm tone, ';
-  } else if (voice === 'female') {
-    voicePrefix = 'soulful Black female vocals, alto, rich warm tone, ';
-  } else if (voice === 'duet') {
-    voicePrefix = 'soulful Black male and female duet, harmonies, rich warm tone, ';
+/**
+ * Build vocal descriptor prefix - ALWAYS Black and soulful.
+ */
+function buildVoicePrefix(voice?: "male" | "female" | "duet"): string {
+  switch (voice) {
+    case "male":
+      return "soulful Black male lead vocals, deep baritone/tenor, rich warm tone, ";
+    case "female":
+      return "soulful Black female lead vocals, alto/soprano, rich warm tone, ";
+    case "duet":
+      return "soulful Black male and female duet, stacked harmonies, rich warm tone, ";
+    default:
+      return DEFAULT_VOICE_STYLE;
   }
+}
 
-  // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
+// Map genres to style strings with detailed musical characteristics.
+function getDetailedStyle(
+  rawGenre: string | undefined,
+  tone: string,
+  voice?: "male" | "female" | "duet",
+): string {
+  const genre = resolveGenre(rawGenre);
+  const voicePrefix = buildVoicePrefix(voice);
+
+  // Genre-specific style clusters with authentic instrumentation, groove, and production
+  // Priority order: instrumentation, rhythm/groove, arrangement, production era, energy
   const genreStyles: Record<string, string> = {
-    // Gospel styles
-    "black-gospel": buildBlackGospelStyle(),
-    gospel: buildBlackGospelStyle(),
+    // Gospel styles - use dedicated builder
+    "black-gospel": buildBlackGospelBandStyle(),
+    gospel: buildBlackGospelBandStyle(),
 
-    // R&B / Soul
-    "r&b":
-      "R&B, smooth vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, mid-tempo bounce",
-    rnb: "R&B, smooth vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, mid-tempo bounce",
-    soul: "classic soul, Motown feel, horn section, warm bass, emotional vocals, 60s soul revival",
-    "neo-soul":
-      "neo-soul, jazzy chords, warm rhodes piano, laid-back groove, organic drums, spiritual undertones",
+    // Soul / R&B - AUTHENTIC BLACK MUSIC STYLES
+    soul: "classic soul, live horn section, deep pocket drums, Fender Rhodes, analog warmth, 1970s Motown/Stax feel, gospel-influenced runs",
+    "classic-soul": "70s soul, live brass arrangement, finger-snapping groove, vintage tape saturation, halftime feel, emotional melisma",
+    "neo-soul": "neo-soul, Fender Rhodes chords, jazzy 7th harmonies, laid-back pocket groove, live bass, D'Angelo/Erykah Badu vibe",
+    "r&b": "90s R&B, new jack swing drums, lush vocal stacks, slow jam groove, sensual, Jodeci/Mary J Blige feel",
+    rnb: "90s R&B, new jack swing drums, lush vocal stacks, slow jam groove, sensual, deep pocket bass",
+    "modern-r&b": "modern R&B, 808 bass, trap hi-hats, falsetto runs, moody pads, SZA/Frank Ocean atmosphere",
+    "quiet-storm": "quiet storm R&B, smooth slow jam, satin sheets vibe, soft synths, intimate whisper vocals, late night radio",
 
-    // Pop styles
-    pop: `${tone} pop, synth-driven, catchy hooks, polished production, radio-friendly, bright melody`,
-    "dance-pop":
-      "dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy, euphoric",
-    "indie-pop":
-      "indie pop, dreamy guitars, lo-fi aesthetic, alternative vocals, quirky melody",
+    // Funk - tight grooves
+    funk: "funk, slap bass, clavinet, wah guitar, deep pocket ONE groove, James Brown horns, call and response",
+    "p-funk": "P-funk, synth bass, spacey keyboards, talkbox, Parliament/Funkadelic cosmic groove, tight drums",
+    "modern-funk": "modern funk, synth bass, 80s drum machine, boogie feel, Thundercat/Anderson Paak vibe",
 
-    // Rock styles
-    rock: `${tone} rock, electric guitar riffs, live drums, bass groove, powerful vocals`,
-    alternative:
-      "alternative rock, grunge influence, distorted guitars, emotional intensity, 90s vibe",
-    indie:
-      "indie rock, jangly guitars, DIY aesthetic, melodic vocals, garage band energy",
-    "classic-rock":
-      "classic rock, 70s style, blues-influenced guitar, analog warmth, big riffs",
+    // Hip-hop styles
+    rap: "melodic hip hop, 808 sub bass, trap hi-hats, sung hooks, atmospheric pads, Drake/Future vibe",
+    "hip-hop": "boom bap, chopped soul samples, MPC drums, jazzy loops, conscious lyrics, 90s golden era",
+    hiphop: "boom bap, chopped soul samples, MPC drums, jazzy loops, storytelling verses, 90s golden era",
+    trap: "trap, heavy 808s, triplet hi-hats, dark minor keys, Atlanta sound, melodic hooks",
+    "conscious-rap": "conscious hip hop, jazz samples, live bass, positive message, Kendrick/J Cole vibe",
 
-    // Country & folk
-    country:
-      "modern country, acoustic and electric guitars, steel guitar, Nashville production, storytelling lyrics",
-    folk: "folk, acoustic guitar, fingerpicking, warm vocals, narrative storytelling, organic sound",
+    // Blues
+    blues: "delta blues, slide guitar, shuffle groove, Hammond B3 organ, 12-bar progression, gritty emotional vocals",
+    "chicago-blues": "Chicago blues, electric guitar, harmonica, walking bass, smoky club feel, Muddy Waters vibe",
+    "soul-blues": "soul blues, horn section, B3 organ, Bobby Blue Bland feel, deep southern groove",
 
-    // Hip-hop / Rap
-    rap: "hip hop, melodic rap flow, 808 bass, modern trap drums, ambient pads, introspective delivery",
-    "hip-hop":
-      "hip hop, boom bap drums, jazz samples, strong groove, storytelling verses, conscious lyrics",
-    hiphop:
-      "hip hop, boom bap drums, jazz samples, strong groove, storytelling verses, conscious lyrics",
-    trap: "trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta-inspired rhythm, energetic ad-libs",
+    // Jazz
+    jazz: "jazz, swing rhythm, piano trio, walking upright bass, brush drums, sophisticated harmony",
+    "smooth-jazz": "smooth jazz, soprano sax, Rhodes piano, laid-back groove, late night vibe",
+    "jazz-fusion": "jazz fusion, complex harmony, slap bass, Herbie Hancock Rhodes, odd time signatures",
 
-    // Electronic styles
-    electronic:
-      "electronic, synth-heavy, digital production, futuristic sounds, dance beats",
-    edm: "EDM, build-ups, drops, festival energy, synth leads, four-on-the-floor",
-    house:
-      "house music, four-on-the-floor, deep bass, repetitive vocal chops, club vibe",
-    lofi: "lo-fi hip hop, vinyl crackle, jazzy samples, chill beats, mellow and laid-back",
+    // Pop - but with soul influence
+    pop: "pop, catchy hooks, polished production, R&B vocal runs, radio-friendly, contemporary sound",
+    "dance-pop": "dance pop, four-on-the-floor, synth drops, euphoric chorus, house-influenced, club energy",
+    "indie-pop": "indie pop, dreamy guitars, lo-fi warmth, bedroom production, quirky melody",
 
-    // Jazz / Blues
-    jazz: "jazz, swing or smooth groove, piano chords, upright or electric bass, brass or saxophone lines",
-    blues:
-      "blues, 12-bar feel, expressive guitar, soulful vocals, Hammond organ, gritty tone",
+    // Rock with soul
+    rock: "rock, electric guitar riffs, live drums, powerful vocals with gospel inflection, arena sound",
+    alternative: "alternative rock, 90s grunge influence, emotional intensity, raw guitar, dynamic shifts",
+    indie: "indie rock, jangly guitars, lo-fi charm, melodic hooks, DIY energy",
+    "classic-rock": "classic rock, 70s guitar tones, blues-based riffs, analog warmth, live band feel",
+    "blues-rock": "blues rock, overdriven guitar, shuffle groove, Hammond organ, Hendrix/SRV feel",
 
-    // Latin styles
-    latin:
-      "latin pop, syncopated percussion, tropical flavor, danceable rhythm, spanish-influenced melodies",
-    reggaeton:
-      "reggaeton, dembow beat, latin trap flavor, urban latino energy, club-ready",
-    salsa:
-      "salsa, Afro-Cuban rhythm, brass section, congas, piano montuno, dance floor feel",
+    // Country/Folk
+    country: "modern country, acoustic guitar, steel guitar, Nashville production, storytelling, crossover appeal",
+    folk: "folk, fingerpicked acoustic, warm natural vocal, narrative storytelling, organic production",
+    "country-soul": "country soul, Ray Charles influence, piano, southern groove, gospel harmonies",
 
-    // Other styles
-    christmas:
-      "Christmas carol, sleigh bells, holiday warmth, festive choir, winter atmosphere",
-    ballad: `${tone} ballad, piano-driven, emotional strings, slow tempo, heartfelt vocals`,
-    acoustic:
-      "acoustic, unplugged, guitar-driven, intimate vocals, warm and natural sound",
-    reggae:
-      "reggae, off-beat rhythm, bass-heavy, island vibes, one drop beat, laid-back groove",
-    funk: "funk, slap bass, wah guitar, groovy drums, tight pocket, syncopated rhythm",
-    disco:
-      "disco, four-on-the-floor, funky bassline, string stabs, 70s dance energy",
-    metal:
-      "heavy metal, distorted guitars, double bass drums, aggressive vocals, power chords",
+    // Electronic with soul
+    electronic: "electronic, synth textures, soulful vocal chops, atmospheric, modern production",
+    edm: "EDM, build and drop, festival energy, anthemic hooks, euphoric breakdown",
+    house: "deep house, four-on-the-floor, soulful vocal samples, classic Chicago/Detroit feel, warm bass",
+    lofi: "lo-fi hip hop, vinyl crackle, jazzy piano samples, chill beats, mellow and nostalgic",
+
+    // Latin
+    latin: "latin soul, Afro-Cuban percussion, piano montuno, bilingual flow, salsa-influenced",
+    reggaeton: "reggaeton, dembow riddim, 808 bass, latin trap flavor, club-ready energy",
+    salsa: "salsa, live brass, congas, piano montuno, call and response, dance floor energy",
+
+    // Caribbean
+    reggae: "reggae, one drop beat, bass-heavy, off-beat skank guitar, dub echo, island vibes",
+    dancehall: "dancehall, digital riddim, Caribbean flow, party energy, tropical bass",
+
+    // Special occasions
+    christmas: "Christmas soul, sleigh bells, gospel choir harmonies, Motown holiday feel, warm and festive",
+    ballad: "power ballad, piano-driven, emotional strings, slow tempo, big vocal crescendo, gospel runs",
+    acoustic: "acoustic soul, unplugged guitar, intimate vocals, stripped-down, warm room sound",
+
+    // Other
+    disco: "disco, four-on-the-floor, funky bass, string stabs, 70s dance floor, Chic/Earth Wind Fire feel",
+    metal: "heavy metal, distorted guitars, double bass drums, powerful vocals, aggressive energy",
     punk: "punk rock, fast tempo, power chords, raw energy, DIY aesthetic",
-    classical:
-      "classical crossover, orchestral arrangement, strings, piano, elegant composition",
+    classical: "classical crossover, orchestral strings, piano, elegant arrangement, cinematic",
   };
 
-  // For gospel of any kind, force Black gospel style
+  // For gospel of any kind, force gospel band style but keep Black vocal prefix
   if (genre === "black-gospel" || genre === "gospel") {
-    return voicePrefix + buildBlackGospelStyle();
+    const style = voicePrefix + buildBlackGospelBandStyle();
+    console.log(`[Suno] Gospel style: ${style}`);
+    return style;
   }
 
   // Exact match
   if (genreStyles[genre]) {
-    console.log(
-      `[Suno] Genre "${genre}" matched to style: ${voicePrefix + genreStyles[genre]}`,
-    );
-    return voicePrefix + genreStyles[genre];
+    const style = voicePrefix + genreStyles[genre];
+    console.log(`[Suno] Genre "${genre}" matched to style: ${style}`);
+    return style;
   }
 
   // Partial match for fuzzy cases
   const genreLower = genre.toLowerCase();
   for (const [key, value] of Object.entries(genreStyles)) {
     if (genreLower.includes(key) || key.includes(genreLower)) {
+      const style = voicePrefix + value;
       console.log(
-        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${voicePrefix + value}`,
+        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${style}`,
       );
-      return voicePrefix + value;
+      return style;
     }
   }
 
   // Default fallback
-  console.log(`[Suno] Genre "${genre}" not found, using pop fallback`);
-  return voicePrefix + `${tone} pop, synth-driven, catchy hooks, polished production`;
+  const fallback =
+    voicePrefix +
+    `${tone} pop, synth-driven, catchy hooks, polished production, R&B-infused vocals`;
+  console.log(
+    `[Suno] Genre "${genre}" not found, using pop fallback: ${fallback}`,
+  );
+  return fallback;
 }
 
 async function pollTaskStatus(
@@ -804,8 +836,6 @@ async function concatenateClips(clipIds: string[]): Promise<string> {
   const response = await axios.post<SunoConcatResponse>(
     `${SUNO_API_BASE_URL}/api/v1/generate/concat`,
     {
-      // NOTE: API currently takes a single clipId in your original code.
-      // If they later support arrays, update this accordingly.
       clipId: clipIds[0],
     },
     {
@@ -843,7 +873,7 @@ export async function generateSongWithLyrics(params: {
   lyrics: string;
   tone: string;
   genre?: string;
-  voice?: string;
+  voice?: "male" | "female" | "duet";
   additionalNotes?: string;
 }): Promise<{
   audioUrl: string;
@@ -866,13 +896,18 @@ export async function generateSongWithLyrics(params: {
     const isGospel =
       resolvedGenre === "black-gospel" || resolvedGenre === "gospel";
 
-    // Check if additional notes contain style override (look for "style:" prefix)
+    const voicePrefix = buildVoicePrefix(params.voice);
+
+    // If user includes a "style:" override, we STILL keep the Black soulful voice prefix.
     let style: string;
     const styleMatch = params.additionalNotes?.match(/style:\s*(.+?)(?:\n|$)/i);
 
     if (styleMatch && styleMatch[1]) {
-      style = styleMatch[1].trim().substring(0, 100);
-      console.log(`[Suno] Using CUSTOM style from notes: ${style}`);
+      const userStyle = styleMatch[1].trim().substring(0, 120);
+      style = voicePrefix + userStyle;
+      console.log(
+        `[Suno] Using CUSTOM style from notes (with Black vocals): ${style}`,
+      );
     } else {
       style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
       console.log(`[Suno] Using auto-generated style: ${style}`);
@@ -886,7 +921,7 @@ export async function generateSongWithLyrics(params: {
     const response = await axios.post<SunoGenerateResponse>(
       `${SUNO_API_BASE_URL}/api/v1/generate`,
       {
-        prompt: params.lyrics, // lyrics in custom mode
+        prompt: params.lyrics,
         style,
         title: params.title,
         customMode: true,
@@ -935,10 +970,9 @@ export async function generateSongWithLyrics(params: {
     let extensionCount = 0;
     const maxExtensions = 3;
 
-    // Build a continuation prompt base that respects the actual genre
     const continuationBase = isGospel
-      ? "Continue this BLACK GOSPEL worship song with the same church choir energy, Hammond organ, and call-and-response feel."
-      : `Continue this ${resolvedGenre} song with the same style, groove, and energy.`;
+      ? "Continue this BLACK GOSPEL worship song with the same soulful Black choir energy, Hammond organ feel, and call-and-response spirit."
+      : `Continue this ${resolvedGenre} song with the same groove, production style, and soulful Black vocal energy.`;
 
     // Step 2: Extend until we reach target duration
     while (currentDuration < targetDuration && extensionCount < maxExtensions) {
@@ -1032,9 +1066,7 @@ export async function generateSongWithLyrics(params: {
  *  - uses custom lyrics & title directly, OR
  *  - calls OpenAI to generate lyrics and then passes them into the genre-aware generator.
  */
-export async function generateSong(
-  params: GenerateSongParams,
-): Promise<{
+export async function generateSong(params: GenerateSongParams): Promise<{
   audioUrl: string;
   lyrics: string;
   title: string;
