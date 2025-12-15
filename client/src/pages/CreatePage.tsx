@@ -159,7 +159,7 @@ export default function CreatePage() {
       relationship: "",
       occasion: "",
       tone: "sweet",
-      genre: "pop",
+      genre: "r&b",
       voice: "",
       duration: "quick",
       additionalNotes: "",
@@ -182,17 +182,17 @@ export default function CreatePage() {
     defaultValues: {
       recipientName: "",
       theme: "",
-      genre1: "pop",
+      genre1: "r&b",
       tone1: "sweet",
       voice1: "",
       duration1: "quick",
       notes1: "",
-      genre2: "r&b",
+      genre2: "gospel",
       tone2: "romantic",
       voice2: "",
       duration2: "quick",
       notes2: "",
-      genre3: "acoustic",
+      genre3: "neo-soul",
       tone3: "heartfelt",
       voice3: "",
       duration3: "quick",
@@ -1256,17 +1256,20 @@ export default function CreatePage() {
                                   <SelectValue placeholder="Select genre" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="pop">Pop</SelectItem>
-                                  <SelectItem value="rock">Rock</SelectItem>
-                                  <SelectItem value="country">Country</SelectItem>
                                   <SelectItem value="r&b">R&B</SelectItem>
-                                  <SelectItem value="rap">Rap</SelectItem>
-                                  <SelectItem value="neo-soul">Neo-Soul</SelectItem>
-                                  <SelectItem value="trap">Trap</SelectItem>
-                                  <SelectItem value="ballad">Ballad</SelectItem>
                                   <SelectItem value="gospel">Gospel</SelectItem>
                                   <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
-                                  <SelectItem value="christmas">Christmas</SelectItem>
+                                  <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                  <SelectItem value="soul">Soul</SelectItem>
+                                  <SelectItem value="motown">Motown</SelectItem>
+                                  <SelectItem value="rap">Rap</SelectItem>
+                                  <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                                  <SelectItem value="trap">Trap</SelectItem>
+                                  <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                                  <SelectItem value="jazz">Jazz</SelectItem>
+                                  <SelectItem value="blues">Blues</SelectItem>
+                                  <SelectItem value="funk">Funk</SelectItem>
+                                  <SelectItem value="reggae">Reggae</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -1765,22 +1768,20 @@ export default function CreatePage() {
                                         <SelectValue placeholder="Select genre" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="pop">Pop</SelectItem>
-                                        <SelectItem value="rock">Rock</SelectItem>
                                         <SelectItem value="r&b">R&B</SelectItem>
-                                        <SelectItem value="country">Country</SelectItem>
-                                        <SelectItem value="jazz">Jazz</SelectItem>
-                                        <SelectItem value="soul">Soul</SelectItem>
-                                        <SelectItem value="folk">Folk</SelectItem>
-                                        <SelectItem value="indie">Indie</SelectItem>
-                                        <SelectItem value="acoustic">Acoustic</SelectItem>
-                                        <SelectItem value="electronic">Electronic</SelectItem>
-                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
-                                        <SelectItem value="trap">Trap</SelectItem>
-                                        <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
-                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="motown">Motown</SelectItem>
+                                        <SelectItem value="rap">Rap</SelectItem>
+                                        <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
+                                        <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="blues">Blues</SelectItem>
+                                        <SelectItem value="funk">Funk</SelectItem>
+                                        <SelectItem value="reggae">Reggae</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
@@ -1891,22 +1892,20 @@ export default function CreatePage() {
                                         <SelectValue placeholder="Select genre" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="pop">Pop</SelectItem>
-                                        <SelectItem value="rock">Rock</SelectItem>
                                         <SelectItem value="r&b">R&B</SelectItem>
-                                        <SelectItem value="country">Country</SelectItem>
-                                        <SelectItem value="jazz">Jazz</SelectItem>
-                                        <SelectItem value="soul">Soul</SelectItem>
-                                        <SelectItem value="folk">Folk</SelectItem>
-                                        <SelectItem value="indie">Indie</SelectItem>
-                                        <SelectItem value="acoustic">Acoustic</SelectItem>
-                                        <SelectItem value="electronic">Electronic</SelectItem>
-                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
-                                        <SelectItem value="trap">Trap</SelectItem>
-                                        <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
-                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="motown">Motown</SelectItem>
+                                        <SelectItem value="rap">Rap</SelectItem>
+                                        <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
+                                        <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="blues">Blues</SelectItem>
+                                        <SelectItem value="funk">Funk</SelectItem>
+                                        <SelectItem value="reggae">Reggae</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
@@ -2017,22 +2016,20 @@ export default function CreatePage() {
                                         <SelectValue placeholder="Select genre" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="pop">Pop</SelectItem>
-                                        <SelectItem value="rock">Rock</SelectItem>
                                         <SelectItem value="r&b">R&B</SelectItem>
-                                        <SelectItem value="country">Country</SelectItem>
-                                        <SelectItem value="jazz">Jazz</SelectItem>
-                                        <SelectItem value="soul">Soul</SelectItem>
-                                        <SelectItem value="folk">Folk</SelectItem>
-                                        <SelectItem value="indie">Indie</SelectItem>
-                                        <SelectItem value="acoustic">Acoustic</SelectItem>
-                                        <SelectItem value="electronic">Electronic</SelectItem>
-                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
-                                        <SelectItem value="trap">Trap</SelectItem>
-                                        <SelectItem value="classical">Classical</SelectItem>
                                         <SelectItem value="gospel">Gospel</SelectItem>
-                                        <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                                        <SelectItem value="black-gospel">Black Gospel (Clark Sisters style)</SelectItem>
+                                        <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="motown">Motown</SelectItem>
+                                        <SelectItem value="rap">Rap</SelectItem>
+                                        <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
+                                        <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="blues">Blues</SelectItem>
+                                        <SelectItem value="funk">Funk</SelectItem>
+                                        <SelectItem value="reggae">Reggae</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
