@@ -560,11 +560,11 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
   // Build voice descriptor prefix - authentic Black R&B/soul vocal style
   let voicePrefix = '';
   if (voice === 'male') {
-    voicePrefix = 'soulful Black male vocals, R&B tenor with runs and ad-libs, ';
+    voicePrefix = 'soulful Black male R&B vocals, ';
   } else if (voice === 'female') {
-    voicePrefix = 'powerful Black female vocals, R&B alto with melisma and runs, ';
+    voicePrefix = 'soulful Black female R&B vocals, ';
   } else if (voice === 'duet') {
-    voicePrefix = 'Black male and female duet, R&B harmonies with ad-libs, ';
+    voicePrefix = 'Black R&B duet harmonies, ';
   }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
@@ -577,13 +577,13 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
 
     // R&B / Soul - AUTHENTIC instrumentation, NO synth/808 for classic styles
     "r&b":
-      "contemporary R&B, live drums with snap, warm bass guitar, Rhodes electric piano, lush strings, sensual groove, slow jam feel",
-    rnb: "contemporary R&B, live drums with snap, warm bass guitar, Rhodes electric piano, lush strings, sensual groove, slow jam feel",
-    soul: "CLASSIC SOUL, Stax Records sound, live horn section, walking bass, analog tape warmth, gritty B3 Hammond organ, rimshot snare backbeat, raw emotional vocals, 1960s Memphis soul",
-    "southern-soul": "SOUTHERN SOUL, Stax-style horns, walking bass, analog tape saturation, B3 organ, live drums, call-and-response vocals, chitlin circuit feel",
-    motown: "MOTOWN SOUND, 1960s Detroit, tambourine on 2 and 4, walking bass, string arrangements, hand claps, upbeat groove, classic vocal harmonies",
+      "contemporary R&B, Rhodes piano, live drums, warm bass, slow jam groove",
+    rnb: "contemporary R&B, Rhodes piano, live drums, warm bass, slow jam groove",
+    soul: "CLASSIC SOUL, Stax horns, walking bass, B3 organ, 1960s Memphis feel",
+    "southern-soul": "SOUTHERN SOUL, Stax horns, walking bass, B3 organ, call-and-response",
+    motown: "MOTOWN SOUND, 1960s Detroit, tambourine, walking bass, strings, hand claps",
     "neo-soul":
-      "NEO-SOUL, soulful Black R&B vocals with ad-libs, Fender Rhodes, J Dilla drums with swing, Moog bass, vinyl warmth, head-nodding groove, late 90s golden era vibe",
+      "NEO-SOUL, Fender Rhodes, J Dilla drums, Moog bass, vinyl warmth, 90s golden era",
 
     // Pop styles - these CAN use synths
     pop: `modern pop production, catchy hooks, polished mix, radio-friendly, bright melody, ${tone} mood`,
