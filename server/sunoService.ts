@@ -947,13 +947,14 @@ export async function generateSongWithLyrics(params: {
       `[Suno] Initial clip completed: ${initialDuration}s, ID: ${initialTrack.id}`,
     );
 
-    // Target: ~180 seconds (3 minutes)
-    const targetDuration = 180;
+    // Target: ~60 seconds (1 minute) - faster generation, keeps users engaged
+    // Initial clip is typically 45-60 seconds, so we only extend once if needed
+    const targetDuration = 60;
     let currentDuration = initialDuration;
     let currentAudioId = initialTrack.id;
     const clipIds = [initialTrack.id];
     let extensionCount = 0;
-    const maxExtensions = 3;
+    const maxExtensions = 1; // Reduced from 3 to 1 for faster generation
 
     // Build a continuation prompt base that respects the actual genre
     const continuationBase = isGospel
