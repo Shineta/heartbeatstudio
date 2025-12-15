@@ -402,29 +402,38 @@ export async function generateCardImage(params: {
   return b64Json;
 }
 
-// Generate song cover art (returns base64) - Cassette tape style
+// Generate song cover art - Cassette tape style using Nano Banana Realistic
+// Returns a URL to the generated image (not base64)
 export async function generateSongCover(params: {
   title: string;
   tone: string;
   genre?: string;
   trackList?: string[];
+  recipientName?: string;
 }): Promise<string> {
-  // Build a tracklist string for the cassette jacket
-  const tracks = params.trackList && params.trackList.length > 0 
-    ? params.trackList.slice(0, 6).map((t, i) => `${i + 1}. ${t}`).join(', ')
-    : `1. ${params.title}`;
+  // Import Nano Banana service for realistic image generation
+  const { generateImageStandard } = await import('./nanoBananaService');
 
-  const prompt = `Create a vintage cassette tape album cover photograph. Show a classic audio cassette tape in white/cream color laying next to its opened paper jacket/case. The cassette jacket should be open and unfolded, showing the cover art and a printed tracklist. Style: nostalgic 80s/90s retro photography, warm vintage tones, realistic product photography. The cassette tape should be clearly visible with its spools and label. The jacket art should have vibrant colors matching the ${params.tone} ${params.genre || 'pop'} genre, with the song title "${params.title}" visible. Professional studio lighting, slight film grain for vintage feel.`;
+  const prompt = `A vintage audio cassette tape with its paper jacket/case displayed on a warm wooden surface.
+The cassette tape is a classic white/cream colored compact cassette with two visible tape reels through the transparent window.
+The cassette label shows "${params.title}" in bold retro typography.
+Next to the cassette is its unfolded paper jacket/sleeve showing vibrant ${params.genre || 'pop'} style album artwork with ${params.tone} mood colors.
+The inside of the jacket displays a printed tracklist with song titles.
+Style: nostalgic 80s/90s product photography, warm vintage film tones, professional studio lighting, slight film grain.
+Photorealistic, high quality product shot of a compact audio cassette tape and its packaging.`;
 
-  const response = await openai.images.generate({
-    model: "gpt-image-1",
+  console.log(`[SongCover] Generating cassette tape cover with Nano Banana for: ${params.title}`);
+
+  const imageUrls = await generateImageStandard({
     prompt,
-    size: "1024x1024",
+    numImages: 1,
+    imageSize: '1:1'
   });
 
-  const b64Json = response.data?.[0]?.b64_json;
-  if (!b64Json) {
-    throw new Error("No image data returned from AI service");
+  if (!imageUrls || imageUrls.length === 0) {
+    throw new Error("No image URL returned from Nano Banana");
   }
-  return b64Json;
+
+  // Return the URL directly (Nano Banana returns URLs, not base64)
+  return imageUrls[0];
 }

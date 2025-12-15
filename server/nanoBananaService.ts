@@ -97,6 +97,65 @@ export async function generateImage(params: {
   }
 }
 
+// Standard model version (faster, ~30-60 seconds)
+export async function generateImageStandard(params: {
+  prompt: string;
+  numImages?: number;
+  imageSize?: ImageSize;
+  imageUrls?: string[];
+}): Promise<string[]> {
+  if (!NANO_BANANA_API_KEY) {
+    throw new Error('NANO_BANANA_API_KEY is not configured. Please add it to Replit Secrets.');
+  }
+
+  const { prompt, numImages = 1, imageSize = '1:1', imageUrls } = params;
+
+  const callbackUrl = process.env.REPL_SLUG 
+    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/nanobanana-callback`
+    : 'https://example.com/callback';
+
+  console.log(`[NanoBanana] Using STANDARD model (faster)`);
+  console.log(`[NanoBanana] Generating image with prompt: ${prompt.substring(0, 100)}...`);
+
+  const requestBody: Record<string, any> = {
+    prompt,
+    numImages,
+    callBackUrl: callbackUrl,
+    type: imageUrls && imageUrls.length > 0 ? 'IMAGETOIAMGE' : 'TEXTTOIAMGE',
+    image_size: imageSize,
+  };
+
+  if (imageUrls && imageUrls.length > 0) {
+    requestBody.imageUrls = imageUrls;
+  }
+
+  try {
+    const response = await axios.post<NanoBananaGenerateResponse>(
+      `${NANO_BANANA_BASE_URL}/generate`,
+      requestBody,
+      {
+        headers: {
+          'Authorization': `Bearer ${NANO_BANANA_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (response.data.code !== 200) {
+      throw new Error(response.data.msg || 'Failed to start image generation');
+    }
+
+    const taskId = response.data.data.taskId;
+    console.log(`[NanoBanana Standard] Task started with ID: ${taskId}`);
+
+    const result = await pollTaskStatus(taskId);
+    return result;
+  } catch (error: any) {
+    console.error('[NanoBanana Standard] Error generating image:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.msg || error.message || 'Failed to generate image');
+  }
+}
+
 async function pollTaskStatus(taskId: string, maxAttempts: number = 60): Promise<string[]> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     await new Promise(resolve => setTimeout(resolve, 3000));
