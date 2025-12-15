@@ -43,6 +43,7 @@ const songFormSchema = z.object({
   tone: z.string().min(1, "Tone is required"),
   genre: z.string().min(1, "Genre is required"),
   voice: z.string().optional(),
+  duration: z.string().optional(),
   additionalNotes: z.string().optional(),
 });
 
@@ -62,14 +63,17 @@ const mixtapeFormSchema = z.object({
   genre1: z.string().min(1, "Genre for Song 1 is required"),
   tone1: z.string().min(1, "Tone for Song 1 is required"),
   voice1: z.string().optional(),
+  duration1: z.string().optional(),
   notes1: z.string().optional(),
   genre2: z.string().min(1, "Genre for Song 2 is required"),
   tone2: z.string().min(1, "Tone for Song 2 is required"),
   voice2: z.string().optional(),
+  duration2: z.string().optional(),
   notes2: z.string().optional(),
   genre3: z.string().min(1, "Genre for Song 3 is required"),
   tone3: z.string().min(1, "Tone for Song 3 is required"),
   voice3: z.string().optional(),
+  duration3: z.string().optional(),
   notes3: z.string().optional(),
 });
 
@@ -157,6 +161,7 @@ export default function CreatePage() {
       tone: "sweet",
       genre: "pop",
       voice: "",
+      duration: "quick",
       additionalNotes: "",
     },
   });
@@ -180,14 +185,17 @@ export default function CreatePage() {
       genre1: "pop",
       tone1: "sweet",
       voice1: "",
+      duration1: "quick",
       notes1: "",
       genre2: "r&b",
       tone2: "romantic",
       voice2: "",
+      duration2: "quick",
       notes2: "",
       genre3: "acoustic",
       tone3: "heartfelt",
       voice3: "",
+      duration3: "quick",
       notes3: "",
     },
   });
@@ -1316,6 +1324,31 @@ export default function CreatePage() {
 
                       <FormField
                         control={songForm.control}
+                        name="duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Song Length</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-song-duration">
+                                  <SelectValue placeholder="Select length" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="quick">Quick (~1 min) - Faster generation</SelectItem>
+                                  <SelectItem value="extended">Extended (~3 min) - Full song</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Quick songs generate in about 1 minute. Extended songs take 3-5 minutes but are longer.
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={songForm.control}
                         name="additionalNotes"
                         render={({ field }) => (
                           <FormItem>
@@ -1806,6 +1839,27 @@ export default function CreatePage() {
                             />
                             <FormField
                               control={mixtapeForm.control}
+                              name="duration1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Length</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-duration1">
+                                        <SelectValue placeholder="Select length" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="quick">Quick (~1 min)</SelectItem>
+                                        <SelectItem value="extended">Extended (~3 min)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
                               name="notes1"
                               render={({ field }) => (
                                 <FormItem>
@@ -1911,6 +1965,27 @@ export default function CreatePage() {
                             />
                             <FormField
                               control={mixtapeForm.control}
+                              name="duration2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Length</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-duration2">
+                                        <SelectValue placeholder="Select length" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="quick">Quick (~1 min)</SelectItem>
+                                        <SelectItem value="extended">Extended (~3 min)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
                               name="notes2"
                               render={({ field }) => (
                                 <FormItem>
@@ -2007,6 +2082,27 @@ export default function CreatePage() {
                                         <SelectItem value="male">Male</SelectItem>
                                         <SelectItem value="female">Female</SelectItem>
                                         <SelectItem value="duet">Duet</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="duration3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Length</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-mixtape-duration3">
+                                        <SelectValue placeholder="Select length" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="quick">Quick (~1 min)</SelectItem>
+                                        <SelectItem value="extended">Extended (~3 min)</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
