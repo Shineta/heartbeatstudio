@@ -409,6 +409,10 @@
 // }
 
 // sunoService.ts
+
+
+
+
 import axios from "axios";
 
 const SUNO_API_KEY = process.env.SUNO_API_KEY;
@@ -507,15 +511,25 @@ function resolveGenre(input?: string): string {
   if (g === "hip hop" || g === "hip-hop") return "hiphop";
   if (g === "hiphop") return "hiphop";
   if (g === "rap") return "rap";
+  if (g === "old school rap" || g === "old school hip hop" || g === "80s hip hop") return "old-school-rap";
 
-  if (g === "r&b" || g === "rnb" || g === "r and b" || g === "r n b") {
+  if (g === "r&b" || g === "rnb" || g === "r and b" || g === "r n b" || g === "rhythm and blues") {
     return "r&b";
   }
 
-  if (g === "lofi" || g === "lo-fi") return "lofi";
+  // Soul variations - route to authentic soul sound
+  if (g === "soul" || g === "soul music" || g === "classic soul" || g === "60s soul") return "soul";
+  if (g === "southern soul" || g === "stax" || g === "memphis soul") return "southern-soul";
+  if (g === "motown" || g === "detroit soul" || g === "60s motown") return "motown";
+  if (g === "neo soul" || g === "neo-soul" || g === "modern soul") return "neo-soul";
+
+  if (g === "lofi" || g === "lo-fi" || g === "lo fi") return "lofi";
   if (g === "dance pop" || g === "dance-pop") return "dance-pop";
   if (g === "indie pop" || g === "indie-pop") return "indie-pop";
-  if (g === "classic rock" || g === "classic-rock") return "classic-rock";
+  if (g === "classic rock" || g === "classic-rock" || g === "70s rock") return "classic-rock";
+  if (g === "smooth jazz" || g === "smooth-jazz") return "smooth-jazz";
+  if (g === "blue grass" || g === "bluegrass") return "bluegrass";
+  if (g === "afro beat" || g === "afrobeat" || g === "afro-beat") return "afrobeat";
 
   // Otherwise use the lowercased string as-is
   return g;
@@ -553,85 +567,94 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
   }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
+  // Use SPECIFIC instrumentation, era references, and production styles for authentic sounds
+  // Tone is appended at end to avoid diluting genre characteristics
   const genreStyles: Record<string, string> = {
     // Gospel styles
     "black-gospel": buildBlackGospelStyle(),
     gospel: buildBlackGospelStyle(),
 
-    // R&B / Soul
+    // R&B / Soul - AUTHENTIC instrumentation, NO synth/808 for classic styles
     "r&b":
-      "R&B, smooth vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, mid-tempo bounce",
-    rnb: "R&B, smooth vocals, 808 bass, lush synth pads, melodic hooks, sensual groove, mid-tempo bounce",
-    soul: "classic soul, Motown feel, horn section, warm bass, emotional vocals, 60s soul revival",
+      "contemporary R&B, live drums with snap, warm bass guitar, Rhodes electric piano, lush strings, sensual groove, slow jam feel",
+    rnb: "contemporary R&B, live drums with snap, warm bass guitar, Rhodes electric piano, lush strings, sensual groove, slow jam feel",
+    soul: "CLASSIC SOUL, Stax Records sound, live horn section, walking bass, analog tape warmth, gritty B3 Hammond organ, rimshot snare backbeat, raw emotional vocals, 1960s Memphis soul",
+    "southern-soul": "SOUTHERN SOUL, Stax-style horns, walking bass, analog tape saturation, B3 organ, live drums, call-and-response vocals, chitlin circuit feel",
+    motown: "MOTOWN SOUND, 1960s Detroit, tambourine on 2 and 4, walking bass, string arrangements, hand claps, upbeat groove, classic vocal harmonies",
     "neo-soul":
-      "neo-soul, jazzy chords, warm rhodes piano, laid-back groove, organic drums, spiritual undertones",
+      "NEO-SOUL, Fender Rhodes piano, jazzy 7th chords, live organic drums, upright bass, vinyl warmth, laid-back pocket groove, spiritual undertones",
 
-    // Pop styles
-    pop: `${tone} pop, synth-driven, catchy hooks, polished production, radio-friendly, bright melody`,
+    // Pop styles - these CAN use synths
+    pop: `modern pop production, catchy hooks, polished mix, radio-friendly, bright melody, ${tone} mood`,
     "dance-pop":
-      "dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy, euphoric",
+      "dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy, euphoric build",
     "indie-pop":
-      "indie pop, dreamy guitars, lo-fi aesthetic, alternative vocals, quirky melody",
+      "indie pop, dreamy jangly guitars, lo-fi bedroom aesthetic, alternative vocals, quirky melody",
 
-    // Rock styles
-    rock: `${tone} rock, electric guitar riffs, live drums, bass groove, powerful vocals`,
+    // Rock styles - live instruments only
+    rock: `live rock band, electric guitar riffs, real drums, bass groove, powerful vocals, ${tone} energy`,
     alternative:
-      "alternative rock, grunge influence, distorted guitars, emotional intensity, 90s vibe",
+      "alternative rock, 90s grunge influence, distorted guitars, emotional intensity, analog recording",
     indie:
-      "indie rock, jangly guitars, DIY aesthetic, melodic vocals, garage band energy",
+      "indie rock, jangly Telecaster guitars, DIY aesthetic, melodic vocals, garage band energy, lo-fi warmth",
     "classic-rock":
-      "classic rock, 70s style, blues-influenced guitar, analog warmth, big riffs",
+      "CLASSIC ROCK, 1970s analog recording, blues-influenced guitar solos, warm tube amp distortion, live drums, big riffs",
 
-    // Country & folk
+    // Country & folk - acoustic focus
     country:
-      "modern country, acoustic and electric guitars, steel guitar, Nashville production, storytelling lyrics",
-    folk: "folk, acoustic guitar, fingerpicking, warm vocals, narrative storytelling, organic sound",
+      "COUNTRY MUSIC, acoustic guitar, pedal steel guitar, fiddle, upright bass, Nashville studio sound, storytelling vocals",
+    folk: "FOLK MUSIC, fingerpicked acoustic guitar, warm vocals, narrative storytelling, organic sound, minimal production",
+    bluegrass: "BLUEGRASS, banjo, mandolin, fiddle, upright bass, fast picking, high lonesome harmonies",
 
-    // Hip-hop / Rap
-    rap: "hip hop, melodic rap flow, 808 bass, modern trap drums, ambient pads, introspective delivery",
+    // Hip-hop / Rap - different eras have different sounds
+    rap: "modern hip hop, melodic rap flow, 808 sub bass, trap hi-hats, ambient pads, introspective delivery",
     "hip-hop":
-      "hip hop, boom bap drums, jazz samples, strong groove, storytelling verses, conscious lyrics",
+      "BOOM BAP HIP HOP, 90s East Coast, MPC drums, jazz piano samples, scratching, head-nodding groove, lyrical focus",
     hiphop:
-      "hip hop, boom bap drums, jazz samples, strong groove, storytelling verses, conscious lyrics",
-    trap: "trap music, heavy 808s, triplet hi-hats, dark synths, Atlanta-inspired rhythm, energetic ad-libs",
+      "BOOM BAP HIP HOP, 90s East Coast, MPC drums, jazz piano samples, scratching, head-nodding groove, lyrical focus",
+    trap: "TRAP MUSIC, heavy 808 sub bass, triplet hi-hats, dark synth pads, Atlanta sound, energetic ad-libs",
+    "old-school-rap": "OLD SCHOOL HIP HOP, 1980s breakbeat drums, DJ scratching, boom box sound, party energy",
 
     // Electronic styles
     electronic:
-      "electronic, synth-heavy, digital production, futuristic sounds, dance beats",
-    edm: "EDM, build-ups, drops, festival energy, synth leads, four-on-the-floor",
+      "electronic music, synth-heavy, digital production, futuristic sounds, pulsing beats",
+    edm: "EDM, massive build-ups, drops, festival energy, synth leads, four-on-the-floor",
     house:
-      "house music, four-on-the-floor, deep bass, repetitive vocal chops, club vibe",
-    lofi: "lo-fi hip hop, vinyl crackle, jazzy samples, chill beats, mellow and laid-back",
+      "DEEP HOUSE, four-on-the-floor kick, deep rolling bass, vocal chops, Chicago house warmth",
+    lofi: "LO-FI HIP HOP, vinyl crackle and hiss, dusty jazz piano samples, mellow beats, late night study vibe",
 
-    // Jazz / Blues
-    jazz: "jazz, swing or smooth groove, piano chords, upright or electric bass, brass or saxophone lines",
+    // Jazz / Blues - live acoustic instruments
+    jazz: "JAZZ, live combo, swing feel, piano comping, upright bass walking, brushed drums, saxophone or trumpet solos",
     blues:
-      "blues, 12-bar feel, expressive guitar, soulful vocals, Hammond organ, gritty tone",
+      "ELECTRIC BLUES, 12-bar progression, expressive guitar bends, Hammond B3 organ, shuffling drums, raw gritty vocals",
+    "smooth-jazz": "SMOOTH JAZZ, soft saxophone lead, electric piano, mellow groove, late night radio feel",
 
-    // Latin styles
+    // Latin styles - authentic percussion
     latin:
-      "latin pop, syncopated percussion, tropical flavor, danceable rhythm, spanish-influenced melodies",
+      "LATIN MUSIC, congas, timbales, syncopated rhythms, tropical flavor, danceable groove",
     reggaeton:
-      "reggaeton, dembow beat, latin trap flavor, urban latino energy, club-ready",
+      "REGGAETON, dembow beat, perreo rhythm, urban latino energy, club-ready bounce",
     salsa:
-      "salsa, Afro-Cuban rhythm, brass section, congas, piano montuno, dance floor feel",
+      "SALSA, Afro-Cuban clave rhythm, brass section, congas and bongos, piano montuno, dance floor energy",
+    bachata: "BACHATA, romantic guitar, bongos, bass guitar, Dominican rhythm, passionate vocals",
 
-    // Other styles
+    // Other authentic styles
     christmas:
-      "Christmas carol, sleigh bells, holiday warmth, festive choir, winter atmosphere",
-    ballad: `${tone} ballad, piano-driven, emotional strings, slow tempo, heartfelt vocals`,
+      "CHRISTMAS MUSIC, sleigh bells, orchestral strings, warm choir, holiday nostalgia, classic arrangement",
+    ballad: `emotional ballad, piano-driven, string orchestra, slow tempo, heartfelt vocals, ${tone} mood`,
     acoustic:
-      "acoustic, unplugged, guitar-driven, intimate vocals, warm and natural sound",
+      "ACOUSTIC, unplugged instruments, fingerpicked guitar, intimate vocals, natural room sound",
     reggae:
-      "reggae, off-beat rhythm, bass-heavy, island vibes, one drop beat, laid-back groove",
-    funk: "funk, slap bass, wah guitar, groovy drums, tight pocket, syncopated rhythm",
+      "REGGAE, off-beat guitar skank, deep dub bass, one drop drums, island vibes, laid-back groove",
+    funk: "FUNK, slap bass, wah-wah guitar, tight pocket drums, horn stabs, syncopated groove, get up and dance",
     disco:
-      "disco, four-on-the-floor, funky bassline, string stabs, 70s dance energy",
+      "DISCO, four-on-the-floor kick, funky bass line, string arrangements, 1970s dance floor energy",
     metal:
-      "heavy metal, distorted guitars, double bass drums, aggressive vocals, power chords",
-    punk: "punk rock, fast tempo, power chords, raw energy, DIY aesthetic",
+      "HEAVY METAL, distorted guitars, double bass drum, aggressive vocals, power chords, high gain amps",
+    punk: "PUNK ROCK, fast tempo, power chords, raw energy, DIY aesthetic, rebellious attitude",
     classical:
-      "classical crossover, orchestral arrangement, strings, piano, elegant composition",
+      "CLASSICAL, orchestral arrangement, strings, piano, elegant composition, concert hall sound",
+    afrobeat: "AFROBEAT, polyrhythmic drums, horn section, funky guitar, West African groove, extended jam",
   };
 
   // For gospel of any kind, force Black gospel style
