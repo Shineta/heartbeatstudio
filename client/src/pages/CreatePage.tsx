@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -98,6 +98,10 @@ export default function CreatePage() {
   const [editedLyrics, setEditedLyrics] = useState<string>("");
   const [editedTitle, setEditedTitle] = useState<string>("");
   const [pendingSongData, setPendingSongData] = useState<z.infer<typeof songFormSchema> | null>(null);
+  
+  // Custom cover image state
+  const [customCoverImageUrl, setCustomCoverImageUrl] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -295,7 +299,7 @@ export default function CreatePage() {
 
   // Create song with custom/edited lyrics
   const songWithLyricsMutation = useMutation({
-    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string }) => {
+    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string; customCoverImageUrl?: string }) => {
       const res = await apiRequest("POST", "/api/generate/song-with-lyrics", data);
       return await res.json() as Creation;
     },
@@ -466,7 +470,68 @@ export default function CreatePage() {
       additionalNotes: pendingSongData.additionalNotes,
       voice: pendingSongData.voice,
       duration: pendingSongData.duration,
+      customCoverImageUrl: customCoverImageUrl || undefined,
     });
+  };
+
+  // Handle cover image upload
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingCover(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setCustomCoverImageUrl(data.imageUrl);
+      toast({
+        title: "Image uploaded",
+        description: "Your custom cover image is ready",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  const clearCustomCoverImage = () => {
+    setCustomCoverImageUrl(null);
   };
 
   // Regenerate lyrics with same data
@@ -1373,6 +1438,61 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Custom Cover Image (optional)</label>
+                        {customCoverImageUrl ? (
+                          <div className="relative w-32 h-32">
+                            <img
+                              src={customCoverImageUrl}
+                              alt="Custom cover"
+                              className="w-full h-full object-cover rounded-lg border"
+                              data-testid="img-custom-cover-preview"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background"
+                              onClick={clearCustomCoverImage}
+                              data-testid="button-clear-cover"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <label 
+                              htmlFor="cover-upload"
+                              className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover-elevate transition-colors"
+                            >
+                              {isUploadingCover ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <span className="text-sm">Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ImageIcon className="w-4 h-4" />
+                                  <span className="text-sm">Upload Image</span>
+                                </>
+                              )}
+                            </label>
+                            <input
+                              id="cover-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleCoverImageUpload}
+                              disabled={isUploadingCover}
+                              data-testid="input-cover-upload"
+                            />
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Upload a photo to create a personalized retro cassette cover
+                        </p>
+                      </div>
 
                       {lyricsPreviewMutation.isPending && (
                         <Card className="bg-primary/5 border-primary/20">
