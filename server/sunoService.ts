@@ -583,7 +583,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     "southern-soul": "SOUTHERN SOUL, Stax-style horns, walking bass, analog tape saturation, B3 organ, live drums, call-and-response vocals, chitlin circuit feel",
     motown: "MOTOWN SOUND, 1960s Detroit, tambourine on 2 and 4, walking bass, string arrangements, hand claps, upbeat groove, classic vocal harmonies",
     "neo-soul":
-      "NEO-SOUL, Fender Rhodes piano, jazzy 7th chords, live organic drums, upright bass, vinyl warmth, laid-back pocket groove, spiritual undertones",
+      "AUTHENTIC NEO-SOUL, Soulquarians-era production, deep soulful Black R&B vocals with runs and ad-libs, Fender Rhodes with jazzy 9th chords, J Dilla-inspired drums with heavy swing, Moog bass, syncopated hi-hats, Philadelphia soul meets Atlanta vibe, vintage analog warmth, vinyl crackle texture, head-nodding pocket groove, conscious and spiritual undertones, late 90s early 2000s golden era neo-soul",
 
     // Pop styles - these CAN use synths
     pop: `modern pop production, catchy hooks, polished mix, radio-friendly, bright melody, ${tone} mood`,
