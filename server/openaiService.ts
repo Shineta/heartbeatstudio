@@ -413,57 +413,18 @@ export async function generateSongCover(params: {
   recipientName?: string;
   customImageUrl?: string;
 }): Promise<string> {
-  // Import Nano Banana service for realistic image generation
-  const { generateImageStandard } = await import('./nanoBananaService');
+  // Import Nano Banana service for cassette case generation
+  const { generateCassetteCaseImage } = await import('./nanoBananaService');
 
-  // If a custom image is provided, use image-to-image to stylize it
-  if (params.customImageUrl) {
-    console.log(`[SongCover] Using custom image for stylization: ${params.customImageUrl}`);
-    
-    const stylePrompt = `Transform this image into a vintage cassette tape album cover artwork.
-Apply a retro 80s/90s aesthetic with:
-- Warm vintage film tones and colors
-- Slight film grain and nostalgic lighting
-- Bold retro typography overlaying the image with the title "${params.title}"
-- ${params.genre || 'pop'} style album artwork vibes with ${params.tone} mood
-Keep the main subject/person from the original image but stylize it to look like authentic vintage cassette album art.
-Professional album cover design, nostalgic and warm.`;
+  console.log(`[SongCover] Generating cassette cover for: ${params.title}${params.customImageUrl ? ' (with custom art)' : ''}`);
 
-    const imageUrls = await generateImageStandard({
-      prompt: stylePrompt,
-      numImages: 1,
-      imageSize: '1:1',
-      imageUrls: [params.customImageUrl]
-    });
-
-    if (!imageUrls || imageUrls.length === 0) {
-      throw new Error("No image URL returned from Nano Banana image-to-image");
-    }
-
-    return imageUrls[0];
-  }
-
-  // Default: Generate cassette tape cover from scratch
-  const prompt = `A vintage audio cassette tape with its paper jacket/case displayed on a warm wooden surface.
-The cassette tape is a classic white/cream colored compact cassette with two visible tape reels through the transparent window.
-The cassette label shows "${params.title}" in bold retro typography.
-Next to the cassette is its unfolded paper jacket/sleeve showing vibrant ${params.genre || 'pop'} style album artwork with ${params.tone} mood colors.
-The inside of the jacket displays a printed tracklist with song titles.
-Style: nostalgic 80s/90s product photography, warm vintage film tones, professional studio lighting, slight film grain.
-Photorealistic, high quality product shot of a compact audio cassette tape and its packaging.`;
-
-  console.log(`[SongCover] Generating cassette tape cover with Nano Banana for: ${params.title}`);
-
-  const imageUrls = await generateImageStandard({
-    prompt,
-    numImages: 1,
-    imageSize: '1:1'
+  // Use the unified cassette case generator which handles both custom images and scratch generation
+  const imageUrl = await generateCassetteCaseImage({
+    title: params.title,
+    recipientName: params.recipientName || 'You',
+    theme: `${params.genre || 'pop'} ${params.tone}`,
+    coverArtUrl: params.customImageUrl,
   });
 
-  if (!imageUrls || imageUrls.length === 0) {
-    throw new Error("No image URL returned from Nano Banana");
-  }
-
-  // Return the URL directly (Nano Banana returns URLs, not base64)
-  return imageUrls[0];
+  return imageUrl;
 }

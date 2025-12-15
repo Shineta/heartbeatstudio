@@ -301,9 +301,34 @@ export async function generateCassetteCaseImage(params: {
   theme?: string;
   coverArtUrl?: string;
 }): Promise<string> {
-  const { title, recipientName, theme } = params;
+  const { title, recipientName, theme, coverArtUrl } = params;
 
-  // Very explicit prompt - the AI must generate a cassette tape
+  // If a custom cover art URL is provided, use image-to-image to stylize it as a cassette cover
+  if (coverArtUrl) {
+    console.log(`[NanoBanana] Stylizing custom cover art as cassette for: ${title}`);
+    
+    const stylePrompt = `Transform this image into a vintage cassette tape album cover artwork.
+Create a product photography shot of a compact audio cassette tape with its paper jacket displayed on a warm wooden surface.
+The cassette tape is classic white/cream colored with two visible tape reels through the transparent window.
+The cassette label shows "${title}" in retro handwritten marker text, "For ${recipientName}".
+Next to the cassette is its unfolded paper jacket/sleeve showing this transformed image as the album artwork with vintage 80s/90s retro styling.
+Apply warm vintage film tones, slight film grain, nostalgic lighting.
+The original image subject should be clearly visible but stylized to look like authentic vintage cassette album art.
+Classic TDK or Maxell style compact cassette with the characteristic rectangular shape, rounded corners, tape spools with brown magnetic tape.
+Photorealistic product photography, studio lighting.`;
+
+    // Use standard model for image-to-image (required for the imageUrls parameter)
+    const images = await generateImageStandard({
+      prompt: stylePrompt,
+      numImages: 1,
+      imageSize: '1:1',
+      imageUrls: [coverArtUrl]
+    });
+
+    return images[0];
+  }
+
+  // Default: Generate cassette tape from scratch
   const prompt = `A single vintage audio cassette tape photographed on a wooden table. 
 The cassette tape is a rectangular plastic cartridge with two circular tape reels visible through a transparent window in the center.
 The cassette has a white paper label on top with handwritten marker text saying "${title}" and "For ${recipientName}".
