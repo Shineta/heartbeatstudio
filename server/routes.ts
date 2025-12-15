@@ -315,6 +315,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== UPLOAD ROUTES ==========
+  
+  // Upload image for song cover customization
+  app.post('/api/upload/cover-image', isAuthenticated, upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+
+      console.log(`[Upload] Received cover image upload from user ${userId}, size: ${file.size} bytes`);
+      
+      // Upload to object storage
+      const base64 = file.buffer.toString('base64');
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        base64,
+        `uploads/${userId}`,
+        'cover-custom'
+      );
+      
+      console.log(`[Upload] Cover image uploaded: ${imageUrl}`);
+      
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error('Error uploading cover image:', error);
+      res.status(500).json({ message: error.message || 'Failed to upload image' });
+    }
+  });
+
   // ========== CREATION ROUTES ==========
   
   app.get('/api/creations', isAuthenticated, async (req: Request, res: Response) => {
@@ -497,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration } = req.body;
+      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl } = req.body;
       
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
@@ -515,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: duration || "quick",
       });
 
-      // Generate cassette tape cover art using Nano Banana
+      // Generate cassette tape cover art using Nano Banana (with optional custom image)
       let coverImageUrl = null;
       try {
         const { generateSongCover } = await import('./openaiService');
@@ -523,6 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: songResult.title,
           tone: tone || 'sweet',
           genre: genre || 'pop',
+          customImageUrl: customCoverImageUrl || undefined,
         });
         
         // Download and upload to our storage
@@ -569,7 +601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, occasion, voice, duration } = req.body;
+      const { lovedOneId, tone, genre, occasion, voice, duration, customCoverImageUrl } = req.body;
       
       let lovedOne;
       if (lovedOneId) {
@@ -590,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: duration || "quick",
       });
 
-      // Generate cassette tape cover art using Nano Banana
+      // Generate cassette tape cover art using Nano Banana (with optional custom image)
       let coverImageUrl = null;
       try {
         const { generateSongCover } = await import('./openaiService');
@@ -598,6 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: songResult.title,
           tone: tone || 'sweet',
           genre: genre || 'pop',
+          customImageUrl: customCoverImageUrl || undefined,
         });
         
         // Download and upload to our storage
