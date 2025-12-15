@@ -540,31 +540,22 @@ function resolveGenre(input?: string): string {
  * Style builder specifically tuned for authentic Black gospel.
  */
 function buildBlackGospelStyle(): string {
-  // Keep this reasonably short; Suno can be sensitive to very long tag strings
-  return [
-    "BLACK GOSPEL CHOIR",
-    "African American lead vocals",
-    "Hammond B3 organ",
-    "live church band",
-    "call and response",
-    "12/8 worship groove",
-    "tambourine",
-    "praise break energy",
-  ].join(", ");
+  // Keep under 60 chars so voice + style < 95
+  return "BLACK GOSPEL, B3 organ, choir, call and response, praise break";
 }
 
 // Map genres to style strings with detailed musical characteristics.
 function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
   const genre = resolveGenre(rawGenre);
 
-  // Build voice descriptor prefix - authentic Black R&B/soul vocal style
-  let voicePrefix = '';
+  // Build voice descriptor - use short uppercase tags Suno responds to
+  let voiceTag = '';
   if (voice === 'male') {
-    voicePrefix = 'soulful Black male R&B vocals, ';
+    voiceTag = 'BLACK MALE SOUL VOCALS, ';
   } else if (voice === 'female') {
-    voicePrefix = 'soulful Black female R&B vocals, ';
+    voiceTag = 'BLACK FEMALE SOUL VOCALS, ';
   } else if (voice === 'duet') {
-    voicePrefix = 'Black R&B duet harmonies, ';
+    voiceTag = 'BLACK SOUL DUET, ';
   }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
@@ -575,15 +566,13 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     "black-gospel": buildBlackGospelStyle(),
     gospel: buildBlackGospelStyle(),
 
-    // R&B / Soul - AUTHENTIC instrumentation, NO synth/808 for classic styles
-    "r&b":
-      "contemporary R&B, Rhodes piano, live drums, warm bass, slow jam groove",
-    rnb: "contemporary R&B, Rhodes piano, live drums, warm bass, slow jam groove",
-    soul: "CLASSIC SOUL, Stax horns, walking bass, B3 organ, 1960s Memphis feel",
-    "southern-soul": "SOUTHERN SOUL, Stax horns, walking bass, B3 organ, call-and-response",
-    motown: "MOTOWN SOUND, 1960s Detroit, tambourine, walking bass, strings, hand claps",
-    "neo-soul":
-      "NEO-SOUL, Fender Rhodes, J Dilla drums, Moog bass, vinyl warmth, 90s golden era",
+    // R&B / Soul - keep under 60 chars each
+    "r&b": "R&B, Rhodes piano, live drums, slow jam groove",
+    rnb: "R&B, Rhodes piano, live drums, slow jam groove",
+    soul: "CLASSIC SOUL, Stax horns, B3 organ, Memphis feel",
+    "southern-soul": "SOUTHERN SOUL, Stax horns, B3 organ, call-response",
+    motown: "MOTOWN, 60s Detroit, tambourine, walking bass, strings",
+    "neo-soul": "NEO-SOUL, Rhodes, J Dilla drums, Moog bass, 90s vibe",
 
     // Pop styles - these CAN use synths
     pop: `modern pop production, catchy hooks, polished mix, radio-friendly, bright melody, ${tone} mood`,
@@ -607,14 +596,12 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     folk: "FOLK MUSIC, fingerpicked acoustic guitar, warm vocals, narrative storytelling, organic sound, minimal production",
     bluegrass: "BLUEGRASS, banjo, mandolin, fiddle, upright bass, fast picking, high lonesome harmonies",
 
-    // Hip-hop / Rap - different eras have different sounds
-    rap: "modern hip hop, melodic rap flow, 808 sub bass, trap hi-hats, ambient pads, introspective delivery",
-    "hip-hop":
-      "BOOM BAP HIP HOP, 90s East Coast, MPC drums, jazz piano samples, scratching, head-nodding groove, lyrical focus",
-    hiphop:
-      "BOOM BAP HIP HOP, 90s East Coast, MPC drums, jazz piano samples, scratching, head-nodding groove, lyrical focus",
-    trap: "TRAP MUSIC, heavy 808 sub bass, triplet hi-hats, dark synth pads, Atlanta sound, energetic ad-libs",
-    "old-school-rap": "OLD SCHOOL HIP HOP, 1980s breakbeat drums, DJ scratching, boom box sound, party energy",
+    // Hip-hop / Rap - keep under 60 chars each
+    rap: "HIP HOP, 808 bass, trap hi-hats, melodic rap flow",
+    "hip-hop": "BOOM BAP, 90s East Coast, MPC drums, jazz samples",
+    hiphop: "BOOM BAP, 90s East Coast, MPC drums, jazz samples",
+    trap: "TRAP, 808 sub bass, triplet hi-hats, Atlanta sound",
+    "old-school-rap": "OLD SCHOOL HIP HOP, breakbeats, scratching, 80s",
 
     // Electronic styles
     electronic:
@@ -624,11 +611,10 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
       "DEEP HOUSE, four-on-the-floor kick, deep rolling bass, vocal chops, Chicago house warmth",
     lofi: "LO-FI HIP HOP, vinyl crackle and hiss, dusty jazz piano samples, mellow beats, late night study vibe",
 
-    // Jazz / Blues - live acoustic instruments
-    jazz: "JAZZ, live combo, swing feel, piano comping, upright bass walking, brushed drums, saxophone or trumpet solos",
-    blues:
-      "ELECTRIC BLUES, 12-bar progression, expressive guitar bends, Hammond B3 organ, shuffling drums, raw gritty vocals",
-    "smooth-jazz": "SMOOTH JAZZ, soft saxophone lead, electric piano, mellow groove, late night radio feel",
+    // Jazz / Blues - keep under 60 chars each
+    jazz: "JAZZ, swing feel, piano, upright bass, brushed drums, sax",
+    blues: "ELECTRIC BLUES, 12-bar, guitar bends, B3 organ, gritty vocals",
+    "smooth-jazz": "SMOOTH JAZZ, saxophone, electric piano, mellow groove",
 
     // Latin styles - authentic percussion
     latin:
@@ -645,9 +631,8 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     ballad: `emotional ballad, piano-driven, string orchestra, slow tempo, heartfelt vocals, ${tone} mood`,
     acoustic:
       "ACOUSTIC, unplugged instruments, fingerpicked guitar, intimate vocals, natural room sound",
-    reggae:
-      "REGGAE, off-beat guitar skank, deep dub bass, one drop drums, island vibes, laid-back groove",
-    funk: "FUNK, slap bass, wah-wah guitar, tight pocket drums, horn stabs, syncopated groove, get up and dance",
+    reggae: "REGGAE, off-beat skank, dub bass, one drop drums, island vibes",
+    funk: "FUNK, slap bass, wah-wah guitar, horn stabs, tight groove",
     disco:
       "DISCO, four-on-the-floor kick, funky bass line, string arrangements, 1970s dance floor energy",
     metal:
@@ -655,20 +640,20 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     punk: "PUNK ROCK, fast tempo, power chords, raw energy, DIY aesthetic, rebellious attitude",
     classical:
       "CLASSICAL, orchestral arrangement, strings, piano, elegant composition, concert hall sound",
-    afrobeat: "AFROBEAT, polyrhythmic drums, horn section, funky guitar, West African groove, extended jam",
+    afrobeat: "AFROBEAT, polyrhythmic drums, horns, funky guitar, African groove",
   };
 
   // For gospel of any kind, force Black gospel style
   if (genre === "black-gospel" || genre === "gospel") {
-    return voicePrefix + buildBlackGospelStyle();
+    return voiceTag + buildBlackGospelStyle();
   }
 
   // Exact match
   if (genreStyles[genre]) {
     console.log(
-      `[Suno] Genre "${genre}" matched to style: ${voicePrefix + genreStyles[genre]}`,
+      `[Suno] Genre "${genre}" matched to style: ${voiceTag + genreStyles[genre]}`,
     );
-    return voicePrefix + genreStyles[genre];
+    return voiceTag + genreStyles[genre];
   }
 
   // Partial match for fuzzy cases
@@ -676,15 +661,15 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
   for (const [key, value] of Object.entries(genreStyles)) {
     if (genreLower.includes(key) || key.includes(genreLower)) {
       console.log(
-        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${voicePrefix + value}`,
+        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${voiceTag + value}`,
       );
-      return voicePrefix + value;
+      return voiceTag + value;
     }
   }
 
   // Default fallback
   console.log(`[Suno] Genre "${genre}" not found, using pop fallback`);
-  return voicePrefix + `${tone} pop, synth-driven, catchy hooks, polished production`;
+  return voiceTag + `${tone} pop, synth-driven, catchy hooks, polished production`;
 }
 
 async function pollTaskStatus(
