@@ -390,10 +390,9 @@ export async function generateCardImage(params: {
   const prompt = `Create a beautiful, ${params.tone} greeting card illustration for ${params.recipientName}. ${params.occasion ? `For: ${params.occasion}.` : ''} Watercolor style with hearts, flowers, and celebratory elements. Warm, joyful, colorful, professional card design.`;
 
   const response = await openai.images.generate({
-    model: "dall-e-3",
+    model: "gpt-image-1",
     prompt,
     size: "1024x1024",
-    response_format: "b64_json",
   });
 
   const b64Json = response.data?.[0]?.b64_json;
@@ -418,10 +417,9 @@ export async function generateSongCover(params: {
   const prompt = `Create a vintage cassette tape album cover photograph. Show a classic audio cassette tape in white/cream color laying next to its opened paper jacket/case. The cassette jacket should be open and unfolded, showing the cover art and a printed tracklist. Style: nostalgic 80s/90s retro photography, warm vintage tones, realistic product photography. The cassette tape should be clearly visible with its spools and label. The jacket art should have vibrant colors matching the ${params.tone} ${params.genre || 'pop'} genre, with the song title "${params.title}" visible. Professional studio lighting, slight film grain for vintage feel.`;
 
   const response = await openai.images.generate({
-    model: "dall-e-3",
+    model: "gpt-image-1",
     prompt,
     size: "1024x1024",
-    response_format: "b64_json",
   });
 
   const b64Json = response.data?.[0]?.b64_json;
