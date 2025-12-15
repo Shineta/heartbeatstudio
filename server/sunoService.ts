@@ -545,113 +545,182 @@ function buildBlackGospelStyle(): string {
 }
 
 // Map genres to style strings with detailed musical characteristics.
+// ALL genres now feature Black African American vocals and Black-centric production styles
 function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
   const genre = resolveGenre(rawGenre);
 
-  // Build voice descriptor - use short uppercase tags Suno responds to
-  let voiceTag = '';
-  if (voice === 'male') {
-    voiceTag = 'BLACK MALE SOUL VOCALS, ';
-  } else if (voice === 'female') {
-    voiceTag = 'BLACK FEMALE SOUL VOCALS, ';
-  } else if (voice === 'duet') {
-    voiceTag = 'BLACK SOUL DUET, ';
+  // Get genre-appropriate Black voice tag - BLACK VOCALS ARE DEFAULT FOR ALL GENRES
+  function getBlackVoiceTag(genreType: string, voiceChoice?: string): string {
+    // Determine voice gender - default to female if not specified
+    const isMale = voiceChoice === 'male';
+    const isDuet = voiceChoice === 'duet';
+
+    // Genre-specific Black voice tags (keep short for Suno - under 35 chars)
+    // Hip-hop / Rap genres
+    if (genreType === 'rap' || genreType === 'hip-hop' || genreType === 'hiphop' || genreType === 'trap' || genreType === 'old-school-rap') {
+      if (isDuet) return 'BLACK RAP DUET, ';
+      return isMale ? 'BLACK MALE RAP VOCALS, ' : 'BLACK FEMALE RAP VOCALS, ';
+    }
+    // Gospel
+    if (genreType === 'gospel' || genreType === 'black-gospel') {
+      if (isDuet) return 'BLACK GOSPEL DUET, ';
+      return isMale ? 'BLACK MALE GOSPEL VOCALS, ' : 'BLACK FEMALE GOSPEL VOCALS, ';
+    }
+    // Jazz
+    if (genreType === 'jazz' || genreType === 'smooth-jazz') {
+      if (isDuet) return 'BLACK JAZZ DUET, ';
+      return isMale ? 'BLACK MALE JAZZ VOCALS, ' : 'BLACK FEMALE JAZZ VOCALS, ';
+    }
+    // Blues
+    if (genreType === 'blues') {
+      if (isDuet) return 'BLACK BLUES DUET, ';
+      return isMale ? 'BLACK MALE BLUES VOCALS, ' : 'BLACK FEMALE BLUES VOCALS, ';
+    }
+    // Reggae
+    if (genreType === 'reggae') {
+      if (isDuet) return 'BLACK REGGAE DUET, ';
+      return isMale ? 'BLACK MALE REGGAE VOCALS, ' : 'BLACK FEMALE REGGAE VOCALS, ';
+    }
+    // Afrobeat
+    if (genreType === 'afrobeat') {
+      if (isDuet) return 'AFROBEAT DUET, ';
+      return isMale ? 'BLACK MALE AFROBEAT, ' : 'BLACK FEMALE AFROBEAT, ';
+    }
+    // Funk / Disco
+    if (genreType === 'funk' || genreType === 'disco') {
+      if (isDuet) return 'BLACK FUNK DUET, ';
+      return isMale ? 'BLACK MALE FUNK VOCALS, ' : 'BLACK FEMALE FUNK VOCALS, ';
+    }
+    // Rock / Alternative / Metal / Punk
+    if (genreType === 'rock' || genreType === 'classic-rock' || genreType === 'alternative' || genreType === 'metal' || genreType === 'punk') {
+      if (isDuet) return 'BLACK ROCK DUET, ';
+      return isMale ? 'BLACK MALE ROCK VOCALS, ' : 'BLACK FEMALE ROCK VOCALS, ';
+    }
+    // Indie
+    if (genreType === 'indie' || genreType === 'indie-pop') {
+      if (isDuet) return 'BLACK INDIE DUET, ';
+      return isMale ? 'BLACK MALE INDIE VOCALS, ' : 'BLACK FEMALE INDIE VOCALS, ';
+    }
+    // Pop / Dance-pop
+    if (genreType === 'pop' || genreType === 'dance-pop') {
+      if (isDuet) return 'BLACK POP DUET, ';
+      return isMale ? 'BLACK MALE POP VOCALS, ' : 'BLACK FEMALE POP VOCALS, ';
+    }
+    // Country / Folk / Bluegrass
+    if (genreType === 'country' || genreType === 'folk' || genreType === 'bluegrass') {
+      if (isDuet) return 'BLACK COUNTRY DUET, ';
+      return isMale ? 'BLACK MALE COUNTRY VOCALS, ' : 'BLACK FEMALE COUNTRY VOCALS, ';
+    }
+    // Christmas
+    if (genreType === 'christmas') {
+      if (isDuet) return 'BLACK GOSPEL DUET, ';
+      return isMale ? 'BLACK MALE GOSPEL, ' : 'BLACK FEMALE GOSPEL, ';
+    }
+    // Electronic / EDM / House / Lofi
+    if (genreType === 'electronic' || genreType === 'edm' || genreType === 'house' || genreType === 'lofi') {
+      if (isDuet) return 'BLACK HOUSE DUET, ';
+      return isMale ? 'BLACK MALE HOUSE VOCALS, ' : 'BLACK FEMALE HOUSE VOCALS, ';
+    }
+    // Latin / Reggaeton / Salsa / Bachata
+    if (genreType === 'latin' || genreType === 'reggaeton' || genreType === 'salsa' || genreType === 'bachata') {
+      if (isDuet) return 'AFRO-LATIN DUET, ';
+      return isMale ? 'BLACK MALE LATIN VOCALS, ' : 'BLACK FEMALE LATIN VOCALS, ';
+    }
+    // Classical
+    if (genreType === 'classical') {
+      if (isDuet) return 'BLACK CLASSICAL DUET, ';
+      return isMale ? 'BLACK MALE CLASSICAL, ' : 'BLACK FEMALE CLASSICAL, ';
+    }
+    // Ballad / Acoustic
+    if (genreType === 'ballad' || genreType === 'acoustic') {
+      if (isDuet) return 'BLACK SOUL DUET, ';
+      return isMale ? 'BLACK MALE BALLAD VOCALS, ' : 'BLACK FEMALE BALLAD VOCALS, ';
+    }
+    // Default: Soul vocals for R&B, Soul, Neo-Soul, Motown, and everything else
+    if (isDuet) return 'BLACK SOUL DUET, ';
+    return isMale ? 'BLACK MALE SOUL VOCALS, ' : 'BLACK FEMALE SOUL VOCALS, ';
   }
 
-  // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
-  // Use SPECIFIC instrumentation, era references, and production styles for authentic sounds
-  // Tone is appended at end to avoid diluting genre characteristics
+  // Get the genre-appropriate Black voice tag (ALWAYS applied)
+  const voiceTag = getBlackVoiceTag(genre, voice);
+
+  // ALL genre styles are now Black-centric with authentic Black production
+  // Keep styles under 55 chars so voice + style < 95
   const genreStyles: Record<string, string> = {
-    // Gospel styles
-    "black-gospel": buildBlackGospelStyle(),
-    gospel: buildBlackGospelStyle(),
+    // Gospel styles - authentic Black gospel
+    "black-gospel": "BLACK GOSPEL, B3 organ, choir, call and response",
+    gospel: "BLACK GOSPEL, B3 organ, choir, praise break, choir",
 
-    // R&B / Soul - keep under 60 chars each
-    "r&b": "R&B, Rhodes piano, live drums, slow jam groove",
-    rnb: "R&B, Rhodes piano, live drums, slow jam groove",
-    soul: "CLASSIC SOUL, Stax horns, B3 organ, Memphis feel",
+    // R&B / Soul - Black R&B and Soul classics
+    "r&b": "BLACK R&B, Rhodes piano, live drums, slow jam groove",
+    rnb: "BLACK R&B, Rhodes piano, live drums, slow jam groove",
+    soul: "BLACK SOUL, Stax horns, B3 organ, Memphis feel",
     "southern-soul": "SOUTHERN SOUL, Stax horns, B3 organ, call-response",
-    motown: "MOTOWN, 60s Detroit, tambourine, walking bass, strings",
-    "neo-soul": "NEO-SOUL, Rhodes, J Dilla drums, Moog bass, 90s vibe",
+    motown: "BLACK MOTOWN, 60s Detroit, tambourine, walking bass",
+    "neo-soul": "BLACK NEO-SOUL, Rhodes, J Dilla drums, Moog bass",
 
-    // Pop styles - these CAN use synths
-    pop: `modern pop production, catchy hooks, polished mix, radio-friendly, bright melody, ${tone} mood`,
-    "dance-pop":
-      "dance pop, EDM elements, four-on-the-floor beat, synth drops, club energy, euphoric build",
-    "indie-pop":
-      "indie pop, dreamy jangly guitars, lo-fi bedroom aesthetic, alternative vocals, quirky melody",
+    // Pop styles - Black pop production (Beyoncé, Bruno Mars style)
+    pop: "BLACK POP, R&B influenced, catchy hooks, urban sound",
+    "dance-pop": "BLACK DANCE POP, club energy, R&B vocals, urban beat",
+    "indie-pop": "BLACK INDIE, alternative R&B, dreamy, soulful",
 
-    // Rock styles - live instruments only
-    rock: `live rock band, electric guitar riffs, real drums, bass groove, powerful vocals, ${tone} energy`,
-    alternative:
-      "alternative rock, 90s grunge influence, distorted guitars, emotional intensity, analog recording",
-    indie:
-      "indie rock, jangly Telecaster guitars, DIY aesthetic, melodic vocals, garage band energy, lo-fi warmth",
-    "classic-rock":
-      "CLASSIC ROCK, 1970s analog recording, blues-influenced guitar solos, warm tube amp distortion, live drums, big riffs",
+    // Rock styles - Black rock (Lenny Kravitz, Living Colour)
+    rock: "BLACK ROCK, funk-influenced guitar, powerful vocals",
+    alternative: "BLACK ALTERNATIVE, rock soul fusion, raw power",
+    indie: "BLACK INDIE ROCK, soulful vocals, guitar driven",
+    "classic-rock": "BLACK CLASSIC ROCK, blues rock, powerful riffs",
 
-    // Country & folk - acoustic focus
-    country:
-      "COUNTRY MUSIC, acoustic guitar, pedal steel guitar, fiddle, upright bass, Nashville studio sound, storytelling vocals",
-    folk: "FOLK MUSIC, fingerpicked acoustic guitar, warm vocals, narrative storytelling, organic sound, minimal production",
-    bluegrass: "BLUEGRASS, banjo, mandolin, fiddle, upright bass, fast picking, high lonesome harmonies",
+    // Country - Black country (Darius Rucker, Beyoncé Cowboy Carter)
+    country: "BLACK COUNTRY, soul-influenced, acoustic guitar, twang",
+    folk: "BLACK FOLK, acoustic soul, storytelling, warm vocals",
+    bluegrass: "BLACK BLUEGRASS, banjo, soulful harmonies, roots",
 
-    // Hip-hop / Rap - keep under 60 chars each
-    rap: "HIP HOP, 808 bass, trap hi-hats, melodic rap flow",
-    "hip-hop": "BOOM BAP, 90s East Coast, MPC drums, jazz samples",
-    hiphop: "BOOM BAP, 90s East Coast, MPC drums, jazz samples",
-    trap: "TRAP, 808 sub bass, triplet hi-hats, Atlanta sound",
-    "old-school-rap": "OLD SCHOOL HIP HOP, breakbeats, scratching, 80s",
+    // Hip-hop / Rap - authentic Black hip-hop
+    rap: "BLACK HIP HOP, 808 bass, trap hi-hats, melodic flow",
+    "hip-hop": "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
+    hiphop: "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
+    trap: "BLACK TRAP, 808 sub bass, triplet hi-hats, Atlanta",
+    "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
 
-    // Electronic styles
-    electronic:
-      "electronic music, synth-heavy, digital production, futuristic sounds, pulsing beats",
-    edm: "EDM, massive build-ups, drops, festival energy, synth leads, four-on-the-floor",
-    house:
-      "DEEP HOUSE, four-on-the-floor kick, deep rolling bass, vocal chops, Chicago house warmth",
-    lofi: "LO-FI HIP HOP, vinyl crackle and hiss, dusty jazz piano samples, mellow beats, late night study vibe",
+    // Electronic styles - Black electronic (Chicago house, Detroit techno)
+    electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
+    edm: "BLACK EDM, Chicago house influence, soulful drops",
+    house: "BLACK HOUSE, Chicago house, deep bass, soul vocals",
+    lofi: "BLACK LO-FI, jazz samples, mellow beats, soul chops",
 
-    // Jazz / Blues - keep under 60 chars each
-    jazz: "JAZZ, swing feel, piano, upright bass, brushed drums, sax",
-    blues: "ELECTRIC BLUES, 12-bar, guitar bends, B3 organ, gritty vocals",
-    "smooth-jazz": "SMOOTH JAZZ, saxophone, electric piano, mellow groove",
+    // Jazz / Blues - authentic Black jazz and blues
+    jazz: "BLACK JAZZ, swing, piano, upright bass, sax, bebop",
+    blues: "BLACK BLUES, 12-bar, guitar bends, B3 organ, gritty",
+    "smooth-jazz": "BLACK SMOOTH JAZZ, saxophone, electric piano",
 
-    // Latin styles - authentic percussion
-    latin:
-      "LATIN MUSIC, congas, timbales, syncopated rhythms, tropical flavor, danceable groove",
-    reggaeton:
-      "REGGAETON, dembow beat, perreo rhythm, urban latino energy, club-ready bounce",
-    salsa:
-      "SALSA, Afro-Cuban clave rhythm, brass section, congas and bongos, piano montuno, dance floor energy",
-    bachata: "BACHATA, romantic guitar, bongos, bass guitar, Dominican rhythm, passionate vocals",
+    // Latin styles - Afro-Latin influence
+    latin: "AFRO-LATIN, congas, timbales, Black Latin groove",
+    reggaeton: "BLACK REGGAETON, dembow, urban latino, R&B flow",
+    salsa: "AFRO-CUBAN SALSA, clave rhythm, brass, congas",
+    bachata: "AFRO-BACHATA, romantic, bongos, soulful vocals",
 
-    // Other authentic styles
-    christmas:
-      "CHRISTMAS MUSIC, sleigh bells, orchestral strings, warm choir, holiday nostalgia, classic arrangement",
-    ballad: `emotional ballad, piano-driven, string orchestra, slow tempo, heartfelt vocals, ${tone} mood`,
-    acoustic:
-      "ACOUSTIC, unplugged instruments, fingerpicked guitar, intimate vocals, natural room sound",
-    reggae: "REGGAE, off-beat skank, dub bass, one drop drums, island vibes",
-    funk: "FUNK, slap bass, wah-wah guitar, horn stabs, tight groove",
-    disco:
-      "DISCO, four-on-the-floor kick, funky bass line, string arrangements, 1970s dance floor energy",
-    metal:
-      "HEAVY METAL, distorted guitars, double bass drum, aggressive vocals, power chords, high gain amps",
-    punk: "PUNK ROCK, fast tempo, power chords, raw energy, DIY aesthetic, rebellious attitude",
-    classical:
-      "CLASSICAL, orchestral arrangement, strings, piano, elegant composition, concert hall sound",
-    afrobeat: "AFROBEAT, polyrhythmic drums, horns, funky guitar, African groove",
+    // Other styles - all Black-centric versions
+    christmas: "BLACK GOSPEL CHRISTMAS, Donny Hathaway style, choir",
+    ballad: "BLACK BALLAD, soulful, piano, heartfelt, emotional",
+    acoustic: "BLACK ACOUSTIC, soulful guitar, intimate vocals",
+    reggae: "BLACK REGGAE, off-beat skank, dub bass, one drop",
+    funk: "BLACK FUNK, slap bass, wah guitar, horn stabs, groove",
+    disco: "BLACK DISCO, funky bass, strings, dance floor groove",
+    metal: "BLACK METAL, heavy riffs, powerful Black vocals",
+    punk: "BLACK PUNK, Bad Brains style, fast, raw energy",
+    classical: "BLACK CLASSICAL, orchestral soul, elegant strings",
+    afrobeat: "AFROBEAT, polyrhythmic drums, horns, funky guitar",
   };
 
   // For gospel of any kind, force Black gospel style
   if (genre === "black-gospel" || genre === "gospel") {
-    return voiceTag + buildBlackGospelStyle();
+    return voiceTag + genreStyles["black-gospel"];
   }
 
   // Exact match
   if (genreStyles[genre]) {
     console.log(
-      `[Suno] Genre "${genre}" matched to style: ${voiceTag + genreStyles[genre]}`,
+      `[Suno] Genre "${genre}" matched to Black-centric style: ${voiceTag + genreStyles[genre]}`,
     );
     return voiceTag + genreStyles[genre];
   }
@@ -661,15 +730,15 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
   for (const [key, value] of Object.entries(genreStyles)) {
     if (genreLower.includes(key) || key.includes(genreLower)) {
       console.log(
-        `[Suno] Genre "${genre}" partially matched to "${key}" style: ${voiceTag + value}`,
+        `[Suno] Genre "${genre}" partially matched to "${key}" Black-centric style: ${voiceTag + value}`,
       );
       return voiceTag + value;
     }
   }
 
-  // Default fallback
-  console.log(`[Suno] Genre "${genre}" not found, using pop fallback`);
-  return voiceTag + `${tone} pop, synth-driven, catchy hooks, polished production`;
+  // Default fallback - Black R&B pop
+  console.log(`[Suno] Genre "${genre}" not found, using Black R&B pop fallback`);
+  return voiceTag + "BLACK R&B POP, soulful, catchy hooks, urban sound";
 }
 
 async function pollTaskStatus(
