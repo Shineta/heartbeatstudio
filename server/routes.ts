@@ -499,18 +499,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: duration || "quick",
       });
 
-      let coverImageUrl = songResult.coverImage;
-      
-      if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
-        const coverResponse = await fetch(songResult.coverImage);
-        const coverBuffer = await coverResponse.arrayBuffer();
-        const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+      // Generate cassette tape cover art using Nano Banana
+      let coverImageUrl = null;
+      try {
+        const { generateSongCover } = await import('./openaiService');
+        const cassetteCoverUrl = await generateSongCover({
+          title: songResult.title,
+          tone: tone || 'sweet',
+          genre: genre || 'pop',
+        });
         
-        coverImageUrl = await objectStorageService.uploadBase64Image(
-          coverBase64,
-          `songs/${userId}`,
-          'cover'
-        );
+        // Download and upload to our storage
+        if (cassetteCoverUrl) {
+          const coverResponse = await fetch(cassetteCoverUrl);
+          const coverBuffer = await coverResponse.arrayBuffer();
+          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+          
+          coverImageUrl = await objectStorageService.uploadBase64Image(
+            coverBase64,
+            `songs/${userId}`,
+            'cover'
+          );
+          console.log('[Song] Cassette cover art generated and uploaded:', coverImageUrl);
+        }
+      } catch (coverError: any) {
+        console.error('[Song] Failed to generate cassette cover art:', coverError.message);
+        // Continue without cover art - song still works
       }
 
       const creation = await storage.createCreation({
@@ -560,18 +574,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: duration || "quick",
       });
 
-      let coverImageUrl = songResult.coverImage;
-      
-      if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
-        const coverResponse = await fetch(songResult.coverImage);
-        const coverBuffer = await coverResponse.arrayBuffer();
-        const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+      // Generate cassette tape cover art using Nano Banana
+      let coverImageUrl = null;
+      try {
+        const { generateSongCover } = await import('./openaiService');
+        const cassetteCoverUrl = await generateSongCover({
+          title: songResult.title,
+          tone: tone || 'sweet',
+          genre: genre || 'pop',
+        });
         
-        coverImageUrl = await objectStorageService.uploadBase64Image(
-          coverBase64,
-          `songs/${userId}`,
-          'cover'
-        );
+        // Download and upload to our storage
+        if (cassetteCoverUrl) {
+          const coverResponse = await fetch(cassetteCoverUrl);
+          const coverBuffer = await coverResponse.arrayBuffer();
+          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+          
+          coverImageUrl = await objectStorageService.uploadBase64Image(
+            coverBase64,
+            `songs/${userId}`,
+            'cover'
+          );
+          console.log('[Song] Cassette cover art generated and uploaded:', coverImageUrl);
+        }
+      } catch (coverError: any) {
+        console.error('[Song] Failed to generate cassette cover art:', coverError.message);
+        // Continue without cover art - song still works
       }
 
       const creation = await storage.createCreation({
