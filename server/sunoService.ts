@@ -430,6 +430,7 @@ interface GenerateSongParams {
   customLyrics?: string;
   customTitle?: string;
   additionalNotes?: string;
+  duration?: 'quick' | 'extended';
 }
 
 interface SunoGenerateResponse {
@@ -865,6 +866,7 @@ export async function generateSongWithLyrics(params: {
   genre?: string;
   voice?: string;
   additionalNotes?: string;
+  duration?: 'quick' | 'extended';
 }): Promise<{
   audioUrl: string;
   lyrics: string;
@@ -947,14 +949,17 @@ export async function generateSongWithLyrics(params: {
       `[Suno] Initial clip completed: ${initialDuration}s, ID: ${initialTrack.id}`,
     );
 
-    // Target: ~60 seconds (1 minute) - faster generation, keeps users engaged
-    // Initial clip is typically 45-60 seconds, so we only extend once if needed
-    const targetDuration = 60;
+    // Duration-based settings:
+    // - quick (~60 seconds): faster generation, 1 extension max
+    // - extended (~3 minutes): longer song, up to 3 extensions
+    const isExtended = params.duration === 'extended';
+    const targetDuration = isExtended ? 180 : 60;
+    const maxExtensions = isExtended ? 3 : 1;
+    
     let currentDuration = initialDuration;
     let currentAudioId = initialTrack.id;
     const clipIds = [initialTrack.id];
     let extensionCount = 0;
-    const maxExtensions = 1; // Reduced from 3 to 1 for faster generation
 
     // Build a continuation prompt base that respects the actual genre
     const continuationBase = isGospel
@@ -1081,6 +1086,7 @@ export async function generateSong(
       genre: resolvedGenre,
       voice: params.voice,
       additionalNotes: params.additionalNotes,
+      duration: params.duration,
     });
   }
 
@@ -1103,5 +1109,6 @@ export async function generateSong(
     genre: resolvedGenre,
     voice: params.voice,
     additionalNotes: params.additionalNotes,
+    duration: params.duration,
   });
 }

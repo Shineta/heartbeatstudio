@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice } = req.body;
+      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration } = req.body;
       
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
@@ -496,6 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre: genre || "pop",
         voice: voice || undefined,
         additionalNotes: additionalNotes || undefined,
+        duration: duration || "quick",
       });
 
       let coverImageUrl = songResult.coverImage;
@@ -538,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, occasion, voice } = req.body;
+      const { lovedOneId, tone, genre, occasion, voice, duration } = req.body;
       
       let lovedOne;
       if (lovedOneId) {
@@ -556,6 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voice: voice || undefined,
         interests: lovedOne?.interests || undefined,
         insideJokes: lovedOne?.insideJokes || undefined,
+        duration: duration || "quick",
       });
 
       let coverImageUrl = songResult.coverImage;
@@ -859,9 +861,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const { 
         lovedOneId, theme, recipientName, relationship,
-        genre1, tone1, notes1, voice1,
-        genre2, tone2, notes2, voice2,
-        genre3, tone3, notes3, voice3
+        genre1, tone1, notes1, voice1, duration1,
+        genre2, tone2, notes2, voice2, duration2,
+        genre3, tone3, notes3, voice3, duration3
       } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
@@ -880,6 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tones = [tone1, tone2, tone3];
       const notes = [notes1 || '', notes2 || '', notes3 || ''];
       const voices = [voice1 || undefined, voice2 || undefined, voice3 || undefined];
+      const durations = [duration1 || 'quick', duration2 || 'quick', duration3 || 'quick'];
 
       let lovedOne;
       if (lovedOneId) {
@@ -915,8 +918,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const songTone = tones[i];
         const songNotes = notes[i];
         const songVoice = voices[i];
+        const songDuration = durations[i];
         try {
-          // Use user-selected genre, tone, voice, and notes for each song
+          // Use user-selected genre, tone, voice, duration, and notes for each song
           const songResult = await generateSong({
             recipientName: recipient,
             relationship: recipientRelationship,
@@ -927,6 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             interests: lovedOne?.interests || undefined,
             insideJokes: lovedOne?.insideJokes || undefined,
             additionalNotes: songNotes || undefined, // User notes for this song
+            duration: songDuration, // User-selected duration for this specific song
           });
 
           let coverImageUrl = songResult.coverImage;
