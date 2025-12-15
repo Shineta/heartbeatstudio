@@ -331,15 +331,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Upload to object storage
       const base64 = file.buffer.toString('base64');
-      const imageUrl = await objectStorageService.uploadBase64Image(
+      const imagePath = await objectStorageService.uploadBase64Image(
         base64,
         `uploads/${userId}`,
         'cover-custom'
       );
       
-      console.log(`[Upload] Cover image uploaded: ${imageUrl}`);
+      // Return full public URL so external APIs (like Nano Banana) can access the image
+      const fullImageUrl = `${BASE_URL}${imagePath}`;
       
-      res.json({ imageUrl });
+      console.log(`[Upload] Cover image uploaded: ${fullImageUrl}`);
+      
+      res.json({ imageUrl: fullImageUrl });
     } catch (error: any) {
       console.error('Error uploading cover image:', error);
       res.status(500).json({ message: error.message || 'Failed to upload image' });
