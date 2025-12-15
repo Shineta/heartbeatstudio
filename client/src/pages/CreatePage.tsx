@@ -295,7 +295,7 @@ export default function CreatePage() {
 
   // Create song with custom/edited lyrics
   const songWithLyricsMutation = useMutation({
-    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string }) => {
+    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string }) => {
       const res = await apiRequest("POST", "/api/generate/song-with-lyrics", data);
       return await res.json() as Creation;
     },
@@ -464,6 +464,8 @@ export default function CreatePage() {
       title: editedTitle,
       lyrics: editedLyrics,
       additionalNotes: pendingSongData.additionalNotes,
+      voice: pendingSongData.voice,
+      duration: pendingSongData.duration,
     });
   };
 
