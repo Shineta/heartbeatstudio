@@ -557,14 +557,14 @@ function buildBlackGospelStyle(): string {
 function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: string): string {
   const genre = resolveGenre(rawGenre);
 
-  // Build voice descriptor prefix
+  // Build voice descriptor prefix - authentic Black R&B/soul vocal style
   let voicePrefix = '';
   if (voice === 'male') {
-    voicePrefix = 'deep male vocals, baritone singer, ';
+    voicePrefix = 'soulful Black male vocals, R&B tenor with runs and ad-libs, ';
   } else if (voice === 'female') {
-    voicePrefix = 'soulful female vocals, alto singer, ';
+    voicePrefix = 'powerful Black female vocals, R&B alto with melisma and runs, ';
   } else if (voice === 'duet') {
-    voicePrefix = 'male and female duet vocals, harmonies, ';
+    voicePrefix = 'Black male and female duet, R&B harmonies with ad-libs, ';
   }
 
   // IMPORTANT: Do NOT include artist names - describe the STYLE characteristics instead
