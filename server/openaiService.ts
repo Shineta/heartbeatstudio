@@ -404,16 +404,46 @@ export async function generateCardImage(params: {
 
 // Generate song cover art - Cassette tape style using Nano Banana Realistic
 // Returns a URL to the generated image (not base64)
+// If customImageUrl is provided, uses image-to-image to stylize it with retro cassette tape aesthetic
 export async function generateSongCover(params: {
   title: string;
   tone: string;
   genre?: string;
   trackList?: string[];
   recipientName?: string;
+  customImageUrl?: string;
 }): Promise<string> {
   // Import Nano Banana service for realistic image generation
   const { generateImageStandard } = await import('./nanoBananaService');
 
+  // If a custom image is provided, use image-to-image to stylize it
+  if (params.customImageUrl) {
+    console.log(`[SongCover] Using custom image for stylization: ${params.customImageUrl}`);
+    
+    const stylePrompt = `Transform this image into a vintage cassette tape album cover artwork.
+Apply a retro 80s/90s aesthetic with:
+- Warm vintage film tones and colors
+- Slight film grain and nostalgic lighting
+- Bold retro typography overlaying the image with the title "${params.title}"
+- ${params.genre || 'pop'} style album artwork vibes with ${params.tone} mood
+Keep the main subject/person from the original image but stylize it to look like authentic vintage cassette album art.
+Professional album cover design, nostalgic and warm.`;
+
+    const imageUrls = await generateImageStandard({
+      prompt: stylePrompt,
+      numImages: 1,
+      imageSize: '1:1',
+      imageUrls: [params.customImageUrl]
+    });
+
+    if (!imageUrls || imageUrls.length === 0) {
+      throw new Error("No image URL returned from Nano Banana image-to-image");
+    }
+
+    return imageUrls[0];
+  }
+
+  // Default: Generate cassette tape cover from scratch
   const prompt = `A vintage audio cassette tape with its paper jacket/case displayed on a warm wooden surface.
 The cassette tape is a classic white/cream colored compact cassette with two visible tape reels through the transparent window.
 The cassette label shows "${params.title}" in bold retro typography.
