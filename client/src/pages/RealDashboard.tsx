@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, Music } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -302,12 +302,24 @@ export default function RealDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {creations.map((creation) => (
                   <div key={creation.id} className="border rounded-md overflow-hidden hover-elevate" data-testid={`card-creation-${creation.id}`}>
-                    {creation.imageUrl && (
-                      <img
-                        src={creation.imageUrl}
-                        alt={creation.title || "Creation"}
-                        className="w-full h-48 object-cover"
-                      />
+                    {/* Cassette/Card Cover Art */}
+                    {creation.imageUrl ? (
+                      <div className="aspect-square relative overflow-hidden">
+                        <img
+                          src={creation.imageUrl}
+                          alt={creation.title || "Creation"}
+                          className="w-full h-full object-cover"
+                          data-testid={`img-creation-cover-${creation.id}`}
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-square bg-muted flex items-center justify-center">
+                        {creation.type === 'song' ? (
+                          <Music className="w-16 h-16 text-muted-foreground" />
+                        ) : (
+                          <Sparkles className="w-16 h-16 text-muted-foreground" />
+                        )}
+                      </div>
                     )}
                     <div className="p-4">
                       <h3 className="font-semibold mb-2">{creation.title}</h3>
@@ -373,37 +385,52 @@ export default function RealDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mixtapes.map((mixtape) => (
-                  <Card key={mixtape.id} className="hover-elevate cursor-pointer" onClick={() => {
+                  <Card key={mixtape.id} className="hover-elevate cursor-pointer overflow-hidden" onClick={() => {
                     if (mixtape.shareableLink) {
                       window.location.href = `/share/mixtape/${mixtape.shareableLink}`;
                     }
                   }} data-testid={`card-mixtape-${mixtape.id}`}>
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <ListMusic className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base truncate">{mixtape.title}</CardTitle>
-                          <CardDescription className="truncate">
-                            For {mixtape.recipientName}
-                          </CardDescription>
+                    {/* Cassette Cover Art */}
+                    {mixtape.cassetteCaseImageUrl ? (
+                      <div className="aspect-square relative overflow-hidden">
+                        <img
+                          src={mixtape.cassetteCaseImageUrl}
+                          alt={`${mixtape.title} cassette cover`}
+                          className="w-full h-full object-cover"
+                          data-testid={`img-mixtape-cover-${mixtape.id}`}
+                        />
+                        <div className="absolute top-2 right-2">
+                          <span className={`text-xs px-2 py-1 rounded-full backdrop-blur-sm ${
+                            mixtape.status === 'complete' ? 'bg-green-500/80 text-white' :
+                            mixtape.status === 'generating' ? 'bg-yellow-500/80 text-white' :
+                            'bg-red-500/80 text-white'
+                          }`}>
+                            {mixtape.status === 'complete' ? 'Ready' : mixtape.status === 'generating' ? 'Creating...' : 'Failed'}
+                          </span>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground capitalize">
-                          {mixtape.theme?.replace('-', ' ') || 'Custom'} Theme
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          mixtape.status === 'complete' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                          mixtape.status === 'generating' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                          'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                        }`}>
-                          {mixtape.status === 'complete' ? 'Ready' : mixtape.status === 'generating' ? 'Creating...' : 'Failed'}
-                        </span>
+                    ) : (
+                      <div className="aspect-square relative bg-muted flex items-center justify-center">
+                        <ListMusic className="w-16 h-16 text-muted-foreground" />
+                        <div className="absolute top-2 right-2">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            mixtape.status === 'complete' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                            mixtape.status === 'generating' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                          }`}>
+                            {mixtape.status === 'complete' ? 'Ready' : mixtape.status === 'generating' ? 'Creating...' : 'Failed'}
+                          </span>
+                        </div>
                       </div>
+                    )}
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold truncate mb-1">{mixtape.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate mb-2">
+                        For {mixtape.recipientName}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {mixtape.theme?.replace('-', ' ') || 'Custom'} Theme
+                      </p>
                       {mixtape.status === 'complete' && (
                         <Button variant="outline" size="sm" className="w-full mt-3" data-testid={`button-play-mixtape-${mixtape.id}`}>
                           <Play className="w-4 h-4 mr-2" />
