@@ -62,6 +62,7 @@ export async function setupAuth(app: Express) {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // Required for cookies to work with redirects
       },
     })
   );
