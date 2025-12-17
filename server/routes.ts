@@ -1089,95 +1089,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'generating',
       });
 
-      // Generate songs sequentially (Suno API needs time)
-      const { generateSong } = await import('./sunoService');
-      const songIds: string[] = [];
-
-      for (let i = 0; i < themeConfig.songs.length; i++) {
-        const songConfig = themeConfig.songs[i];
-        const songGenre = genres[i];
-        const songTone = tones[i];
-        const songNotes = notes[i];
-        const songVoice = voices[i];
-        const songDuration = durations[i];
-        try {
-          // Use user-selected genre, tone, voice, duration, and notes for each song
-          const songResult = await generateSong({
-            recipientName: recipient,
-            relationship: recipientRelationship,
-            occasion: songConfig.occasion,
-            tone: songTone, // User-selected tone for this specific song
-            genre: songGenre, // User-selected genre for this specific song
-            voice: songVoice, // User-selected voice for this specific song
-            interests: lovedOne?.interests || undefined,
-            insideJokes: lovedOne?.insideJokes || undefined,
-            additionalNotes: songNotes || undefined, // User notes for this song
-            duration: songDuration, // User-selected duration for this specific song
-          });
-
-          let coverImageUrl = songResult.coverImage;
-          if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
-            const coverResponse = await fetch(songResult.coverImage);
-            const coverBuffer = await coverResponse.arrayBuffer();
-            const coverBase64 = Buffer.from(coverBuffer).toString('base64');
-            coverImageUrl = await objectStorageService.uploadBase64Image(
-              coverBase64,
-              `songs/${userId}`,
-              'cover'
-            );
-          }
-
-          const creation = await storage.createCreation({
-            userId,
-            lovedOneId: lovedOneId || null,
-            type: 'song',
-            tone: songTone, // User-selected tone for this specific song
-            genre: songGenre, // User-selected genre for this specific song
-            title: songResult.title,
-            content: songResult.lyrics,
-            imageUrl: coverImageUrl || null,
-            mediaUrl: songResult.audioUrl,
-          });
-
-          const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-          await storage.updateCreation(creation.id, { shareableLink });
-          songIds.push(creation.id);
-
-          console.log(`[Mixtape] Generated song ${songIds.length}/${themeConfig.songs.length}: ${songResult.title}`);
-        } catch (songError: any) {
-          console.error(`[Mixtape] Error generating song:`, songError.message);
-          // Continue with next song even if one fails
-        }
-      }
-
-      // Update mixtape with generated song IDs
-      let updatedMixtape = await storage.updateMixtape(mixtape.id, {
-        songIds,
-        status: songIds.length > 0 ? 'complete' : 'failed',
+      // Return immediately with generating status - songs will be created in background
+      res.json({
+        mixtape,
+        songs: [],
+        status: 'generating',
+        message: 'Your mixtape is being created! This may take a few minutes.',
       });
 
-      // Generate cassette case image using nano banana (async, don't block response)
-      if (songIds.length > 0) {
-        generateCassetteCaseImage({
-          title: mixtape.title,
-          recipientName: mixtape.recipientName || 'Someone Special',
-          theme: mixtape.theme,
-        }).then(async (cassetteCaseImageUrl) => {
-          await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
-          console.log(`[Mixtape] Generated cassette case image for "${mixtape.title}"`);
-        }).catch((err) => {
-          console.error(`[Mixtape] Failed to generate cassette case image:`, err.message);
-        });
-      }
+      // Process song generation in background (don't await - response already sent)
+      setImmediate(async () => {
+        try {
+          // Generate songs sequentially (Suno API needs time)
+          const { generateSong } = await import('./sunoService');
+          const songIds: string[] = [];
 
-      // Fetch the songs to include in response
-      const songs = await Promise.all(
-        songIds.map(id => storage.getCreationById(id))
-      );
+          for (let i = 0; i < themeConfig.songs.length; i++) {
+            const songConfig = themeConfig.songs[i];
+            const songGenre = genres[i];
+            const songTone = tones[i];
+            const songNotes = notes[i];
+            const songVoice = voices[i];
+            const songDuration = durations[i];
+            try {
+              // Use user-selected genre, tone, voice, duration, and notes for each song
+              const songResult = await generateSong({
+                recipientName: recipient,
+                relationship: recipientRelationship,
+                occasion: songConfig.occasion,
+                tone: songTone,
+                genre: songGenre,
+                voice: songVoice,
+                interests: lovedOne?.interests || undefined,
+                insideJokes: lovedOne?.insideJokes || undefined,
+                additionalNotes: songNotes || undefined,
+                duration: songDuration,
+              });
 
-      res.json({
-        mixtape: updatedMixtape,
-        songs: songs.filter(Boolean),
+              let coverImageUrl = songResult.coverImage;
+              if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
+                const coverResponse = await fetch(songResult.coverImage);
+                const coverBuffer = await coverResponse.arrayBuffer();
+                const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+                coverImageUrl = await objectStorageService.uploadBase64Image(
+                  coverBase64,
+                  `songs/${userId}`,
+                  'cover'
+                );
+              }
+
+              const creation = await storage.createCreation({
+                userId,
+                lovedOneId: lovedOneId || null,
+                type: 'song',
+                tone: songTone,
+                genre: songGenre,
+                title: songResult.title,
+                content: songResult.lyrics,
+                imageUrl: coverImageUrl || null,
+                mediaUrl: songResult.audioUrl,
+              });
+
+              const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+              await storage.updateCreation(creation.id, { shareableLink });
+              songIds.push(creation.id);
+
+              console.log(`[Mixtape ${mixtape.id}] Generated song ${songIds.length}/${themeConfig.songs.length}: ${songResult.title}`);
+            } catch (songError: any) {
+              console.error(`[Mixtape ${mixtape.id}] Error generating song:`, songError.message);
+              // Continue with next song even if one fails
+            }
+          }
+
+          // Update mixtape with generated song IDs and final status
+          await storage.updateMixtape(mixtape.id, {
+            songIds,
+            status: songIds.length > 0 ? 'complete' : 'failed',
+          });
+
+          console.log(`[Mixtape ${mixtape.id}] Completed with ${songIds.length} songs`);
+
+          // Generate cassette case image (async, don't block)
+          if (songIds.length > 0) {
+            generateCassetteCaseImage({
+              title: mixtape.title,
+              recipientName: mixtape.recipientName || 'Someone Special',
+              theme: mixtape.theme,
+            }).then(async (cassetteCaseImageUrl) => {
+              await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
+              console.log(`[Mixtape ${mixtape.id}] Generated cassette case image`);
+            }).catch((err) => {
+              console.error(`[Mixtape ${mixtape.id}] Failed to generate cassette case image:`, err.message);
+            });
+          }
+        } catch (bgError: any) {
+          console.error(`[Mixtape ${mixtape.id}] Background processing failed:`, bgError.message);
+          await storage.updateMixtape(mixtape.id, { status: 'failed' });
+        }
       });
     } catch (error: any) {
       console.error("Error generating mixtape:", error);

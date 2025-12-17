@@ -376,14 +376,19 @@ export default function CreatePage() {
   const mixtapeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/mixtape", data);
-      const result = await res.json() as { mixtape: Mixtape; songs: Creation[] };
+      const result = await res.json() as { mixtape: Mixtape; songs: Creation[]; status?: string; message?: string };
       return result.mixtape;
     },
     onSuccess: (data: Mixtape) => {
       queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
       setCreatedMixtape(data);
-      setMixtapeGenerationTime(0);
-      toast({ title: "Success", description: "Your mixtape has been created!" });
+      // Don't reset timer or show success if still generating - polling will handle it
+      if (data.status === 'generating') {
+        toast({ title: "Started", description: "Your mixtape is being created! This may take a few minutes." });
+      } else {
+        setMixtapeGenerationTime(0);
+        toast({ title: "Success", description: "Your mixtape has been created!" });
+      }
     },
     onError: (error: Error) => {
       setMixtapeGenerationTime(0);
@@ -425,20 +430,62 @@ export default function CreatePage() {
     };
   }, [songMutation.isPending, songWithLyricsMutation.isPending]);
 
+  // Timer for mixtape generation (runs during pending or generating status)
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (mixtapeMutation.isPending) {
-      setMixtapeGenerationTime(0);
+    const isGenerating = mixtapeMutation.isPending || createdMixtape?.status === 'generating';
+    
+    if (isGenerating) {
+      // Only reset timer when mutation starts (isPending becomes true)
+      if (mixtapeMutation.isPending && mixtapeGenerationTime === 0) {
+        setMixtapeGenerationTime(0);
+      }
       interval = setInterval(() => {
         setMixtapeGenerationTime(prev => prev + 1);
       }, 1000);
-    } else {
-      if (interval) clearInterval(interval);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [mixtapeMutation.isPending]);
+  }, [mixtapeMutation.isPending, createdMixtape?.status]);
+
+  // Poll for mixtape status updates when generating
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout | null = null;
+    
+    if (createdMixtape?.status === 'generating' && createdMixtape?.id) {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/mixtapes/${createdMixtape.id}`, {
+            credentials: 'include',
+          });
+          if (res.ok) {
+            const data = await res.json() as { mixtape: Mixtape; songs: Creation[] };
+            setCreatedMixtape(data.mixtape);
+            if (data.songs && data.songs.length > 0) {
+              setMixtapeSongs(data.songs);
+            }
+            
+            // Show success toast and reset timer when complete
+            if (data.mixtape.status === 'complete') {
+              setMixtapeGenerationTime(0);
+              toast({ title: "Success", description: "Your mixtape is ready!" });
+              queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
+            } else if (data.mixtape.status === 'failed') {
+              setMixtapeGenerationTime(0);
+              toast({ title: "Error", description: "Mixtape generation failed. Please try again.", variant: "destructive" });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to poll mixtape status:', error);
+        }
+      }, 5000); // Poll every 5 seconds
+    }
+    
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [createdMixtape?.status, createdMixtape?.id, toast]);
 
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
     cardMutation.mutate(data);
