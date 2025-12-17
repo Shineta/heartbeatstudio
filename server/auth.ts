@@ -23,9 +23,26 @@ const JWT_SECRET = process.env.JWT_SECRET || SESSION_SECRET;
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const BASE_URL = process.env.REPLIT_DEV_DOMAIN 
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-  : 'http://localhost:5000';
+
+// Use custom domain in production, dev domain in development
+function getBaseUrl(): string {
+  // Check for custom production domain first
+  if (process.env.APP_URL) {
+    return process.env.APP_URL;
+  }
+  // In production, use the first domain from REPLIT_DOMAINS (custom domain takes priority)
+  if (process.env.NODE_ENV === 'production' && process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    return `https://${domains[0]}`;
+  }
+  // In development, use the dev domain
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  return 'http://localhost:5000';
+}
+
+const BASE_URL = getBaseUrl();
 
 export async function setupAuth(app: Express) {
   // SESSION_SECRET is guaranteed to exist due to check above

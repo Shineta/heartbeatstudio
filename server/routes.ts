@@ -26,9 +26,22 @@ const upload = multer({
   },
 });
 
-const BASE_URL = process.env.REPLIT_DEV_DOMAIN 
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-  : 'http://localhost:5000';
+// Use custom domain in production, dev domain in development
+function getBaseUrl(): string {
+  if (process.env.APP_URL) {
+    return process.env.APP_URL;
+  }
+  if (process.env.NODE_ENV === 'production' && process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    return `https://${domains[0]}`;
+  }
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  return 'http://localhost:5000';
+}
+
+const BASE_URL = getBaseUrl();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
