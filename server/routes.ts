@@ -1068,10 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
 
-      let lovedOne: { name?: string; relationship?: string; interests?: string; insideJokes?: string } | null | undefined = null;
-      if (lovedOneId) {
-        lovedOne = await storage.getLovedOneById(lovedOneId);
-      }
+      let lovedOne = lovedOneId ? await storage.getLovedOneById(lovedOneId) : null;
 
       const recipient = lovedOne?.name || recipientName || "someone special";
       const recipientRelationship = lovedOne?.relationship || relationship || "friend";
