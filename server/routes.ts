@@ -1092,7 +1092,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return immediately with generating status - songs will be created in background
       res.json({
         mixtape,
-        songs: [],
         status: 'generating',
         message: 'Your mixtape is being created! This may take a few minutes.',
       });
@@ -1127,15 +1126,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
 
               let coverImageUrl = songResult.coverImage;
+              // Upload cover image to object storage (with its own error handling)
               if (songResult.coverImage && songResult.coverImage.startsWith('http')) {
-                const coverResponse = await fetch(songResult.coverImage);
-                const coverBuffer = await coverResponse.arrayBuffer();
-                const coverBase64 = Buffer.from(coverBuffer).toString('base64');
-                coverImageUrl = await objectStorageService.uploadBase64Image(
-                  coverBase64,
-                  `songs/${userId}`,
-                  'cover'
-                );
+                try {
+                  const coverResponse = await fetch(songResult.coverImage);
+                  const coverBuffer = await coverResponse.arrayBuffer();
+                  const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+                  coverImageUrl = await objectStorageService.uploadBase64Image(
+                    coverBase64,
+                    `songs/${userId}`,
+                    'cover'
+                  );
+                } catch (uploadError: any) {
+                  console.error(`[Mixtape ${mixtape.id}] Failed to upload cover, using original:`, uploadError.message);
+                  // Keep original cover URL if upload fails
+                }
               }
 
               const creation = await storage.createCreation({

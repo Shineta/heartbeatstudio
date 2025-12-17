@@ -376,7 +376,7 @@ export default function CreatePage() {
   const mixtapeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/mixtape", data);
-      const result = await res.json() as { mixtape: Mixtape; songs: Creation[]; status?: string; message?: string };
+      const result = await res.json() as { mixtape: Mixtape; status?: string; message?: string };
       return result.mixtape;
     },
     onSuccess: (data: Mixtape) => {
@@ -449,43 +449,79 @@ export default function CreatePage() {
     };
   }, [mixtapeMutation.isPending, createdMixtape?.status]);
 
+  // Track polling state across renders to prevent duplicates
+  const pollingRef = useRef<{ interval: NodeJS.Timeout | null; toastShown: boolean }>({
+    interval: null,
+    toastShown: false,
+  });
+
   // Poll for mixtape status updates when generating
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout | null = null;
-    
-    if (createdMixtape?.status === 'generating' && createdMixtape?.id) {
-      pollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/mixtapes/${createdMixtape.id}`, {
-            credentials: 'include',
-          });
-          if (res.ok) {
-            const data = await res.json() as { mixtape: Mixtape; songs: Creation[] };
-            setCreatedMixtape(data.mixtape);
-            if (data.songs && data.songs.length > 0) {
-              setMixtapeSongs(data.songs);
-            }
-            
-            // Show success toast and reset timer when complete
-            if (data.mixtape.status === 'complete') {
-              setMixtapeGenerationTime(0);
-              toast({ title: "Success", description: "Your mixtape is ready!" });
-              queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
-            } else if (data.mixtape.status === 'failed') {
-              setMixtapeGenerationTime(0);
-              toast({ title: "Error", description: "Mixtape generation failed. Please try again.", variant: "destructive" });
-            }
-          }
-        } catch (error) {
-          console.error('Failed to poll mixtape status:', error);
-        }
-      }, 5000); // Poll every 5 seconds
+    // Only poll if status is 'generating'
+    if (!createdMixtape?.id || createdMixtape?.status !== 'generating') {
+      // Clean up any existing interval when not generating
+      if (pollingRef.current.interval) {
+        clearInterval(pollingRef.current.interval);
+        pollingRef.current.interval = null;
+      }
+      return;
     }
     
+    // Reset toast flag when starting to poll for a new mixtape
+    pollingRef.current.toastShown = false;
+    
+    // Don't create new interval if one already exists
+    if (pollingRef.current.interval) {
+      return;
+    }
+    
+    const mixtapeId = createdMixtape.id;
+    
+    pollingRef.current.interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/mixtapes/${mixtapeId}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        
+        const data = await res.json() as { mixtape: Mixtape; songs: Creation[] };
+        
+        setCreatedMixtape(data.mixtape);
+        if (data.songs && data.songs.length > 0) {
+          setMixtapeSongs(data.songs);
+        }
+        
+        // Stop polling and show toast when no longer generating (only once)
+        if (data.mixtape.status === 'complete' && !pollingRef.current.toastShown) {
+          pollingRef.current.toastShown = true;
+          if (pollingRef.current.interval) {
+            clearInterval(pollingRef.current.interval);
+            pollingRef.current.interval = null;
+          }
+          setMixtapeGenerationTime(0);
+          toast({ title: "Success", description: "Your mixtape is ready!" });
+          queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
+        } else if (data.mixtape.status === 'failed' && !pollingRef.current.toastShown) {
+          pollingRef.current.toastShown = true;
+          if (pollingRef.current.interval) {
+            clearInterval(pollingRef.current.interval);
+            pollingRef.current.interval = null;
+          }
+          setMixtapeGenerationTime(0);
+          toast({ title: "Error", description: "Mixtape generation failed. Please try again.", variant: "destructive" });
+        }
+      } catch (error) {
+        console.error('Failed to poll mixtape status:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+    
     return () => {
-      if (pollInterval) clearInterval(pollInterval);
+      if (pollingRef.current.interval) {
+        clearInterval(pollingRef.current.interval);
+        pollingRef.current.interval = null;
+      }
     };
-  }, [createdMixtape?.status, createdMixtape?.id, toast]);
+  }, [createdMixtape?.id, createdMixtape?.status, toast]);
 
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
     cardMutation.mutate(data);
