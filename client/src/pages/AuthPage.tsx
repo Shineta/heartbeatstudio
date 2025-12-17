@@ -73,16 +73,17 @@ export default function AuthPage() {
       console.log('[AuthPage] Registration successful:', result);
       return result;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       console.log('[AuthPage] Registration mutation onSuccess called');
-      // Invalidate and wait for refetch to complete before redirecting
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Queries invalidated and refetched, showing toast');
+      // Show toast immediately
       toast({ title: 'Welcome to Heartbeat Studio!', description: 'Your account has been created.' });
+      // Invalidate cache and redirect
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       console.log('[AuthPage] Redirecting to /dashboard');
-      // Use window.location for a reliable redirect after auth state is updated
-      window.location.href = '/dashboard';
+      // Small delay to ensure cookie is set, then hard redirect
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 300);
     },
     onError: (error: any) => {
       console.error('[AuthPage] Registration mutation error:', error);
@@ -109,16 +110,17 @@ export default function AuthPage() {
       console.log('[AuthPage] Login successful:', result);
       return result;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       console.log('[AuthPage] Login mutation onSuccess called');
-      // Invalidate and wait for refetch to complete before redirecting
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Queries invalidated and refetched, showing toast');
+      // Show toast immediately
       toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
+      // Invalidate cache and redirect
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       console.log('[AuthPage] Redirecting to /dashboard');
-      // Use window.location for a reliable redirect after auth state is updated
-      window.location.href = '/dashboard';
+      // Small delay to ensure cookie is set, then hard redirect
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 300);
     },
     onError: (error: any) => {
       console.error('[AuthPage] Login mutation error:', error);
