@@ -1042,9 +1042,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const { 
         lovedOneId, theme, recipientName, relationship,
-        genre1, tone1, notes1, voice1, duration1,
-        genre2, tone2, notes2, voice2, duration2,
-        genre3, tone3, notes3, voice3, duration3
+        genre1, tone1, notes1, voice1, duration1, customTitle1, customLyrics1,
+        genre2, tone2, notes2, voice2, duration2, customTitle2, customLyrics2,
+        genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3
       } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
@@ -1064,6 +1064,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notes = [notes1 || '', notes2 || '', notes3 || ''];
       const voices = [voice1 || undefined, voice2 || undefined, voice3 || undefined];
       const durations = [duration1 || 'quick', duration2 || 'quick', duration3 || 'quick'];
+      const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
+      const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
 
       let lovedOne;
       if (lovedOneId) {
@@ -1110,8 +1112,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const songNotes = notes[i];
             const songVoice = voices[i];
             const songDuration = durations[i];
+            const songCustomTitle = customTitles[i];
+            const songCustomLyrics = customLyrics[i];
+            // Only use custom lyrics/title if BOTH are provided (required by Suno API)
+            const useCustomLyrics = songCustomTitle && songCustomLyrics;
             try {
-              // Use user-selected genre, tone, voice, duration, and notes for each song
+              // Use user-selected genre, tone, voice, duration, notes, and optional custom lyrics/title for each song
               const songResult = await generateSong({
                 recipientName: recipient,
                 relationship: recipientRelationship,
@@ -1123,6 +1129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 insideJokes: lovedOne?.insideJokes || undefined,
                 additionalNotes: songNotes || undefined,
                 duration: songDuration,
+                customTitle: useCustomLyrics ? songCustomTitle : undefined,
+                customLyrics: useCustomLyrics ? songCustomLyrics : undefined,
               });
 
               let coverImageUrl = songResult.coverImage;

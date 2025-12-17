@@ -65,16 +65,22 @@ const mixtapeFormSchema = z.object({
   voice1: z.string().optional(),
   duration1: z.string().optional(),
   notes1: z.string().optional(),
+  customTitle1: z.string().optional(),
+  customLyrics1: z.string().optional(),
   genre2: z.string().min(1, "Genre for Song 2 is required"),
   tone2: z.string().min(1, "Tone for Song 2 is required"),
   voice2: z.string().optional(),
   duration2: z.string().optional(),
   notes2: z.string().optional(),
+  customTitle2: z.string().optional(),
+  customLyrics2: z.string().optional(),
   genre3: z.string().min(1, "Genre for Song 3 is required"),
   tone3: z.string().min(1, "Tone for Song 3 is required"),
   voice3: z.string().optional(),
   duration3: z.string().optional(),
   notes3: z.string().optional(),
+  customTitle3: z.string().optional(),
+  customLyrics3: z.string().optional(),
 });
 
 export default function CreatePage() {
@@ -191,16 +197,22 @@ export default function CreatePage() {
       voice1: "",
       duration1: "quick",
       notes1: "",
+      customTitle1: "",
+      customLyrics1: "",
       genre2: "gospel",
       tone2: "romantic",
       voice2: "",
       duration2: "quick",
       notes2: "",
+      customTitle2: "",
+      customLyrics2: "",
       genre3: "neo-soul",
       tone3: "heartfelt",
       voice3: "",
       duration3: "quick",
       notes3: "",
+      customTitle3: "",
+      customLyrics3: "",
     },
   });
 
@@ -2077,6 +2089,39 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customTitle1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Title (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your custom song title..." {...field} data-testid="input-mixtape-customTitle1" />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Leave blank to auto-generate a title</p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customLyrics1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Lyrics (optional)</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Write your own lyrics here... Leave blank to auto-generate lyrics based on the theme and tone."
+                                      className="min-h-[100px]"
+                                      {...field} 
+                                      data-testid="textarea-mixtape-customLyrics1" 
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Both title and lyrics are required for custom songs</p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </Card>
 
@@ -2201,6 +2246,39 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customTitle2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Title (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your custom song title..." {...field} data-testid="input-mixtape-customTitle2" />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Leave blank to auto-generate a title</p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customLyrics2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Lyrics (optional)</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Write your own lyrics here... Leave blank to auto-generate lyrics based on the theme and tone."
+                                      className="min-h-[100px]"
+                                      {...field} 
+                                      data-testid="textarea-mixtape-customLyrics2" 
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Both title and lyrics are required for custom songs</p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </Card>
 
@@ -2321,6 +2399,39 @@ export default function CreatePage() {
                                   <FormControl>
                                     <Input placeholder="Special details for this song..." {...field} data-testid="input-mixtape-notes3" />
                                   </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customTitle3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Title (optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your custom song title..." {...field} data-testid="input-mixtape-customTitle3" />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Leave blank to auto-generate a title</p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={mixtapeForm.control}
+                              name="customLyrics3"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Custom Lyrics (optional)</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Write your own lyrics here... Leave blank to auto-generate lyrics based on the theme and tone."
+                                      className="min-h-[100px]"
+                                      {...field} 
+                                      data-testid="textarea-mixtape-customLyrics3" 
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">Both title and lyrics are required for custom songs</p>
                                   <FormMessage />
                                 </FormItem>
                               )}
