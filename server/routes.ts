@@ -8,7 +8,7 @@ import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToke
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
-import { sendMagicLinkEmail } from "./emailService";
+import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
 // Configure multer for memory storage (files stored as buffers)
@@ -199,6 +199,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Magic link verification error:", error);
       res.status(500).json({ message: 'Verification failed' });
+    }
+  });
+
+  // Request password reset
+  app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({ email: z.string().email() });
+      const { email } = schema.parse(req.body);
+      
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ message: 'If an account exists with this email, you will receive a password reset link.' });
+      }
+      
+      const token = generateMagicLinkToken(email);
+      
+      // Store token in database for one-time use validation
+      await storage.createMagicLinkToken({
+        email,
+        token,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      });
+      
+      const resetLink = `${BASE_URL}/auth/reset-password?token=${token}`;
+      
+      await sendPasswordResetEmail(email, resetLink);
+      
+      res.json({ message: 'If an account exists with this email, you will receive a password reset link.' });
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      res.status(400).json({ message: error.message || 'Failed to send password reset email' });
+    }
+  });
+
+  // Set new password with token
+  app.post('/api/auth/set-password', async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({ 
+        token: z.string(),
+        password: z.string().min(6, 'Password must be at least 6 characters'),
+      });
+      const { token, password } = schema.parse(req.body);
+      
+      // Check if token exists in database and hasn't been used
+      const storedToken = await storage.getMagicLinkToken(token);
+      
+      if (!storedToken || storedToken.used) {
+        return res.status(401).json({ message: 'Invalid, expired, or already used token' });
+      }
+      
+      // Verify JWT signature and check expiration
+      const payload = verifyMagicLinkToken(token);
+      
+      if (!payload || payload.email !== storedToken.email) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      // Mark token as used
+      await storage.markMagicLinkTokenAsUsed(token);
+      
+      const user = await storage.getUserByEmail(storedToken.email);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Hash and update password
+      const hashedPassword = await hashPassword(password);
+      await storage.updateUser(user.id, { password: hashedPassword });
+      
+      // Log the user in
+      req.session.regenerate((err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Session regeneration failed' });
+        }
+        
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Login failed' });
+          }
+          res.json({ message: 'Password updated successfully', user });
+        });
+      });
+    } catch (error: any) {
+      console.error("Set password error:", error);
+      res.status(400).json({ message: error.message || 'Failed to set password' });
     }
   });
 

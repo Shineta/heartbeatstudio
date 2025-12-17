@@ -115,3 +115,41 @@ export async function sendMagicLinkEmail(to: string, magicLink: string) {
 
   await client.send(msg);
 }
+
+export async function sendPasswordResetEmail(to: string, resetLink: string) {
+  const {client, fromEmail} = await getUncachableSendGridClient();
+  
+  const msg = {
+    to,
+    from: fromEmail,
+    subject: 'Reset Your Password - Heartbeat Studio',
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #FF4D8C; font-family: 'Fredoka', sans-serif;">Reset Your Password</h1>
+        <p style="font-size: 16px; color: #333; line-height: 1.6;">
+          Click the button below to set a new password for your Heartbeat Studio account. This link will expire in 10 minutes.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" 
+             style="display: inline-block; background-color: #FF4D8C; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            Set New Password
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 30px;">
+          If you didn't request this email, you can safely ignore it.
+        </p>
+        <p style="font-size: 14px; color: #666;">
+          Or copy and paste this link into your browser:<br>
+          <a href="${resetLink}" style="color: #FF4D8C;">${resetLink}</a>
+        </p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #999; text-align: center;">
+          Heartbeat Studio by Horton's Tech Innovations<br>
+          Making celebrations effortless and joyful
+        </p>
+      </div>
+    `,
+  };
+
+  await client.send(msg);
+}

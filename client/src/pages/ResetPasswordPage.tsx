@@ -1,0 +1,231 @@
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation, useSearch } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Heart, Lock, Mail } from 'lucide-react';
+
+const requestResetSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+});
+
+const setPasswordSchema = z.object({
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type RequestResetForm = z.infer<typeof requestResetSchema>;
+type SetPasswordForm = z.infer<typeof setPasswordSchema>;
+
+export default function ResetPasswordPage() {
+  const search = useSearch();
+  const token = new URLSearchParams(search).get('token');
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const requestForm = useForm<RequestResetForm>({
+    resolver: zodResolver(requestResetSchema),
+    defaultValues: { email: '' },
+  });
+
+  const setPasswordForm = useForm<SetPasswordForm>({
+    resolver: zodResolver(setPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
+
+  const requestResetMutation = useMutation({
+    mutationFn: async (data: RequestResetForm) => {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send reset email');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ 
+        title: 'Check your email!', 
+        description: 'If an account exists with this email, you will receive a password reset link.' 
+      });
+      requestForm.reset();
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to send reset email', description: error.message });
+    },
+  });
+
+  const setPasswordMutation = useMutation({
+    mutationFn: async (data: { token: string; password: string }) => {
+      const response = await fetch('/api/auth/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to set password');
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({ title: 'Password set successfully!', description: 'You are now logged in.' });
+      setTimeout(() => setLocation('/dashboard'), 100);
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to set password', description: error.message });
+    },
+  });
+
+  const handleSetPassword = (data: SetPasswordForm) => {
+    if (token) {
+      setPasswordMutation.mutate({ token, password: data.password });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Heart className="w-8 h-8 text-primary heartbeat" fill="currentColor" />
+            <h1 className="text-2xl font-fredoka font-semibold text-primary">Heartbeat Studio</h1>
+          </div>
+          <CardTitle className="text-xl">
+            {token ? 'Set Your New Password' : 'Reset Your Password'}
+          </CardTitle>
+          <CardDescription>
+            {token 
+              ? 'Enter your new password below' 
+              : 'Enter your email and we\'ll send you a link to reset your password'}
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {token ? (
+            <Form {...setPasswordForm}>
+              <form onSubmit={setPasswordForm.handleSubmit(handleSetPassword)} className="space-y-3">
+                <FormField
+                  control={setPasswordForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="password" 
+                            placeholder="••••••••" 
+                            className="pl-10"
+                            data-testid="input-password"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={setPasswordForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="password" 
+                            placeholder="••••••••" 
+                            className="pl-10"
+                            data-testid="input-confirm-password"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={setPasswordMutation.isPending}
+                  data-testid="button-set-password"
+                >
+                  {setPasswordMutation.isPending ? 'Setting password...' : 'Set Password'}
+                </Button>
+              </form>
+            </Form>
+          ) : (
+            <Form {...requestForm}>
+              <form onSubmit={requestForm.handleSubmit((data) => requestResetMutation.mutate(data))} className="space-y-3">
+                <FormField
+                  control={requestForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="email" 
+                            placeholder="you@example.com" 
+                            className="pl-10"
+                            data-testid="input-email"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={requestResetMutation.isPending}
+                  data-testid="button-request-reset"
+                >
+                  {requestResetMutation.isPending ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </form>
+            </Form>
+          )}
+
+          <div className="text-center text-sm">
+            <button
+              type="button"
+              onClick={() => setLocation('/auth')}
+              className="text-primary hover:underline"
+              data-testid="link-back-to-login"
+            >
+              Back to sign in
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

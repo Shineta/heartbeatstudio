@@ -380,6 +380,14 @@ export default function AuthPage() {
                 >
                   Sign in with magic link instead
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setLocation('/auth/reset-password')}
+                  className="text-primary hover:underline block"
+                  data-testid="link-forgot-password"
+                >
+                  Forgot your password?
+                </button>
                 <div className="text-muted-foreground">
                   Don't have an account?{' '}
                   <button
