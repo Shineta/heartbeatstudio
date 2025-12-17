@@ -75,13 +75,14 @@ export default function AuthPage() {
     },
     onSuccess: async () => {
       console.log('[AuthPage] Registration mutation onSuccess called');
+      // Invalidate and wait for refetch to complete before redirecting
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Queries invalidated, showing toast');
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      console.log('[AuthPage] Queries invalidated and refetched, showing toast');
       toast({ title: 'Welcome to Heartbeat Studio!', description: 'Your account has been created.' });
       console.log('[AuthPage] Redirecting to /dashboard');
-      setTimeout(() => {
-        setLocation('/dashboard');
-      }, 100);
+      // Use window.location for a reliable redirect after auth state is updated
+      window.location.href = '/dashboard';
     },
     onError: (error: any) => {
       console.error('[AuthPage] Registration mutation error:', error);
@@ -110,13 +111,14 @@ export default function AuthPage() {
     },
     onSuccess: async () => {
       console.log('[AuthPage] Login mutation onSuccess called');
+      // Invalidate and wait for refetch to complete before redirecting
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Queries invalidated, showing toast');
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      console.log('[AuthPage] Queries invalidated and refetched, showing toast');
       toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
       console.log('[AuthPage] Redirecting to /dashboard');
-      setTimeout(() => {
-        setLocation('/dashboard');
-      }, 100);
+      // Use window.location for a reliable redirect after auth state is updated
+      window.location.href = '/dashboard';
     },
     onError: (error: any) => {
       console.error('[AuthPage] Login mutation error:', error);
