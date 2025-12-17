@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Heart, Mail, Lock, User, Sparkles } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const registerSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -35,9 +36,30 @@ type MagicLinkForm = z.infer<typeof magicLinkSchema>;
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register' | 'magic'>('login');
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Redirect to dashboard when user becomes authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      console.log('[AuthPage] User is authenticated, redirecting to dashboard');
+      window.location.href = '/dashboard';
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Fallback redirect when login succeeds
+  useEffect(() => {
+    if (loginSuccess) {
+      console.log('[AuthPage] Login success state detected, forcing redirect');
+      const timer = setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loginSuccess]);
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -77,13 +99,11 @@ export default function AuthPage() {
       console.log('[AuthPage] Registration mutation onSuccess called');
       // Show toast immediately
       toast({ title: 'Welcome to Heartbeat Studio!', description: 'Your account has been created.' });
-      // Invalidate cache and redirect
+      // Set login success state to trigger redirect via useEffect
+      setLoginSuccess(true);
+      // Invalidate cache to update auth state
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Redirecting to /dashboard');
-      // Small delay to ensure cookie is set, then hard redirect
-      setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 300);
+      console.log('[AuthPage] Registration success, redirect will happen via useEffect');
     },
     onError: (error: any) => {
       console.error('[AuthPage] Registration mutation error:', error);
@@ -114,13 +134,11 @@ export default function AuthPage() {
       console.log('[AuthPage] Login mutation onSuccess called');
       // Show toast immediately
       toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
-      // Invalidate cache and redirect
+      // Set login success state to trigger redirect via useEffect
+      setLoginSuccess(true);
+      // Invalidate cache to update auth state
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      console.log('[AuthPage] Redirecting to /dashboard');
-      // Small delay to ensure cookie is set, then hard redirect
-      setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 300);
+      console.log('[AuthPage] Login success, redirect will happen via useEffect');
     },
     onError: (error: any) => {
       console.error('[AuthPage] Login mutation error:', error);
