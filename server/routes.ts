@@ -1034,6 +1034,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { genre: 'folk', tone: 'sweet', occasion: 'friendship celebration' },
       ]
     },
+    // Client/Business themes
+    'appreciation': {
+      songs: [
+        { genre: 'jazz', tone: 'grateful', occasion: 'client appreciation' },
+        { genre: 'acoustic', tone: 'heartfelt', occasion: 'thank you' },
+        { genre: 'pop', tone: 'uplifting', occasion: 'appreciation' },
+      ]
+    },
+    'corporate': {
+      songs: [
+        { genre: 'electronic', tone: 'energetic', occasion: 'corporate event' },
+        { genre: 'pop', tone: 'inspiring', occasion: 'business celebration' },
+        { genre: 'jazz', tone: 'sophisticated', occasion: 'professional gathering' },
+      ]
+    },
+    'welcome': {
+      songs: [
+        { genre: 'pop', tone: 'warm', occasion: 'welcome gift' },
+        { genre: 'acoustic', tone: 'friendly', occasion: 'new beginnings' },
+        { genre: 'indie', tone: 'uplifting', occasion: 'welcome' },
+      ]
+    },
+    'holiday': {
+      songs: [
+        { genre: 'pop', tone: 'festive', occasion: 'holiday gift' },
+        { genre: 'acoustic', tone: 'warm', occasion: 'holiday celebration' },
+        { genre: 'jazz', tone: 'cozy', occasion: 'holiday cheer' },
+      ]
+    },
+    'celebration': {
+      songs: [
+        { genre: 'pop', tone: 'joyful', occasion: 'celebration' },
+        { genre: 'dance', tone: 'fun', occasion: 'party' },
+        { genre: 'r&b', tone: 'upbeat', occasion: 'special occasion' },
+      ]
+    },
+    // Personal themes
+    'birthday': {
+      songs: [
+        { genre: 'pop', tone: 'fun', occasion: 'birthday' },
+        { genre: 'dance', tone: 'playful', occasion: 'birthday party' },
+        { genre: 'hip-hop', tone: 'funny', occasion: 'birthday celebration' },
+      ]
+    },
+    'thank-you': {
+      songs: [
+        { genre: 'acoustic', tone: 'grateful', occasion: 'thank you' },
+        { genre: 'soul', tone: 'heartfelt', occasion: 'appreciation' },
+        { genre: 'pop', tone: 'sweet', occasion: 'gratitude' },
+      ]
+    },
+    'just-because': {
+      songs: [
+        { genre: 'indie', tone: 'sweet', occasion: 'thinking of you' },
+        { genre: 'pop', tone: 'fun', occasion: 'just because' },
+        { genre: 'acoustic', tone: 'heartfelt', occasion: 'love' },
+      ]
+    },
+    'encouragement': {
+      songs: [
+        { genre: 'pop', tone: 'inspiring', occasion: 'encouragement' },
+        { genre: 'rock', tone: 'motivating', occasion: 'you got this' },
+        { genre: 'hip-hop', tone: 'empowering', occasion: 'keep going' },
+      ]
+    },
+    'graduation': {
+      songs: [
+        { genre: 'pop', tone: 'inspiring', occasion: 'graduation' },
+        { genre: 'hip-hop', tone: 'celebratory', occasion: 'achievement' },
+        { genre: 'rock', tone: 'triumphant', occasion: 'success' },
+      ]
+    },
+    'new-baby': {
+      songs: [
+        { genre: 'acoustic', tone: 'sweet', occasion: 'new baby' },
+        { genre: 'lullaby', tone: 'gentle', occasion: 'baby welcome' },
+        { genre: 'pop', tone: 'joyful', occasion: 'new arrival' },
+      ]
+    },
+    'get-well': {
+      songs: [
+        { genre: 'acoustic', tone: 'comforting', occasion: 'get well' },
+        { genre: 'pop', tone: 'uplifting', occasion: 'recovery' },
+        { genre: 'folk', tone: 'warm', occasion: 'healing' },
+      ]
+    },
   };
 
   // Generate Mixtape (creates multiple songs)
