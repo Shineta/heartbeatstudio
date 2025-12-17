@@ -1034,56 +1034,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { genre: 'folk', tone: 'sweet', occasion: 'friendship celebration' },
       ]
     },
-    // Client mode themes
-    'appreciation': {
-      songs: [
-        { genre: 'jazz', tone: 'warm', occasion: 'client appreciation' },
-        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
-        { genre: 'soul', tone: 'heartfelt', occasion: 'gratitude' },
-      ]
-    },
-    'corporate': {
-      songs: [
-        { genre: 'pop', tone: 'uplifting', occasion: 'corporate celebration' },
-        { genre: 'electronic', tone: 'energetic', occasion: 'company event' },
-        { genre: 'rock', tone: 'inspiring', occasion: 'team motivation' },
-      ]
-    },
-    'thank-you': {
-      songs: [
-        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
-        { genre: 'pop', tone: 'warm', occasion: 'appreciation' },
-        { genre: 'folk', tone: 'heartfelt', occasion: 'gratitude' },
-      ]
-    },
-    'congratulations': {
-      songs: [
-        { genre: 'pop', tone: 'celebratory', occasion: 'congratulations' },
-        { genre: 'dance', tone: 'upbeat', occasion: 'achievement' },
-        { genre: 'rock', tone: 'triumphant', occasion: 'success' },
-      ]
-    },
-    'celebration': {
-      songs: [
-        { genre: 'pop', tone: 'joyful', occasion: 'celebration' },
-        { genre: 'dance', tone: 'festive', occasion: 'party' },
-        { genre: 'funk', tone: 'upbeat', occasion: 'good times' },
-      ]
-    },
-    'welcome': {
-      songs: [
-        { genre: 'acoustic', tone: 'warm', occasion: 'welcome' },
-        { genre: 'pop', tone: 'friendly', occasion: 'new beginnings' },
-        { genre: 'folk', tone: 'inviting', occasion: 'greeting' },
-      ]
-    },
-    'holiday': {
-      songs: [
-        { genre: 'pop', tone: 'festive', occasion: 'holiday' },
-        { genre: 'jazz', tone: 'warm', occasion: 'seasonal celebration' },
-        { genre: 'acoustic', tone: 'cozy', occasion: 'holiday cheer' },
-      ]
-    },
   };
 
   // Generate Mixtape (creates multiple songs)
@@ -1094,8 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lovedOneId, theme, recipientName, relationship,
         genre1, tone1, notes1, voice1, duration1, customTitle1, customLyrics1,
         genre2, tone2, notes2, voice2, duration2, customTitle2, customLyrics2,
-        genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3,
-        customCassetteImageUrl
+        genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3
       } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
@@ -1118,7 +1067,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
 
-      let lovedOne = lovedOneId ? await storage.getLovedOneById(lovedOneId) : null;
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
 
       const recipient = lovedOne?.name || recipientName || "someone special";
       const recipientRelationship = lovedOne?.relationship || relationship || "friend";
@@ -1136,7 +1088,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientName: recipient,
         songIds: [],
         shareableLink: shareableMixtapeLink,
-        cassetteCaseImageUrl: customCassetteImageUrl || null, // Use custom image if provided
         status: 'generating',
       });
 
@@ -1231,8 +1182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`[Mixtape ${mixtape.id}] Completed with ${songIds.length} songs`);
 
-          // Generate cassette case image only if no custom image was provided (async, don't block)
-          if (songIds.length > 0 && !customCassetteImageUrl) {
+          // Generate cassette case image (async, don't block)
+          if (songIds.length > 0) {
             generateCassetteCaseImage({
               title: mixtape.title,
               recipientName: mixtape.recipientName || 'Someone Special',
@@ -1243,8 +1194,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }).catch((err) => {
               console.error(`[Mixtape ${mixtape.id}] Failed to generate cassette case image:`, err.message);
             });
-          } else if (customCassetteImageUrl) {
-            console.log(`[Mixtape ${mixtape.id}] Using custom cassette cover image`);
           }
         } catch (bgError: any) {
           console.error(`[Mixtape ${mixtape.id}] Background processing failed:`, bgError.message);
