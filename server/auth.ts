@@ -48,6 +48,11 @@ export async function setupAuth(app: Express) {
   // SESSION_SECRET is guaranteed to exist due to check above
   const sessionSecret = SESSION_SECRET as string;
   
+  // Trust proxy in production - required for secure cookies behind Replit's HTTPS proxy
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+  
   // Session configuration
   app.use(
     session({
