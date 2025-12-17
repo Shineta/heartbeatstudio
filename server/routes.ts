@@ -1044,7 +1044,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lovedOneId, theme, recipientName, relationship,
         genre1, tone1, notes1, voice1, duration1, customTitle1, customLyrics1,
         genre2, tone2, notes2, voice2, duration2, customTitle2, customLyrics2,
-        genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3
+        genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3,
+        customCassetteImageUrl
       } = req.body;
 
       if (!theme || !MIXTAPE_THEMES[theme]) {
@@ -1067,7 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
 
-      let lovedOne;
+      let lovedOne: { name?: string; relationship?: string; interests?: string; insideJokes?: string } | null | undefined = null;
       if (lovedOneId) {
         lovedOne = await storage.getLovedOneById(lovedOneId);
       }
@@ -1088,6 +1089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientName: recipient,
         songIds: [],
         shareableLink: shareableMixtapeLink,
+        cassetteCaseImageUrl: customCassetteImageUrl || null, // Use custom image if provided
         status: 'generating',
       });
 
@@ -1182,8 +1184,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`[Mixtape ${mixtape.id}] Completed with ${songIds.length} songs`);
 
-          // Generate cassette case image (async, don't block)
-          if (songIds.length > 0) {
+          // Generate cassette case image only if no custom image was provided (async, don't block)
+          if (songIds.length > 0 && !customCassetteImageUrl) {
             generateCassetteCaseImage({
               title: mixtape.title,
               recipientName: mixtape.recipientName || 'Someone Special',
@@ -1194,6 +1196,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }).catch((err) => {
               console.error(`[Mixtape ${mixtape.id}] Failed to generate cassette case image:`, err.message);
             });
+          } else if (customCassetteImageUrl) {
+            console.log(`[Mixtape ${mixtape.id}] Using custom cassette cover image`);
           }
         } catch (bgError: any) {
           console.error(`[Mixtape ${mixtape.id}] Background processing failed:`, bgError.message);

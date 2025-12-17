@@ -113,6 +113,11 @@ export default function CreatePage() {
   
   // Client mode toggle (for creating songs for business clients)
   const [isClientMode, setIsClientMode] = useState(false);
+  const [isMixtapeClientMode, setIsMixtapeClientMode] = useState(false);
+  
+  // Custom cassette cover image state for mixtapes
+  const [customCassetteImageUrl, setCustomCassetteImageUrl] = useState<string | null>(null);
+  const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -391,7 +396,7 @@ export default function CreatePage() {
   });
 
   const mixtapeMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
+    mutationFn: async (data: z.infer<typeof mixtapeFormSchema> & { customCassetteImageUrl?: string }) => {
       const res = await apiRequest("POST", "/api/generate/mixtape", data);
       const result = await res.json() as { mixtape: Mixtape; status?: string; message?: string };
       return result.mixtape;
@@ -549,7 +554,10 @@ export default function CreatePage() {
   };
 
   const onMixtapeSubmit = (data: z.infer<typeof mixtapeFormSchema>) => {
-    mixtapeMutation.mutate(data);
+    mixtapeMutation.mutate({
+      ...data,
+      customCassetteImageUrl: customCassetteImageUrl || undefined,
+    });
   };
 
   // Generate lyrics preview first
@@ -632,6 +640,66 @@ export default function CreatePage() {
 
   const clearCustomCoverImage = () => {
     setCustomCoverImageUrl(null);
+  };
+
+  // Handle cassette cover image upload for mixtapes
+  const handleCassetteCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingCassetteCover(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setCustomCassetteImageUrl(data.imageUrl);
+      toast({
+        title: "Image uploaded",
+        description: "Your custom cassette cover is ready",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingCassetteCover(false);
+    }
+  };
+
+  const clearCustomCassetteCover = () => {
+    setCustomCassetteImageUrl(null);
   };
 
   // Regenerate lyrics with same data
@@ -1969,47 +2037,85 @@ export default function CreatePage() {
                   </div>
                   <Form {...mixtapeForm}>
                     <form onSubmit={mixtapeForm.handleSubmit(onMixtapeSubmit)} className="space-y-6">
-                      <FormField
-                        control={mixtapeForm.control}
-                        name="lovedOneId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Select Loved One (optional)</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  const loved = lovedOnes.find(l => l.id === value);
-                                  if (loved) {
-                                    mixtapeForm.setValue("recipientName", loved.name);
-                                  }
-                                }}
-                                value={field.value}
-                              >
-                                <SelectTrigger data-testid="select-mixtape-loved-one">
-                                  <SelectValue placeholder="Choose from your loved ones" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {lovedOnes.map((loved) => (
-                                    <SelectItem key={loved.id} value={loved.id}>
-                                      {loved.name} ({loved.relationship})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      {/* Client Mode Toggle for Mixtapes */}
+                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
+                        <div className="flex items-center gap-3">
+                          {isMixtapeClientMode ? (
+                            <Briefcase className="w-5 h-5 text-primary" />
+                          ) : (
+                            <Users className="w-5 h-5 text-primary" />
+                          )}
+                          <div>
+                            <Label htmlFor="mixtape-client-mode" className="text-sm font-medium">
+                              {isMixtapeClientMode ? "Creating for a Client" : "Creating for a Loved One"}
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              {isMixtapeClientMode 
+                                ? "Professional mixtape for your business client" 
+                                : "Personal mixtape for someone special"}
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          id="mixtape-client-mode"
+                          checked={isMixtapeClientMode}
+                          onCheckedChange={(checked) => {
+                            setIsMixtapeClientMode(checked);
+                            mixtapeForm.setValue("lovedOneId", "");
+                            mixtapeForm.setValue("recipientName", "");
+                          }}
+                          data-testid="switch-mixtape-client-mode"
+                        />
+                      </div>
+
+                      {/* Loved One Selector - only show in personal mode */}
+                      {!isMixtapeClientMode && (
+                        <FormField
+                          control={mixtapeForm.control}
+                          name="lovedOneId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Select Loved One (optional)</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    const loved = lovedOnes.find(l => l.id === value);
+                                    if (loved) {
+                                      mixtapeForm.setValue("recipientName", loved.name);
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
+                                  <SelectTrigger data-testid="select-mixtape-loved-one">
+                                    <SelectValue placeholder="Choose from your loved ones" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {lovedOnes.map((loved) => (
+                                      <SelectItem key={loved.id} value={loved.id}>
+                                        {loved.name} ({loved.relationship})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       <FormField
                         control={mixtapeForm.control}
                         name="recipientName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Recipient Name</FormLabel>
+                            <FormLabel>{isMixtapeClientMode ? "Client Name" : "Recipient Name"}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Sarah" {...field} data-testid="input-mixtape-recipient" />
+                              <Input 
+                                placeholder={isMixtapeClientMode ? "John Smith" : "Sarah"} 
+                                {...field} 
+                                data-testid="input-mixtape-recipient" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -2028,11 +2134,25 @@ export default function CreatePage() {
                                   <SelectValue placeholder="Select a theme for your mixtape" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="wedding">Wedding Celebration</SelectItem>
-                                  <SelectItem value="anniversary">Anniversary</SelectItem>
-                                  <SelectItem value="birthday-party">Birthday Party</SelectItem>
-                                  <SelectItem value="romantic-evening">Romantic Evening</SelectItem>
-                                  <SelectItem value="friendship">Friendship</SelectItem>
+                                  {isMixtapeClientMode ? (
+                                    <>
+                                      <SelectItem value="appreciation">Client Appreciation</SelectItem>
+                                      <SelectItem value="corporate">Corporate Event</SelectItem>
+                                      <SelectItem value="wedding">Wedding</SelectItem>
+                                      <SelectItem value="anniversary">Business Anniversary</SelectItem>
+                                      <SelectItem value="celebration">Celebration</SelectItem>
+                                      <SelectItem value="welcome">Welcome Gift</SelectItem>
+                                      <SelectItem value="holiday">Holiday Gift</SelectItem>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <SelectItem value="wedding">Wedding Celebration</SelectItem>
+                                      <SelectItem value="anniversary">Anniversary</SelectItem>
+                                      <SelectItem value="birthday-party">Birthday Party</SelectItem>
+                                      <SelectItem value="romantic-evening">Romantic Evening</SelectItem>
+                                      <SelectItem value="friendship">Friendship</SelectItem>
+                                    </>
+                                  )}
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -2043,6 +2163,64 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Custom Cassette Cover Image Upload */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Custom Cassette Cover (optional)</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Upload your own cover image or let AI generate one for you
+                        </p>
+                        
+                        {customCassetteImageUrl ? (
+                          <div className="relative inline-block">
+                            <img 
+                              src={customCassetteImageUrl} 
+                              alt="Custom cassette cover" 
+                              className="w-32 h-32 object-cover rounded-lg border border-border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={clearCustomCassetteCover}
+                              data-testid="button-clear-cassette-cover"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={isUploadingCassetteCover}
+                              onClick={() => document.getElementById('cassette-cover-upload')?.click()}
+                              data-testid="button-upload-cassette-cover"
+                            >
+                              {isUploadingCassetteCover ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Upload Image
+                                </>
+                              )}
+                            </Button>
+                            <input
+                              id="cassette-cover-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleCassetteCoverUpload}
+                              data-testid="input-cassette-cover-upload"
+                            />
+                          </div>
+                        )}
+                      </div>
 
                       <div className="space-y-6">
                         <p className="text-sm font-medium">Customize each song</p>
