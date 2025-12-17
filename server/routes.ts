@@ -1063,6 +1063,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { genre: 'rock', tone: 'triumphant', occasion: 'success' },
       ]
     },
+    'celebration': {
+      songs: [
+        { genre: 'pop', tone: 'joyful', occasion: 'celebration' },
+        { genre: 'dance', tone: 'festive', occasion: 'party' },
+        { genre: 'funk', tone: 'upbeat', occasion: 'good times' },
+      ]
+    },
+    'welcome': {
+      songs: [
+        { genre: 'acoustic', tone: 'warm', occasion: 'welcome' },
+        { genre: 'pop', tone: 'friendly', occasion: 'new beginnings' },
+        { genre: 'folk', tone: 'inviting', occasion: 'greeting' },
+      ]
+    },
+    'holiday': {
+      songs: [
+        { genre: 'pop', tone: 'festive', occasion: 'holiday' },
+        { genre: 'jazz', tone: 'warm', occasion: 'seasonal celebration' },
+        { genre: 'acoustic', tone: 'cozy', occasion: 'holiday cheer' },
+      ]
+    },
   };
 
   // Generate Mixtape (creates multiple songs)
