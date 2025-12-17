@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,6 +110,9 @@ export default function CreatePage() {
   // Custom cover image state
   const [customCoverImageUrl, setCustomCoverImageUrl] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  
+  // Client mode toggle (for creating songs for business clients)
+  const [isClientMode, setIsClientMode] = useState(false);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -1314,48 +1319,88 @@ export default function CreatePage() {
                   </div>
                   <Form {...songForm}>
                     <form onSubmit={songForm.handleSubmit(onGenerateLyrics)} className="space-y-6">
-                      <FormField
-                        control={songForm.control}
-                        name="lovedOneId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Select Loved One (optional)</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  const loved = lovedOnes.find(l => l.id === value);
-                                  if (loved) {
-                                    songForm.setValue("recipientName", loved.name);
-                                    songForm.setValue("relationship", loved.relationship);
-                                  }
-                                }}
-                                value={field.value}
-                              >
-                                <SelectTrigger data-testid="select-song-loved-one">
-                                  <SelectValue placeholder="Choose from your loved ones" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {lovedOnes.map((loved) => (
-                                    <SelectItem key={loved.id} value={loved.id}>
-                                      {loved.name} ({loved.relationship})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      {/* Client Mode Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
+                        <div className="flex items-center gap-3">
+                          {isClientMode ? (
+                            <Briefcase className="w-5 h-5 text-primary" />
+                          ) : (
+                            <Users className="w-5 h-5 text-primary" />
+                          )}
+                          <div>
+                            <Label htmlFor="client-mode" className="text-sm font-medium">
+                              {isClientMode ? "Creating for a Client" : "Creating for a Loved One"}
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              {isClientMode 
+                                ? "Professional song for your business client" 
+                                : "Personal song for someone special"}
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          id="client-mode"
+                          checked={isClientMode}
+                          onCheckedChange={(checked) => {
+                            setIsClientMode(checked);
+                            // Reset form fields when switching modes
+                            songForm.setValue("lovedOneId", "");
+                            songForm.setValue("recipientName", "");
+                            songForm.setValue("relationship", checked ? "Client" : "");
+                          }}
+                          data-testid="switch-client-mode"
+                        />
+                      </div>
+
+                      {/* Loved One Selector - only show in personal mode */}
+                      {!isClientMode && (
+                        <FormField
+                          control={songForm.control}
+                          name="lovedOneId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Select Loved One (optional)</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    const loved = lovedOnes.find(l => l.id === value);
+                                    if (loved) {
+                                      songForm.setValue("recipientName", loved.name);
+                                      songForm.setValue("relationship", loved.relationship);
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
+                                  <SelectTrigger data-testid="select-song-loved-one">
+                                    <SelectValue placeholder="Choose from your loved ones" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {lovedOnes.map((loved) => (
+                                      <SelectItem key={loved.id} value={loved.id}>
+                                        {loved.name} ({loved.relationship})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       <FormField
                         control={songForm.control}
                         name="recipientName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Recipient Name</FormLabel>
+                            <FormLabel>{isClientMode ? "Client Name" : "Recipient Name"}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Sarah" {...field} data-testid="input-song-recipient" />
+                              <Input 
+                                placeholder={isClientMode ? "John Smith" : "Sarah"} 
+                                {...field} 
+                                data-testid="input-song-recipient" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1367,9 +1412,26 @@ export default function CreatePage() {
                         name="relationship"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Relationship</FormLabel>
+                            <FormLabel>{isClientMode ? "Client Type" : "Relationship"}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Best Friend" {...field} data-testid="input-song-relationship" />
+                              {isClientMode ? (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger data-testid="select-client-type">
+                                    <SelectValue placeholder="Select client type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Client">General Client</SelectItem>
+                                    <SelectItem value="VIP Client">VIP Client</SelectItem>
+                                    <SelectItem value="Corporate Client">Corporate Client</SelectItem>
+                                    <SelectItem value="Wedding Client">Wedding Client</SelectItem>
+                                    <SelectItem value="Event Client">Event Client</SelectItem>
+                                    <SelectItem value="Brand Partner">Brand Partner</SelectItem>
+                                    <SelectItem value="Sponsor">Sponsor</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input placeholder="Best Friend" {...field} data-testid="input-song-relationship" />
+                              )}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1388,14 +1450,31 @@ export default function CreatePage() {
                                   <SelectValue placeholder="Select occasion" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="birthday">Birthday</SelectItem>
-                                  <SelectItem value="anniversary">Anniversary</SelectItem>
-                                  <SelectItem value="graduation">Graduation</SelectItem>
-                                  <SelectItem value="thank-you">Thank You</SelectItem>
-                                  <SelectItem value="congratulations">Congratulations</SelectItem>
-                                  <SelectItem value="love">Love</SelectItem>
-                                  <SelectItem value="friendship">Friendship</SelectItem>
-                                  <SelectItem value="missing-you">Missing You</SelectItem>
+                                  {isClientMode ? (
+                                    <>
+                                      <SelectItem value="appreciation">Client Appreciation</SelectItem>
+                                      <SelectItem value="thank-you">Thank You</SelectItem>
+                                      <SelectItem value="congratulations">Congratulations</SelectItem>
+                                      <SelectItem value="welcome">Welcome</SelectItem>
+                                      <SelectItem value="milestone">Milestone Celebration</SelectItem>
+                                      <SelectItem value="partnership">Partnership Celebration</SelectItem>
+                                      <SelectItem value="anniversary">Business Anniversary</SelectItem>
+                                      <SelectItem value="holiday">Holiday Gift</SelectItem>
+                                      <SelectItem value="wedding">Wedding</SelectItem>
+                                      <SelectItem value="event">Special Event</SelectItem>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <SelectItem value="birthday">Birthday</SelectItem>
+                                      <SelectItem value="anniversary">Anniversary</SelectItem>
+                                      <SelectItem value="graduation">Graduation</SelectItem>
+                                      <SelectItem value="thank-you">Thank You</SelectItem>
+                                      <SelectItem value="congratulations">Congratulations</SelectItem>
+                                      <SelectItem value="love">Love</SelectItem>
+                                      <SelectItem value="friendship">Friendship</SelectItem>
+                                      <SelectItem value="missing-you">Missing You</SelectItem>
+                                    </>
+                                  )}
                                 </SelectContent>
                               </Select>
                             </FormControl>
