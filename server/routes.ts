@@ -1034,6 +1034,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { genre: 'folk', tone: 'sweet', occasion: 'friendship celebration' },
       ]
     },
+    // Client mode themes
+    'appreciation': {
+      songs: [
+        { genre: 'jazz', tone: 'warm', occasion: 'client appreciation' },
+        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
+        { genre: 'soul', tone: 'heartfelt', occasion: 'gratitude' },
+      ]
+    },
+    'corporate': {
+      songs: [
+        { genre: 'pop', tone: 'uplifting', occasion: 'corporate celebration' },
+        { genre: 'electronic', tone: 'energetic', occasion: 'company event' },
+        { genre: 'rock', tone: 'inspiring', occasion: 'team motivation' },
+      ]
+    },
+    'thank-you': {
+      songs: [
+        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
+        { genre: 'pop', tone: 'warm', occasion: 'appreciation' },
+        { genre: 'folk', tone: 'heartfelt', occasion: 'gratitude' },
+      ]
+    },
+    'congratulations': {
+      songs: [
+        { genre: 'pop', tone: 'celebratory', occasion: 'congratulations' },
+        { genre: 'dance', tone: 'upbeat', occasion: 'achievement' },
+        { genre: 'rock', tone: 'triumphant', occasion: 'success' },
+      ]
+    },
   };
 
   // Generate Mixtape (creates multiple songs)
