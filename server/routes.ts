@@ -1403,6 +1403,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload custom cover image for a song
+  app.post('/api/creations/:id/upload-cover', isAuthenticated, upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const creation = await storage.getCreationById(req.params.id);
+      
+      if (!creation) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+
+      if (creation.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      if (creation.type !== 'song') {
+        return res.status(400).json({ message: "This feature is only available for songs" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+
+      console.log(`[Song] Uploading custom cover for "${creation.title}"`);
+      
+      // Convert file buffer to base64
+      const base64Image = req.file.buffer.toString('base64');
+      
+      // Upload to object storage
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        base64Image,
+        `songs/${userId}`,
+        'custom-cover'
+      );
+
+      // Update the creation with new image
+      await storage.updateCreation(creation.id, { imageUrl });
+
+      console.log(`[Song] Custom cover uploaded: ${imageUrl}`);
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("Error uploading custom cover:", error);
+      res.status(500).json({ message: error.message || "Failed to upload custom cover" });
+    }
+  });
+
   // Generate cassette case image for a mixtape
   app.post('/api/mixtapes/:id/generate-cassette-cover', isAuthenticated, async (req: Request, res: Response) => {
     try {
