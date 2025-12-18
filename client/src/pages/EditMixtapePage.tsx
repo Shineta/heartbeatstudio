@@ -4,7 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, Music, Loader2, GripVertical } from "lucide-react";
+import { ArrowLeft, Save, Music, Loader2, GripVertical, Plus } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -206,12 +206,33 @@ export default function EditMixtapePage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Available Songs</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-lg">Available Songs</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Check songs below to add them to your mixtape
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setLocation('/create?type=song')}
+              data-testid="button-create-more-songs"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create More Songs
+            </Button>
           </CardHeader>
           <CardContent>
             {availableSongs.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No songs available. Create some songs first!</p>
+              <div className="text-center py-8">
+                <Music className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground mb-4">No songs available yet.</p>
+                <Button onClick={() => setLocation('/create?type=song')} data-testid="button-create-first-song">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Song
+                </Button>
+              </div>
             ) : (
               <div className="space-y-2">
                 {availableSongs.map(song => {
