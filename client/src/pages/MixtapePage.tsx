@@ -126,9 +126,16 @@ export default function MixtapePage() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary mb-4">
-            <Heart className="w-4 h-4" />
-            Made with love on Heartbeat Studio
+          <div className="inline-flex flex-col items-center gap-1 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary mb-4">
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              Made with love on Heartbeat Studio
+            </div>
+            {mixtape.creatorName && (
+              <span className="text-xs opacity-80" data-testid="text-creator-name-top">
+                By {mixtape.creatorName}
+              </span>
+            )}
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
             {mixtape.title}
@@ -136,11 +143,6 @@ export default function MixtapePage() {
           <p className="text-lg text-muted-foreground">
             A {themeDisplay} Mixtape for {mixtape.recipientName}
           </p>
-          {mixtape.creatorName && (
-            <p className="text-sm text-muted-foreground mt-2" data-testid="text-creator-name">
-              By {mixtape.creatorName}
-            </p>
-          )}
         </div>
 
         {/* Cassette Tape Case Visual */}
@@ -339,6 +341,11 @@ export default function MixtapePage() {
           <a href="/" className="text-primary hover:underline">
             Heartbeat Studio
           </a>
+          {mixtape.creatorName && (
+            <p className="text-xs mt-1 opacity-80" data-testid="text-creator-name-bottom">
+              By {mixtape.creatorName}
+            </p>
+          )}
         </div>
       </div>
     </div>
