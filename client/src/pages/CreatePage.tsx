@@ -495,7 +495,7 @@ export default function CreatePage() {
   }, [songMutation.isPending, songWithLyricsMutation.isPending]);
 
   // Timer for mixtape generation (runs during pending or generating status)
-  // Includes 20-minute frontend timeout to catch stalled requests
+  // Includes 35-minute frontend timeout to catch stalled requests
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     const isGenerating = mixtapeMutation.isPending || createdMixtape?.status === 'generating';
@@ -511,12 +511,7 @@ export default function CreatePage() {
           const newTime = prev + 1;
           // Check for frontend timeout
           if (newTime >= FRONTEND_TIMEOUT_SECONDS) {
-            // Show timeout error and reset state
-            toast({
-              title: "Generation Timed Out",
-              description: "Mixtape generation took too long. Please refresh the page and try again.",
-              variant: "destructive",
-            });
+            // Reset state - toast will be shown separately
             setCreatedMixtape(null);
             setMixtapeSongs([]);
             return 0;
@@ -528,7 +523,7 @@ export default function CreatePage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [mixtapeMutation.isPending, createdMixtape?.status, toast]);
+  }, [mixtapeMutation.isPending, createdMixtape?.status]);
 
   // Track polling state across renders to prevent duplicates
   const pollingRef = useRef<{ interval: NodeJS.Timeout | null; toastShown: boolean }>({
