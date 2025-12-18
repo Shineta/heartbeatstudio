@@ -303,23 +303,38 @@ export async function generateCassetteCaseImage(params: {
 }): Promise<string> {
   const { title, recipientName, theme, coverArtUrl } = params;
 
-  // If a custom cover art URL is provided, use image-to-image to stylize it as a cassette cover
+  // Randomly select cassette style for variety
+  const cassetteStyles = [
+    'classic cream/white TDK style',
+    'vintage gray Maxell style with red and black accents',
+    'retro transparent clear cassette showing the tape reels',
+    'classic black Sony style with silver accents',
+    'vintage brown/tan colored with handwritten label look',
+  ];
+  const randomStyle = cassetteStyles[Math.floor(Math.random() * cassetteStyles.length)];
+  
+  // Randomly select background for variety
+  const backgrounds = [
+    'warm wooden table surface',
+    'vintage record store counter',
+    'nostalgic bedroom desk with music posters in background',
+    'retro boombox next to it',
+    'cozy coffee table with warm lighting',
+  ];
+  const randomBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+
+  // If a custom cover art URL is provided, use image-to-image to stylize it
   if (coverArtUrl) {
     console.log(`[NanoBanana] Stylizing custom cover art as cassette for: ${title}`);
     
-    // NO TEXT IN PROMPT - AI struggles with text rendering
     const stylePrompt = `Transform this image into a vintage cassette tape album cover artwork.
-Create a product photography shot of a compact audio cassette tape with its paper jacket displayed on a warm wooden surface.
-The cassette tape is classic white/cream colored with two visible tape reels through the transparent window.
-The cassette has a BLANK white paper label (no text, no writing, completely blank label).
-Next to the cassette is its unfolded paper jacket/sleeve showing this transformed image as the album artwork with vintage 80s/90s retro styling.
-Apply warm vintage film tones, slight film grain, nostalgic lighting.
-The original image subject should be clearly visible but stylized to look like authentic vintage cassette album art.
-Classic TDK or Maxell style compact cassette with the characteristic rectangular shape, rounded corners, tape spools with brown magnetic tape.
-Photorealistic product photography, studio lighting.
-IMPORTANT: No text, no writing, no letters anywhere on the cassette or label - keep all surfaces blank.`;
+A ${randomStyle} compact audio cassette tape on a ${randomBackground}.
+The cassette has a paper label with handwritten-style text: "${title}" as the main title and "For ${recipientName}" below it.
+The text should look like someone wrote on the cassette label with a marker or pen.
+Apply warm vintage film tones, slight film grain, nostalgic 80s/90s aesthetic.
+Photorealistic product photography, studio lighting, shallow depth of field.
+This is a COMPACT AUDIO CASSETTE TAPE for Walkman/boombox.`;
 
-    // Use standard model for image-to-image (required for the imageUrls parameter)
     const images = await generateImageStandard({
       prompt: stylePrompt,
       numImages: 1,
@@ -330,17 +345,17 @@ IMPORTANT: No text, no writing, no letters anywhere on the cassette or label - k
     return images[0];
   }
 
-  // Default: Generate cassette tape from scratch - NO TEXT
-  const prompt = `A single vintage audio cassette tape photographed on a wooden table. 
-The cassette tape is a rectangular plastic cartridge with two circular tape reels visible through a transparent window in the center.
-The cassette has a BLANK white paper label on top (no text, no writing, completely blank and clean).
-Classic 1980s TDK or Maxell style compact cassette design.
-The cassette shows the characteristic rectangular shape with rounded corners, the two tape spools with brown magnetic tape, screw holes in the corners, and the textured grip patterns on the sides.
-Photorealistic product photography, studio lighting, shallow depth of field.
-This must be a COMPACT CASSETTE TAPE - the audio format used with Walkman and boomboxes - NOT a VHS tape, NOT a CD, NOT vinyl.
-IMPORTANT: No text, no writing, no letters, no words anywhere - the label and cassette surfaces must be completely blank.`;
+  // Generate varied cassette tape with text on the label
+  const prompt = `A ${randomStyle} vintage audio cassette tape photographed on a ${randomBackground}.
+The cassette tape is a rectangular plastic cartridge with two circular tape reels visible through a transparent window.
+The cassette has a paper label with handwritten-style text: "${title}" as the main title, and below it "For ${recipientName}".
+The text looks like someone wrote on the cassette label with a black marker or pen - authentic handwritten feel.
+Classic 1980s cassette design with the characteristic rectangular shape, rounded corners, tape spools with brown magnetic tape.
+Photorealistic product photography, warm nostalgic lighting, slight film grain, shallow depth of field.
+This must be a COMPACT CASSETTE TAPE - the audio format used with Walkman and boomboxes.
+The handwritten text on the label is clearly readable: "${title}" and "For ${recipientName}".`;
 
-  console.log(`[NanoBanana] Generating blank cassette tape image for: ${title}`);
+  console.log(`[NanoBanana] Generating cassette with text for: ${title} (style: ${randomStyle})`);
 
   const images = await generateImage({
     prompt,

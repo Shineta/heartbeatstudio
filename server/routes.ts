@@ -709,24 +709,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Generate simple cassette cover with text labels (no AI image, no scene)
+      // Generate AI cassette cover with text using Nano Banana (varied styles)
       let coverImageUrl = null;
       try {
-        const cassetteCoverBuffer = await createCassetteCover({
-          songTitle: songResult.title,
+        const cassetteCoverUrl = await generateSongCover({
+          title: songResult.title,
+          tone: tone || 'sweet',
+          genre: genre || 'pop',
           recipientName,
         });
         
-        const coverBase64 = cassetteCoverBuffer.toString('base64');
-        
-        coverImageUrl = await objectStorageService.uploadBase64Image(
-          coverBase64,
-          `songs/${userId}`,
-          'cover'
-        );
-        console.log('[Song] Cassette cover with text created and uploaded:', coverImageUrl);
+        if (cassetteCoverUrl) {
+          // Download and upload to our storage
+          const coverResponse = await fetch(cassetteCoverUrl);
+          const coverBuffer = await coverResponse.arrayBuffer();
+          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+          
+          coverImageUrl = await objectStorageService.uploadBase64Image(
+            coverBase64,
+            `songs/${userId}`,
+            'cover'
+          );
+          console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
+        }
       } catch (coverError: any) {
-        console.error('[Song] Failed to generate cassette cover:', coverError.message);
+        console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
         // Continue without cover - song still works
       }
 
@@ -780,24 +787,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get recipient name for cover text
       const recipientName = lovedOne?.name || req.body.recipientName || 'Someone Special';
 
-      // Generate simple cassette cover with text labels (no AI image, no scene)
+      // Generate AI cassette cover with text using Nano Banana (varied styles)
       let coverImageUrl = null;
       try {
-        const cassetteCoverBuffer = await createCassetteCover({
-          songTitle: songResult.title,
+        const cassetteCoverUrl = await generateSongCover({
+          title: songResult.title,
+          tone: tone || 'sweet',
+          genre: genre || 'pop',
           recipientName,
+          customImageUrl: customCoverImageUrl || undefined,
         });
         
-        const coverBase64 = cassetteCoverBuffer.toString('base64');
-        
-        coverImageUrl = await objectStorageService.uploadBase64Image(
-          coverBase64,
-          `songs/${userId}`,
-          'cover'
-        );
-        console.log('[Song] Cassette cover with text created and uploaded:', coverImageUrl);
+        if (cassetteCoverUrl) {
+          // Download and upload to our storage
+          const coverResponse = await fetch(cassetteCoverUrl);
+          const coverBuffer = await coverResponse.arrayBuffer();
+          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+          
+          coverImageUrl = await objectStorageService.uploadBase64Image(
+            coverBase64,
+            `songs/${userId}`,
+            'cover'
+          );
+          console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
+        }
       } catch (coverError: any) {
-        console.error('[Song] Failed to generate cassette cover:', coverError.message);
+        console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
         // Continue without cover - song still works
       }
 
@@ -1413,13 +1428,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Generate simple cassette cover with text labels (no AI image, no scene)
-      const cassetteCoverBuffer = await createCassetteCover({
-        songTitle: creation.title || 'My Song',
+      // Generate AI cassette cover with varied styles using Nano Banana
+      const cassetteCoverUrl = await generateSongCover({
+        title: creation.title || 'My Song',
+        tone: creation.tone || 'sweet',
+        genre: creation.genre || 'pop',
         recipientName,
       });
-      
-      const coverBase64 = cassetteCoverBuffer.toString('base64');
+
+      if (!cassetteCoverUrl) {
+        throw new Error('Failed to generate cassette cover image');
+      }
+
+      // Download and upload to our storage
+      const coverResponse = await fetch(cassetteCoverUrl);
+      const coverBuffer = await coverResponse.arrayBuffer();
+      const coverBase64 = Buffer.from(coverBuffer).toString('base64');
       
       const imageUrl = await objectStorageService.uploadBase64Image(
         coverBase64,
