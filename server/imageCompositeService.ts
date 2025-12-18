@@ -100,6 +100,12 @@ export async function compositePhotoIntoCassette(
 
   const cassetteWithShadow = await addShadow(resizedCassette, 8, 0.4);
 
+  // Create text label for cassette
+  const textLabel = await createCassetteLabel(
+    options.songTitle || "My Song",
+    options.recipientName || ""
+  );
+
   const composited = await sharp(woodBackground)
     .composite([
       {
@@ -112,6 +118,12 @@ export async function compositePhotoIntoCassette(
         input: cassetteWithShadow,
         top: cassetteY,
         left: cassetteX,
+        blend: "over",
+      },
+      {
+        input: textLabel,
+        top: cassetteY + 60,
+        left: cassetteX + 75,
         blend: "over",
       },
     ])
@@ -176,6 +188,44 @@ async function createFallbackCassette(): Promise<Buffer> {
   })
     .png()
     .toBuffer();
+}
+
+async function createCassetteLabel(
+  songTitle: string,
+  recipientName: string
+): Promise<Buffer> {
+  const labelWidth = 220;
+  const labelHeight = 70;
+  
+  // Truncate text if too long
+  const truncatedTitle = songTitle.length > 20 ? songTitle.substring(0, 18) + "..." : songTitle;
+  const forText = recipientName ? `For "${recipientName}"` : "";
+  const truncatedFor = forText.length > 24 ? forText.substring(0, 22) + "..." : forText;
+  
+  // Create SVG with text
+  const svgText = `
+    <svg width="${labelWidth}" height="${labelHeight}" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #1a1a1a; }
+        .recipient { font-family: Arial, sans-serif; font-size: 11px; fill: #333333; font-style: italic; }
+      </style>
+      <text x="${labelWidth / 2}" y="28" text-anchor="middle" class="title">${escapeXml(truncatedTitle)}</text>
+      <text x="${labelWidth / 2}" y="50" text-anchor="middle" class="recipient">${escapeXml(truncatedFor)}</text>
+    </svg>
+  `;
+  
+  return sharp(Buffer.from(svgText))
+    .png()
+    .toBuffer();
+}
+
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 export async function downloadImageAsBuffer(url: string): Promise<Buffer> {
