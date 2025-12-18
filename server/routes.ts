@@ -1448,6 +1448,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update mixtape songs (swap/reorder songs)
+  app.patch('/api/mixtapes/:id/songs', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const mixtape = await storage.getMixtapeById(req.params.id);
+      
+      if (!mixtape) {
+        return res.status(404).json({ message: "Mixtape not found" });
+      }
+
+      if (mixtape.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { songIds } = req.body;
+      
+      if (!Array.isArray(songIds)) {
+        return res.status(400).json({ message: "songIds must be an array" });
+      }
+
+      // Verify all songs exist and belong to the user
+      for (const songId of songIds) {
+        const song = await storage.getCreationById(songId);
+        if (!song) {
+          return res.status(400).json({ message: `Song ${songId} not found` });
+        }
+        if (song.userId !== userId) {
+          return res.status(403).json({ message: `Song ${songId} does not belong to you` });
+        }
+      }
+
+      // Update the mixtape with new song IDs
+      const updated = await storage.updateMixtape(req.params.id, { songIds });
+      
+      console.log(`[Mixtape ${req.params.id}] Updated songs: ${songIds.join(', ')}`);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating mixtape songs:", error);
+      res.status(500).json({ message: error.message || "Failed to update mixtape songs" });
+    }
+  });
+
   // Generate cassette case image for a mixtape
   app.post('/api/mixtapes/:id/generate-cassette-cover', isAuthenticated, async (req: Request, res: Response) => {
     try {

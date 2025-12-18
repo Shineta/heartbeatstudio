@@ -13,6 +13,7 @@ import RealDashboard from "@/pages/RealDashboard";
 import CreatePage from "@/pages/CreatePage";
 import SharePage from "@/pages/SharePage";
 import MixtapePage from "@/pages/MixtapePage";
+import EditMixtapePage from "@/pages/EditMixtapePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
       <Route path="/create" component={isAuthenticated ? CreatePage : AuthPage} />
+      <Route path="/mixtape/:id/edit" component={isAuthenticated ? EditMixtapePage : AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );

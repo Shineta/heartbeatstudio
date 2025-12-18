@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -514,10 +514,25 @@ export default function RealDashboard() {
                         </span>
                       </div>
                       {mixtape.status === 'complete' && (
-                        <Button variant="outline" size="sm" className="w-full mt-3" data-testid={`button-play-mixtape-${mixtape.id}`}>
-                          <Play className="w-4 h-4 mr-2" />
-                          Play Mixtape
-                        </Button>
+                        <div className="flex gap-2 mt-3">
+                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-play-mixtape-${mixtape.id}`}>
+                            <Play className="w-4 h-4 mr-2" />
+                            Play
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/mixtape/${mixtape.id}/edit`;
+                            }}
+                            data-testid={`button-edit-mixtape-${mixtape.id}`}
+                          >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
