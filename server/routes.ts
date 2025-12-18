@@ -1297,13 +1297,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Mixtape not found" });
       }
 
+      // Fetch creator info
+      const creator = await storage.getUser(mixtape.userId);
+      const creatorName = creator ? 
+        (creator.firstName && creator.lastName ? `${creator.firstName} ${creator.lastName}` : creator.email?.split('@')[0]) 
+        : null;
+
       // Fetch all songs in the mixtape
       const songs = await Promise.all(
         (mixtape.songIds || []).map(id => storage.getCreationById(id))
       );
 
       res.json({
-        mixtape,
+        ...mixtape,
+        creatorName,
         songs: songs.filter(Boolean),
       });
     } catch (error) {

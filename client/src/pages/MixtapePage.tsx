@@ -8,6 +8,7 @@ import type { Mixtape, Creation } from "@shared/schema";
 
 interface MixtapeWithSongs extends Mixtape {
   songs: Creation[];
+  creatorName?: string | null;
 }
 
 export default function MixtapePage() {
@@ -135,6 +136,11 @@ export default function MixtapePage() {
           <p className="text-lg text-muted-foreground">
             A {themeDisplay} Mixtape for {mixtape.recipientName}
           </p>
+          {mixtape.creatorName && (
+            <p className="text-sm text-muted-foreground mt-2" data-testid="text-creator-name">
+              By {mixtape.creatorName}
+            </p>
+          )}
         </div>
 
         {/* Cassette Tape Case Visual */}
