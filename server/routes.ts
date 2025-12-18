@@ -8,6 +8,7 @@ import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToke
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
+import { generateAnimationVideo } from "./soraService";
 import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
@@ -542,15 +543,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Animation (using Nano Banana API)
+  // Generate AI Animation (using OpenAI Sora 2)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const { lovedOneId, tone, occasion, style, description } = req.body;
-      
-      if (!process.env.NANO_BANANA_API_KEY) {
-        return res.status(400).json({ message: "Animation generation requires Nano Banana API key" });
-      }
       
       let lovedOne;
       if (lovedOneId) {
@@ -559,26 +556,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
 
-      console.log('[Animation] Using Nano Banana API for animation generation');
-      const nanoBananaImageUrl = await generateAnimation({
+      console.log('[Animation] Using OpenAI Sora 2 for video animation generation');
+      
+      // Generate video using Sora 2
+      const videoBuffer = await generateAnimationVideo({
         recipientName,
         occasion: occasion || "celebration",
-        style: style || `${tone || 'sweet'}, colorful, animated style`,
+        tone: tone || 'sweet',
+        style: style,
         description,
       });
 
-      // Download the temporary image and upload to our storage
-      console.log('[Animation] Downloading Nano Banana image and uploading to storage...');
-      const imageResponse = await fetch(nanoBananaImageUrl);
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
-      
-      const imageUrl = await objectStorageService.uploadBase64Image(
-        imageBase64,
-        `animations/${userId}`,
-        'animation'
+      // Upload video to object storage
+      console.log('[Animation] Uploading video to storage...');
+      const videoUrl = await objectStorageService.uploadBuffer(
+        videoBuffer,
+        `animations/${userId}/animation`,
+        'video/mp4'
       );
-      console.log('[Animation] Image uploaded to storage:', imageUrl);
+      console.log('[Animation] Video uploaded to storage:', videoUrl);
+
+      // Also generate a thumbnail image using Nano Banana as a fallback for preview
+      let imageUrl = videoUrl; // Use video URL as fallback
+      try {
+        if (process.env.NANO_BANANA_API_KEY) {
+          console.log('[Animation] Generating thumbnail with Nano Banana...');
+          const thumbnailUrl = await generateAnimation({
+            recipientName,
+            occasion: occasion || "celebration",
+            style: style || `${tone || 'sweet'}, colorful, animated style`,
+            description,
+          });
+          const imageResponse = await fetch(thumbnailUrl);
+          const imageBuffer = await imageResponse.arrayBuffer();
+          const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+          imageUrl = await objectStorageService.uploadBase64Image(
+            imageBase64,
+            `animations/${userId}`,
+            'thumbnail'
+          );
+          console.log('[Animation] Thumbnail uploaded:', imageUrl);
+        }
+      } catch (thumbError) {
+        console.log('[Animation] Thumbnail generation failed, using video URL as fallback');
+      }
 
       const creation = await storage.createCreation({
         userId,
@@ -588,6 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: `Animation for ${recipientName}`,
         content: description || `A celebration animation for ${occasion || 'a special occasion'}`,
         imageUrl,
+        mediaUrl: videoUrl,
       });
       
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
