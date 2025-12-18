@@ -178,16 +178,26 @@ export default function RealDashboard() {
             </h1>
             <p className="text-muted-foreground">Ready to create something special?</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                size="lg"
-                data-testid="button-add-loved-one"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Loved One
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-3">
+            <Button 
+              size="lg"
+              onClick={() => window.location.href = '/create'}
+              data-testid="button-create"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  data-testid="button-add-loved-one"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Loved One
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add a Loved One</DialogTitle>
@@ -279,6 +289,7 @@ export default function RealDashboard() {
               </Form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
