@@ -45,10 +45,11 @@ export async function compositePhotoIntoCassette(
   const sleeveY = 80;
   const sleeveRotation = 5;
 
+  // Use "contain" to show the ENTIRE image without cropping (important for logos with text)
   const userArt = await sharp(userPhotoBuffer)
     .resize(sleeveWidth - 20, sleeveHeight - 20, {
-      fit: "cover",
-      position: "attention",
+      fit: "contain",
+      background: { r: 255, g: 255, b: 255, alpha: 1 }, // White background for logos
     })
     .png()
     .toBuffer();
