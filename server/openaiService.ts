@@ -241,6 +241,7 @@ function buildBasePrompt(
     tone,
     interests,
     insideJokes,
+    additionalNotes,
   } = params;
 
   const occasionText = occasion
@@ -255,6 +256,10 @@ function buildBasePrompt(
     ? `Optional playful or personal inside jokes to tastefully reference (without being corny): ${insideJokes}.`
     : "No explicit inside jokes were provided.";
 
+  const notesText = additionalNotes
+    ? `IMPORTANT SPECIAL INSTRUCTIONS FROM USER (must incorporate these): ${additionalNotes}`
+    : "";
+
   return `
 Recipient: ${recipientName}
 Relationship to sender: ${relationship}
@@ -263,6 +268,7 @@ Genre target (normalized): ${normalizedGenre}
 ${occasionText}
 ${interestsText}
 ${jokesText}
+${notesText}
 `.trim();
 }
 
