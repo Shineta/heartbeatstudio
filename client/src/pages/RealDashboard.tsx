@@ -11,7 +11,8 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,9 +30,16 @@ const lovedOneFormSchema = z.object({
   insideJokes: z.string().optional(),
 });
 
+const mixtapeFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  recipientName: z.string().optional(),
+});
+
 export default function RealDashboard() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mixtapeDialogOpen, setMixtapeDialogOpen] = useState(false);
+  const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [regeneratingCover, setRegeneratingCover] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +102,73 @@ export default function RealDashboard() {
   const onSubmit = (data: z.infer<typeof lovedOneFormSchema>) => {
     createMutation.mutate(data);
   };
+
+  const mixtapeForm = useForm<z.infer<typeof mixtapeFormSchema>>({
+    resolver: zodResolver(mixtapeFormSchema),
+    defaultValues: {
+      title: "",
+      recipientName: "",
+    },
+  });
+
+  const createMixtapeMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof mixtapeFormSchema>) => {
+      return await apiRequest("POST", "/api/mixtapes/from-songs", {
+        ...data,
+        songIds: selectedSongIds,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
+      toast({ title: "Success", description: "Mixtape created successfully!" });
+      setMixtapeDialogOpen(false);
+      setSelectedSongIds([]);
+      mixtapeForm.reset();
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create mixtape. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onMixtapeSubmit = (data: z.infer<typeof mixtapeFormSchema>) => {
+    if (selectedSongIds.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select at least one song to create a mixtape.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createMixtapeMutation.mutate(data);
+  };
+
+  const toggleSongSelection = (songId: string) => {
+    const creation = creations.find(c => c.id === songId);
+    if (!creation || creation.type !== 'song') return;
+    
+    setSelectedSongIds(prev => 
+      prev.includes(songId) 
+        ? prev.filter(id => id !== songId)
+        : [...prev, songId]
+    );
+  };
+
+  const songs = creations.filter(c => c.type === 'song');
 
   const handleRegenerateCover = async (creationId: string) => {
     setRegeneratingCover(creationId);
@@ -381,94 +456,126 @@ export default function RealDashboard() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {creations.map((creation) => (
-                  <div key={creation.id} className="border rounded-md overflow-hidden hover-elevate" data-testid={`card-creation-${creation.id}`}>
-                    {creation.imageUrl && (
-                      <img
-                        src={creation.imageUrl}
-                        alt={creation.title || "Creation"}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-2">{creation.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {creation.type === 'song' ? 'Song' : 'Card'} • {creation.tone}
-                      </p>
-                      <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
-                      
-                      {creation.type === 'song' && creation.mediaUrl && (
-                        <div className="mb-4">
-                          <audio 
-                            controls 
-                            className="w-full mb-2"
-                            data-testid={`audio-player-${creation.id}`}
-                          >
-                            <source src={creation.mediaUrl} type="audio/mpeg" />
-                            Your browser does not support the audio element.
-                          </audio>
+              <>
+                {songs.length > 0 && (
+                  <div className="flex items-center justify-between mb-4 p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Music className="w-5 h-5 text-primary" />
+                      <span className="font-medium">
+                        {selectedSongIds.length > 0 
+                          ? `${selectedSongIds.length} song${selectedSongIds.length > 1 ? 's' : ''} selected`
+                          : 'Select songs to create a mixtape'}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={() => setMixtapeDialogOpen(true)}
+                      disabled={selectedSongIds.length === 0}
+                      data-testid="button-create-mixtape-from-songs"
+                    >
+                      <ListMusic className="w-4 h-4 mr-2" />
+                      Create Mixtape
+                    </Button>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {creations.map((creation) => (
+                    <div key={creation.id} className={`border rounded-md overflow-hidden hover-elevate relative ${selectedSongIds.includes(creation.id) ? 'ring-2 ring-primary' : ''}`} data-testid={`card-creation-${creation.id}`}>
+                      {creation.type === 'song' && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Checkbox
+                            checked={selectedSongIds.includes(creation.id)}
+                            onCheckedChange={() => toggleSongSelection(creation.id)}
+                            className="bg-background"
+                            data-testid={`checkbox-song-${creation.id}`}
+                          />
                         </div>
                       )}
-                      
-                      <div className="flex gap-2 flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const shareLink = creation.shareableLink?.startsWith('/share/') 
-                              ? creation.shareableLink 
-                              : `/share/${creation.shareableLink}`;
-                            navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                            toast({ title: "Copied!", description: "Link copied to clipboard" });
-                          }}
-                          data-testid="button-share-creation"
-                        >
-                          Share
-                        </Button>
-                        {creation.type === 'song' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUploadClick(creation.id);
-                              }}
-                              disabled={uploadingCover === creation.id}
-                              data-testid={`button-upload-cover-${creation.id}`}
+                      {creation.imageUrl && (
+                        <img
+                          src={creation.imageUrl}
+                          alt={creation.title || "Creation"}
+                          className="w-full h-48 object-cover"
+                        />
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-2">{creation.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {creation.type === 'song' ? 'Song' : 'Card'} • {creation.tone}
+                        </p>
+                        <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
+                        
+                        {creation.type === 'song' && creation.mediaUrl && (
+                          <div className="mb-4">
+                            <audio 
+                              controls 
+                              className="w-full mb-2"
+                              data-testid={`audio-player-${creation.id}`}
                             >
-                              {uploadingCover === creation.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Upload className="w-4 h-4" />
-                              )}
-                              <span className="ml-1">Upload</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRegenerateCover(creation.id);
-                              }}
-                              disabled={regeneratingCover === creation.id}
-                              data-testid={`button-regenerate-cover-${creation.id}`}
-                            >
-                              {regeneratingCover === creation.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <RefreshCw className="w-4 h-4" />
-                              )}
-                              <span className="ml-1">New Cover</span>
-                            </Button>
-                          </>
+                              <source src={creation.mediaUrl} type="audio/mpeg" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </div>
                         )}
+                        
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const shareLink = creation.shareableLink?.startsWith('/share/') 
+                                ? creation.shareableLink 
+                                : `/share/${creation.shareableLink}`;
+                              navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                              toast({ title: "Copied!", description: "Link copied to clipboard" });
+                            }}
+                            data-testid="button-share-creation"
+                          >
+                            Share
+                          </Button>
+                          {creation.type === 'song' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUploadClick(creation.id);
+                                }}
+                                disabled={uploadingCover === creation.id}
+                                data-testid={`button-upload-cover-${creation.id}`}
+                              >
+                                {uploadingCover === creation.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Upload className="w-4 h-4" />
+                                )}
+                                <span className="ml-1">Upload</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRegenerateCover(creation.id);
+                                }}
+                                disabled={regeneratingCover === creation.id}
+                                data-testid={`button-regenerate-cover-${creation.id}`}
+                              >
+                                {regeneratingCover === creation.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-4 h-4" />
+                                )}
+                                <span className="ml-1">New Cover</span>
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </TabsContent>
 
@@ -568,6 +675,66 @@ export default function RealDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={mixtapeDialogOpen} onOpenChange={setMixtapeDialogOpen}>
+        <DialogContent data-testid="dialog-create-mixtape">
+          <DialogHeader>
+            <DialogTitle>Create Mixtape from Songs</DialogTitle>
+          </DialogHeader>
+          <Form {...mixtapeForm}>
+            <form onSubmit={mixtapeForm.handleSubmit(onMixtapeSubmit)} className="space-y-4">
+              <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+                <p className="text-sm font-medium mb-2">Selected Songs ({selectedSongIds.length}):</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {selectedSongIds.map(id => {
+                    const song = creations.find(c => c.id === id);
+                    return song ? <li key={id}>• {song.title}</li> : null;
+                  })}
+                </ul>
+              </div>
+              <FormField
+                control={mixtapeForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mixtape Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="My Holiday Mixtape" {...field} data-testid="input-mixtape-title" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={mixtapeForm.control}
+                name="recipientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>For (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Who is this mixtape for?" {...field} data-testid="input-mixtape-recipient" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={createMixtapeMutation.isPending} data-testid="button-submit-mixtape">
+                {createMixtapeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Mixtape...
+                  </>
+                ) : (
+                  <>
+                    <ListMusic className="w-4 h-4 mr-2" />
+                    Create Mixtape
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

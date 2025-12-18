@@ -11,7 +11,7 @@ import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } fr
 import { generateAnimationVideo, isSoraConfigured } from "./soraService";
 import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
 import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
-import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
+import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shared/schema";
 
 // Configure multer for memory storage (files stored as buffers)
 const upload = multer({
@@ -1055,6 +1055,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching mixtapes:", error);
       res.status(500).json({ message: "Failed to fetch mixtapes" });
+    }
+  });
+
+  // Create mixtape from existing songs
+  app.post('/api/mixtapes/from-songs', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { title, theme, recipientName, songIds } = req.body;
+
+      if (!title || !songIds || !Array.isArray(songIds) || songIds.length === 0) {
+        return res.status(400).json({ message: "Title and at least one song are required" });
+      }
+
+      // Verify all songs belong to this user and are of type 'song'
+      const songs: Creation[] = [];
+      for (const songId of songIds) {
+        const creation = await storage.getCreationById(songId);
+        if (!creation) {
+          return res.status(404).json({ message: `Song with ID ${songId} not found` });
+        }
+        if (creation.userId !== userId) {
+          return res.status(403).json({ message: "You can only add your own songs to a mixtape" });
+        }
+        if (creation.type !== 'song') {
+          return res.status(400).json({ message: `Creation ${songId} is not a song` });
+        }
+        songs.push(creation);
+      }
+
+      // Create the mixtape
+      const mixtape = await storage.createMixtape({
+        userId,
+        title,
+        theme: theme || 'custom',
+        recipientName: recipientName || null,
+        songIds,
+        status: 'complete',
+      });
+
+      // Generate cassette cover for the mixtape
+      try {
+        const { generateSongCover } = await import('./openaiService');
+        const coverUrl = await generateSongCover({
+          title,
+          tone: 'nostalgic',
+          genre: 'mixtape',
+          recipientName: recipientName || 'Someone Special',
+        });
+
+        if (coverUrl) {
+          const coverResponse = await fetch(coverUrl);
+          const coverBuffer = await coverResponse.arrayBuffer();
+          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+          
+          const imageUrl = await objectStorageService.uploadBase64Image(
+            coverBase64,
+            `mixtapes/${userId}`,
+            'cassette-cover'
+          );
+          
+          await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl: imageUrl });
+          mixtape.cassetteCaseImageUrl = imageUrl;
+        }
+      } catch (coverError: any) {
+        console.error('[Mixtape] Failed to generate cassette cover:', coverError.message);
+      }
+
+      console.log(`[Mixtape] Created mixtape "${title}" from ${songIds.length} existing songs`);
+      res.json(mixtape);
+    } catch (error: any) {
+      console.error("Error creating mixtape from songs:", error);
+      res.status(500).json({ message: error.message || "Failed to create mixtape" });
     }
   });
 
