@@ -339,6 +339,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  // Update user profile (including brand name)
+  app.patch('/api/auth/user', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { firstName, lastName, brandName } = req.body;
+      
+      const updates: any = {};
+      if (firstName !== undefined) updates.firstName = firstName;
+      if (lastName !== undefined) updates.lastName = lastName;
+      if (brandName !== undefined) updates.brandName = brandName;
+      
+      const updatedUser = await storage.updateUser(userId, updates);
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: error.message || "Failed to update profile" });
+    }
+  });
+
   // Logout
   app.post('/api/auth/logout', (req: Request, res: Response) => {
     req.logout((err) => {
@@ -1297,11 +1316,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Mixtape not found" });
       }
 
-      // Fetch creator info
+      // Fetch creator info (use brandName for professional branding)
       const creator = await storage.getUser(mixtape.userId);
-      const creatorName = creator ? 
-        (creator.firstName && creator.lastName ? `${creator.firstName} ${creator.lastName}` : creator.email?.split('@')[0]) 
-        : null;
+      const creatorName = creator?.brandName || null;
 
       // Fetch all songs in the mixtape
       const songs = await Promise.all(

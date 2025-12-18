@@ -1,17 +1,46 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X, LogOut } from "lucide-react";
+import { Heart, Menu, X, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [brandName, setBrandName] = useState("");
+  const [saving, setSaving] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const typedUser = user as User | undefined;
+
+  const handleOpenSettings = () => {
+    setBrandName(typedUser?.brandName || "");
+    setSettingsOpen(true);
+  };
+
+  const handleSaveBrandName = async () => {
+    setSaving(true);
+    try {
+      await apiRequest("PATCH", "/api/auth/user", { brandName });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({ title: "Success", description: "Brand name updated!" });
+      setSettingsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update brand name.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -120,6 +149,46 @@ export default function Navigation() {
                     <span className="text-sm">{typedUser.firstName || typedUser.email}</span>
                   </>
                 )}
+                <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={handleOpenSettings}
+                      data-testid="button-settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Profile Settings</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="brandName">Brand Name</Label>
+                        <Input
+                          id="brandName"
+                          placeholder="Your business or brand name"
+                          value={brandName}
+                          onChange={(e) => setBrandName(e.target.value)}
+                          data-testid="input-brand-name"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          This will appear on shared mixtapes as "by [Your Brand Name]"
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={handleSaveBrandName} 
+                        disabled={saving}
+                        className="w-full"
+                        data-testid="button-save-brand"
+                      >
+                        {saving ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button 
                   variant="ghost" 
                   size="sm"

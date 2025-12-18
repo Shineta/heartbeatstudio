@@ -30,6 +30,7 @@ export const users = pgTable("users", {
   password: varchar("password"), // hashed password for email/password auth (null for OAuth-only users)
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  brandName: varchar("brand_name"), // business/brand name for professional users (e.g., "Horton's Tech Innovations")
   profileImageUrl: varchar("profile_image_url"),
   googleId: varchar("google_id").unique(), // for Google OAuth
   createdAt: timestamp("created_at").defaultNow(),
