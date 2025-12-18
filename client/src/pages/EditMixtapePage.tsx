@@ -4,7 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, Music, Loader2, GripVertical, Plus } from "lucide-react";
+import { ArrowLeft, Save, Music, Loader2, GripVertical, Plus, RefreshCw } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -17,8 +17,33 @@ export default function EditMixtapePage() {
   const { toast } = useToast();
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [regeneratingCover, setRegeneratingCover] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleRegenerateCover = async () => {
+    if (!id) return;
+    setRegeneratingCover(true);
+    try {
+      // If there's an existing cover that looks like an unprocessed image (not composited), 
+      // try to composite it with the cassette. Otherwise, generate a new AI cover.
+      const currentUrl = mixtapeData?.mixtape?.cassetteCaseImageUrl;
+      await apiRequest("POST", `/api/mixtapes/${id}/generate-cassette-cover`, 
+        currentUrl ? { customImageUrl: currentUrl } : {}
+      );
+      queryClient.invalidateQueries({ queryKey: ['/api/mixtapes', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
+      toast({ title: "Success", description: "Cassette cover regenerated!" });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to regenerate cover",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingCover(false);
+    }
+  };
 
   const { data: mixtapeData, isLoading: mixtapeLoading } = useQuery<{ mixtape: Mixtape; songs: Creation[] }>({
     queryKey: ['/api/mixtapes', id],
@@ -141,6 +166,15 @@ export default function EditMixtapePage() {
             </h1>
             <p className="text-muted-foreground">{mixtape.title}</p>
           </div>
+          <Button 
+            variant="outline"
+            onClick={handleRegenerateCover} 
+            disabled={regeneratingCover}
+            data-testid="button-regenerate-cover"
+          >
+            {regeneratingCover ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            Regenerate Cover
+          </Button>
           <Button onClick={handleSave} disabled={saving} data-testid="button-save-mixtape">
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             Save Changes

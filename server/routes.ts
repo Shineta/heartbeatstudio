@@ -1186,7 +1186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientName: recipient,
         songIds: [],
         shareableLink: shareableMixtapeLink,
-        cassetteCaseImageUrl: customCassetteImageUrl || null, // Use custom image if provided
+        cassetteCaseImageUrl: null, // Will be generated/composited after songs are created
         status: 'generating',
       });
 
@@ -1281,20 +1281,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`[Mixtape ${mixtape.id}] Completed with ${songIds.length} songs`);
 
-          // Generate cassette case image only if no custom image was provided (async, don't block)
-          if (songIds.length > 0 && !customCassetteImageUrl) {
-            generateCassetteCaseImage({
-              title: mixtape.title,
-              recipientName: mixtape.recipientName || 'Someone Special',
-              theme: mixtape.theme,
-            }).then(async (cassetteCaseImageUrl) => {
-              await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
-              console.log(`[Mixtape ${mixtape.id}] Generated cassette case image`);
-            }).catch((err) => {
+          // Generate cassette case image (composite custom image if provided, otherwise AI generate)
+          if (songIds.length > 0) {
+            try {
+              if (customCassetteImageUrl) {
+                // Download custom image and composite with cassette
+                console.log(`[Mixtape ${mixtape.id}] Compositing custom image with cassette template`);
+                const imageResponse = await fetch(customCassetteImageUrl);
+                if (imageResponse.ok) {
+                  const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+                  const compositedBuffer = await compositePhotoIntoCassette(imageBuffer, {
+                    songTitle: mixtape.title,
+                    recipientName: mixtape.recipientName || 'Someone Special',
+                  });
+                  
+                  // Upload composited image
+                  const objectStorage = new ObjectStorageService();
+                  const filename = `mixtape-cassette-${mixtape.id}-${Date.now()}.png`;
+                  const compositedUrl = await objectStorage.uploadBuffer(compositedBuffer, filename, 'image/png');
+                  
+                  await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl: compositedUrl });
+                  console.log(`[Mixtape ${mixtape.id}] Generated composited cassette cover from custom image`);
+                } else {
+                  console.error(`[Mixtape ${mixtape.id}] Failed to download custom image`);
+                }
+              } else {
+                // AI generate cassette case image
+                const cassetteCaseImageUrl = await generateCassetteCaseImage({
+                  title: mixtape.title,
+                  recipientName: mixtape.recipientName || 'Someone Special',
+                  theme: mixtape.theme,
+                });
+                await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
+                console.log(`[Mixtape ${mixtape.id}] Generated AI cassette case image`);
+              }
+            } catch (err: any) {
               console.error(`[Mixtape ${mixtape.id}] Failed to generate cassette case image:`, err.message);
-            });
-          } else if (customCassetteImageUrl) {
-            console.log(`[Mixtape ${mixtape.id}] Using custom cassette cover image`);
+            }
           }
         } catch (bgError: any) {
           console.error(`[Mixtape ${mixtape.id}] Background processing failed:`, bgError.message);
@@ -1521,11 +1544,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate cassette case image for a mixtape
+  // Generate cassette case image for a mixtape (with optional custom image for compositing)
   app.post('/api/mixtapes/:id/generate-cassette-cover', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const mixtape = await storage.getMixtapeById(req.params.id);
+      const { customImageUrl } = req.body;
       
       if (!mixtape) {
         return res.status(404).json({ message: "Mixtape not found" });
@@ -1537,11 +1561,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Mixtape] Generating cassette case image for "${mixtape.title}"`);
       
-      const cassetteCaseImageUrl = await generateCassetteCaseImage({
-        title: mixtape.title,
-        recipientName: mixtape.recipientName || 'Someone Special',
-        theme: mixtape.theme,
-      });
+      let cassetteCaseImageUrl: string;
+      
+      if (customImageUrl) {
+        // Download custom image and composite with cassette template
+        console.log(`[Mixtape ${mixtape.id}] Compositing custom image with cassette template`);
+        const imageResponse = await fetch(customImageUrl);
+        if (!imageResponse.ok) {
+          return res.status(400).json({ message: "Failed to download custom image" });
+        }
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        const compositedBuffer = await compositePhotoIntoCassette(imageBuffer, {
+          songTitle: mixtape.title,
+          recipientName: mixtape.recipientName || 'Someone Special',
+        });
+        
+        // Upload composited image
+        const objectStorage = new ObjectStorageService();
+        const filename = `mixtape-cassette-${mixtape.id}-${Date.now()}.png`;
+        cassetteCaseImageUrl = await objectStorage.uploadBuffer(compositedBuffer, filename, 'image/png');
+      } else {
+        // AI generate cassette case image
+        cassetteCaseImageUrl = await generateCassetteCaseImage({
+          title: mixtape.title,
+          recipientName: mixtape.recipientName || 'Someone Special',
+          theme: mixtape.theme,
+        });
+      }
 
       // Update the mixtape with the generated image
       await storage.updateMixtape(mixtape.id, { cassetteCaseImageUrl });
