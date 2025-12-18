@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 
 interface LyricsPreview {
   lyrics: string;
@@ -47,6 +48,11 @@ const songFormSchema = z.object({
   voice: z.string().optional(),
   duration: z.string().optional(),
   additionalNotes: z.string().optional(),
+  // V5 parameters
+  vocalGender: z.string().optional(),
+  negativeTags: z.string().optional(),
+  styleWeight: z.number().min(0).max(1).optional(),
+  weirdnessConstraint: z.number().min(0).max(1).optional(),
 });
 
 const animationFormSchema = z.object({
@@ -69,6 +75,10 @@ const mixtapeFormSchema = z.object({
   notes1: z.string().optional(),
   customTitle1: z.string().optional(),
   customLyrics1: z.string().optional(),
+  vocalGender1: z.string().optional(),
+  negativeTags1: z.string().optional(),
+  styleWeight1: z.number().min(0).max(1).optional(),
+  weirdnessConstraint1: z.number().min(0).max(1).optional(),
   genre2: z.string().min(1, "Genre for Song 2 is required"),
   tone2: z.string().min(1, "Tone for Song 2 is required"),
   voice2: z.string().optional(),
@@ -76,6 +86,10 @@ const mixtapeFormSchema = z.object({
   notes2: z.string().optional(),
   customTitle2: z.string().optional(),
   customLyrics2: z.string().optional(),
+  vocalGender2: z.string().optional(),
+  negativeTags2: z.string().optional(),
+  styleWeight2: z.number().min(0).max(1).optional(),
+  weirdnessConstraint2: z.number().min(0).max(1).optional(),
   genre3: z.string().min(1, "Genre for Song 3 is required"),
   tone3: z.string().min(1, "Tone for Song 3 is required"),
   voice3: z.string().optional(),
@@ -83,6 +97,10 @@ const mixtapeFormSchema = z.object({
   notes3: z.string().optional(),
   customTitle3: z.string().optional(),
   customLyrics3: z.string().optional(),
+  vocalGender3: z.string().optional(),
+  negativeTags3: z.string().optional(),
+  styleWeight3: z.number().min(0).max(1).optional(),
+  weirdnessConstraint3: z.number().min(0).max(1).optional(),
 });
 
 export default function CreatePage() {
@@ -183,6 +201,10 @@ export default function CreatePage() {
       voice: "",
       duration: "quick",
       additionalNotes: "",
+      vocalGender: "",
+      negativeTags: "",
+      styleWeight: 0.5,
+      weirdnessConstraint: 0.3,
     },
   });
 
@@ -209,6 +231,10 @@ export default function CreatePage() {
       notes1: "",
       customTitle1: "",
       customLyrics1: "",
+      vocalGender1: "",
+      negativeTags1: "",
+      styleWeight1: 0.5,
+      weirdnessConstraint1: 0.3,
       genre2: "gospel",
       tone2: "romantic",
       voice2: "",
@@ -216,6 +242,10 @@ export default function CreatePage() {
       notes2: "",
       customTitle2: "",
       customLyrics2: "",
+      vocalGender2: "",
+      negativeTags2: "",
+      styleWeight2: 0.5,
+      weirdnessConstraint2: 0.3,
       genre3: "neo-soul",
       tone3: "heartfelt",
       voice3: "",
@@ -223,6 +253,10 @@ export default function CreatePage() {
       notes3: "",
       customTitle3: "",
       customLyrics3: "",
+      vocalGender3: "",
+      negativeTags3: "",
+      styleWeight3: 0.5,
+      weirdnessConstraint3: 0.3,
     },
   });
 
@@ -321,7 +355,7 @@ export default function CreatePage() {
 
   // Create song with custom/edited lyrics
   const songWithLyricsMutation = useMutation({
-    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string; customCoverImageUrl?: string }) => {
+    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string; customCoverImageUrl?: string; vocalGender?: string; negativeTags?: string; styleWeight?: number; weirdnessConstraint?: number }) => {
       const res = await apiRequest("POST", "/api/generate/song-with-lyrics", data);
       return await res.json() as Creation;
     },
@@ -579,6 +613,11 @@ export default function CreatePage() {
       voice: pendingSongData.voice,
       duration: pendingSongData.duration,
       customCoverImageUrl: customCoverImageUrl || undefined,
+      // V5 parameters
+      vocalGender: pendingSongData.vocalGender,
+      negativeTags: pendingSongData.negativeTags,
+      styleWeight: pendingSongData.styleWeight,
+      weirdnessConstraint: pendingSongData.weirdnessConstraint,
     });
   };
 
@@ -1681,6 +1720,114 @@ export default function CreatePage() {
                         )}
                       />
 
+                      {/* V5 Advanced Controls */}
+                      <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          Advanced V5 Settings
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={songForm.control}
+                            name="vocalGender"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Vocal Gender</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger data-testid="select-song-vocal-gender">
+                                      <SelectValue placeholder="Any voice" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="">Any voice</SelectItem>
+                                      <SelectItem value="m">Male</SelectItem>
+                                      <SelectItem value="f">Female</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={songForm.control}
+                            name="negativeTags"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Exclude Styles</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="e.g., Heavy Metal, Screaming"
+                                    {...field}
+                                    data-testid="input-song-negative-tags"
+                                  />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  Styles to avoid in the song
+                                </p>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={songForm.control}
+                          name="styleWeight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex justify-between items-center">
+                                <FormLabel>Style Influence</FormLabel>
+                                <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.5) * 100)}%</span>
+                              </div>
+                              <FormControl>
+                                <Slider
+                                  min={0}
+                                  max={1}
+                                  step={0.05}
+                                  value={[field.value || 0.5]}
+                                  onValueChange={(values) => field.onChange(values[0])}
+                                  data-testid="slider-song-style-weight"
+                                />
+                              </FormControl>
+                              <p className="text-xs text-muted-foreground">
+                                How strongly the genre/style guides the song
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={songForm.control}
+                          name="weirdnessConstraint"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex justify-between items-center">
+                                <FormLabel>Creative Freedom</FormLabel>
+                                <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.3) * 100)}%</span>
+                              </div>
+                              <FormControl>
+                                <Slider
+                                  min={0}
+                                  max={1}
+                                  step={0.05}
+                                  value={[field.value || 0.3]}
+                                  onValueChange={(values) => field.onChange(values[0])}
+                                  data-testid="slider-song-weirdness"
+                                />
+                              </FormControl>
+                              <p className="text-xs text-muted-foreground">
+                                Higher = more experimental and unique sounds
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Custom Cover Image (optional)</label>
                         {customCoverImageUrl ? (
@@ -2379,6 +2526,93 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+                            
+                            {/* V5 Advanced Controls for Song 1 */}
+                            <div className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                              <p className="text-xs font-medium flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-primary" />
+                                Advanced V5 Settings
+                              </p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="vocalGender1"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Vocal Gender</FormLabel>
+                                      <FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                          <SelectTrigger data-testid="select-mixtape-vocal-gender1">
+                                            <SelectValue placeholder="Any" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="">Any</SelectItem>
+                                            <SelectItem value="m">Male</SelectItem>
+                                            <SelectItem value="f">Female</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="negativeTags1"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Exclude Styles</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="e.g., Screaming" {...field} data-testid="input-mixtape-negative-tags1" />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="styleWeight1"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Style Influence</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.5) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.5]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-style-weight1"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="weirdnessConstraint1"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Creative Freedom</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.3) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.3]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-weirdness1"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
                         </Card>
 
@@ -2536,6 +2770,93 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+                            
+                            {/* V5 Advanced Controls for Song 2 */}
+                            <div className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                              <p className="text-xs font-medium flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-primary" />
+                                Advanced V5 Settings
+                              </p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="vocalGender2"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Vocal Gender</FormLabel>
+                                      <FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                          <SelectTrigger data-testid="select-mixtape-vocal-gender2">
+                                            <SelectValue placeholder="Any" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="">Any</SelectItem>
+                                            <SelectItem value="m">Male</SelectItem>
+                                            <SelectItem value="f">Female</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="negativeTags2"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Exclude Styles</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="e.g., Screaming" {...field} data-testid="input-mixtape-negative-tags2" />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="styleWeight2"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Style Influence</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.5) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.5]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-style-weight2"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="weirdnessConstraint2"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Creative Freedom</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.3) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.3]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-weirdness2"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
                         </Card>
 
@@ -2693,6 +3014,93 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+                            
+                            {/* V5 Advanced Controls for Song 3 */}
+                            <div className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                              <p className="text-xs font-medium flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-primary" />
+                                Advanced V5 Settings
+                              </p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="vocalGender3"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Vocal Gender</FormLabel>
+                                      <FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                          <SelectTrigger data-testid="select-mixtape-vocal-gender3">
+                                            <SelectValue placeholder="Any" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="">Any</SelectItem>
+                                            <SelectItem value="m">Male</SelectItem>
+                                            <SelectItem value="f">Female</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={mixtapeForm.control}
+                                  name="negativeTags3"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Exclude Styles</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="e.g., Screaming" {...field} data-testid="input-mixtape-negative-tags3" />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="styleWeight3"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Style Influence</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.5) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.5]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-style-weight3"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={mixtapeForm.control}
+                                name="weirdnessConstraint3"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex justify-between items-center">
+                                      <FormLabel className="text-xs">Creative Freedom</FormLabel>
+                                      <span className="text-xs text-muted-foreground">{Math.round((field.value || 0.3) * 100)}%</span>
+                                    </div>
+                                    <FormControl>
+                                      <Slider
+                                        min={0}
+                                        max={1}
+                                        step={0.05}
+                                        value={[field.value || 0.3]}
+                                        onValueChange={(values) => field.onChange(values[0])}
+                                        data-testid="slider-mixtape-weirdness3"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
                         </Card>
                       </div>

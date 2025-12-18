@@ -632,7 +632,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl } = req.body;
+      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl,
+        vocalGender, negativeTags, styleWeight, weirdnessConstraint } = req.body;
       
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
@@ -648,6 +649,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voice: voice || undefined,
         additionalNotes: additionalNotes || undefined,
         duration: duration || "quick",
+        // V5 parameters
+        vocalGender: vocalGender || undefined,
+        negativeTags: negativeTags || undefined,
+        styleWeight: styleWeight !== undefined ? parseFloat(styleWeight) : undefined,
+        weirdnessConstraint: weirdnessConstraint !== undefined ? parseFloat(weirdnessConstraint) : undefined,
       });
 
       // Generate cassette tape cover art using Nano Banana (with optional custom image)
@@ -1129,8 +1135,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         lovedOneId, theme, recipientName, relationship,
         genre1, tone1, notes1, voice1, duration1, customTitle1, customLyrics1,
+        vocalGender1, negativeTags1, styleWeight1, weirdnessConstraint1,
         genre2, tone2, notes2, voice2, duration2, customTitle2, customLyrics2,
+        vocalGender2, negativeTags2, styleWeight2, weirdnessConstraint2,
         genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3,
+        vocalGender3, negativeTags3, styleWeight3, weirdnessConstraint3,
         customCassetteImageUrl
       } = req.body;
 
@@ -1153,6 +1162,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const durations = [duration1 || 'quick', duration2 || 'quick', duration3 || 'quick'];
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
+      // V5 parameters
+      const vocalGenders = [vocalGender1 || undefined, vocalGender2 || undefined, vocalGender3 || undefined];
+      const negativeTagsArr = [negativeTags1 || undefined, negativeTags2 || undefined, negativeTags3 || undefined];
+      const styleWeights = [styleWeight1 !== undefined ? parseFloat(styleWeight1) : undefined, styleWeight2 !== undefined ? parseFloat(styleWeight2) : undefined, styleWeight3 !== undefined ? parseFloat(styleWeight3) : undefined];
+      const weirdnessConstraints = [weirdnessConstraint1 !== undefined ? parseFloat(weirdnessConstraint1) : undefined, weirdnessConstraint2 !== undefined ? parseFloat(weirdnessConstraint2) : undefined, weirdnessConstraint3 !== undefined ? parseFloat(weirdnessConstraint3) : undefined];
 
       let lovedOne: { name?: string; relationship?: string; interests?: string; insideJokes?: string } | null | undefined = null;
       if (lovedOneId) {
@@ -1202,6 +1216,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const songDuration = durations[i];
             const songCustomTitle = customTitles[i];
             const songCustomLyrics = customLyrics[i];
+            // V5 parameters for this song
+            const songVocalGender = vocalGenders[i];
+            const songNegativeTags = negativeTagsArr[i];
+            const songStyleWeight = styleWeights[i];
+            const songWeirdnessConstraint = weirdnessConstraints[i];
             // Only use custom lyrics/title if BOTH are provided (required by Suno API)
             const useCustomLyrics = songCustomTitle && songCustomLyrics;
             try {
@@ -1219,6 +1238,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 duration: songDuration,
                 customTitle: useCustomLyrics ? songCustomTitle : undefined,
                 customLyrics: useCustomLyrics ? songCustomLyrics : undefined,
+                // V5 parameters
+                vocalGender: songVocalGender as 'm' | 'f' | undefined,
+                negativeTags: songNegativeTags,
+                styleWeight: songStyleWeight,
+                weirdnessConstraint: songWeirdnessConstraint,
               });
 
               let coverImageUrl = songResult.coverImage;

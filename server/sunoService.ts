@@ -431,6 +431,11 @@ interface GenerateSongParams {
   customTitle?: string;
   additionalNotes?: string;
   duration?: 'quick' | 'extended';
+  // V5 parameters
+  vocalGender?: 'm' | 'f';
+  negativeTags?: string;
+  styleWeight?: number;
+  weirdnessConstraint?: number;
 }
 
 interface SunoGenerateResponse {
@@ -921,6 +926,11 @@ export async function generateSongWithLyrics(params: {
   voice?: string;
   additionalNotes?: string;
   duration?: 'quick' | 'extended';
+  // V5 parameters
+  vocalGender?: 'm' | 'f';
+  negativeTags?: string;
+  styleWeight?: number;
+  weirdnessConstraint?: number;
 }): Promise<{
   audioUrl: string;
   lyrics: string;
@@ -959,17 +969,34 @@ export async function generateSongWithLyrics(params: {
       `[Suno] Starting extended song generation (~3 minutes) for: ${params.title} [genre=${resolvedGenre}]`,
     );
 
+    // Build V5 request body with optional parameters
+    const requestBody: Record<string, any> = {
+      prompt: params.lyrics, // lyrics in custom mode
+      style,
+      title: params.title,
+      customMode: true,
+      instrumental: false,
+      model: "V5",
+      callBackUrl: callbackUrl,
+    };
+
+    // Add V5 optional parameters if provided
+    if (params.vocalGender) {
+      requestBody.vocalGender = params.vocalGender;
+    }
+    if (params.negativeTags) {
+      requestBody.negativeTags = params.negativeTags;
+    }
+    if (params.styleWeight !== undefined) {
+      requestBody.styleWeight = params.styleWeight;
+    }
+    if (params.weirdnessConstraint !== undefined) {
+      requestBody.weirdnessConstraint = params.weirdnessConstraint;
+    }
+
     const response = await axios.post<SunoGenerateResponse>(
       `${SUNO_API_BASE_URL}/api/v1/generate`,
-      {
-        prompt: params.lyrics, // lyrics in custom mode
-        style,
-        title: params.title,
-        customMode: true,
-        instrumental: false,
-        model: "V5",
-        callBackUrl: callbackUrl,
-      },
+      requestBody,
       {
         headers: {
           Authorization: `Bearer ${SUNO_API_KEY}`,
@@ -1141,6 +1168,11 @@ export async function generateSong(
       voice: params.voice,
       additionalNotes: params.additionalNotes,
       duration: params.duration,
+      // V5 parameters
+      vocalGender: params.vocalGender,
+      negativeTags: params.negativeTags,
+      styleWeight: params.styleWeight,
+      weirdnessConstraint: params.weirdnessConstraint,
     });
   }
 
@@ -1164,5 +1196,10 @@ export async function generateSong(
     voice: params.voice,
     additionalNotes: params.additionalNotes,
     duration: params.duration,
+    // V5 parameters
+    vocalGender: params.vocalGender,
+    negativeTags: params.negativeTags,
+    styleWeight: params.styleWeight,
+    weirdnessConstraint: params.weirdnessConstraint,
   });
 }
