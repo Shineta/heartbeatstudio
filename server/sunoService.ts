@@ -834,7 +834,7 @@ async function extendSong(params: {
     `${SUNO_API_BASE_URL}/api/v1/generate/extend`,
     {
       audioId: params.audioId,
-      model: "V4",
+      model: "V5",
       continueAt: params.continueAt,
       prompt: params.prompt,
       style: params.style,
@@ -967,7 +967,7 @@ export async function generateSongWithLyrics(params: {
         title: params.title,
         customMode: true,
         instrumental: false,
-        model: "V4",
+        model: "V5",
         callBackUrl: callbackUrl,
       },
       {
