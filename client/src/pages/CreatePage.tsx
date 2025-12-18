@@ -495,11 +495,9 @@ export default function CreatePage() {
   }, [songMutation.isPending, songWithLyricsMutation.isPending]);
 
   // Timer for mixtape generation (runs during pending or generating status)
-  // Includes 35-minute frontend timeout to catch stalled requests
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     const isGenerating = mixtapeMutation.isPending || createdMixtape?.status === 'generating';
-    const FRONTEND_TIMEOUT_SECONDS = 35 * 60; // 35 minutes (buffer beyond stated 30 min)
     
     if (isGenerating) {
       // Only reset timer when mutation starts (isPending becomes true)
@@ -507,17 +505,7 @@ export default function CreatePage() {
         setMixtapeGenerationTime(0);
       }
       interval = setInterval(() => {
-        setMixtapeGenerationTime(prev => {
-          const newTime = prev + 1;
-          // Check for frontend timeout
-          if (newTime >= FRONTEND_TIMEOUT_SECONDS) {
-            // Reset state - toast will be shown separately
-            setCreatedMixtape(null);
-            setMixtapeSongs([]);
-            return 0;
-          }
-          return newTime;
-        });
+        setMixtapeGenerationTime(prev => prev + 1);
       }, 1000);
     }
     return () => {
