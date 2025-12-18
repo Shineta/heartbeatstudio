@@ -66,11 +66,11 @@ export async function createCassetteCover(
 
   // Get text label dimensions for positioning
   const textMeta = await sharp(textLabel).metadata();
-  const textWidth = textMeta.width || 220;
+  const textWidth = textMeta.width || 400;
   
   // Position text in the upper-middle area of the cassette (the label area)
   const textX = Math.floor((canvasWidth - textWidth) / 2);
-  const textY = Math.floor(canvasHeight * 0.28); // Position in cassette label area
+  const textY = Math.floor(canvasHeight * 0.18); // Position in cassette label area
 
   const composited = await sharp(whiteBackground)
     .composite([
@@ -270,23 +270,23 @@ async function createCassetteLabel(
   songTitle: string,
   recipientName: string
 ): Promise<Buffer> {
-  const labelWidth = 220;
-  const labelHeight = 70;
+  const labelWidth = 400;
+  const labelHeight = 120;
   
   // Truncate text if too long
-  const truncatedTitle = songTitle.length > 20 ? songTitle.substring(0, 18) + "..." : songTitle;
-  const forText = recipientName ? `For "${recipientName}"` : "";
-  const truncatedFor = forText.length > 24 ? forText.substring(0, 22) + "..." : forText;
+  const truncatedTitle = songTitle.length > 25 ? songTitle.substring(0, 23) + "..." : songTitle;
+  const forText = recipientName ? `For ${recipientName}` : "";
+  const truncatedFor = forText.length > 30 ? forText.substring(0, 28) + "..." : forText;
   
-  // Create SVG with text
+  // Create SVG with text - much larger fonts for readability
   const svgText = `
     <svg width="${labelWidth}" height="${labelHeight}" xmlns="http://www.w3.org/2000/svg">
       <style>
-        .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #1a1a1a; }
-        .recipient { font-family: Arial, sans-serif; font-size: 11px; fill: #333333; font-style: italic; }
+        .title { font-family: Arial, sans-serif; font-size: 28px; font-weight: bold; fill: #000000; }
+        .recipient { font-family: Arial, sans-serif; font-size: 20px; fill: #333333; font-style: italic; }
       </style>
-      <text x="${labelWidth / 2}" y="28" text-anchor="middle" class="title">${escapeXml(truncatedTitle)}</text>
-      <text x="${labelWidth / 2}" y="50" text-anchor="middle" class="recipient">${escapeXml(truncatedFor)}</text>
+      <text x="${labelWidth / 2}" y="45" text-anchor="middle" class="title">${escapeXml(truncatedTitle)}</text>
+      <text x="${labelWidth / 2}" y="85" text-anchor="middle" class="recipient">${escapeXml(truncatedFor)}</text>
     </svg>
   `;
   
