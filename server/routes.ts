@@ -8,7 +8,7 @@ import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToke
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
-import { generateAnimationVideo } from "./soraService";
+import { generateAnimationVideo, isSoraConfigured } from "./soraService";
 import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
@@ -546,6 +546,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate AI Animation (using OpenAI Sora 2)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Check if Sora API is configured
+      if (!isSoraConfigured()) {
+        return res.status(503).json({ 
+          message: "Animation generation is not available. Please configure your OpenAI API key with Sora access.",
+          configRequired: true
+        });
+      }
+
       const userId = (req.user as any).id;
       const { lovedOneId, tone, occasion, style, description } = req.body;
       

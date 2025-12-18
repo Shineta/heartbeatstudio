@@ -1,9 +1,24 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-});
+// Sora 2 requires direct OpenAI API access (not through Replit AI Integrations proxy)
+// The user must provide their own OPENAI_API_KEY with Sora access
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured. Sora video generation requires an OpenAI API key with Sora access.');
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
+
+export function isSoraConfigured(): boolean {
+  return !!process.env.OPENAI_API_KEY;
+}
 
 interface VideoGenerationParams {
   prompt: string;
@@ -24,6 +39,7 @@ export async function generateVideo(params: VideoGenerationParams): Promise<Buff
   };
 
   try {
+    const openai = getOpenAIClient();
     const video = await (openai as any).videos.createAndPoll({
       model: 'sora-2',
       prompt,
