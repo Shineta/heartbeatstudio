@@ -570,25 +570,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Animation] Using Sora 2 API for video generation');
       console.log('[Animation] Generated prompt:', prompt);
       
+      // Validate duration - only allow 4, 8, 12
+      const validDurations = [4, 8, 12];
+      const parsedDuration = duration ? parseInt(duration) : 8;
+      const validatedDuration = validDurations.includes(parsedDuration) ? parsedDuration : 8;
+      
       // Generate video with Sora 2
       const videoResult = await generateVideo({
         prompt,
-        duration: duration ? parseInt(duration) : 8,
+        duration: validatedDuration,
         size: size || "1280x720",
         model: model || "sora-2",
       });
 
-      // Download the video and upload to our storage
-      console.log('[Animation] Downloading Sora video and uploading to storage...');
-      const videoResponse = await fetch(videoResult.videoUrl);
-      const videoBuffer = await videoResponse.arrayBuffer();
-      const videoBase64 = Buffer.from(videoBuffer).toString('base64');
+      // Upload the video buffer directly to storage (no base64 conversion)
+      console.log('[Animation] Uploading Sora video to storage...');
       
-      // Upload video to object storage
-      const videoUrl = await objectStorageService.uploadBase64Video(
-        videoBase64,
-        `animations/${userId}`,
-        'animation'
+      // Upload video buffer directly to object storage
+      const videoUrl = await objectStorageService.uploadBuffer(
+        videoResult.videoBuffer,
+        `animations/${userId}/animation`,
+        'video/mp4'
       );
       console.log('[Animation] Video uploaded to storage:', videoUrl);
 

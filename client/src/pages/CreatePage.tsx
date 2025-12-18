@@ -1242,11 +1242,8 @@ export default function CreatePage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="4">4 seconds</SelectItem>
-                                      <SelectItem value="6">6 seconds</SelectItem>
-                                      <SelectItem value="8">8 seconds</SelectItem>
-                                      <SelectItem value="10">10 seconds</SelectItem>
-                                      <SelectItem value="15">15 seconds</SelectItem>
-                                      <SelectItem value="20">20 seconds</SelectItem>
+                                      <SelectItem value="8">8 seconds (recommended)</SelectItem>
+                                      <SelectItem value="12">12 seconds</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </FormControl>

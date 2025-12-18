@@ -1,4 +1,5 @@
 import axios from "axios";
+import FormData from "form-data";
 
 const OPENAI_API_KEY = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 const OPENAI_API_BASE = "https://api.openai.com/v1";
@@ -11,7 +12,7 @@ export interface SoraVideoParams {
 }
 
 export interface SoraVideoResult {
-  videoUrl: string;
+  videoBuffer: Buffer;  // Raw video buffer for upload to storage
   duration: number;
   status: string;
 }
@@ -35,18 +36,18 @@ interface SoraRetrieveResponse {
 // Valid values for Sora 2 API
 const VALID_SIZES = ["1280x720", "720x1280", "1792x1024"] as const;
 const VALID_MODELS = ["sora-2", "sora-2-pro"] as const;
-const MIN_DURATION = 4;
-const MAX_DURATION = 20;
+const VALID_DURATIONS = [4, 8, 12] as const;
 
 /**
- * Validate and normalize duration to valid range
+ * Validate duration to allowed values (4, 8, or 12 seconds)
  */
-function validateDuration(duration: number): number {
-  const d = Math.max(MIN_DURATION, Math.min(MAX_DURATION, duration));
-  if (d !== duration) {
-    console.log(`[Sora] Duration ${duration}s clamped to ${d}s (valid range: ${MIN_DURATION}-${MAX_DURATION})`);
+function validateDuration(duration: number): 4 | 8 | 12 {
+  if (VALID_DURATIONS.includes(duration as 4 | 8 | 12)) {
+    return duration as 4 | 8 | 12;
   }
-  return d;
+  // Default to 8 if invalid
+  console.log(`[Sora] Duration ${duration}s is invalid, using default 8s (valid: 4, 8, 12)`);
+  return 8;
 }
 
 /**
@@ -74,19 +75,24 @@ export async function generateVideo(params: SoraVideoParams): Promise<SoraVideoR
   console.log(`[Sora] Duration: ${duration}s, Size: ${validSize}`);
 
   try {
-    // Create video generation job
+    // Create video generation job using multipart/form-data
+    // Valid duration values are "4", "8", "12"
+    const validSeconds = [4, 8, 12].includes(duration) ? String(duration) : "8";
+    
+    // Build form data per OpenAI API spec
+    const formData = new FormData();
+    formData.append("model", validModel);
+    formData.append("prompt", prompt);
+    formData.append("size", validSize);
+    formData.append("seconds", validSeconds);
+    
     const createResponse = await axios.post<SoraCreateResponse>(
       `${OPENAI_API_BASE}/videos`,
-      {
-        model: validModel,
-        prompt,
-        size: validSize,
-        seconds: duration,
-      },
+      formData,
       {
         headers: {
+          ...formData.getHeaders(),
           Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
         },
         timeout: 60000, // 60s timeout for creation request
       }
@@ -147,17 +153,26 @@ export async function generateVideo(params: SoraVideoParams): Promise<SoraVideoR
       throw new Error("Video generation timed out after maximum polling attempts");
     }
 
-    // Get the video URL
-    const videoUrl = videoResult.url || videoResult.output?.url;
+    // Get the video via the download endpoint
+    console.log(`[Sora] Video generation completed, fetching video...`);
     
-    if (!videoUrl) {
-      throw new Error("No video URL returned from Sora API");
-    }
-
-    console.log(`[Sora] Video generation completed: ${videoUrl}`);
+    const downloadResponse = await axios.get(
+      `${OPENAI_API_BASE}/videos/${videoResult.id}/download`,
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        responseType: "arraybuffer",
+        timeout: 120000, // 2 min timeout for download
+      }
+    );
+    
+    // Return raw buffer for storage upload
+    const videoBuffer = Buffer.from(downloadResponse.data);
+    console.log(`[Sora] Video downloaded successfully (${videoBuffer.length} bytes)`);
 
     return {
-      videoUrl,
+      videoBuffer,
       duration,
       status: "completed",
     };
