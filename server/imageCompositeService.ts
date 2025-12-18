@@ -21,39 +21,84 @@ export async function compositePhotoIntoCassette(
   const templateWidth = 1456;
   const templateHeight = 816;
   
-  const photoWidth = 350;
-  const photoHeight = 280;
-  const photoX = 950;
-  const photoY = 200;
+  const photoInnerWidth = 320;
+  const photoInnerHeight = 320;
+  
+  const polaroidPaddingSide = 16;
+  const polaroidPaddingTop = 16;
+  const polaroidPaddingBottom = 50;
+  
+  const polaroidWidth = photoInnerWidth + (polaroidPaddingSide * 2);
+  const polaroidHeight = photoInnerHeight + polaroidPaddingTop + polaroidPaddingBottom;
   
   const resizedPhoto = await sharp(userPhotoBuffer)
-    .resize(photoWidth, photoHeight, {
+    .resize(photoInnerWidth, photoInnerHeight, {
       fit: "cover",
-      position: "center",
+      position: "attention",
     })
     .png()
     .toBuffer();
 
-  const photoWithBorder = await sharp({
+  const shadowOffset = 8;
+  const shadowBlur = 15;
+  const canvasWidth = polaroidWidth + shadowOffset + shadowBlur * 2;
+  const canvasHeight = polaroidHeight + shadowOffset + shadowBlur * 2;
+  
+  const shadowBuffer = await sharp({
     create: {
-      width: photoWidth + 8,
-      height: photoHeight + 8,
+      width: polaroidWidth,
+      height: polaroidHeight,
       channels: 4,
-      background: { r: 255, g: 255, b: 255, alpha: 1 },
+      background: { r: 0, g: 0, b: 0, alpha: 0.4 },
+    },
+  })
+    .blur(shadowBlur)
+    .png()
+    .toBuffer();
+
+  const polaroidBuffer = await sharp({
+    create: {
+      width: polaroidWidth,
+      height: polaroidHeight,
+      channels: 4,
+      background: { r: 252, g: 250, b: 245, alpha: 1 },
     },
   })
     .composite([
       {
         input: resizedPhoto,
-        top: 4,
-        left: 4,
+        top: polaroidPaddingTop,
+        left: polaroidPaddingSide,
       },
     ])
     .png()
     .toBuffer();
 
-  const rotatedPhoto = await sharp(photoWithBorder)
-    .rotate(-5, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  const polaroidWithShadow = await sharp({
+    create: {
+      width: canvasWidth,
+      height: canvasHeight,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([
+      {
+        input: shadowBuffer,
+        top: shadowBlur + shadowOffset,
+        left: shadowBlur + shadowOffset,
+      },
+      {
+        input: polaroidBuffer,
+        top: shadowBlur,
+        left: shadowBlur,
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  const rotatedPolaroid = await sharp(polaroidWithShadow)
+    .rotate(8, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer();
 
@@ -69,10 +114,13 @@ export async function compositePhotoIntoCassette(
     .png()
     .toBuffer();
 
+  const photoX = 980;
+  const photoY = 180;
+
   const composited = await sharp(resizedTemplate)
     .composite([
       {
-        input: rotatedPhoto,
+        input: rotatedPolaroid,
         top: photoY,
         left: photoX,
         blend: "over",
