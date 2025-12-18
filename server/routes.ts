@@ -1340,6 +1340,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Regenerate cassette cover image for an existing song
+  app.post('/api/creations/:id/regenerate-cover', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const creation = await storage.getCreationById(req.params.id);
+      
+      if (!creation) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+
+      if (creation.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      if (creation.type !== 'song') {
+        return res.status(400).json({ message: "This feature is only available for songs" });
+      }
+
+      console.log(`[Song] Regenerating cassette cover for "${creation.title}"`);
+      
+      // Get loved one name if available
+      let recipientName = 'Someone Special';
+      if (creation.lovedOneId) {
+        const lovedOne = await storage.getLovedOneById(creation.lovedOneId);
+        if (lovedOne) {
+          recipientName = lovedOne.name;
+        }
+      }
+
+      // Generate new cassette cover using Nano Banana
+      const cassetteCoverUrl = await generateSongCover({
+        title: creation.title || 'My Song',
+        tone: creation.tone || 'sweet',
+        recipientName,
+        genre: creation.genre || undefined,
+      });
+
+      if (!cassetteCoverUrl) {
+        throw new Error('Failed to generate cassette cover image');
+      }
+
+      // Download and upload to object storage
+      const coverResponse = await fetch(cassetteCoverUrl);
+      const coverBuffer = await coverResponse.arrayBuffer();
+      const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+      
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        coverBase64,
+        `songs/${userId}`,
+        'cassette-cover'
+      );
+
+      // Update the creation with new image
+      await storage.updateCreation(creation.id, { imageUrl });
+
+      console.log(`[Song] Cassette cover regenerated: ${imageUrl}`);
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("Error regenerating cassette cover:", error);
+      res.status(500).json({ message: error.message || "Failed to regenerate cassette cover" });
+    }
+  });
+
   // Generate cassette case image for a mixtape
   app.post('/api/mixtapes/:id/generate-cassette-cover', isAuthenticated, async (req: Request, res: Response) => {
     try {

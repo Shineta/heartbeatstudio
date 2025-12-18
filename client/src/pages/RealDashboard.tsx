@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +32,7 @@ const lovedOneFormSchema = z.object({
 export default function RealDashboard() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [regeneratingCover, setRegeneratingCover] = useState<string | null>(null);
 
   const { data: lovedOnes = [], isLoading } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -89,6 +90,23 @@ export default function RealDashboard() {
 
   const onSubmit = (data: z.infer<typeof lovedOneFormSchema>) => {
     createMutation.mutate(data);
+  };
+
+  const handleRegenerateCover = async (creationId: string) => {
+    setRegeneratingCover(creationId);
+    try {
+      await apiRequest("POST", `/api/creations/${creationId}/regenerate-cover`);
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      toast({ title: "Success", description: "Cassette cover regenerated!" });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to regenerate cover",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingCover(null);
+    }
   };
 
   return (
@@ -329,7 +347,7 @@ export default function RealDashboard() {
                         </div>
                       )}
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button
                           size="sm"
                           variant="outline"
@@ -344,6 +362,25 @@ export default function RealDashboard() {
                         >
                           Share
                         </Button>
+                        {creation.type === 'song' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRegenerateCover(creation.id);
+                            }}
+                            disabled={regeneratingCover === creation.id}
+                            data-testid={`button-regenerate-cover-${creation.id}`}
+                          >
+                            {regeneratingCover === creation.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                            <span className="ml-1">New Cover</span>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
