@@ -240,17 +240,11 @@ export default function EditMixtapePage() {
                   return (
                     <div 
                       key={song.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        isSelected ? 'bg-primary/10 border border-primary/20' : 'bg-muted/30 hover:bg-muted/50'
+                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                        isSelected ? 'bg-primary/10 border border-primary/20' : 'bg-muted/30'
                       }`}
-                      onClick={() => handleSongToggle(song.id)}
                       data-testid={`song-option-${song.id}`}
                     >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => handleSongToggle(song.id)}
-                        data-testid={`checkbox-song-${song.id}`}
-                      />
                       {song.imageUrl ? (
                         <img src={song.imageUrl} alt={song.title || ''} className="w-10 h-10 rounded object-cover" />
                       ) : (
@@ -264,16 +258,14 @@ export default function EditMixtapePage() {
                           {song.genre} • {song.tone}
                         </p>
                       </div>
-                      {song.mediaUrl && (
-                        <audio 
-                          controls 
-                          className="h-8 w-32"
-                          onClick={(e) => e.stopPropagation()}
-                          data-testid={`audio-preview-${song.id}`}
-                        >
-                          <source src={song.mediaUrl} type="audio/mpeg" />
-                        </audio>
-                      )}
+                      <Button
+                        size="sm"
+                        variant={isSelected ? "secondary" : "default"}
+                        onClick={() => handleSongToggle(song.id)}
+                        data-testid={`button-toggle-song-${song.id}`}
+                      >
+                        {isSelected ? "Added" : "Add"}
+                      </Button>
                     </div>
                   );
                 })}
