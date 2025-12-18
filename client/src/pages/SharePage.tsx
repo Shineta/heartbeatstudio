@@ -3,7 +3,7 @@ import { useRoute } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Download, Sparkles, Play, Video } from 'lucide-react';
-import { Link } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 
 interface Creation {
   id: string;
@@ -28,6 +28,14 @@ export default function SharePage() {
   const [videoStarted, setVideoStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { toast } = useToast();
+
+  const handleComingSoon = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "Heartbeat Studio is launching soon. Stay tuned for AI-powered songs, cards, and more!",
+    });
+  };
 
   const handlePlaySong = () => {
     if (audioRef.current) {
@@ -96,12 +104,10 @@ export default function SharePage() {
             <CardDescription>{error || 'Creation not found'}</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Link href="/">
-              <Button data-testid="button-home">
-                <Heart className="w-4 h-4 mr-2" />
-                Go to Heartbeat Studio
-              </Button>
-            </Link>
+            <Button data-testid="button-home" onClick={handleComingSoon}>
+              <Heart className="w-4 h-4 mr-2" />
+              Go to Heartbeat Studio
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -117,12 +123,10 @@ export default function SharePage() {
             <Heart className="w-6 h-6 text-primary heartbeat" />
             <span className="font-bold text-xl">Heartbeat Studio</span>
           </div>
-          <Link href="/">
-            <Button variant="outline" size="sm" data-testid="button-create-own">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Create Your Own
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" data-testid="button-create-own" onClick={handleComingSoon}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Create Your Own
+          </Button>
         </div>
       </header>
 
@@ -267,12 +271,10 @@ export default function SharePage() {
             <p className="text-muted-foreground mb-6">
               Make personalized AI-powered songs, cards, and animations for your loved ones
             </p>
-            <Link href="/">
-              <Button size="lg" data-testid="button-get-started">
-                <Sparkles className="w-5 h-5 mr-2" />
-                Get Started Free
-              </Button>
-            </Link>
+            <Button size="lg" data-testid="button-get-started" onClick={handleComingSoon}>
+              <Sparkles className="w-5 h-5 mr-2" />
+              Get Started Free
+            </Button>
           </div>
         </div>
       </main>
