@@ -6,6 +6,13 @@ const CASSETTE_TEMPLATE_PATH = path.join(
   process.cwd(),
   "attached_assets",
   "generated_images",
+  "cassette_tape_isolated_transparent.png"
+);
+
+const ORIGINAL_CASSETTE_PATH = path.join(
+  process.cwd(),
+  "attached_assets",
+  "generated_images",
   "blank_cassette_tape_template.png"
 );
 
@@ -18,63 +25,122 @@ export async function compositePhotoIntoCassette(
   userPhotoBuffer: Buffer,
   options: CompositeOptions = {}
 ): Promise<Buffer> {
-  const templateWidth = 1456;
-  const templateHeight = 816;
+  const canvasWidth = 800;
+  const canvasHeight = 500;
   
-  const photoInnerWidth = 320;
-  const photoInnerHeight = 320;
-  
-  const polaroidPaddingSide = 16;
-  const polaroidPaddingTop = 16;
-  const polaroidPaddingBottom = 50;
-  
-  const polaroidWidth = photoInnerWidth + (polaroidPaddingSide * 2);
-  const polaroidHeight = photoInnerHeight + polaroidPaddingTop + polaroidPaddingBottom;
-  
-  const resizedPhoto = await sharp(userPhotoBuffer)
-    .resize(photoInnerWidth, photoInnerHeight, {
+  const woodBackground = await sharp({
+    create: {
+      width: canvasWidth,
+      height: canvasHeight,
+      channels: 4,
+      background: { r: 139, g: 90, b: 43, alpha: 1 },
+    },
+  })
+    .png()
+    .toBuffer();
+
+  const sleeveWidth = 340;
+  const sleeveHeight = 340;
+  const sleeveX = 420;
+  const sleeveY = 80;
+  const sleeveRotation = 5;
+
+  const userArt = await sharp(userPhotoBuffer)
+    .resize(sleeveWidth - 20, sleeveHeight - 20, {
       fit: "cover",
       position: "attention",
     })
     .png()
     .toBuffer();
 
-  const shadowOffset = 8;
-  const shadowBlur = 15;
-  const canvasWidth = polaroidWidth + shadowOffset + shadowBlur * 2;
-  const canvasHeight = polaroidHeight + shadowOffset + shadowBlur * 2;
-  
-  const shadowBuffer = await sharp({
+  const sleeveWithBorder = await sharp({
     create: {
-      width: polaroidWidth,
-      height: polaroidHeight,
+      width: sleeveWidth,
+      height: sleeveHeight,
       channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0.4 },
-    },
-  })
-    .blur(shadowBlur)
-    .png()
-    .toBuffer();
-
-  const polaroidBuffer = await sharp({
-    create: {
-      width: polaroidWidth,
-      height: polaroidHeight,
-      channels: 4,
-      background: { r: 252, g: 250, b: 245, alpha: 1 },
+      background: { r: 30, g: 30, b: 35, alpha: 1 },
     },
   })
     .composite([
       {
-        input: resizedPhoto,
-        top: polaroidPaddingTop,
-        left: polaroidPaddingSide,
+        input: userArt,
+        top: 10,
+        left: 10,
       },
     ])
     .png()
     .toBuffer();
 
-  const polaroidWithShadow = await sharp({
+  const sleeveWithShadow = await addShadow(sleeveWithBorder, 12, 0.5);
+
+  const rotatedSleeve = await sharp(sleeveWithShadow)
+    .rotate(sleeveRotation, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  let cassetteBuffer: Buffer;
+  if (fs.existsSync(CASSETTE_TEMPLATE_PATH)) {
+    cassetteBuffer = fs.readFileSync(CASSETTE_TEMPLATE_PATH);
+  } else if (fs.existsSync(ORIGINAL_CASSETTE_PATH)) {
+    cassetteBuffer = fs.readFileSync(ORIGINAL_CASSETTE_PATH);
+  } else {
+    cassetteBuffer = await createFallbackCassette();
+  }
+
+  const cassetteWidth = 380;
+  const cassetteHeight = 250;
+  const cassetteX = 30;
+  const cassetteY = 150;
+
+  const resizedCassette = await sharp(cassetteBuffer)
+    .resize(cassetteWidth, cassetteHeight, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  const cassetteWithShadow = await addShadow(resizedCassette, 8, 0.4);
+
+  const composited = await sharp(woodBackground)
+    .composite([
+      {
+        input: rotatedSleeve,
+        top: sleeveY,
+        left: sleeveX,
+        blend: "over",
+      },
+      {
+        input: cassetteWithShadow,
+        top: cassetteY,
+        left: cassetteX,
+        blend: "over",
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  return composited;
+}
+
+async function addShadow(
+  imageBuffer: Buffer,
+  shadowOffset: number,
+  shadowOpacity: number
+): Promise<Buffer> {
+  const metadata = await sharp(imageBuffer).metadata();
+  const width = metadata.width || 400;
+  const height = metadata.height || 300;
+
+  const canvasWidth = width + shadowOffset + 20;
+  const canvasHeight = height + shadowOffset + 20;
+
+  const shadowBuffer = await sharp(imageBuffer)
+    .greyscale()
+    .modulate({ brightness: 0 })
+    .blur(8)
+    .ensureAlpha(shadowOpacity)
+    .png()
+    .toBuffer();
+
+  return sharp({
     create: {
       width: canvasWidth,
       height: canvasHeight,
@@ -85,63 +151,26 @@ export async function compositePhotoIntoCassette(
     .composite([
       {
         input: shadowBuffer,
-        top: shadowBlur + shadowOffset,
-        left: shadowBlur + shadowOffset,
+        top: shadowOffset + 10,
+        left: shadowOffset + 10,
       },
       {
-        input: polaroidBuffer,
-        top: shadowBlur,
-        left: shadowBlur,
+        input: imageBuffer,
+        top: 10,
+        left: 10,
       },
     ])
     .png()
     .toBuffer();
-
-  const rotatedPolaroid = await sharp(polaroidWithShadow)
-    .rotate(8, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toBuffer();
-
-  let templateBuffer: Buffer;
-  if (fs.existsSync(CASSETTE_TEMPLATE_PATH)) {
-    templateBuffer = fs.readFileSync(CASSETTE_TEMPLATE_PATH);
-  } else {
-    templateBuffer = await createFallbackTemplate(templateWidth, templateHeight);
-  }
-
-  const resizedTemplate = await sharp(templateBuffer)
-    .resize(templateWidth, templateHeight, { fit: "fill" })
-    .png()
-    .toBuffer();
-
-  const photoX = 980;
-  const photoY = 180;
-
-  const composited = await sharp(resizedTemplate)
-    .composite([
-      {
-        input: rotatedPolaroid,
-        top: photoY,
-        left: photoX,
-        blend: "over",
-      },
-    ])
-    .png()
-    .toBuffer();
-
-  return composited;
 }
 
-async function createFallbackTemplate(
-  width: number,
-  height: number
-): Promise<Buffer> {
+async function createFallbackCassette(): Promise<Buffer> {
   return sharp({
     create: {
-      width,
-      height,
+      width: 380,
+      height: 250,
       channels: 4,
-      background: { r: 245, g: 240, b: 230, alpha: 1 },
+      background: { r: 240, g: 230, b: 210, alpha: 1 },
     },
   })
     .png()
