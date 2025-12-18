@@ -10,6 +10,7 @@ import { generateCardContent, generateCardImage, generateSongLyrics, generateSon
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 import { generateAnimationVideo, isSoraConfigured } from "./soraService";
 import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
+import { compositePhotoIntoCassette } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
 // Configure multer for memory storage (files stored as buffers)
@@ -1427,20 +1428,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Song] Uploading custom cover for "${creation.title}"`);
       
-      // Convert file buffer to base64
-      const base64Image = req.file.buffer.toString('base64');
+      // Composite the user's photo into a cassette cover design
+      console.log(`[Song] Compositing photo into cassette design...`);
+      const compositedBuffer = await compositePhotoIntoCassette(req.file.buffer, {
+        songTitle: creation.title || undefined
+      });
       
-      // Upload to object storage
+      // Convert composited buffer to base64
+      const base64Image = compositedBuffer.toString('base64');
+      
+      // Upload composited image to object storage
       const imageUrl = await objectStorageService.uploadBase64Image(
         base64Image,
         `songs/${userId}`,
-        'custom-cover'
+        'cassette-cover'
       );
 
       // Update the creation with new image
       await storage.updateCreation(creation.id, { imageUrl });
 
-      console.log(`[Song] Custom cover uploaded: ${imageUrl}`);
+      console.log(`[Song] Cassette cover with photo uploaded: ${imageUrl}`);
       res.json({ imageUrl });
     } catch (error: any) {
       console.error("Error uploading custom cover:", error);
