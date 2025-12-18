@@ -10,7 +10,7 @@ import { generateCardContent, generateCardImage, generateSongLyrics, generateSon
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 import { generateAnimationVideo, isSoraConfigured } from "./soraService";
 import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
-import { compositePhotoIntoCassette } from "./imageCompositeService";
+import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema } from "@shared/schema";
 
 // Configure multer for memory storage (files stored as buffers)
@@ -709,40 +709,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Generate cassette tape cover art using Nano Banana (with optional custom image)
+      // Generate simple cassette cover with text labels (no AI image, no scene)
       let coverImageUrl = null;
       try {
-        const { generateSongCover } = await import('./openaiService');
-        const cassetteCoverUrl = await generateSongCover({
-          title: songResult.title,
-          tone: tone || 'sweet',
-          genre: genre || 'pop',
-          customImageUrl: customCoverImageUrl || undefined,
+        const cassetteCoverBuffer = await createCassetteCover({
+          songTitle: songResult.title,
+          recipientName,
         });
         
-        // Download and composite with cassette design + text
-        if (cassetteCoverUrl) {
-          const coverResponse = await fetch(cassetteCoverUrl);
-          const coverBuffer = Buffer.from(await coverResponse.arrayBuffer());
-          
-          // Composite with cassette design and add text labels
-          const compositedBuffer = await compositePhotoIntoCassette(coverBuffer, {
-            songTitle: songResult.title,
-            recipientName,
-          });
-          
-          const coverBase64 = compositedBuffer.toString('base64');
-          
-          coverImageUrl = await objectStorageService.uploadBase64Image(
-            coverBase64,
-            `songs/${userId}`,
-            'cover'
-          );
-          console.log('[Song] Cassette cover art generated with text and uploaded:', coverImageUrl);
-        }
+        const coverBase64 = cassetteCoverBuffer.toString('base64');
+        
+        coverImageUrl = await objectStorageService.uploadBase64Image(
+          coverBase64,
+          `songs/${userId}`,
+          'cover'
+        );
+        console.log('[Song] Cassette cover with text created and uploaded:', coverImageUrl);
       } catch (coverError: any) {
-        console.error('[Song] Failed to generate cassette cover art:', coverError.message);
-        // Continue without cover art - song still works
+        console.error('[Song] Failed to generate cassette cover:', coverError.message);
+        // Continue without cover - song still works
       }
 
       const creation = await storage.createCreation({
@@ -795,40 +780,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get recipient name for cover text
       const recipientName = lovedOne?.name || req.body.recipientName || 'Someone Special';
 
-      // Generate cassette tape cover art using Nano Banana (with optional custom image)
+      // Generate simple cassette cover with text labels (no AI image, no scene)
       let coverImageUrl = null;
       try {
-        const { generateSongCover } = await import('./openaiService');
-        const cassetteCoverUrl = await generateSongCover({
-          title: songResult.title,
-          tone: tone || 'sweet',
-          genre: genre || 'pop',
-          customImageUrl: customCoverImageUrl || undefined,
+        const cassetteCoverBuffer = await createCassetteCover({
+          songTitle: songResult.title,
+          recipientName,
         });
         
-        // Download and composite with cassette design + text
-        if (cassetteCoverUrl) {
-          const coverResponse = await fetch(cassetteCoverUrl);
-          const coverBuffer = Buffer.from(await coverResponse.arrayBuffer());
-          
-          // Composite with cassette design and add text labels
-          const compositedBuffer = await compositePhotoIntoCassette(coverBuffer, {
-            songTitle: songResult.title,
-            recipientName,
-          });
-          
-          const coverBase64 = compositedBuffer.toString('base64');
-          
-          coverImageUrl = await objectStorageService.uploadBase64Image(
-            coverBase64,
-            `songs/${userId}`,
-            'cover'
-          );
-          console.log('[Song] Cassette cover art generated with text and uploaded:', coverImageUrl);
-        }
+        const coverBase64 = cassetteCoverBuffer.toString('base64');
+        
+        coverImageUrl = await objectStorageService.uploadBase64Image(
+          coverBase64,
+          `songs/${userId}`,
+          'cover'
+        );
+        console.log('[Song] Cassette cover with text created and uploaded:', coverImageUrl);
       } catch (coverError: any) {
-        console.error('[Song] Failed to generate cassette cover art:', coverError.message);
-        // Continue without cover art - song still works
+        console.error('[Song] Failed to generate cassette cover:', coverError.message);
+        // Continue without cover - song still works
       }
 
       const creation = await storage.createCreation({
@@ -1443,30 +1413,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Generate new cassette cover using Nano Banana
-      const cassetteCoverUrl = await generateSongCover({
-        title: creation.title || 'My Song',
-        tone: creation.tone || 'sweet',
-        recipientName,
-        genre: creation.genre || undefined,
-      });
-
-      if (!cassetteCoverUrl) {
-        throw new Error('Failed to generate cassette cover image');
-      }
-
-      // Download the AI-generated image
-      const coverResponse = await fetch(cassetteCoverUrl);
-      const coverBuffer = Buffer.from(await coverResponse.arrayBuffer());
-      
-      // Composite with cassette design and add text labels
-      console.log(`[Song] Compositing AI cover with cassette template and text...`);
-      const compositedBuffer = await compositePhotoIntoCassette(coverBuffer, {
+      // Generate simple cassette cover with text labels (no AI image, no scene)
+      const cassetteCoverBuffer = await createCassetteCover({
         songTitle: creation.title || 'My Song',
         recipientName,
       });
       
-      const coverBase64 = compositedBuffer.toString('base64');
+      const coverBase64 = cassetteCoverBuffer.toString('base64');
       
       const imageUrl = await objectStorageService.uploadBase64Image(
         coverBase64,

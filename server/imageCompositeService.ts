@@ -21,6 +21,82 @@ export interface CompositeOptions {
   recipientName?: string;
 }
 
+/**
+ * Creates a simple cassette tape image with text labels (no background, no album art)
+ * This is the PREFERRED function for song covers - just cassette + text
+ */
+export async function createCassetteCover(
+  options: CompositeOptions = {}
+): Promise<Buffer> {
+  // Load cassette template
+  let cassetteBuffer: Buffer;
+  if (fs.existsSync(CASSETTE_TEMPLATE_PATH)) {
+    cassetteBuffer = fs.readFileSync(CASSETTE_TEMPLATE_PATH);
+  } else if (fs.existsSync(ORIGINAL_CASSETTE_PATH)) {
+    cassetteBuffer = fs.readFileSync(ORIGINAL_CASSETTE_PATH);
+  } else {
+    cassetteBuffer = await createFallbackCassette();
+  }
+
+  // Get cassette dimensions
+  const metadata = await sharp(cassetteBuffer).metadata();
+  const cassetteWidth = metadata.width || 800;
+  const cassetteHeight = metadata.height || 500;
+
+  // Create white background canvas
+  const canvasWidth = cassetteWidth + 40;
+  const canvasHeight = cassetteHeight + 40;
+  
+  const whiteBackground = await sharp({
+    create: {
+      width: canvasWidth,
+      height: canvasHeight,
+      channels: 4,
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    },
+  })
+    .png()
+    .toBuffer();
+
+  // Create text label for cassette
+  const textLabel = await createCassetteLabel(
+    options.songTitle || "My Song",
+    options.recipientName || ""
+  );
+
+  // Get text label dimensions for positioning
+  const textMeta = await sharp(textLabel).metadata();
+  const textWidth = textMeta.width || 220;
+  
+  // Position text in the upper-middle area of the cassette (the label area)
+  const textX = Math.floor((canvasWidth - textWidth) / 2);
+  const textY = Math.floor(canvasHeight * 0.28); // Position in cassette label area
+
+  const composited = await sharp(whiteBackground)
+    .composite([
+      {
+        input: cassetteBuffer,
+        top: 20,
+        left: 20,
+        blend: "over",
+      },
+      {
+        input: textLabel,
+        top: textY,
+        left: textX,
+        blend: "over",
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  return composited;
+}
+
+/**
+ * LEGACY: Creates full scene with wood background, album art, and cassette
+ * Use createCassetteCover() for simple cassette-only covers
+ */
 export async function compositePhotoIntoCassette(
   userPhotoBuffer: Buffer,
   options: CompositeOptions = {}
