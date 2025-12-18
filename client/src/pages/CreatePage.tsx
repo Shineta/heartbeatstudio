@@ -925,6 +925,9 @@ export default function CreatePage() {
                                   <SelectItem value="romantic">Romantic</SelectItem>
                                   <SelectItem value="heartfelt">Heartfelt</SelectItem>
                                   <SelectItem value="playful">Playful</SelectItem>
+                                  <SelectItem value="uplifting">Uplifting</SelectItem>
+                                  <SelectItem value="grateful">Grateful</SelectItem>
+                                  <SelectItem value="celebratory">Celebratory</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -1136,6 +1139,9 @@ export default function CreatePage() {
                                   <SelectItem value="romantic">Romantic</SelectItem>
                                   <SelectItem value="heartfelt">Heartfelt</SelectItem>
                                   <SelectItem value="playful">Playful</SelectItem>
+                                  <SelectItem value="uplifting">Uplifting</SelectItem>
+                                  <SelectItem value="grateful">Grateful</SelectItem>
+                                  <SelectItem value="celebratory">Celebratory</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -1614,6 +1620,9 @@ export default function CreatePage() {
                                   <SelectItem value="romantic">Romantic</SelectItem>
                                   <SelectItem value="heartfelt">Heartfelt</SelectItem>
                                   <SelectItem value="playful">Playful</SelectItem>
+                                  <SelectItem value="uplifting">Uplifting</SelectItem>
+                                  <SelectItem value="grateful">Grateful</SelectItem>
+                                  <SelectItem value="celebratory">Celebratory</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -2293,6 +2302,8 @@ export default function CreatePage() {
                                         <SelectItem value="funny">Funny</SelectItem>
                                         <SelectItem value="nostalgic">Nostalgic</SelectItem>
                                         <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="grateful">Grateful</SelectItem>
+                                        <SelectItem value="celebratory">Celebratory</SelectItem>
                                         <SelectItem value="sentimental">Sentimental</SelectItem>
                                       </SelectContent>
                                     </Select>
@@ -2450,6 +2461,8 @@ export default function CreatePage() {
                                         <SelectItem value="funny">Funny</SelectItem>
                                         <SelectItem value="nostalgic">Nostalgic</SelectItem>
                                         <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="grateful">Grateful</SelectItem>
+                                        <SelectItem value="celebratory">Celebratory</SelectItem>
                                         <SelectItem value="sentimental">Sentimental</SelectItem>
                                       </SelectContent>
                                     </Select>
@@ -2607,6 +2620,8 @@ export default function CreatePage() {
                                         <SelectItem value="funny">Funny</SelectItem>
                                         <SelectItem value="nostalgic">Nostalgic</SelectItem>
                                         <SelectItem value="uplifting">Uplifting</SelectItem>
+                                        <SelectItem value="grateful">Grateful</SelectItem>
+                                        <SelectItem value="celebratory">Celebratory</SelectItem>
                                         <SelectItem value="sentimental">Sentimental</SelectItem>
                                       </SelectContent>
                                     </Select>
