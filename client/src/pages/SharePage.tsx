@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRoute } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Download, Sparkles, Play } from 'lucide-react';
+import { Heart, Download, Sparkles, Play, Video } from 'lucide-react';
 import { Link } from 'wouter';
 
 interface Creation {
@@ -25,12 +25,21 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [songStarted, setSongStarted] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlaySong = () => {
     if (audioRef.current) {
       audioRef.current.play();
       setSongStarted(true);
+    }
+  };
+
+  const handlePlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setVideoStarted(true);
     }
   };
 
@@ -188,6 +197,34 @@ export default function SharePage() {
                 </div>
               )}
 
+              {/* Animation Video Player */}
+              {creation.type === 'animation' && creation.mediaUrl && (
+                <div className="space-y-4">
+                  {!videoStarted && (
+                    <div className="flex justify-center py-6">
+                      <Button 
+                        size="lg" 
+                        onClick={handlePlayVideo}
+                        className="h-20 px-12 text-xl gap-3 animate-pulse"
+                        data-testid="button-play-video"
+                      >
+                        <Video className="w-8 h-8" />
+                        Play Your Animation
+                      </Button>
+                    </div>
+                  )}
+                  <video 
+                    ref={videoRef}
+                    controls 
+                    className="w-full rounded-lg"
+                    data-testid="video-player"
+                  >
+                    <source src={creation.mediaUrl} type="video/mp4" />
+                    Your browser does not support the video element.
+                  </video>
+                </div>
+              )}
+
               {/* Lyrics / Content */}
               {creation.content && (
                 <div>
@@ -208,13 +245,13 @@ export default function SharePage() {
                 <div className="flex justify-center pt-4">
                   <a 
                     href={creation.mediaUrl} 
-                    download={`${creation.title}.mp3`}
+                    download={`${creation.title}.${creation.type === 'animation' ? 'mp4' : 'mp3'}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <Button size="lg" data-testid="button-download">
                       <Download className="w-4 h-4 mr-2" />
-                      Download Song
+                      Download {creation.type === 'song' ? 'Song' : 'Video'}
                     </Button>
                   </a>
                 </div>

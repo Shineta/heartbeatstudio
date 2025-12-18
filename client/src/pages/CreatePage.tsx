@@ -990,7 +990,19 @@ export default function CreatePage() {
                     <CardTitle>{createdAnimation.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {createdAnimation.imageUrl && (
+                    {/* Video Player for Animation */}
+                    {createdAnimation.mediaUrl && (
+                      <video
+                        controls
+                        className="w-full rounded-md"
+                        data-testid="video-animation-preview"
+                      >
+                        <source src={createdAnimation.mediaUrl} type="video/mp4" />
+                        Your browser does not support the video element.
+                      </video>
+                    )}
+                    {/* Fallback to image if no video */}
+                    {!createdAnimation.mediaUrl && createdAnimation.imageUrl && (
                       <img
                         src={createdAnimation.imageUrl}
                         alt={createdAnimation.title || "Animation"}
