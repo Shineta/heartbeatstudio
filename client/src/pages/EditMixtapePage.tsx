@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ export default function EditMixtapePage() {
   const { toast } = useToast();
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const { data: mixtapeData, isLoading: mixtapeLoading } = useQuery<{ mixtape: Mixtape; songs: Creation[] }>({
     queryKey: ['/api/mixtapes', id],
@@ -42,6 +44,43 @@ export default function EditMixtapePage() {
         return [...prev, songId];
       }
     });
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newOrder = [...selectedSongIds];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(dropIndex, 0, removed);
+    setSelectedSongIds(newOrder);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const handleSave = async () => {
@@ -111,6 +150,7 @@ export default function EditMixtapePage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Selected Songs ({selectedSongIds.length})</CardTitle>
+            <p className="text-sm text-muted-foreground">Drag songs to reorder them</p>
           </CardHeader>
           <CardContent>
             {selectedSongIds.length === 0 ? (
@@ -120,13 +160,23 @@ export default function EditMixtapePage() {
                 {selectedSongIds.map((songId, index) => {
                   const song = availableSongs.find(s => s.id === songId);
                   if (!song) return null;
+                  const isDragging = draggedIndex === index;
+                  const isDragOver = dragOverIndex === index;
                   return (
                     <div 
                       key={songId} 
-                      className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center gap-3 p-3 bg-muted/50 rounded-lg transition-all cursor-grab active:cursor-grabbing ${
+                        isDragging ? 'opacity-50 scale-95' : ''
+                      } ${isDragOver ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                       data-testid={`selected-song-${songId}`}
                     >
-                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
                       <span className="text-sm font-medium text-muted-foreground w-6">{index + 1}.</span>
                       {song.imageUrl ? (
                         <img src={song.imageUrl} alt={song.title || ''} className="w-10 h-10 rounded object-cover" />
