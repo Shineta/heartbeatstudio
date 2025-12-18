@@ -62,6 +62,10 @@ const animationFormSchema = z.object({
   tone: z.string().min(1, "Tone is required"),
   style: z.string().optional(),
   description: z.string().optional(),
+  // Sora 2 video options
+  duration: z.string().optional(),
+  size: z.string().optional(),
+  model: z.string().optional(),
 });
 
 const mixtapeFormSchema = z.object({
@@ -216,6 +220,10 @@ export default function CreatePage() {
       tone: "sweet",
       style: "",
       description: "",
+      // Sora 2 defaults
+      duration: "8",
+      size: "1280x720",
+      model: "sora-2",
     },
   });
 
@@ -1212,6 +1220,91 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Sora 2 Video Settings */}
+                      <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          Sora 2 Video Settings
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField
+                            control={animationForm.control}
+                            name="duration"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Duration</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger data-testid="select-animation-duration">
+                                      <SelectValue placeholder="Select duration" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="4">4 seconds</SelectItem>
+                                      <SelectItem value="6">6 seconds</SelectItem>
+                                      <SelectItem value="8">8 seconds</SelectItem>
+                                      <SelectItem value="10">10 seconds</SelectItem>
+                                      <SelectItem value="15">15 seconds</SelectItem>
+                                      <SelectItem value="20">20 seconds</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={animationForm.control}
+                            name="size"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Video Size</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger data-testid="select-animation-size">
+                                      <SelectValue placeholder="Select size" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1280x720">Landscape (1280x720)</SelectItem>
+                                      <SelectItem value="720x1280">Portrait (720x1280)</SelectItem>
+                                      <SelectItem value="1792x1024">Cinematic (1792x1024)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={animationForm.control}
+                            name="model"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Quality</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger data-testid="select-animation-model">
+                                      <SelectValue placeholder="Select quality" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="sora-2">Standard (~$0.10/sec)</SelectItem>
+                                      <SelectItem value="sora-2-pro">Pro Quality (~$0.50/sec)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Video generation may take several minutes. Pro quality provides higher fidelity output.
+                        </p>
+                      </div>
 
                       <Button type="submit" className="w-full" disabled={animationMutation.isPending} data-testid="button-generate-animation">
                         {animationMutation.isPending ? (

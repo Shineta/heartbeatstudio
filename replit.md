@@ -111,15 +111,23 @@ Preferred communication style: Simple, everyday language.
   - Service manages file uploads, downloads, and public URL generation
 
 **AI Services**
-- **OpenAI via Replit AI Integrations**: Text and image generation
+- **OpenAI via Replit AI Integrations**: Text, image, and video generation
   - Base URL and API key provided by Replit's managed service
   - Models: GPT-5 (chat completions), GPT-Image-1 (image generation)
   - Used for generating card messages and visual assets
+- **Sora 2 (OpenAI)**: AI video generation for animations
+  - Endpoint: `https://api.openai.com/v1/videos`
+  - Uses same OpenAI API key from Replit AI Integrations
+  - Models: sora-2 (standard, ~$0.10/sec), sora-2-pro (high quality, ~$0.50/sec)
+  - Duration: 4-20 seconds
+  - Sizes: 1280x720 (landscape), 720x1280 (portrait), 1792x1024 (cinematic)
+  - Async job-based generation with status polling
+  - Note: Requires OpenAI organization verification for API access
 - **Suno API**: AI song generation with vocals and music
   - Endpoint: `https://api.sunoapi.org/suno-api/generate-music`
   - Requires SUNO_API_KEY environment variable
-  - Generates complete songs (45 seconds) with vocals, music, lyrics, and cover art
-  - Model: v4_5PLUS for highest quality output
+  - Generates complete songs using Suno V5 for studio-quality audio
+  - V5 parameters: vocalGender, negativeTags, styleWeight, weirdnessConstraint
   - Returns MP3 audio files, lyrics, and optional cover images
 
 **Authentication**

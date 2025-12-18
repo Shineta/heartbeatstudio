@@ -542,15 +542,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Animation (using Nano Banana API)
+  // Generate AI Animation (using Sora 2 API for video generation)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, description } = req.body;
-      
-      if (!process.env.NANO_BANANA_API_KEY) {
-        return res.status(400).json({ message: "Animation generation requires Nano Banana API key" });
-      }
+      const { lovedOneId, tone, occasion, style, description, duration, size, model } = req.body;
       
       let lovedOne;
       if (lovedOneId) {
@@ -559,26 +555,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
 
-      console.log('[Animation] Using Nano Banana API for animation generation');
-      const nanoBananaImageUrl = await generateAnimation({
+      // Import Sora service
+      const { generateVideo, buildAnimationPrompt } = await import('./soraService');
+      
+      // Build the animation prompt
+      const prompt = buildAnimationPrompt({
         recipientName,
         occasion: occasion || "celebration",
-        style: style || `${tone || 'sweet'}, colorful, animated style`,
+        tone: tone || "sweet",
+        style,
         description,
       });
 
-      // Download the temporary image and upload to our storage
-      console.log('[Animation] Downloading Nano Banana image and uploading to storage...');
-      const imageResponse = await fetch(nanoBananaImageUrl);
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+      console.log('[Animation] Using Sora 2 API for video generation');
+      console.log('[Animation] Generated prompt:', prompt);
       
-      const imageUrl = await objectStorageService.uploadBase64Image(
-        imageBase64,
+      // Generate video with Sora 2
+      const videoResult = await generateVideo({
+        prompt,
+        duration: duration ? parseInt(duration) : 8,
+        size: size || "1280x720",
+        model: model || "sora-2",
+      });
+
+      // Download the video and upload to our storage
+      console.log('[Animation] Downloading Sora video and uploading to storage...');
+      const videoResponse = await fetch(videoResult.videoUrl);
+      const videoBuffer = await videoResponse.arrayBuffer();
+      const videoBase64 = Buffer.from(videoBuffer).toString('base64');
+      
+      // Upload video to object storage
+      const videoUrl = await objectStorageService.uploadBase64Video(
+        videoBase64,
         `animations/${userId}`,
         'animation'
       );
-      console.log('[Animation] Image uploaded to storage:', imageUrl);
+      console.log('[Animation] Video uploaded to storage:', videoUrl);
 
       const creation = await storage.createCreation({
         userId,
@@ -587,7 +599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tone: tone || 'sweet',
         title: `Animation for ${recipientName}`,
         content: description || `A celebration animation for ${occasion || 'a special occasion'}`,
-        imageUrl,
+        imageUrl: videoUrl, // Store video URL in imageUrl field for now
       });
       
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
