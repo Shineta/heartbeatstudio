@@ -121,26 +121,6 @@ export class ObjectStorageService {
     return `/public-objects/${objectName}`;
   }
 
-  async uploadBase64Video(base64Data: string, directory: string, prefix: string): Promise<string> {
-    const buffer = Buffer.from(base64Data, 'base64');
-    const filename = `${directory}/${prefix}-${randomUUID()}.mp4`;
-    const privateObjectDir = this.getPrivateObjectDir();
-    const fullPath = `${privateObjectDir}/${filename}`;
-    const { bucketName, objectName } = parseObjectPath(fullPath);
-    
-    const bucket = objectStorageClient.bucket(bucketName);
-    const file = bucket.file(objectName);
-    
-    await file.save(buffer, {
-      contentType: 'video/mp4',
-      metadata: {
-        cacheControl: 'public, max-age=31536000',
-      },
-    });
-    
-    return `/public-objects/${objectName}`;
-  }
-
   async uploadBuffer(buffer: Buffer, filename: string, contentType: string): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     const objectId = randomUUID();

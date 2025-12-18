@@ -542,11 +542,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Animation (using Sora 2 API for video generation)
+  // Generate AI Animation (using Nano Banana API)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, description, duration, size, model } = req.body;
+      const { lovedOneId, tone, occasion, style, description } = req.body;
+      
+      if (!process.env.NANO_BANANA_API_KEY) {
+        return res.status(400).json({ message: "Animation generation requires Nano Banana API key" });
+      }
       
       let lovedOne;
       if (lovedOneId) {
@@ -555,44 +559,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
 
-      // Import Sora service
-      const { generateVideo, buildAnimationPrompt } = await import('./soraService');
-      
-      // Build the animation prompt
-      const prompt = buildAnimationPrompt({
+      console.log('[Animation] Using Nano Banana API for animation generation');
+      const nanoBananaImageUrl = await generateAnimation({
         recipientName,
         occasion: occasion || "celebration",
-        tone: tone || "sweet",
-        style,
+        style: style || `${tone || 'sweet'}, colorful, animated style`,
         description,
       });
 
-      console.log('[Animation] Using Sora 2 API for video generation');
-      console.log('[Animation] Generated prompt:', prompt);
+      // Download the temporary image and upload to our storage
+      console.log('[Animation] Downloading Nano Banana image and uploading to storage...');
+      const imageResponse = await fetch(nanoBananaImageUrl);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
       
-      // Validate duration - only allow 4, 8, 12
-      const validDurations = [4, 8, 12];
-      const parsedDuration = duration ? parseInt(duration) : 8;
-      const validatedDuration = validDurations.includes(parsedDuration) ? parsedDuration : 8;
-      
-      // Generate video with Sora 2
-      const videoResult = await generateVideo({
-        prompt,
-        duration: validatedDuration,
-        size: size || "1280x720",
-        model: model || "sora-2",
-      });
-
-      // Upload the video buffer directly to storage (no base64 conversion)
-      console.log('[Animation] Uploading Sora video to storage...');
-      
-      // Upload video buffer directly to object storage
-      const videoUrl = await objectStorageService.uploadBuffer(
-        videoResult.videoBuffer,
-        `animations/${userId}/animation`,
-        'video/mp4'
+      const imageUrl = await objectStorageService.uploadBase64Image(
+        imageBase64,
+        `animations/${userId}`,
+        'animation'
       );
-      console.log('[Animation] Video uploaded to storage:', videoUrl);
+      console.log('[Animation] Image uploaded to storage:', imageUrl);
 
       const creation = await storage.createCreation({
         userId,
@@ -601,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tone: tone || 'sweet',
         title: `Animation for ${recipientName}`,
         content: description || `A celebration animation for ${occasion || 'a special occasion'}`,
-        imageUrl: videoUrl, // Store video URL in imageUrl field for now
+        imageUrl,
       });
       
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -646,8 +632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl,
-        vocalGender, negativeTags, styleWeight, weirdnessConstraint } = req.body;
+      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl } = req.body;
       
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
@@ -663,11 +648,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voice: voice || undefined,
         additionalNotes: additionalNotes || undefined,
         duration: duration || "quick",
-        // V5 parameters
-        vocalGender: vocalGender || undefined,
-        negativeTags: negativeTags || undefined,
-        styleWeight: styleWeight !== undefined ? parseFloat(styleWeight) : undefined,
-        weirdnessConstraint: weirdnessConstraint !== undefined ? parseFloat(weirdnessConstraint) : undefined,
       });
 
       // Generate cassette tape cover art using Nano Banana (with optional custom image)
@@ -1054,90 +1034,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { genre: 'folk', tone: 'sweet', occasion: 'friendship celebration' },
       ]
     },
-    // Client/Business themes
+    // Client mode themes
     'appreciation': {
       songs: [
-        { genre: 'jazz', tone: 'grateful', occasion: 'client appreciation' },
-        { genre: 'acoustic', tone: 'heartfelt', occasion: 'thank you' },
-        { genre: 'pop', tone: 'uplifting', occasion: 'appreciation' },
+        { genre: 'jazz', tone: 'warm', occasion: 'client appreciation' },
+        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
+        { genre: 'soul', tone: 'heartfelt', occasion: 'gratitude' },
       ]
     },
     'corporate': {
       songs: [
-        { genre: 'electronic', tone: 'energetic', occasion: 'corporate event' },
-        { genre: 'pop', tone: 'inspiring', occasion: 'business celebration' },
-        { genre: 'jazz', tone: 'sophisticated', occasion: 'professional gathering' },
+        { genre: 'pop', tone: 'uplifting', occasion: 'corporate celebration' },
+        { genre: 'electronic', tone: 'energetic', occasion: 'company event' },
+        { genre: 'rock', tone: 'inspiring', occasion: 'team motivation' },
       ]
     },
-    'welcome': {
+    'thank-you': {
       songs: [
-        { genre: 'pop', tone: 'warm', occasion: 'welcome gift' },
-        { genre: 'acoustic', tone: 'friendly', occasion: 'new beginnings' },
-        { genre: 'indie', tone: 'uplifting', occasion: 'welcome' },
+        { genre: 'acoustic', tone: 'sincere', occasion: 'thank you' },
+        { genre: 'pop', tone: 'warm', occasion: 'appreciation' },
+        { genre: 'folk', tone: 'heartfelt', occasion: 'gratitude' },
       ]
     },
-    'holiday': {
+    'congratulations': {
       songs: [
-        { genre: 'pop', tone: 'festive', occasion: 'holiday gift' },
-        { genre: 'acoustic', tone: 'warm', occasion: 'holiday celebration' },
-        { genre: 'jazz', tone: 'cozy', occasion: 'holiday cheer' },
+        { genre: 'pop', tone: 'celebratory', occasion: 'congratulations' },
+        { genre: 'dance', tone: 'upbeat', occasion: 'achievement' },
+        { genre: 'rock', tone: 'triumphant', occasion: 'success' },
       ]
     },
     'celebration': {
       songs: [
         { genre: 'pop', tone: 'joyful', occasion: 'celebration' },
-        { genre: 'dance', tone: 'fun', occasion: 'party' },
-        { genre: 'r&b', tone: 'upbeat', occasion: 'special occasion' },
+        { genre: 'dance', tone: 'festive', occasion: 'party' },
+        { genre: 'funk', tone: 'upbeat', occasion: 'good times' },
       ]
     },
-    // Personal themes
-    'birthday': {
+    'welcome': {
       songs: [
-        { genre: 'pop', tone: 'fun', occasion: 'birthday' },
-        { genre: 'dance', tone: 'playful', occasion: 'birthday party' },
-        { genre: 'hip-hop', tone: 'funny', occasion: 'birthday celebration' },
+        { genre: 'acoustic', tone: 'warm', occasion: 'welcome' },
+        { genre: 'pop', tone: 'friendly', occasion: 'new beginnings' },
+        { genre: 'folk', tone: 'inviting', occasion: 'greeting' },
       ]
     },
-    'thank-you': {
+    'holiday': {
       songs: [
-        { genre: 'acoustic', tone: 'grateful', occasion: 'thank you' },
-        { genre: 'soul', tone: 'heartfelt', occasion: 'appreciation' },
-        { genre: 'pop', tone: 'sweet', occasion: 'gratitude' },
-      ]
-    },
-    'just-because': {
-      songs: [
-        { genre: 'indie', tone: 'sweet', occasion: 'thinking of you' },
-        { genre: 'pop', tone: 'fun', occasion: 'just because' },
-        { genre: 'acoustic', tone: 'heartfelt', occasion: 'love' },
-      ]
-    },
-    'encouragement': {
-      songs: [
-        { genre: 'pop', tone: 'inspiring', occasion: 'encouragement' },
-        { genre: 'rock', tone: 'motivating', occasion: 'you got this' },
-        { genre: 'hip-hop', tone: 'empowering', occasion: 'keep going' },
-      ]
-    },
-    'graduation': {
-      songs: [
-        { genre: 'pop', tone: 'inspiring', occasion: 'graduation' },
-        { genre: 'hip-hop', tone: 'celebratory', occasion: 'achievement' },
-        { genre: 'rock', tone: 'triumphant', occasion: 'success' },
-      ]
-    },
-    'new-baby': {
-      songs: [
-        { genre: 'acoustic', tone: 'sweet', occasion: 'new baby' },
-        { genre: 'lullaby', tone: 'gentle', occasion: 'baby welcome' },
-        { genre: 'pop', tone: 'joyful', occasion: 'new arrival' },
-      ]
-    },
-    'get-well': {
-      songs: [
-        { genre: 'acoustic', tone: 'comforting', occasion: 'get well' },
-        { genre: 'pop', tone: 'uplifting', occasion: 'recovery' },
-        { genre: 'folk', tone: 'warm', occasion: 'healing' },
+        { genre: 'pop', tone: 'festive', occasion: 'holiday' },
+        { genre: 'jazz', tone: 'warm', occasion: 'seasonal celebration' },
+        { genre: 'acoustic', tone: 'cozy', occasion: 'holiday cheer' },
       ]
     },
   };
@@ -1149,11 +1093,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         lovedOneId, theme, recipientName, relationship,
         genre1, tone1, notes1, voice1, duration1, customTitle1, customLyrics1,
-        vocalGender1, negativeTags1, styleWeight1, weirdnessConstraint1,
         genre2, tone2, notes2, voice2, duration2, customTitle2, customLyrics2,
-        vocalGender2, negativeTags2, styleWeight2, weirdnessConstraint2,
         genre3, tone3, notes3, voice3, duration3, customTitle3, customLyrics3,
-        vocalGender3, negativeTags3, styleWeight3, weirdnessConstraint3,
         customCassetteImageUrl
       } = req.body;
 
@@ -1176,16 +1117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const durations = [duration1 || 'quick', duration2 || 'quick', duration3 || 'quick'];
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
-      // V5 parameters
-      const vocalGenders = [vocalGender1 || undefined, vocalGender2 || undefined, vocalGender3 || undefined];
-      const negativeTagsArr = [negativeTags1 || undefined, negativeTags2 || undefined, negativeTags3 || undefined];
-      const styleWeights = [styleWeight1 !== undefined ? parseFloat(styleWeight1) : undefined, styleWeight2 !== undefined ? parseFloat(styleWeight2) : undefined, styleWeight3 !== undefined ? parseFloat(styleWeight3) : undefined];
-      const weirdnessConstraints = [weirdnessConstraint1 !== undefined ? parseFloat(weirdnessConstraint1) : undefined, weirdnessConstraint2 !== undefined ? parseFloat(weirdnessConstraint2) : undefined, weirdnessConstraint3 !== undefined ? parseFloat(weirdnessConstraint3) : undefined];
 
-      let lovedOne: { name?: string; relationship?: string; interests?: string; insideJokes?: string } | null | undefined = null;
-      if (lovedOneId) {
-        lovedOne = await storage.getLovedOneById(lovedOneId);
-      }
+      let lovedOne = lovedOneId ? await storage.getLovedOneById(lovedOneId) : null;
 
       const recipient = lovedOne?.name || recipientName || "someone special";
       const recipientRelationship = lovedOne?.relationship || relationship || "friend";
@@ -1230,11 +1163,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const songDuration = durations[i];
             const songCustomTitle = customTitles[i];
             const songCustomLyrics = customLyrics[i];
-            // V5 parameters for this song
-            const songVocalGender = vocalGenders[i];
-            const songNegativeTags = negativeTagsArr[i];
-            const songStyleWeight = styleWeights[i];
-            const songWeirdnessConstraint = weirdnessConstraints[i];
             // Only use custom lyrics/title if BOTH are provided (required by Suno API)
             const useCustomLyrics = songCustomTitle && songCustomLyrics;
             try {
@@ -1252,11 +1180,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 duration: songDuration,
                 customTitle: useCustomLyrics ? songCustomTitle : undefined,
                 customLyrics: useCustomLyrics ? songCustomLyrics : undefined,
-                // V5 parameters
-                vocalGender: songVocalGender as 'm' | 'f' | undefined,
-                negativeTags: songNegativeTags,
-                styleWeight: songStyleWeight,
-                weirdnessConstraint: songWeirdnessConstraint,
               });
 
               let coverImageUrl = songResult.coverImage;
