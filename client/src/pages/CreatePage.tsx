@@ -499,7 +499,7 @@ export default function CreatePage() {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     const isGenerating = mixtapeMutation.isPending || createdMixtape?.status === 'generating';
-    const FRONTEND_TIMEOUT_SECONDS = 20 * 60; // 20 minutes
+    const FRONTEND_TIMEOUT_SECONDS = 35 * 60; // 35 minutes (buffer beyond stated 30 min)
     
     if (isGenerating) {
       // Only reset timer when mutation starts (isPending becomes true)
