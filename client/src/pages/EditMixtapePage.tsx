@@ -4,7 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, Music, Loader2, GripVertical, Plus, RefreshCw } from "lucide-react";
+import { ArrowLeft, Save, Music, Loader2, GripVertical, Plus, RefreshCw, Image } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -21,28 +21,29 @@ export default function EditMixtapePage() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  const handleRegenerateCover = async () => {
+  const handleRegenerateCover = async (customImageUrl?: string) => {
     if (!id) return;
     setRegeneratingCover(true);
     try {
-      // If there's an existing cover that looks like an unprocessed image (not composited), 
-      // try to composite it with the cassette. Otherwise, generate a new AI cover.
-      const currentUrl = mixtapeData?.mixtape?.cassetteCaseImageUrl;
       await apiRequest("POST", `/api/mixtapes/${id}/generate-cassette-cover`, 
-        currentUrl ? { customImageUrl: currentUrl } : {}
+        customImageUrl ? { customImageUrl } : {}
       );
       queryClient.invalidateQueries({ queryKey: ['/api/mixtapes', id] });
       queryClient.invalidateQueries({ queryKey: ['/api/mixtapes'] });
-      toast({ title: "Success", description: "Cassette cover regenerated!" });
+      toast({ title: "Success", description: "Cassette cover updated!" });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to regenerate cover",
+        description: error.message || "Failed to update cover",
         variant: "destructive",
       });
     } finally {
       setRegeneratingCover(false);
     }
+  };
+
+  const handleUseSongCover = (songImageUrl: string) => {
+    handleRegenerateCover(songImageUrl);
   };
 
   const { data: mixtapeData, isLoading: mixtapeLoading } = useQuery<{ mixtape: Mixtape; songs: Creation[] }>({
@@ -168,7 +169,7 @@ export default function EditMixtapePage() {
           </div>
           <Button 
             variant="outline"
-            onClick={handleRegenerateCover} 
+            onClick={() => handleRegenerateCover()} 
             disabled={regeneratingCover}
             data-testid="button-regenerate-cover"
           >
@@ -223,6 +224,18 @@ export default function EditMixtapePage() {
                         <p className="font-medium truncate">{song.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{song.genre}</p>
                       </div>
+                      {song.imageUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUseSongCover(song.imageUrl!)}
+                          disabled={regeneratingCover}
+                          data-testid={`button-use-cover-${songId}`}
+                        >
+                          {regeneratingCover ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Image className="w-3 h-3 mr-1" />}
+                          Use as Cover
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
