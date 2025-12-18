@@ -38,10 +38,10 @@ export async function createCassetteCover(
     cassetteBuffer = await createFallbackCassette();
   }
 
-  // Get cassette dimensions
+  // Get cassette dimensions (template is 1024x717)
   const metadata = await sharp(cassetteBuffer).metadata();
-  const cassetteWidth = metadata.width || 800;
-  const cassetteHeight = metadata.height || 500;
+  const cassetteWidth = metadata.width || 1024;
+  const cassetteHeight = metadata.height || 717;
 
   // Create white background canvas
   const canvasWidth = cassetteWidth + 40;
@@ -58,19 +58,20 @@ export async function createCassetteCover(
     .png()
     .toBuffer();
 
-  // Create text label for cassette
+  // Create text label for cassette - sized to fit the label area
+  // The cassette label area is approximately x:120-900, y:170-315 on the template
+  const labelWidth = 700;  // Wide enough to fill label area
   const textLabel = await createCassetteLabel(
     options.songTitle || "My Song",
-    options.recipientName || ""
+    options.recipientName || "",
+    labelWidth
   );
 
-  // Get text label dimensions for positioning
-  const textMeta = await sharp(textLabel).metadata();
-  const textWidth = textMeta.width || 400;
-  
-  // Position text in the upper-middle area of the cassette (the label area)
-  const textX = Math.floor((canvasWidth - textWidth) / 2);
-  const textY = Math.floor(canvasHeight * 0.18); // Position in cassette label area
+  // Position text in the CENTER of the cassette's white label panel
+  // Label area on template is roughly y:170-315, so center is around y:240
+  // With 20px canvas padding, target y is around 190-210
+  const textX = Math.floor((canvasWidth - labelWidth) / 2);
+  const textY = 200; // Centered in the label area
 
   const composited = await sharp(whiteBackground)
     .composite([
@@ -268,25 +269,28 @@ async function createFallbackCassette(): Promise<Buffer> {
 
 async function createCassetteLabel(
   songTitle: string,
-  recipientName: string
+  recipientName: string,
+  width: number = 700
 ): Promise<Buffer> {
-  const labelWidth = 400;
+  const labelWidth = width;
   const labelHeight = 120;
   
-  // Truncate text if too long
-  const truncatedTitle = songTitle.length > 25 ? songTitle.substring(0, 23) + "..." : songTitle;
+  // Truncate text if too long (allow more chars for wider label)
+  const maxTitleLen = Math.floor(width / 18);
+  const truncatedTitle = songTitle.length > maxTitleLen ? songTitle.substring(0, maxTitleLen - 2) + "..." : songTitle;
   const forText = recipientName ? `For ${recipientName}` : "";
-  const truncatedFor = forText.length > 30 ? forText.substring(0, 28) + "..." : forText;
+  const maxForLen = Math.floor(width / 14);
+  const truncatedFor = forText.length > maxForLen ? forText.substring(0, maxForLen - 2) + "..." : forText;
   
-  // Create SVG with text - much larger fonts for readability
+  // Create SVG with text - large fonts for readability, bold black text
   const svgText = `
     <svg width="${labelWidth}" height="${labelHeight}" xmlns="http://www.w3.org/2000/svg">
       <style>
-        .title { font-family: Arial, sans-serif; font-size: 28px; font-weight: bold; fill: #000000; }
-        .recipient { font-family: Arial, sans-serif; font-size: 20px; fill: #333333; font-style: italic; }
+        .title { font-family: Arial, Helvetica, sans-serif; font-size: 42px; font-weight: bold; fill: #000000; }
+        .recipient { font-family: Arial, Helvetica, sans-serif; font-size: 28px; fill: #222222; font-style: italic; }
       </style>
-      <text x="${labelWidth / 2}" y="45" text-anchor="middle" class="title">${escapeXml(truncatedTitle)}</text>
-      <text x="${labelWidth / 2}" y="85" text-anchor="middle" class="recipient">${escapeXml(truncatedFor)}</text>
+      <text x="${labelWidth / 2}" y="50" text-anchor="middle" class="title">${escapeXml(truncatedTitle)}</text>
+      <text x="${labelWidth / 2}" y="95" text-anchor="middle" class="recipient">${escapeXml(truncatedFor)}</text>
     </svg>
   `;
   
