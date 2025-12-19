@@ -121,7 +121,10 @@ export default function SharePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Heart className="w-6 h-6 text-primary heartbeat" />
-            <span className="font-bold text-xl">Heartbeat Studio</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl leading-tight">Heartbeat Studio</span>
+              <span className="text-xs text-muted-foreground">By Hortons Tech Innovations</span>
+            </div>
           </div>
           <Button variant="outline" size="sm" data-testid="button-create-own" onClick={handleComingSoon}>
             <Sparkles className="w-4 h-4 mr-2" />
