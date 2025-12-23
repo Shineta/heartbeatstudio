@@ -484,6 +484,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update creation (rename)
+  app.patch('/api/creations/:id', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { id } = req.params;
+      const { title } = req.body;
+
+      const creation = await storage.getCreationById(id);
+      if (!creation) {
+        return res.status(404).json({ message: "Creation not found" });
+      }
+      if (creation.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this creation" });
+      }
+
+      const updated = await storage.updateCreation(id, { title });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating creation:", error);
+      res.status(500).json({ message: "Failed to update creation" });
+    }
+  });
+
   // Generate AI Card (using Nano Banana API)
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {

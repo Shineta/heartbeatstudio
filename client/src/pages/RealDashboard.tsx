@@ -35,10 +35,16 @@ const mixtapeFormSchema = z.object({
   recipientName: z.string().optional(),
 });
 
+const renameFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+});
+
 export default function RealDashboard() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mixtapeDialogOpen, setMixtapeDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renamingCreation, setRenamingCreation] = useState<Creation | null>(null);
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [regeneratingCover, setRegeneratingCover] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState<string | null>(null);
@@ -155,6 +161,55 @@ export default function RealDashboard() {
       return;
     }
     createMixtapeMutation.mutate(data);
+  };
+
+  const renameForm = useForm<z.infer<typeof renameFormSchema>>({
+    resolver: zodResolver(renameFormSchema),
+    defaultValues: {
+      title: "",
+    },
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: async (data: { id: string; title: string }) => {
+      return await apiRequest("PATCH", `/api/creations/${data.id}`, { title: data.title });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      toast({ title: "Success", description: "Song renamed successfully!" });
+      setRenameDialogOpen(false);
+      setRenamingCreation(null);
+      renameForm.reset();
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to rename. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRenameClick = (creation: Creation) => {
+    setRenamingCreation(creation);
+    renameForm.setValue("title", creation.title || "");
+    setRenameDialogOpen(true);
+  };
+
+  const onRenameSubmit = (data: z.infer<typeof renameFormSchema>) => {
+    if (!renamingCreation) return;
+    renameMutation.mutate({ id: renamingCreation.id, title: data.title });
   };
 
   const toggleSongSelection = (songId: string) => {
@@ -521,6 +576,18 @@ export default function RealDashboard() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRenameClick(creation);
+                            }}
+                            data-testid={`button-rename-${creation.id}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                            <span className="ml-1">Rename</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => {
                               const shareLink = creation.shareableLink?.startsWith('/share/') 
                                 ? creation.shareableLink 
@@ -728,6 +795,44 @@ export default function RealDashboard() {
                   <>
                     <ListMusic className="w-4 h-4 mr-2" />
                     Create Mixtape
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent data-testid="dialog-rename-creation">
+          <DialogHeader>
+            <DialogTitle>Rename {renamingCreation?.type === 'song' ? 'Song' : 'Creation'}</DialogTitle>
+          </DialogHeader>
+          <Form {...renameForm}>
+            <form onSubmit={renameForm.handleSubmit(onRenameSubmit)} className="space-y-4">
+              <FormField
+                control={renameForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter new title" {...field} data-testid="input-rename-title" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={renameMutation.isPending} data-testid="button-submit-rename">
+                {renameMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Save
                   </>
                 )}
               </Button>
