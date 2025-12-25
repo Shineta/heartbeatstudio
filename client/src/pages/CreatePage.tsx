@@ -94,6 +94,7 @@ export default function CreatePage() {
   const [createdMixtape, setCreatedMixtape] = useState<Mixtape | null>(null);
   const [songGenerationTime, setSongGenerationTime] = useState(0);
   const [mixtapeGenerationTime, setMixtapeGenerationTime] = useState(0);
+  const [songProgress, setSongProgress] = useState(0);
   
   // Mixtape player state
   const [mixtapeSongs, setMixtapeSongs] = useState<Creation[]>([]);
@@ -139,6 +140,23 @@ export default function CreatePage() {
       audio.load();
     }
   }, [currentSongIndex]);
+
+  // Animate progress bar when song is generating
+  useEffect(() => {
+    if (createdSong?.status === 'generating') {
+      setSongProgress(0);
+      const interval = setInterval(() => {
+        setSongProgress(prev => {
+          if (prev >= 95) return prev;
+          const increment = prev < 30 ? 2 : prev < 60 ? 1.5 : prev < 80 ? 0.8 : 0.3;
+          return Math.min(prev + increment, 95);
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setSongProgress(0);
+    }
+  }, [createdSong?.status]);
 
   const handlePrevious = () => {
     setCurrentSongIndex((prev) => (prev > 0 ? prev - 1 : mixtapeSongs.length - 1));
@@ -1233,7 +1251,10 @@ export default function CreatePage() {
                   <CardContent className="space-y-4">
                     {createdSong.status === 'generating' ? (
                       <div className="text-center py-8">
-                        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                        <div className="w-full max-w-md mx-auto mb-6">
+                          <Progress value={songProgress} className="h-3" data-testid="progress-song-generation" />
+                          <p className="text-sm text-muted-foreground mt-2">{Math.round(songProgress)}% complete</p>
+                        </div>
                         <h3 className="text-lg font-semibold mb-2">Your song is being created!</h3>
                         <p className="text-muted-foreground mb-4">
                           This typically takes 2-4 minutes. You can check your dashboard to see when it's ready.
