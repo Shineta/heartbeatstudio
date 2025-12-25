@@ -333,7 +333,11 @@ export default function CreatePage() {
       setEditedLyrics("");
       setEditedTitle("");
       setSongGenerationTime(0);
-      toast({ title: "Success", description: "Your song has been created!" });
+      if (data.status === 'generating') {
+        toast({ title: "Song Generation Started!", description: "Your song is being created. This may take 2-4 minutes. Check your dashboard to see it when ready!" });
+      } else {
+        toast({ title: "Success", description: "Your song has been created!" });
+      }
     },
     onError: (error: Error) => {
       setSongGenerationTime(0);
@@ -369,7 +373,11 @@ export default function CreatePage() {
       setCreatedSong(data);
       setPendingSongData(null);
       setSongGenerationTime(0);
-      toast({ title: "Success", description: "Your song has been created!" });
+      if (data.status === 'generating') {
+        toast({ title: "Song Generation Started!", description: "Your song is being created. This may take 2-4 minutes. Check your dashboard to see it when ready!" });
+      } else {
+        toast({ title: "Success", description: "Your song has been created!" });
+      }
     },
     onError: (error: Error) => {
       setSongGenerationTime(0);
@@ -1217,45 +1225,62 @@ export default function CreatePage() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>{createdSong.title}</CardTitle>
+                    <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Song...' : createdSong.title}</CardTitle>
                     {createdSong.genre && (
                       <CardDescription>Genre: {createdSong.genre}</CardDescription>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {createdSong.imageUrl && (
-                      <img
-                        src={createdSong.imageUrl}
-                        alt={createdSong.title || "Song cover"}
-                        className="w-full rounded-md"
-                      />
-                    )}
-                    {createdSong.mediaUrl && (
-                      <div className="w-full">
-                        <audio controls className="w-full" data-testid="audio-player">
-                          <source src={createdSong.mediaUrl} type="audio/mpeg" />
-                          Your browser does not support the audio element.
-                        </audio>
+                    {createdSong.status === 'generating' ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Your song is being created!</h3>
+                        <p className="text-muted-foreground mb-4">
+                          This typically takes 2-4 minutes. You can check your dashboard to see when it's ready.
+                        </p>
+                        <Button onClick={() => setLocation('/dashboard')} variant="outline" data-testid="button-go-to-dashboard">
+                          Go to Dashboard
+                        </Button>
                       </div>
+                    ) : (
+                      <>
+                        {createdSong.imageUrl && (
+                          <img
+                            src={createdSong.imageUrl}
+                            alt={createdSong.title || "Song cover"}
+                            className="w-full rounded-md"
+                          />
+                        )}
+                        {createdSong.mediaUrl && (
+                          <div className="w-full">
+                            <audio controls className="w-full" data-testid="audio-player">
+                              <source src={createdSong.mediaUrl} type="audio/mpeg" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold mb-2">Lyrics:</h3>
+                          <p className="whitespace-pre-wrap text-muted-foreground">{createdSong.content}</p>
+                        </div>
+                      </>
                     )}
-                    <div>
-                      <h3 className="font-semibold mb-2">Lyrics:</h3>
-                      <p className="whitespace-pre-wrap text-muted-foreground">{createdSong.content}</p>
-                    </div>
                   </CardContent>
                   <CardFooter className="flex gap-3">
                     <Button onClick={() => setCreatedSong(null)} variant="outline" data-testid="button-create-another">
                       Create Another
                     </Button>
-                    <Button onClick={() => {
-                      const shareLink = createdSong.shareableLink?.startsWith('/share/') 
-                        ? createdSong.shareableLink 
-                        : `/share/${createdSong.shareableLink}`;
-                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                      toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                    }} data-testid="button-share">
-                      Share
-                    </Button>
+                    {createdSong.status !== 'generating' && (
+                      <Button onClick={() => {
+                        const shareLink = createdSong.shareableLink?.startsWith('/share/') 
+                          ? createdSong.shareableLink 
+                          : `/share/${createdSong.shareableLink}`;
+                        navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                        toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                      }} data-testid="button-share">
+                        Share
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               </div>

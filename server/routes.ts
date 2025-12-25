@@ -48,6 +48,13 @@ const BASE_URL = getBaseUrl();
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   const objectStorageService = new ObjectStorageService();
+  
+  // Verify critical API keys are configured
+  if (!process.env.SUNO_API_KEY) {
+    console.warn('[Warning] SUNO_API_KEY is not configured - song generation will fail');
+  } else {
+    console.log('[Config] SUNO_API_KEY is configured');
+  }
 
   // ========== AUTHENTICATION ROUTES ==========
   
