@@ -57,6 +57,12 @@ export default function RealDashboard() {
 
   const { data: creations = [], isLoading: creationsLoading } = useQuery<Creation[]>({
     queryKey: ['/api/creations'],
+    refetchInterval: (query) => {
+      // Auto-refresh every 10 seconds if there are any generating creations
+      const data = query.state.data;
+      const hasGenerating = data?.some(c => c.status === 'generating');
+      return hasGenerating ? 10000 : false;
+    },
   });
 
   const { data: mixtapes = [], isLoading: mixtapesLoading } = useQuery<Mixtape[]>({
@@ -535,7 +541,7 @@ export default function RealDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {creations.map((creation) => (
                     <div key={creation.id} className={`border rounded-md overflow-hidden hover-elevate relative ${selectedSongIds.includes(creation.id) ? 'ring-2 ring-primary' : ''}`} data-testid={`card-creation-${creation.id}`}>
-                      {creation.type === 'song' && (
+                      {creation.type === 'song' && creation.status !== 'generating' && (
                         <div className="absolute top-2 left-2 z-10">
                           <Checkbox
                             checked={selectedSongIds.includes(creation.id)}
@@ -545,13 +551,31 @@ export default function RealDashboard() {
                           />
                         </div>
                       )}
-                      {creation.imageUrl && (
+                      {creation.status === 'generating' && (
+                        <div className="absolute top-2 right-2 z-10 bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300 text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Creating...
+                        </div>
+                      )}
+                      {creation.status === 'failed' && (
+                        <div className="absolute top-2 right-2 z-10 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 text-xs font-medium px-2 py-1 rounded-full">
+                          Failed
+                        </div>
+                      )}
+                      {creation.imageUrl ? (
                         <img
                           src={creation.imageUrl}
                           alt={creation.title || "Creation"}
                           className="w-full h-48 object-cover"
                         />
-                      )}
+                      ) : creation.status === 'generating' ? (
+                        <div className="w-full h-48 bg-muted flex items-center justify-center">
+                          <div className="text-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">Generating song...</p>
+                          </div>
+                        </div>
+                      ) : null}
                       <div className="p-4">
                         <h3 className="font-semibold mb-2">{creation.title}</h3>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -572,72 +596,82 @@ export default function RealDashboard() {
                           </div>
                         )}
                         
-                        <div className="flex gap-2 flex-wrap">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRenameClick(creation);
-                            }}
-                            data-testid={`button-rename-${creation.id}`}
-                          >
-                            <Pencil className="w-4 h-4" />
-                            <span className="ml-1">Rename</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const shareLink = creation.shareableLink?.startsWith('/share/') 
-                                ? creation.shareableLink 
-                                : `/share/${creation.shareableLink}`;
-                              navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                              toast({ title: "Copied!", description: "Link copied to clipboard" });
-                            }}
-                            data-testid="button-share-creation"
-                          >
-                            Share
-                          </Button>
-                          {creation.type === 'song' && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUploadClick(creation.id);
-                                }}
-                                disabled={uploadingCover === creation.id}
-                                data-testid={`button-upload-cover-${creation.id}`}
-                              >
-                                {uploadingCover === creation.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Upload className="w-4 h-4" />
-                                )}
-                                <span className="ml-1">Upload</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRegenerateCover(creation.id);
-                                }}
-                                disabled={regeneratingCover === creation.id}
-                                data-testid={`button-regenerate-cover-${creation.id}`}
-                              >
-                                {regeneratingCover === creation.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="w-4 h-4" />
-                                )}
-                                <span className="ml-1">New Cover</span>
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        {creation.status === 'generating' ? (
+                          <div className="text-sm text-muted-foreground text-center py-2">
+                            Song is being created... This may take 2-4 minutes.
+                          </div>
+                        ) : creation.status === 'failed' ? (
+                          <div className="text-sm text-red-600 dark:text-red-400 text-center py-2">
+                            Generation failed. Please try creating a new song.
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRenameClick(creation);
+                              }}
+                              data-testid={`button-rename-${creation.id}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                              <span className="ml-1">Rename</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const shareLink = creation.shareableLink?.startsWith('/share/') 
+                                  ? creation.shareableLink 
+                                  : `/share/${creation.shareableLink}`;
+                                navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                                toast({ title: "Copied!", description: "Link copied to clipboard" });
+                              }}
+                              data-testid="button-share-creation"
+                            >
+                              Share
+                            </Button>
+                            {creation.type === 'song' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUploadClick(creation.id);
+                                  }}
+                                  disabled={uploadingCover === creation.id}
+                                  data-testid={`button-upload-cover-${creation.id}`}
+                                >
+                                  {uploadingCover === creation.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Upload className="w-4 h-4" />
+                                  )}
+                                  <span className="ml-1">Upload</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRegenerateCover(creation.id);
+                                  }}
+                                  disabled={regeneratingCover === creation.id}
+                                  data-testid={`button-regenerate-cover-${creation.id}`}
+                                >
+                                  {regeneratingCover === creation.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="w-4 h-4" />
+                                  )}
+                                  <span className="ml-1">New Cover</span>
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

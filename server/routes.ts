@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Song with Custom Lyrics
+  // Generate AI Song with Custom Lyrics (background processing to avoid timeout)
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -632,18 +632,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
       }
-
-      const { generateSongWithLyrics } = await import('./sunoService');
-      
-      const songResult = await generateSongWithLyrics({
-        title,
-        lyrics,
-        tone: tone || "sweet",
-        genre: genre || "pop",
-        voice: voice || undefined,
-        additionalNotes: additionalNotes || undefined,
-        duration: duration || "quick",
-      });
 
       // Get loved one name for cover text
       let recipientName = 'Someone Special';
@@ -654,57 +642,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Generate AI cassette cover with text using Nano Banana (varied styles)
-      let coverImageUrl = null;
-      try {
-        const cassetteCoverUrl = await generateSongCover({
-          title: songResult.title,
-          tone: tone || 'sweet',
-          genre: genre || 'pop',
-          recipientName,
-        });
-        
-        if (cassetteCoverUrl) {
-          // Download and upload to our storage
-          const coverResponse = await fetch(cassetteCoverUrl);
-          const coverBuffer = await coverResponse.arrayBuffer();
-          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
-          
-          coverImageUrl = await objectStorageService.uploadBase64Image(
-            coverBase64,
-            `songs/${userId}`,
-            'cover'
-          );
-          console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
-        }
-      } catch (coverError: any) {
-        console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
-        // Continue without cover - song still works
-      }
-
+      // Create a placeholder creation with "generating" status
       const creation = await storage.createCreation({
         userId,
         lovedOneId: lovedOneId || null,
         type: 'song',
         tone: tone || 'sweet',
         genre: genre || 'pop',
-        title: songResult.title,
-        content: songResult.lyrics,
-        imageUrl: coverImageUrl || null,
-        mediaUrl: songResult.audioUrl,
+        title: `Generating: ${title}`,
+        content: lyrics,
+        imageUrl: null,
+        mediaUrl: null,
+        status: 'generating',
       });
-      
-      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
-      res.json(updatedCreation || creation);
+      // Return immediately - song will be generated in background
+      res.json({
+        ...creation,
+        status: 'generating',
+        message: 'Song generation started! This may take 2-4 minutes. Refresh your dashboard to see when it\'s ready.',
+      });
+
+      // Process song generation in background (don't await - response already sent)
+      (async () => {
+        try {
+          const { generateSongWithLyrics } = await import('./sunoService');
+          
+          const songResult = await generateSongWithLyrics({
+            title,
+            lyrics,
+            tone: tone || "sweet",
+            genre: genre || "pop",
+            voice: voice || undefined,
+            additionalNotes: additionalNotes || undefined,
+            duration: duration || "quick",
+          });
+
+          // Generate AI cassette cover
+          let coverImageUrl = null;
+          try {
+            const cassetteCoverUrl = await generateSongCover({
+              title: songResult.title,
+              tone: tone || 'sweet',
+              genre: genre || 'pop',
+              recipientName,
+            });
+            
+            if (cassetteCoverUrl) {
+              const coverResponse = await fetch(cassetteCoverUrl);
+              const coverBuffer = await coverResponse.arrayBuffer();
+              const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+              
+              coverImageUrl = await objectStorageService.uploadBase64Image(
+                coverBase64,
+                `songs/${userId}`,
+                'cover'
+              );
+              console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
+            }
+          } catch (coverError: any) {
+            console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
+          }
+
+          const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+          await storage.updateCreation(creation.id, {
+            title: songResult.title,
+            content: songResult.lyrics,
+            imageUrl: coverImageUrl,
+            mediaUrl: songResult.audioUrl,
+            shareableLink,
+            status: 'ready',
+          });
+          console.log(`[Song] Background generation complete for creation ${creation.id}`);
+        } catch (error: any) {
+          console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
+          await storage.updateCreation(creation.id, {
+            status: 'failed',
+            title: 'Song generation failed',
+          });
+        }
+      })();
     } catch (error: any) {
-      console.error("Error generating song with lyrics:", error);
-      res.status(500).json({ message: error.message || "Failed to generate song" });
+      console.error("Error starting song generation:", error);
+      res.status(500).json({ message: error.message || "Failed to start song generation" });
     }
   });
 
-  // Generate AI Song
+  // Generate AI Song (background processing to avoid timeout)
   app.post('/api/generate/song', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -715,71 +739,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lovedOne = await storage.getLovedOneById(lovedOneId);
       }
 
-      const { generateSong } = await import('./sunoService');
-      
-      const songResult = await generateSong({
-        recipientName: lovedOne?.name || req.body.recipientName || "someone special",
-        relationship: lovedOne?.relationship || req.body.relationship || "friend",
-        occasion,
-        tone: tone || "sweet",
-        genre: genre || "pop",
-        voice: voice || undefined,
-        interests: lovedOne?.interests || undefined,
-        insideJokes: lovedOne?.insideJokes || undefined,
-        duration: duration || "quick",
-      });
-
-      // Get recipient name for cover text
       const recipientName = lovedOne?.name || req.body.recipientName || 'Someone Special';
 
-      // Generate AI cassette cover with text using Nano Banana (varied styles)
-      let coverImageUrl = null;
-      try {
-        const cassetteCoverUrl = await generateSongCover({
-          title: songResult.title,
-          tone: tone || 'sweet',
-          genre: genre || 'pop',
-          recipientName,
-          customImageUrl: customCoverImageUrl || undefined,
-        });
-        
-        if (cassetteCoverUrl) {
-          // Download and upload to our storage
-          const coverResponse = await fetch(cassetteCoverUrl);
-          const coverBuffer = await coverResponse.arrayBuffer();
-          const coverBase64 = Buffer.from(coverBuffer).toString('base64');
-          
-          coverImageUrl = await objectStorageService.uploadBase64Image(
-            coverBase64,
-            `songs/${userId}`,
-            'cover'
-          );
-          console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
-        }
-      } catch (coverError: any) {
-        console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
-        // Continue without cover - song still works
-      }
-
+      // Create a placeholder creation with "generating" status
       const creation = await storage.createCreation({
         userId,
         lovedOneId: lovedOneId || null,
         type: 'song',
         tone: tone || 'sweet',
         genre: genre || 'pop',
-        title: songResult.title,
-        content: songResult.lyrics,
-        imageUrl: coverImageUrl || null,
-        mediaUrl: songResult.audioUrl,
+        title: `Generating song for ${recipientName}...`,
+        content: null,
+        imageUrl: null,
+        mediaUrl: null,
+        status: 'generating',
       });
-      
-      const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
-      res.json(updatedCreation || creation);
+      // Return immediately - song will be generated in background
+      res.json({
+        ...creation,
+        status: 'generating',
+        message: 'Song generation started! This may take 2-4 minutes. Refresh your dashboard to see when it\'s ready.',
+      });
+
+      // Process song generation in background (don't await - response already sent)
+      (async () => {
+        try {
+          const { generateSong } = await import('./sunoService');
+          
+          const songResult = await generateSong({
+            recipientName,
+            relationship: lovedOne?.relationship || req.body.relationship || "friend",
+            occasion,
+            tone: tone || "sweet",
+            genre: genre || "pop",
+            voice: voice || undefined,
+            interests: lovedOne?.interests || undefined,
+            insideJokes: lovedOne?.insideJokes || undefined,
+            duration: duration || "quick",
+          });
+
+          // Generate AI cassette cover
+          let coverImageUrl = null;
+          try {
+            const cassetteCoverUrl = await generateSongCover({
+              title: songResult.title,
+              tone: tone || 'sweet',
+              genre: genre || 'pop',
+              recipientName,
+              customImageUrl: customCoverImageUrl || undefined,
+            });
+            
+            if (cassetteCoverUrl) {
+              const coverResponse = await fetch(cassetteCoverUrl);
+              const coverBuffer = await coverResponse.arrayBuffer();
+              const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+              
+              coverImageUrl = await objectStorageService.uploadBase64Image(
+                coverBase64,
+                `songs/${userId}`,
+                'cover'
+              );
+              console.log('[Song] AI cassette cover generated and uploaded:', coverImageUrl);
+            }
+          } catch (coverError: any) {
+            console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
+          }
+
+          const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+          await storage.updateCreation(creation.id, {
+            title: songResult.title,
+            content: songResult.lyrics,
+            imageUrl: coverImageUrl,
+            mediaUrl: songResult.audioUrl,
+            shareableLink,
+            status: 'ready',
+          });
+          console.log(`[Song] Background generation complete for creation ${creation.id}`);
+        } catch (error: any) {
+          console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
+          await storage.updateCreation(creation.id, {
+            status: 'failed',
+            title: 'Song generation failed',
+          });
+        }
+      })();
     } catch (error: any) {
-      console.error("Error generating song:", error);
-      res.status(500).json({ message: error.message || "Failed to generate song" });
+      console.error("Error starting song generation:", error);
+      res.status(500).json({ message: error.message || "Failed to start song generation" });
     }
   });
 
