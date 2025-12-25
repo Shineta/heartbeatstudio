@@ -15,17 +15,26 @@ export default function MixtapePage() {
   const { link } = useParams<{ link: string }>();
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Sync audio state when track changes
+  // Sync audio state when track changes - auto-play if shouldAutoPlay is true
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      setIsPlaying(false);
-      audio.pause();
       audio.load();
+      if (shouldAutoPlay) {
+        audio.play().then(() => {
+          setIsPlaying(true);
+        }).catch(() => {
+          setIsPlaying(false);
+        });
+        setShouldAutoPlay(false);
+      } else {
+        setIsPlaying(false);
+      }
     }
-  }, [currentSongIndex]);
+  }, [currentSongIndex, shouldAutoPlay]);
 
   const { data: mixtape, isLoading, error } = useQuery<MixtapeWithSongs>({
     queryKey: ['/api/share/mixtape', link],
@@ -109,6 +118,17 @@ export default function MixtapePage() {
   const handleNext = () => {
     setCurrentSongIndex((prev) => (prev < mixtape.songs.length - 1 ? prev + 1 : 0));
     setIsPlaying(false);
+  };
+
+  const handleSongEnded = () => {
+    // Auto-play next song when current one ends
+    if (currentSongIndex < mixtape.songs.length - 1) {
+      setShouldAutoPlay(true);
+      setCurrentSongIndex((prev) => prev + 1);
+    } else {
+      // Reached the end of the playlist
+      setIsPlaying(false);
+    }
   };
 
   const handlePlayPause = () => {
@@ -237,7 +257,7 @@ export default function MixtapePage() {
                 controls
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onEnded={handleNext}
+                onEnded={handleSongEnded}
                 data-testid="audio-mixtape-player"
               />
             )}
