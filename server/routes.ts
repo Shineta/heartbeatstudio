@@ -49,24 +49,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   const objectStorageService = new ObjectStorageService();
 
-  // Cleanup stuck "generating" creations on server startup
-  // If server restarts during generation, these songs will be stuck forever
-  try {
-    const stuckCreations = await storage.getStuckGeneratingCreations();
-    if (stuckCreations.length > 0) {
-      console.log(`[Startup] Found ${stuckCreations.length} stuck generating creations, marking as failed`);
-      for (const creation of stuckCreations) {
-        await storage.updateCreation(creation.id, {
-          status: 'failed',
-          title: creation.title?.replace('Generating:', 'Failed:') || 'Generation failed',
-        });
-        console.log(`[Startup] Marked creation ${creation.id} as failed`);
-      }
-    }
-  } catch (error) {
-    console.error('[Startup] Error cleaning up stuck creations:', error);
-  }
-
   // ========== AUTHENTICATION ROUTES ==========
   
   // Register with email/password
@@ -683,12 +665,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Process song generation in background (don't await - response already sent)
       (async () => {
-        console.log(`[Song] Starting background generation for creation ${creation.id}`);
         try {
-          console.log(`[Song] Importing sunoService...`);
           const { generateSongWithLyrics } = await import('./sunoService');
           
-          console.log(`[Song] Calling Suno API for creation ${creation.id} with title: ${title}`);
           const songResult = await generateSongWithLyrics({
             title,
             lyrics,
@@ -698,7 +677,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             additionalNotes: additionalNotes || undefined,
             duration: duration || "quick",
           });
-          console.log(`[Song] Suno API returned for creation ${creation.id}: audioUrl=${songResult.audioUrl ? 'yes' : 'no'}`);
 
           // Generate AI cassette cover
           let coverImageUrl = null;

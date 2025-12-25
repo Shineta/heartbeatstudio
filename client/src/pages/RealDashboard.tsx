@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Trash2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -601,27 +601,8 @@ export default function RealDashboard() {
                             Song is being created... This may take 2-4 minutes.
                           </div>
                         ) : creation.status === 'failed' ? (
-                          <div className="text-center py-2">
-                            <p className="text-sm text-red-600 dark:text-red-400 mb-2">
-                              Generation failed. Please try creating a new song.
-                            </p>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={async () => {
-                                try {
-                                  await apiRequest("DELETE", `/api/creations/${creation.id}`);
-                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-                                  toast({ title: "Deleted", description: "Failed song removed" });
-                                } catch (error) {
-                                  toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
-                                }
-                              }}
-                              data-testid={`button-delete-failed-${creation.id}`}
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
+                          <div className="text-sm text-red-600 dark:text-red-400 text-center py-2">
+                            Generation failed. Please try creating a new song.
                           </div>
                         ) : (
                           <div className="flex gap-2 flex-wrap">
