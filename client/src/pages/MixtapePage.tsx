@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ListMusic, Play, Pause, SkipBack, SkipForward, Heart } from "lucide-react";
+import { Loader2, ListMusic, Play, Pause, SkipBack, SkipForward, Heart, Download } from "lucide-react";
 import type { Mixtape, Creation } from "@shared/schema";
 
 interface MixtapeWithSongs extends Mixtape {
@@ -119,6 +119,26 @@ export default function MixtapePage() {
       } else {
         audio.play();
       }
+    }
+  };
+
+  const handleDownload = async (song: Creation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!song.mediaUrl) return;
+    
+    try {
+      const response = await fetch(song.mediaUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${song.title || 'song'}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
     }
   };
 
@@ -296,6 +316,17 @@ export default function MixtapePage() {
                       <div className="w-1 h-4 bg-primary animate-pulse rounded delay-75" />
                       <div className="w-1 h-4 bg-primary animate-pulse rounded delay-150" />
                     </div>
+                  )}
+                  {song.mediaUrl && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDownload(song, e)}
+                      title="Download song"
+                      data-testid={`button-download-song-${index}`}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
                   )}
                 </button>
               ))}
