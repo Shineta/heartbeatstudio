@@ -256,8 +256,28 @@ function buildBasePrompt(
     ? `Optional playful or personal inside jokes to tastefully reference (without being corny): ${insideJokes}.`
     : "No explicit inside jokes were provided.";
 
-  const notesText = additionalNotes
-    ? `IMPORTANT SPECIAL INSTRUCTIONS FROM USER (must incorporate these): ${additionalNotes}`
+  // Filter out metadata-style notes (Genre:, Tone:, Voice:, Duration:, Style:) 
+  // These are production instructions, not content for lyrics
+  const cleanedNotes = additionalNotes
+    ? additionalNotes
+        .split('\n')
+        .filter(line => {
+          const trimmed = line.trim().toLowerCase();
+          // Filter out lines that are purely metadata instructions
+          return !trimmed.startsWith('genre:') && 
+                 !trimmed.startsWith('tone:') && 
+                 !trimmed.startsWith('voice:') && 
+                 !trimmed.startsWith('duration:') &&
+                 !trimmed.startsWith('style:') &&
+                 !trimmed.startsWith('tempo:') &&
+                 !trimmed.startsWith('mood:');
+        })
+        .join('\n')
+        .trim()
+    : "";
+
+  const notesText = cleanedNotes
+    ? `IMPORTANT SPECIAL INSTRUCTIONS FROM USER (must incorporate these): ${cleanedNotes}`
     : "";
 
   return `
