@@ -44,6 +44,7 @@ export interface IStorage {
   getCreationsByUserId(userId: string): Promise<Creation[]>;
   getCreationById(id: string): Promise<Creation | undefined>;
   getCreationByShareableLink(link: string): Promise<Creation | undefined>;
+  getStuckGeneratingCreations(): Promise<Creation[]>;
   createCreation(creation: InsertCreation): Promise<Creation>;
   updateCreation(id: string, creation: Partial<InsertCreation>): Promise<Creation | undefined>;
   deleteCreation(id: string): Promise<void>;
@@ -168,6 +169,14 @@ export class DatabaseStorage implements IStorage {
   async getCreationByShareableLink(link: string): Promise<Creation | undefined> {
     const [creation] = await db.select().from(creations).where(eq(creations.shareableLink, link));
     return creation;
+  }
+
+  async getStuckGeneratingCreations(): Promise<Creation[]> {
+    // Find creations stuck in "generating" status (likely from server restart during generation)
+    return await db
+      .select()
+      .from(creations)
+      .where(eq(creations.status, 'generating'));
   }
 
   async createCreation(creation: InsertCreation): Promise<Creation> {

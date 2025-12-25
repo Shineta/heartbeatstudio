@@ -49,6 +49,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   const objectStorageService = new ObjectStorageService();
 
+  // Cleanup stuck "generating" creations on server startup
+  // If server restarts during generation, these songs will be stuck forever
+  try {
+    const stuckCreations = await storage.getStuckGeneratingCreations();
+    if (stuckCreations.length > 0) {
+      console.log(`[Startup] Found ${stuckCreations.length} stuck generating creations, marking as failed`);
+      for (const creation of stuckCreations) {
+        await storage.updateCreation(creation.id, {
+          status: 'failed',
+          title: creation.title?.replace('Generating:', 'Failed:') || 'Generation failed',
+        });
+        console.log(`[Startup] Marked creation ${creation.id} as failed`);
+      }
+    }
+  } catch (error) {
+    console.error('[Startup] Error cleaning up stuck creations:', error);
+  }
+
   // ========== AUTHENTICATION ROUTES ==========
   
   // Register with email/password
