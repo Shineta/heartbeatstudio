@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             genre: genre || "pop",
             voice: voice || undefined,
             additionalNotes: additionalNotes || undefined,
-            duration: duration || "quick",
+            duration: duration || "extended",
           });
 
           // Generate AI cassette cover
@@ -783,7 +783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             voice: voice || undefined,
             interests: lovedOne?.interests || undefined,
             insideJokes: lovedOne?.insideJokes || undefined,
-            duration: duration || "quick",
+            duration: duration || "extended",
           });
 
           // Generate AI cassette cover
