@@ -683,9 +683,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Process song generation in background (don't await - response already sent)
       (async () => {
+        console.log(`[Song] Starting background generation for creation ${creation.id}`);
         try {
+          console.log(`[Song] Importing sunoService...`);
           const { generateSongWithLyrics } = await import('./sunoService');
           
+          console.log(`[Song] Calling Suno API for creation ${creation.id} with title: ${title}`);
           const songResult = await generateSongWithLyrics({
             title,
             lyrics,
@@ -695,6 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             additionalNotes: additionalNotes || undefined,
             duration: duration || "quick",
           });
+          console.log(`[Song] Suno API returned for creation ${creation.id}: audioUrl=${songResult.audioUrl ? 'yes' : 'no'}`);
 
           // Generate AI cassette cover
           let coverImageUrl = null;
