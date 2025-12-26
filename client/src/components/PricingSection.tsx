@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles, CreditCard, Crown, Zap } from "lucide-react";
+import { Check, Sparkles, CreditCard, Crown } from "lucide-react";
 
 const plans = [
   {
@@ -55,22 +55,6 @@ const plans = [
     highlighted: true,
     badge: "Most Popular",
   },
-  {
-    name: "Add-ons",
-    price: "TBD",
-    period: "coming soon",
-    description: "Exciting features on the way",
-    icon: Zap,
-    features: [
-      "Animated music videos",
-      "Printed NFC cards",
-      "Physical gifts integration",
-      "More coming soon...",
-    ],
-    cta: "Get Notified",
-    highlighted: false,
-    badge: "Future",
-  },
 ];
 
 export default function PricingSection() {
@@ -86,7 +70,7 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {plans.map((plan) => (
             <Card 
               key={plan.name} 
