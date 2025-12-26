@@ -669,12 +669,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Allow if user has credits OR has active subscription
       const hasActiveSubscription = user.subscriptionStatus === 'active';
-      if (user.songsRemaining <= 0 && !hasActiveSubscription) {
+      const songsRemaining = user.songsRemaining ?? 0;
+      
+      if (songsRemaining <= 0 && !hasActiveSubscription) {
         return res.status(403).json({ 
           message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
           songsRemaining: 0,
           requiresPayment: true 
         });
+      }
+
+      // Decrement credits IMMEDIATELY (before generation) for non-subscribers
+      if (!hasActiveSubscription) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Song] User ${userId} credit deducted upfront. Songs remaining: ${songsRemaining - 1}`);
       }
 
       // Get loved one name for cover text
@@ -758,13 +766,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'ready',
           });
           
-          // Decrement songs remaining (only for non-subscribers using credits)
-          const currentUser = await storage.getUser(userId);
-          if (currentUser && currentUser.subscriptionStatus !== 'active' && currentUser.songsRemaining > 0) {
-            await storage.updateUser(userId, { songsRemaining: currentUser.songsRemaining - 1 });
-            console.log(`[Song] User ${userId} songs remaining: ${currentUser.songsRemaining - 1}`);
-          }
-          
           console.log(`[Song] Background generation complete for creation ${creation.id}`);
         } catch (error: any) {
           console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
@@ -772,6 +773,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'failed',
             title: 'Song generation failed',
           });
+          
+          // Refund credit on failure (only for non-subscribers)
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active') {
+            const refundedCredits = (currentUser.songsRemaining ?? 0) + 1;
+            await storage.updateUser(userId, { songsRemaining: refundedCredits });
+            console.log(`[Song] Credit refunded for user ${userId} due to failure. Songs remaining: ${refundedCredits}`);
+          }
         }
       })();
     } catch (error: any) {
@@ -794,12 +803,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Allow if user has credits OR has active subscription
       const hasActiveSubscription = user.subscriptionStatus === 'active';
-      if (user.songsRemaining <= 0 && !hasActiveSubscription) {
+      const songsRemaining = user.songsRemaining ?? 0;
+      
+      if (songsRemaining <= 0 && !hasActiveSubscription) {
         return res.status(403).json({ 
           message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
           songsRemaining: 0,
           requiresPayment: true 
         });
+      }
+      
+      // Decrement credits IMMEDIATELY (before generation) for non-subscribers
+      if (!hasActiveSubscription) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Song] User ${userId} credit deducted upfront. Songs remaining: ${songsRemaining - 1}`);
       }
       
       let lovedOne;
@@ -884,13 +901,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'ready',
           });
           
-          // Decrement songs remaining (only for non-subscribers using credits)
-          const currentUser = await storage.getUser(userId);
-          if (currentUser && currentUser.subscriptionStatus !== 'active' && currentUser.songsRemaining > 0) {
-            await storage.updateUser(userId, { songsRemaining: currentUser.songsRemaining - 1 });
-            console.log(`[Song] User ${userId} songs remaining: ${currentUser.songsRemaining - 1}`);
-          }
-          
           console.log(`[Song] Background generation complete for creation ${creation.id}`);
         } catch (error: any) {
           console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
@@ -898,6 +908,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'failed',
             title: 'Song generation failed',
           });
+          
+          // Refund credit on failure (only for non-subscribers)
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active') {
+            const refundedCredits = (currentUser.songsRemaining ?? 0) + 1;
+            await storage.updateUser(userId, { songsRemaining: refundedCredits });
+            console.log(`[Song] Credit refunded for user ${userId} due to failure. Songs remaining: ${refundedCredits}`);
+          }
         }
       })();
     } catch (error: any) {
