@@ -158,6 +158,71 @@ export default function CreatePage() {
     }
   }, [createdSong?.status]);
 
+  // Track song polling state
+  const songPollingRef = useRef<{ interval: NodeJS.Timeout | null; toastShown: boolean }>({
+    interval: null,
+    toastShown: false,
+  });
+
+  // Poll for song status updates when generating
+  useEffect(() => {
+    if (!createdSong?.id || createdSong?.status !== 'generating') {
+      if (songPollingRef.current.interval) {
+        clearInterval(songPollingRef.current.interval);
+        songPollingRef.current.interval = null;
+      }
+      return;
+    }
+    
+    songPollingRef.current.toastShown = false;
+    
+    if (songPollingRef.current.interval) {
+      return;
+    }
+    
+    const songId = createdSong.id;
+    
+    songPollingRef.current.interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/creations/${songId}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        
+        const updatedSong = await res.json();
+        
+        if (updatedSong.status === 'ready' && !songPollingRef.current.toastShown) {
+          songPollingRef.current.toastShown = true;
+          setCreatedSong(updatedSong);
+          setSongProgress(100);
+          if (songPollingRef.current.interval) {
+            clearInterval(songPollingRef.current.interval);
+            songPollingRef.current.interval = null;
+          }
+          toast({ title: "Success", description: "Your song is ready!" });
+          queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+        } else if (updatedSong.status === 'failed' && !songPollingRef.current.toastShown) {
+          songPollingRef.current.toastShown = true;
+          setCreatedSong(updatedSong);
+          if (songPollingRef.current.interval) {
+            clearInterval(songPollingRef.current.interval);
+            songPollingRef.current.interval = null;
+          }
+          toast({ title: "Error", description: "Song generation failed. Please try again.", variant: "destructive" });
+        }
+      } catch (error) {
+        console.error('Failed to poll song status:', error);
+      }
+    }, 5000);
+    
+    return () => {
+      if (songPollingRef.current.interval) {
+        clearInterval(songPollingRef.current.interval);
+        songPollingRef.current.interval = null;
+      }
+    };
+  }, [createdSong?.id, createdSong?.status, toast]);
+
   const handlePrevious = () => {
     setCurrentSongIndex((prev) => (prev > 0 ? prev - 1 : mixtapeSongs.length - 1));
     setIsPlaying(false);

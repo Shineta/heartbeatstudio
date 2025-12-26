@@ -491,6 +491,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single creation by ID (for polling status)
+  app.get('/api/creations/:id', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { id } = req.params;
+      
+      const creation = await storage.getCreationById(id);
+      if (!creation) {
+        return res.status(404).json({ message: "Creation not found" });
+      }
+      if (creation.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this creation" });
+      }
+      
+      res.json(creation);
+    } catch (error) {
+      console.error("Error fetching creation:", error);
+      res.status(500).json({ message: "Failed to fetch creation" });
+    }
+  });
+
   // Update creation (rename)
   app.patch('/api/creations/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
