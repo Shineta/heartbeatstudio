@@ -34,6 +34,9 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   googleId: varchar("google_id").unique(), // for Google OAuth
   stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID for payments
+  songsRemaining: integer("songs_remaining").notNull().default(3), // Free tier: 3 songs, Credit Pack: +5, Subscription: 25/month
+  subscriptionStatus: varchar("subscription_status"), // 'active', 'canceled', 'past_due', null for non-subscribers
+  subscriptionEndsAt: timestamp("subscription_ends_at"), // When current subscription period ends
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

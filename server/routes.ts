@@ -640,6 +640,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Lyrics and title are required" });
       }
 
+      // Check if user has songs remaining
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Allow if user has credits OR has active subscription
+      const hasActiveSubscription = user.subscriptionStatus === 'active';
+      if (user.songsRemaining <= 0 && !hasActiveSubscription) {
+        return res.status(403).json({ 
+          message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
+          songsRemaining: 0,
+          requiresPayment: true 
+        });
+      }
+
       // Get loved one name for cover text
       let recipientName = 'Someone Special';
       if (lovedOneId) {
@@ -720,6 +736,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             shareableLink,
             status: 'ready',
           });
+          
+          // Decrement songs remaining (only for non-subscribers using credits)
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active' && currentUser.songsRemaining > 0) {
+            await storage.updateUser(userId, { songsRemaining: currentUser.songsRemaining - 1 });
+            console.log(`[Song] User ${userId} songs remaining: ${currentUser.songsRemaining - 1}`);
+          }
+          
           console.log(`[Song] Background generation complete for creation ${creation.id}`);
         } catch (error: any) {
           console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
@@ -740,6 +764,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       const { lovedOneId, tone, genre, occasion, voice, duration, customCoverImageUrl } = req.body;
+      
+      // Check if user has songs remaining
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Allow if user has credits OR has active subscription
+      const hasActiveSubscription = user.subscriptionStatus === 'active';
+      if (user.songsRemaining <= 0 && !hasActiveSubscription) {
+        return res.status(403).json({ 
+          message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
+          songsRemaining: 0,
+          requiresPayment: true 
+        });
+      }
       
       let lovedOne;
       if (lovedOneId) {
@@ -822,6 +862,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             shareableLink,
             status: 'ready',
           });
+          
+          // Decrement songs remaining (only for non-subscribers using credits)
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active' && currentUser.songsRemaining > 0) {
+            await storage.updateUser(userId, { songsRemaining: currentUser.songsRemaining - 1 });
+            console.log(`[Song] User ${userId} songs remaining: ${currentUser.songsRemaining - 1}`);
+          }
+          
           console.log(`[Song] Background generation complete for creation ${creation.id}`);
         } catch (error: any) {
           console.error(`[Song] Background generation failed for creation ${creation.id}:`, error.message);
