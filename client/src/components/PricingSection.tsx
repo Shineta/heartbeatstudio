@@ -11,7 +11,7 @@ const plans = [
     description: "Get started with AI-powered celebrations",
     icon: Sparkles,
     features: [
-      "3-5 song generations",
+      "3 song generations",
       "Email authentication required",
       "Basic AI voices & styles",
       "Share via link",
