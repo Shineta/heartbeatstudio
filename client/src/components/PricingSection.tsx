@@ -39,7 +39,7 @@ const plans = [
   },
   {
     name: "Subscription",
-    price: "$7-10",
+    price: "$10",
     period: "per month",
     description: "For those who celebrate often",
     icon: Crown,
