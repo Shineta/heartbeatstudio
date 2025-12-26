@@ -33,6 +33,7 @@ export const users = pgTable("users", {
   brandName: varchar("brand_name"), // business/brand name for professional users (e.g., "Horton's Tech Innovations")
   profileImageUrl: varchar("profile_image_url"),
   googleId: varchar("google_id").unique(), // for Google OAuth
+  stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID for payments
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

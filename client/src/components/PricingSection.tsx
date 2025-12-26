@@ -1,11 +1,27 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles, CreditCard, Crown } from "lucide-react";
+import { Check, Sparkles, CreditCard, Crown, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
-const plans = [
+interface StripeProduct {
+  id: string;
+  name: string;
+  prices: {
+    id: string;
+    unit_amount: number;
+    recurring?: { interval: string };
+  }[];
+}
+
+const planConfig = [
   {
     name: "Free Plan",
+    stripeName: null,
     price: "$0",
     period: "forever",
     description: "Get started with AI-powered celebrations",
@@ -19,9 +35,11 @@ const plans = [
     cta: "Start Free",
     highlighted: false,
     badge: null,
+    mode: null,
   },
   {
     name: "Credit Pack",
+    stripeName: "Credit Pack",
     price: "$4.99",
     period: "one-time",
     description: "Perfect for a special occasion",
@@ -36,9 +54,11 @@ const plans = [
     cta: "Buy Credits",
     highlighted: false,
     badge: "Best Value",
+    mode: "payment",
   },
   {
     name: "Subscription",
+    stripeName: "Subscription",
     price: "$10",
     period: "per month",
     description: "For those who celebrate often",
@@ -54,10 +74,81 @@ const plans = [
     cta: "Subscribe Now",
     highlighted: true,
     badge: "Most Popular",
+    mode: "subscription",
   },
 ];
 
 export default function PricingSection() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const { data: productsData } = useQuery<{ products: StripeProduct[] }>({
+    queryKey: ['/api/stripe/products'],
+  });
+
+  const handleSelectPlan = async (plan: typeof planConfig[0]) => {
+    if (plan.name === "Free Plan") {
+      setLocation('/auth');
+      return;
+    }
+
+    if (!plan.stripeName || !plan.mode) {
+      toast({
+        title: "Coming Soon",
+        description: "This plan is not yet available.",
+      });
+      return;
+    }
+
+    const stripeProduct = productsData?.products?.find(
+      p => p.name === plan.stripeName
+    );
+
+    if (!stripeProduct || stripeProduct.prices.length === 0) {
+      toast({
+        title: "Temporarily Unavailable",
+        description: "This plan is being set up. Please try again shortly.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const priceId = stripeProduct.prices[0].id;
+
+    setLoadingPlan(plan.name);
+    try {
+      const response = await apiRequest('POST', '/api/stripe/checkout', {
+        priceId,
+        mode: plan.mode,
+      });
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      if (error.message?.includes('Unauthorized') || error.message?.includes('401')) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to purchase a plan.",
+        });
+        setLocation('/auth');
+      } else {
+        toast({
+          title: "Checkout Failed",
+          description: error.message || "Unable to start checkout. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <section className="py-16 px-6 bg-muted/30">
       <div className="max-w-7xl mx-auto">
@@ -71,7 +162,7 @@ export default function PricingSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {plans.map((plan) => (
+          {planConfig.map((plan) => (
             <Card 
               key={plan.name} 
               className={`relative ${plan.highlighted ? 'border-primary shadow-lg scale-105' : ''} hover-elevate flex flex-col`}
@@ -82,9 +173,7 @@ export default function PricingSection() {
                   className={`absolute -top-3 left-1/2 -translate-x-1/2 ${
                     plan.highlighted 
                       ? 'bg-primary text-primary-foreground' 
-                      : plan.badge === 'Future' 
-                        ? 'bg-muted text-muted-foreground' 
-                        : 'bg-secondary text-secondary-foreground'
+                      : 'bg-secondary text-secondary-foreground'
                   }`}
                 >
                   {plan.badge}
@@ -102,12 +191,7 @@ export default function PricingSection() {
                   <span className="text-3xl font-bold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
                     {plan.price}
                   </span>
-                  {plan.period !== "coming soon" && (
-                    <span className="text-muted-foreground text-sm ml-1">/ {plan.period}</span>
-                  )}
-                  {plan.period === "coming soon" && (
-                    <p className="text-muted-foreground text-xs mt-1">{plan.period}</p>
-                  )}
+                  <span className="text-muted-foreground text-sm ml-1">/ {plan.period}</span>
                 </div>
               </CardHeader>
               <CardContent className="flex-1">
@@ -124,11 +208,18 @@ export default function PricingSection() {
                 <Button 
                   className="w-full"
                   variant={plan.highlighted ? "default" : "outline"}
-                  disabled={plan.period === "coming soon"}
-                  onClick={() => console.log(`Selected ${plan.name} plan`)}
+                  disabled={loadingPlan === plan.name}
+                  onClick={() => handleSelectPlan(plan)}
                   data-testid={`button-select-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  {plan.cta}
+                  {loadingPlan === plan.name ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    plan.cta
+                  )}
                 </Button>
               </CardFooter>
             </Card>
