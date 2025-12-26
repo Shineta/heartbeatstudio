@@ -14,6 +14,7 @@ import CreatePage from "@/pages/CreatePage";
 import SharePage from "@/pages/SharePage";
 import MixtapePage from "@/pages/MixtapePage";
 import EditMixtapePage from "@/pages/EditMixtapePage";
+import PricingPage from "@/pages/PricingPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,7 +22,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/')) {
+    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/')) {
       setLocation('/auth');
     }
   }, [isAuthenticated, isLoading, location, setLocation]);
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth/verify-magic-link" component={VerifyMagicLink} />
       <Route path="/auth/reset-password" component={ResetPasswordPage} />
+      <Route path="/pricing" component={PricingPage} />
       <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
