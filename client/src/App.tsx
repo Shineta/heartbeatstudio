@@ -30,7 +30,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/') && !location.startsWith('/experience/')) {
+    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/') && !location.startsWith('/experience/') && !location.startsWith('/experiences/')) {
       setLocation('/auth');
     }
   }, [isAuthenticated, isLoading, location, setLocation]);
@@ -61,6 +61,15 @@ function Router() {
       <Route path="/experience/birthday-blast/create" component={isAuthenticated ? CreateBirthdayBlast : AuthPage} />
       <Route path="/experience/gospel-greeting/create" component={isAuthenticated ? CreateGospelGreeting : AuthPage} />
       <Route path="/experience/classroom-cheers/create" component={isAuthenticated ? CreateClassroomCheers : AuthPage} />
+      {/* Plural aliases for experiences routes */}
+      <Route path="/experiences/date-night" component={DateNightExperience} />
+      <Route path="/experiences/birthday-blast" component={BirthdayBlastExperience} />
+      <Route path="/experiences/gospel-greeting" component={GospelGreetingExperience} />
+      <Route path="/experiences/classroom-cheers" component={ClassroomCheersExperience} />
+      <Route path="/experiences/date-night/create" component={isAuthenticated ? CreateDateNight : AuthPage} />
+      <Route path="/experiences/birthday-blast/create" component={isAuthenticated ? CreateBirthdayBlast : AuthPage} />
+      <Route path="/experiences/gospel-greeting/create" component={isAuthenticated ? CreateGospelGreeting : AuthPage} />
+      <Route path="/experiences/classroom-cheers/create" component={isAuthenticated ? CreateClassroomCheers : AuthPage} />
       <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
