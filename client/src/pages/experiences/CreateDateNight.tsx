@@ -18,6 +18,19 @@ interface GeneratedSong {
   mood: string;
 }
 
+// Poll for creation completion
+async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    const response = await fetch(`/api/creations/${creationId}`, { credentials: 'include' });
+    if (!response.ok) continue;
+    const creation = await response.json();
+    if (creation.status === 'ready') return creation;
+    if (creation.status === 'failed') throw new Error('Song generation failed');
+  }
+  throw new Error('Generation timed out');
+}
+
 export default function CreateDateNight() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -57,6 +70,7 @@ export default function CreateDateNight() {
       for (let i = 0; i < 3; i++) {
         setCurrentStep(i + 1);
         
+        // Start generation
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: partnerName,
@@ -67,12 +81,15 @@ export default function CreateDateNight() {
           customMessage: `A ${songMoods[i].mood.toLowerCase()} love song from ${yourName} to ${partnerName}`,
         });
         
-        const creation = await response.json();
+        const initialCreation = await response.json();
+        
+        // Poll for completion
+        const completedCreation = await pollForCompletion(initialCreation.id);
         
         setSongs(prev => [...prev, {
-          title: creation.title || `${songMoods[i].mood} Love Song`,
-          audioUrl: creation.audioUrl || '',
-          coverUrl: creation.coverArtUrl || '',
+          title: completedCreation.title || `${songMoods[i].mood} Love Song`,
+          audioUrl: completedCreation.mediaUrl || '',
+          coverUrl: completedCreation.imageUrl || '',
           mood: songMoods[i].mood,
         }]);
       }

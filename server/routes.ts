@@ -520,6 +520,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new creation (song generation)
+  app.post('/api/creations', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { 
+        type, 
+        recipientName, 
+        occasion, 
+        tone, 
+        genre, 
+        voiceType, 
+        customMessage,
+        lovedOneId 
+      } = req.body;
+      
+      // Check if user has songs remaining
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Allow if user has credits OR has active subscription OR is admin
+      const hasActiveSubscription = user.subscriptionStatus === 'active';
+      const songsRemaining = user.songsRemaining ?? 0;
+      const isAdmin = user.isAdmin === true;
+      
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
+        return res.status(403).json({ 
+          message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
+          songsRemaining: 0,
+          requiresPayment: true 
+        });
+      }
+      
+      // Decrement credits IMMEDIATELY (before generation) for non-subscribers (admins exempt)
+      if (!hasActiveSubscription && !isAdmin) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Creations] User ${userId} credit deducted. Songs remaining: ${songsRemaining - 1}`);
+      }
+
+      // Create placeholder creation with generating status
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: type || 'song',
+        tone: tone || 'sweet',
+        genre: genre || 'pop',
+        title: `Generating song for ${recipientName}...`,
+        content: customMessage || null,
+        imageUrl: null,
+        mediaUrl: null,
+        status: 'generating',
+      });
+
+      // Return immediately
+      res.json({
+        ...creation,
+        status: 'generating',
+        message: 'Song generation started!',
+      });
+
+      // Process song generation in background
+      (async () => {
+        try {
+          const { generateSong } = await import('./sunoService');
+          
+          const songResult = await generateSong({
+            recipientName: recipientName || 'Someone Special',
+            relationship: 'loved one',
+            occasion: occasion || 'celebration',
+            tone: tone || 'sweet',
+            genre: genre || 'pop',
+            voice: voiceType || undefined,
+            duration: 'extended',
+          });
+
+          // Generate AI cassette cover
+          let coverImageUrl = null;
+          try {
+            const cassetteCoverUrl = await generateSongCover({
+              title: songResult.title,
+              tone: tone || 'sweet',
+              genre: genre || 'pop',
+              recipientName: recipientName || 'Someone Special',
+            });
+            
+            if (cassetteCoverUrl) {
+              const coverResponse = await fetch(cassetteCoverUrl);
+              const coverBuffer = await coverResponse.arrayBuffer();
+              const coverBase64 = Buffer.from(coverBuffer).toString('base64');
+              
+              coverImageUrl = await objectStorageService.uploadBase64Image(
+                coverBase64,
+                `songs/${userId}`,
+                'cover'
+              );
+              console.log('[Creations] AI cover generated:', coverImageUrl);
+            }
+          } catch (coverError: any) {
+            console.error('[Creations] Cover generation failed:', coverError.message);
+          }
+
+          const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+          await storage.updateCreation(creation.id, {
+            title: songResult.title,
+            content: songResult.lyrics,
+            imageUrl: coverImageUrl,
+            mediaUrl: songResult.audioUrl,
+            shareableLink,
+            status: 'ready',
+          });
+          
+          console.log(`[Creations] Song generation complete for ${creation.id}`);
+        } catch (error: any) {
+          console.error(`[Creations] Generation failed for ${creation.id}:`, error.message);
+          await storage.updateCreation(creation.id, {
+            status: 'failed',
+            title: 'Song generation failed',
+          });
+          
+          // Refund credit on failure
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active' && !currentUser.isAdmin) {
+            const refundedCredits = (currentUser.songsRemaining ?? 0) + 1;
+            await storage.updateUser(userId, { songsRemaining: refundedCredits });
+            console.log(`[Creations] Credit refunded for user ${userId}`);
+          }
+        }
+      })();
+    } catch (error: any) {
+      console.error("Error creating song:", error);
+      res.status(500).json({ message: error.message || "Failed to create song" });
+    }
+  });
+
   // Update creation (rename)
   app.patch('/api/creations/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {

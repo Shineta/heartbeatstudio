@@ -19,6 +19,19 @@ interface GeneratedSong {
   theme: string;
 }
 
+// Poll for creation completion
+async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    const response = await fetch(`/api/creations/${creationId}`, { credentials: 'include' });
+    if (!response.ok) continue;
+    const creation = await response.json();
+    if (creation.status === 'ready') return creation;
+    if (creation.status === 'failed') throw new Error('Song generation failed');
+  }
+  throw new Error('Generation timed out');
+}
+
 export default function CreateGospelGreeting() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -75,12 +88,15 @@ export default function CreateGospelGreeting() {
           customMessage: `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`,
         });
         
-        const creation = await response.json();
+        const initialCreation = await response.json();
+        
+        // Poll for completion
+        const completedCreation = await pollForCompletion(initialCreation.id);
         
         setSongs(prev => [...prev, {
-          title: creation.title || `${themes[i].label} Gospel Song`,
-          audioUrl: creation.audioUrl || '',
-          coverUrl: creation.coverArtUrl || '',
+          title: completedCreation.title || `${themes[i].label} Gospel Song`,
+          audioUrl: completedCreation.mediaUrl || '',
+          coverUrl: completedCreation.imageUrl || '',
           theme: themes[i].label,
         }]);
       }
