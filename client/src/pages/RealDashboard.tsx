@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -251,6 +251,38 @@ export default function RealDashboard() {
   const handleUploadClick = (creationId: string) => {
     setSelectedCreationId(creationId);
     fileInputRef.current?.click();
+  };
+
+  const handleDownload = async (creation: Creation) => {
+    if (!creation.mediaUrl) {
+      toast({
+        title: "No audio available",
+        description: "This song doesn't have audio yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const response = await fetch(creation.mediaUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${creation.title || 'song'}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Success", description: "Song downloaded!" });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "Unable to download the song. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -632,6 +664,20 @@ export default function RealDashboard() {
                             >
                               Share
                             </Button>
+                            {creation.type === 'song' && creation.mediaUrl && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(creation);
+                                }}
+                                data-testid={`button-download-${creation.id}`}
+                              >
+                                <Download className="w-4 h-4" />
+                                <span className="ml-1">Download</span>
+                              </Button>
+                            )}
                             {creation.type === 'song' && (
                               <>
                                 <Button
