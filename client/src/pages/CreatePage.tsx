@@ -451,9 +451,18 @@ export default function CreatePage() {
         return;
       }
       
-      const errorMessage = error.message || "Unknown error occurred";
+      // Parse error message for better UX
+      let errorMessage = error.message || "Unknown error occurred";
+      let title = "Song Generation Failed";
+      
+      // Check if it's a "no songs remaining" error
+      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
+        title = "Out of Songs";
+        errorMessage = "You've used all your available songs. Get more songs to continue creating!";
+      }
+      
       toast({
-        title: "Song Generation Failed",
+        title,
         description: errorMessage,
         variant: "destructive",
       });
@@ -491,9 +500,18 @@ export default function CreatePage() {
         return;
       }
       
-      const errorMessage = error.message || "Unknown error occurred";
+      // Parse error message for better UX
+      let errorMessage = error.message || "Unknown error occurred";
+      let title = "Song Generation Failed";
+      
+      // Check if it's a "no songs remaining" error
+      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
+        title = "Out of Songs";
+        errorMessage = "You've used all your available songs. Get more songs to continue creating!";
+      }
+      
       toast({
-        title: "Song Generation Failed",
+        title,
         description: errorMessage,
         variant: "destructive",
       });
