@@ -2180,6 +2180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audio proxy endpoint for reliable audio streaming
+  // Downloads full file then serves it to ensure complete delivery
   app.get('/api/audio/:creationId', async (req: Request, res: Response) => {
     try {
       const { creationId } = req.params;
@@ -2189,48 +2190,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Audio not found' });
       }
       
-      // Fetch the audio from the external URL
+      console.log(`[Audio Proxy] Fetching audio for creation ${creationId}`);
+      
+      // Fetch the entire audio file as a buffer
       const response = await fetch(creation.mediaUrl);
       
       if (!response.ok) {
+        console.error(`[Audio Proxy] Failed to fetch: ${response.status}`);
         return res.status(502).json({ message: 'Failed to fetch audio' });
       }
       
-      // Get content info
-      const contentLength = response.headers.get('content-length');
-      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      // Get the full audio as a buffer
+      const audioBuffer = Buffer.from(await response.arrayBuffer());
+      console.log(`[Audio Proxy] Downloaded ${audioBuffer.length} bytes`);
       
-      // Set headers for proper audio streaming
-      res.setHeader('Content-Type', contentType);
-      if (contentLength) {
-        res.setHeader('Content-Length', contentLength);
-      }
+      // Set headers for the response
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length);
       res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
       
-      // Stream the audio
-      const reader = response.body?.getReader();
-      if (!reader) {
-        return res.status(500).json({ message: 'Failed to stream audio' });
-      }
-      
-      const pump = async () => {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          res.write(value);
-        }
-        res.end();
-      };
-      
-      pump().catch((err) => {
-        console.error('Audio streaming error:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ message: 'Streaming error' });
-        }
-      });
+      // Send the complete buffer
+      res.send(audioBuffer);
     } catch (error: any) {
-      console.error('Audio proxy error:', error);
+      console.error('[Audio Proxy] Error:', error);
       if (!res.headersSent) {
         res.status(500).json({ message: 'Failed to proxy audio' });
       }
