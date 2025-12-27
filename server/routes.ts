@@ -4,7 +4,7 @@ import passport from 'passport';
 import { z } from 'zod';
 import multer from 'multer';
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword } from "./auth";
+import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword, isAdminEmail } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
@@ -76,11 +76,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const hashedPassword = await hashPassword(password);
+      const isAdmin = isAdminEmail(email);
       const user = await storage.createUser({
         email,
         password: hashedPassword,
         firstName,
         lastName,
+        isAdmin,
+        songsRemaining: isAdmin ? 9999 : 3,
       });
       
       // Regenerate session to prevent session fixation attacks
@@ -137,7 +140,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUserByEmail(email);
       
       if (!user) {
-        user = await storage.createUser({ email });
+        const isAdmin = isAdminEmail(email);
+        user = await storage.createUser({ 
+          email,
+          isAdmin,
+          songsRemaining: isAdmin ? 9999 : 3,
+        });
       }
       
       const token = generateMagicLinkToken(email);
@@ -667,11 +675,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
       
-      // Allow if user has credits OR has active subscription
+      // Allow if user has credits OR has active subscription OR is admin
       const hasActiveSubscription = user.subscriptionStatus === 'active';
       const songsRemaining = user.songsRemaining ?? 0;
+      const isAdmin = user.isAdmin === true;
       
-      if (songsRemaining <= 0 && !hasActiveSubscription) {
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
         return res.status(403).json({ 
           message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
           songsRemaining: 0,
@@ -679,8 +688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Decrement credits IMMEDIATELY (before generation) for non-subscribers
-      if (!hasActiveSubscription) {
+      // Decrement credits IMMEDIATELY (before generation) for non-subscribers (admins exempt)
+      if (!hasActiveSubscription && !isAdmin) {
         await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
         console.log(`[Song] User ${userId} credit deducted upfront. Songs remaining: ${songsRemaining - 1}`);
       }
@@ -801,11 +810,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
       
-      // Allow if user has credits OR has active subscription
+      // Allow if user has credits OR has active subscription OR is admin
       const hasActiveSubscription = user.subscriptionStatus === 'active';
       const songsRemaining = user.songsRemaining ?? 0;
+      const isAdmin = user.isAdmin === true;
       
-      if (songsRemaining <= 0 && !hasActiveSubscription) {
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
         return res.status(403).json({ 
           message: "No songs remaining. Please purchase a Credit Pack or subscribe for more songs.",
           songsRemaining: 0,
@@ -813,8 +823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Decrement credits IMMEDIATELY (before generation) for non-subscribers
-      if (!hasActiveSubscription) {
+      // Decrement credits IMMEDIATELY (before generation) for non-subscribers (admins exempt)
+      if (!hasActiveSubscription && !isAdmin) {
         await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
         console.log(`[Song] User ${userId} credit deducted upfront. Songs remaining: ${songsRemaining - 1}`);
       }

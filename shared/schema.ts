@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   songsRemaining: integer("songs_remaining").notNull().default(3), // Free tier: 3 songs, Credit Pack: +5, Subscription: 25/month
   subscriptionStatus: varchar("subscription_status"), // 'active', 'canceled', 'past_due', null for non-subscribers
   subscriptionEndsAt: timestamp("subscription_ends_at"), // When current subscription period ends
+  isAdmin: boolean("is_admin").notNull().default(false), // Admin accounts bypass payment requirements
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

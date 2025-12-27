@@ -20,6 +20,13 @@ if (!SESSION_SECRET) {
 
 const JWT_SECRET = process.env.JWT_SECRET || SESSION_SECRET;
 
+// Admin email addresses that bypass payment requirements
+const ADMIN_EMAILS = ['danielle.turner07@gmail.com'];
+
+export function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -150,13 +157,16 @@ export async function setupAuth(app: Express) {
                   profileImageUrl: user.profileImageUrl || profile.photos?.[0]?.value,
                 });
               } else {
-                // Create new user
+                // Create new user (auto-set admin and unlimited credits for admin emails)
+                const isAdmin = isAdminEmail(email);
                 user = await storage.createUser({
                   email,
                   googleId: profile.id,
                   firstName: profile.name?.givenName || profile.displayName?.split(' ')[0],
                   lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' '),
                   profileImageUrl: profile.photos?.[0]?.value,
+                  isAdmin,
+                  songsRemaining: isAdmin ? 9999 : 3,
                 });
               }
             }
