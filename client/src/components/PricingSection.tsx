@@ -122,8 +122,10 @@ export default function PricingSection() {
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const { data: productsData } = useQuery<{ products: StripeProduct[] }>({
+  const { data: productsData, isLoading: productsLoading, error: productsError } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ['/api/stripe/products'],
+    retry: 3,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const handleSelectPlan = async (plan: typeof planConfig[0]) => {
@@ -140,11 +142,21 @@ export default function PricingSection() {
       return;
     }
 
+    // Check if products are still loading
+    if (productsLoading) {
+      toast({
+        title: "Loading",
+        description: "Please wait while we load pricing information.",
+      });
+      return;
+    }
+
     const stripeProduct = productsData?.products?.find(
       p => p.name === plan.stripeName
     );
 
     if (!stripeProduct || stripeProduct.prices.length === 0) {
+      console.error('[Pricing] Product not found:', plan.stripeName, 'Available:', productsData?.products?.map(p => p.name));
       toast({
         title: "Temporarily Unavailable",
         description: "This plan is being set up. Please try again shortly.",
@@ -189,11 +201,21 @@ export default function PricingSection() {
   };
 
   const handleSelectKit = async (kit: typeof kitConfig[0]) => {
+    // Check if products are still loading
+    if (productsLoading) {
+      toast({
+        title: "Loading",
+        description: "Please wait while we load pricing information.",
+      });
+      return;
+    }
+
     const stripeProduct = productsData?.products?.find(
       p => p.name === kit.stripeName
     );
 
     if (!stripeProduct || stripeProduct.prices.length === 0) {
+      console.error('[Pricing] Kit not found:', kit.stripeName, 'Available:', productsData?.products?.map(p => p.name));
       toast({
         title: "Temporarily Unavailable",
         description: "This kit is being set up. Please try again shortly.",
