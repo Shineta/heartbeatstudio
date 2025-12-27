@@ -161,32 +161,57 @@ export default function Navigation() {
                       <Settings className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent data-testid="dialog-profile-settings">
                     <DialogHeader>
                       <DialogTitle>Profile Settings</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="brandName">Brand Name</Label>
-                        <Input
-                          id="brandName"
-                          placeholder="Your business or brand name"
-                          value={brandName}
-                          onChange={(e) => setBrandName(e.target.value)}
-                          data-testid="input-brand-name"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          This will appear on shared mixtapes as "by [Your Brand Name]"
-                        </p>
+                    <div className="space-y-6 py-4">
+                      {/* Account Info Section */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Account Info</h3>
+                        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                          <Avatar className="w-14 h-14">
+                            <AvatarImage src={typedUser?.profileImageUrl || undefined} />
+                            <AvatarFallback className="text-lg">{typedUser?.firstName?.charAt(0) || typedUser?.email?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1">
+                            <p className="font-semibold" data-testid="text-profile-name">
+                              {typedUser?.firstName && typedUser?.lastName 
+                                ? `${typedUser.firstName} ${typedUser.lastName}`
+                                : typedUser?.firstName || 'User'}
+                            </p>
+                            <p className="text-sm text-muted-foreground" data-testid="text-profile-email">
+                              {typedUser?.email}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <Button 
-                        onClick={handleSaveBrandName} 
-                        disabled={saving}
-                        className="w-full"
-                        data-testid="button-save-brand"
-                      >
-                        {saving ? "Saving..." : "Save Changes"}
-                      </Button>
+
+                      {/* Brand Settings Section */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Brand Settings</h3>
+                        <div className="space-y-2">
+                          <Label htmlFor="brandName">Brand Name</Label>
+                          <Input
+                            id="brandName"
+                            placeholder="Your business or brand name"
+                            value={brandName}
+                            onChange={(e) => setBrandName(e.target.value)}
+                            data-testid="input-brand-name"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            This will appear on shared mixtapes as "by [Your Brand Name]"
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={handleSaveBrandName} 
+                          disabled={saving}
+                          className="w-full"
+                          data-testid="button-save-brand"
+                        >
+                          {saving ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
