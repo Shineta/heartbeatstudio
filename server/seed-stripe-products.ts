@@ -33,10 +33,10 @@ async function seedProducts() {
     console.log('Creating Subscription product...');
     const subscription = await stripe.products.create({
       name: 'Subscription',
-      description: '25 songs per month - For those who celebrate often',
+      description: '15 songs per month - For those who celebrate often',
       metadata: {
         type: 'subscription',
-        songs_per_month: '25',
+        songs_per_month: '15',
       },
     });
 

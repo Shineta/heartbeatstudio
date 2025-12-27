@@ -64,7 +64,7 @@ const planConfig = [
     description: "For those who celebrate often",
     icon: Crown,
     features: [
-      "25 songs per month",
+      "15 songs per month",
       "All premium voices & styles",
       "Priority generation",
       "Email & SMS delivery",
