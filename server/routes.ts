@@ -2179,6 +2179,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Audio proxy endpoint for reliable audio streaming
+  app.get('/api/audio/:creationId', async (req: Request, res: Response) => {
+    try {
+      const { creationId } = req.params;
+      const creation = await storage.getCreationById(creationId);
+      
+      if (!creation || !creation.mediaUrl) {
+        return res.status(404).json({ message: 'Audio not found' });
+      }
+      
+      // Fetch the audio from the external URL
+      const response = await fetch(creation.mediaUrl);
+      
+      if (!response.ok) {
+        return res.status(502).json({ message: 'Failed to fetch audio' });
+      }
+      
+      // Get content info
+      const contentLength = response.headers.get('content-length');
+      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      
+      // Set headers for proper audio streaming
+      res.setHeader('Content-Type', contentType);
+      if (contentLength) {
+        res.setHeader('Content-Length', contentLength);
+      }
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Stream the audio
+      const reader = response.body?.getReader();
+      if (!reader) {
+        return res.status(500).json({ message: 'Failed to stream audio' });
+      }
+      
+      const pump = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+        res.end();
+      };
+      
+      pump().catch((err) => {
+        console.error('Audio streaming error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ message: 'Streaming error' });
+        }
+      });
+    } catch (error: any) {
+      console.error('Audio proxy error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Failed to proxy audio' });
+      }
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

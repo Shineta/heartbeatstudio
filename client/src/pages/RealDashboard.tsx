@@ -620,11 +620,10 @@ export default function RealDashboard() {
                             <audio 
                               controls 
                               preload="auto"
-                              crossOrigin="anonymous"
                               className="w-full mb-2"
                               data-testid={`audio-player-${creation.id}`}
                             >
-                              <source src={creation.mediaUrl} type="audio/mpeg" />
+                              <source src={`/api/audio/${creation.id}`} type="audio/mpeg" />
                               Your browser does not support the audio element.
                             </audio>
                           </div>
