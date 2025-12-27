@@ -619,6 +619,8 @@ export default function RealDashboard() {
                           <div className="mb-4">
                             <audio 
                               controls 
+                              preload="auto"
+                              crossOrigin="anonymous"
                               className="w-full mb-2"
                               data-testid={`audio-player-${creation.id}`}
                             >
