@@ -416,10 +416,12 @@ export default function PricingSection() {
                     className="w-full"
                     variant={plan.highlighted ? "default" : "outline"}
                     onClick={() => handleSelectPlan(plan)}
-                    disabled={loadingPlan === plan.name}
+                    disabled={loadingPlan === plan.name || (plan.stripeName !== null && productsLoading)}
                     data-testid={`button-plan-${plan.name}`}
                   >
                     {loadingPlan === plan.name ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (plan.stripeName !== null && productsLoading) ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     ) : null}
                     {plan.cta}
@@ -491,10 +493,12 @@ export default function PricingSection() {
                   <Button 
                     className="w-full"
                     onClick={() => handleSelectExperience(exp)}
-                    disabled={loadingPlan === exp.name}
+                    disabled={loadingPlan === exp.name || productsLoading}
                     data-testid={`button-experience-${exp.name}`}
                   >
                     {loadingPlan === exp.name ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : productsLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     ) : null}
                     {exp.cta}
