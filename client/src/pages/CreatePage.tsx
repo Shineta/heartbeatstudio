@@ -452,26 +452,26 @@ export default function CreatePage() {
       }
       
       // Parse error message for better UX
-      let errorMessage = error.message || "Unknown error occurred";
-      let title = "Song Generation Failed";
+      const errorMessage = error.message || "Unknown error occurred";
+      console.log("[SongError] Full error message:", errorMessage);
       
       // Check if it's a "no songs remaining" error
-      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
-        title = "Out of Songs";
-        errorMessage = "You've used all your available songs. Redirecting to get more...";
+      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining") || errorMessage.includes("requiresPayment")) {
+        console.log("[SongError] Detected out of songs - will redirect to pricing");
         toast({
-          title,
-          description: errorMessage,
+          title: "Out of Songs",
+          description: "You've used all your available songs. Redirecting to get more...",
           variant: "destructive",
         });
         setTimeout(() => {
+          console.log("[SongError] Redirecting now...");
           window.location.href = '/#pricing';
         }, 1500);
         return;
       }
       
       toast({
-        title,
+        title: "Song Generation Failed",
         description: errorMessage,
         variant: "destructive",
       });
@@ -510,26 +510,26 @@ export default function CreatePage() {
       }
       
       // Parse error message for better UX
-      let errorMessage = error.message || "Unknown error occurred";
-      let title = "Song Generation Failed";
+      const errorMessage = error.message || "Unknown error occurred";
+      console.log("[SongError] Full error message:", errorMessage);
       
       // Check if it's a "no songs remaining" error
-      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
-        title = "Out of Songs";
-        errorMessage = "You've used all your available songs. Redirecting to get more...";
+      if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining") || errorMessage.includes("requiresPayment")) {
+        console.log("[SongError] Detected out of songs - will redirect to pricing");
         toast({
-          title,
-          description: errorMessage,
+          title: "Out of Songs",
+          description: "You've used all your available songs. Redirecting to get more...",
           variant: "destructive",
         });
         setTimeout(() => {
+          console.log("[SongError] Redirecting now...");
           window.location.href = '/#pricing';
         }, 1500);
         return;
       }
       
       toast({
-        title,
+        title: "Song Generation Failed",
         description: errorMessage,
         variant: "destructive",
       });
