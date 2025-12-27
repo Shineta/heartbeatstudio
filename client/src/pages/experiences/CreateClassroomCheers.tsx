@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, Users } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -20,7 +21,17 @@ interface GeneratedSong {
   theme: string;
 }
 
-// Poll for creation completion
+const availableGenres = [
+  { id: "kids", label: "Kids / Children's" },
+  { id: "pop", label: "Pop" },
+  { id: "hip-hop", label: "Hip Hop" },
+  { id: "rock", label: "Rock" },
+  { id: "country", label: "Country" },
+  { id: "electronic", label: "Electronic" },
+  { id: "r&b", label: "R&B" },
+  { id: "jazz", label: "Jazz" },
+];
+
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -41,12 +52,21 @@ export default function CreateClassroomCheers() {
   const [teacherName, setTeacherName] = useState("");
   const [gradeLevel, setGradeLevel] = useState("elementary");
   const [eventInfo, setEventInfo] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(["kids"]);
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
   const [shareLink, setShareLink] = useState("");
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleGenreToggle = (genreId: string) => {
+    setSelectedGenres(prev => 
+      prev.includes(genreId) 
+        ? prev.filter(g => g !== genreId)
+        : [...prev, genreId]
+    );
+  };
 
   const handlePlayPause = (idx: number, audioUrl: string) => {
     if (!audioUrl) {
@@ -107,26 +127,34 @@ export default function CreateClassroomCheers() {
       return;
     }
 
+    if (selectedGenres.length === 0) {
+      toast({
+        title: "Genre Required",
+        description: "Please select at least one genre.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setGenerating(true);
     setCurrentStep(1);
 
     try {
       for (let i = 0; i < 5; i++) {
         setCurrentStep(i + 1);
+        const genre = selectedGenres[i % selectedGenres.length];
         
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: className,
           occasion: 'classroom',
           tone: 'encouraging',
-          genre: 'kids',
+          genre: genre,
           voiceType: 'cheerful',
           customMessage: `A ${songThemes[i].theme.toLowerCase()} song for ${className}${teacherName ? ` with ${teacherName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
         
         const initialCreation = await response.json();
-        
-        // Poll for completion
         const completedCreation = await pollForCompletion(initialCreation.id);
         
         setSongs(prev => [...prev, {
@@ -242,6 +270,31 @@ export default function CreateClassroomCheers() {
                 />
               </div>
 
+              <div className="space-y-3">
+                <Label>Select Genres</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableGenres.map((genre) => (
+                    <div key={genre.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`genre-${genre.id}`}
+                        checked={selectedGenres.includes(genre.id)}
+                        onCheckedChange={() => handleGenreToggle(genre.id)}
+                        data-testid={`checkbox-genre-${genre.id}`}
+                      />
+                      <label
+                        htmlFor={`genre-${genre.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {genre.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedGenres.length === 0 && (
+                  <p className="text-xs text-destructive">Please select at least one genre</p>
+                )}
+              </div>
+
               <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-4">
                 <p className="text-sm font-medium mb-3">You'll receive 5 songs:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -257,7 +310,7 @@ export default function CreateClassroomCheers() {
               <Button 
                 className="w-full bg-emerald-500 hover:bg-emerald-600"
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || selectedGenres.length === 0}
                 data-testid="button-generate-songs"
               >
                 <GraduationCap className="w-4 h-4 mr-2" />

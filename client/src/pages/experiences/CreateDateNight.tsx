@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Heart, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -19,10 +20,20 @@ interface GeneratedSong {
   mood: string;
 }
 
-// Poll for creation completion
+const availableGenres = [
+  { id: "soul", label: "Soul" },
+  { id: "r&b", label: "R&B" },
+  { id: "pop", label: "Pop" },
+  { id: "jazz", label: "Jazz" },
+  { id: "acoustic", label: "Acoustic" },
+  { id: "country", label: "Country" },
+  { id: "electronic", label: "Electronic" },
+  { id: "classical", label: "Classical" },
+];
+
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    await new Promise(resolve => setTimeout(resolve, 5000));
     const response = await fetch(`/api/creations/${creationId}`, { credentials: 'include' });
     if (!response.ok) continue;
     const creation = await response.json();
@@ -39,12 +50,27 @@ export default function CreateDateNight() {
   const [yourName, setYourName] = useState("");
   const [partnerName, setPartnerName] = useState("");
   const [eventInfo, setEventInfo] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(["soul", "r&b", "pop"]);
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
   const [shareLink, setShareLink] = useState("");
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const songMoods = [
+    { mood: "Sweet", description: "A tender, heartfelt love song" },
+    { mood: "Playful", description: "An upbeat, fun romantic tune" },
+    { mood: "Intimate", description: "A deep, passionate ballad" },
+  ];
+
+  const handleGenreToggle = (genreId: string) => {
+    setSelectedGenres(prev => 
+      prev.includes(genreId) 
+        ? prev.filter(g => g !== genreId)
+        : [...prev, genreId]
+    );
+  };
 
   const handlePlayPause = (idx: number, audioUrl: string) => {
     if (!audioUrl) {
@@ -57,14 +83,10 @@ export default function CreateDateNight() {
     }
 
     if (playingIndex === idx) {
-      // Pause current song
       audioRef.current?.pause();
       setPlayingIndex(null);
     } else {
-      // Stop any currently playing song
       audioRef.current?.pause();
-      
-      // Play new song
       audioRef.current = new Audio(audioUrl);
       audioRef.current.play().catch((err) => {
         console.error('Audio play error:', err);
@@ -84,17 +106,20 @@ export default function CreateDateNight() {
     return null;
   }
 
-  const songMoods = [
-    { mood: "Sweet", description: "A tender, heartfelt love song" },
-    { mood: "Playful", description: "An upbeat, fun romantic tune" },
-    { mood: "Intimate", description: "A deep, passionate ballad" },
-  ];
-
   const handleGenerate = async () => {
     if (!yourName.trim() || !partnerName.trim()) {
       toast({
         title: "Names Required",
         description: "Please enter both your name and your partner's name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedGenres.length === 0) {
+      toast({
+        title: "Genre Required",
+        description: "Please select at least one genre.",
         variant: "destructive",
       });
       return;
@@ -106,21 +131,19 @@ export default function CreateDateNight() {
     try {
       for (let i = 0; i < 3; i++) {
         setCurrentStep(i + 1);
+        const genre = selectedGenres[i % selectedGenres.length];
         
-        // Start generation
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: partnerName,
           occasion: 'date-night',
           tone: songMoods[i].mood.toLowerCase(),
-          genre: i === 0 ? 'soul' : i === 1 ? 'pop' : 'r&b',
+          genre: genre,
           voiceType: 'duet',
           customMessage: `A ${songMoods[i].mood.toLowerCase()} love song from ${yourName} to ${partnerName}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
         
         const initialCreation = await response.json();
-        
-        // Poll for completion
         const completedCreation = await pollForCompletion(initialCreation.id);
         
         setSongs(prev => [...prev, {
@@ -220,6 +243,31 @@ export default function CreateDateNight() {
                 />
               </div>
 
+              <div className="space-y-3">
+                <Label>Select Genres</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableGenres.map((genre) => (
+                    <div key={genre.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`genre-${genre.id}`}
+                        checked={selectedGenres.includes(genre.id)}
+                        onCheckedChange={() => handleGenreToggle(genre.id)}
+                        data-testid={`checkbox-genre-${genre.id}`}
+                      />
+                      <label
+                        htmlFor={`genre-${genre.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {genre.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedGenres.length === 0 && (
+                  <p className="text-xs text-destructive">Please select at least one genre</p>
+                )}
+              </div>
+
               <div className="bg-rose-50 dark:bg-rose-950/30 rounded-lg p-4">
                 <p className="text-sm font-medium mb-3">Your songs will include:</p>
                 <div className="space-y-2">
@@ -236,7 +284,7 @@ export default function CreateDateNight() {
               <Button 
                 className="w-full bg-rose-500 hover:bg-rose-600"
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || selectedGenres.length === 0}
                 data-testid="button-generate-songs"
               >
                 <Heart className="w-4 h-4 mr-2" />

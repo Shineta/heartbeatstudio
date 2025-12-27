@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Cake, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, PartyPopper } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,17 @@ interface GeneratedSong {
   coverUrl: string;
   theme: string;
 }
+
+const availableGenres = [
+  { id: "pop", label: "Pop" },
+  { id: "dance", label: "Dance / EDM" },
+  { id: "hip-hop", label: "Hip Hop" },
+  { id: "rock", label: "Rock" },
+  { id: "soul", label: "Soul" },
+  { id: "country", label: "Country" },
+  { id: "r&b", label: "R&B" },
+  { id: "jazz", label: "Jazz" },
+];
 
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -38,6 +50,7 @@ export default function CreateBirthdayBlast() {
   const [birthdayPersonName, setBirthdayPersonName] = useState("");
   const [yourName, setYourName] = useState("");
   const [eventInfo, setEventInfo] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(["pop", "dance"]);
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
@@ -46,12 +59,20 @@ export default function CreateBirthdayBlast() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const songThemes = [
-    { theme: "Classic Birthday", description: "Traditional happy birthday celebration", genre: "pop", tone: "joyful" },
-    { theme: "Dance Party", description: "Upbeat dance track to get the party started", genre: "dance", tone: "energetic" },
-    { theme: "Heartfelt Wishes", description: "Warm and emotional birthday message", genre: "soul", tone: "heartfelt" },
-    { theme: "Fun & Silly", description: "Playful and humorous birthday tune", genre: "pop", tone: "playful" },
-    { theme: "Birthday Anthem", description: "Epic celebration anthem for their special day", genre: "rock", tone: "epic" },
+    { theme: "Classic Birthday", description: "Traditional happy birthday celebration", tone: "joyful" },
+    { theme: "Dance Party", description: "Upbeat dance track to get the party started", tone: "energetic" },
+    { theme: "Heartfelt Wishes", description: "Warm and emotional birthday message", tone: "heartfelt" },
+    { theme: "Fun & Silly", description: "Playful and humorous birthday tune", tone: "playful" },
+    { theme: "Birthday Anthem", description: "Epic celebration anthem for their special day", tone: "epic" },
   ];
+
+  const handleGenreToggle = (genreId: string) => {
+    setSelectedGenres(prev => 
+      prev.includes(genreId) 
+        ? prev.filter(g => g !== genreId)
+        : [...prev, genreId]
+    );
+  };
 
   const handlePlayPause = (idx: number, audioUrl: string) => {
     if (!audioUrl) {
@@ -97,19 +118,29 @@ export default function CreateBirthdayBlast() {
       return;
     }
 
+    if (selectedGenres.length === 0) {
+      toast({
+        title: "Genre Required",
+        description: "Please select at least one genre.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setGenerating(true);
     setCurrentStep(1);
 
     try {
       for (let i = 0; i < 5; i++) {
         setCurrentStep(i + 1);
+        const genre = selectedGenres[i % selectedGenres.length];
         
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: birthdayPersonName,
           occasion: 'birthday',
           tone: songThemes[i].tone,
-          genre: songThemes[i].genre,
+          genre: genre,
           voiceType: 'upbeat',
           customMessage: `A ${songThemes[i].theme.toLowerCase()} birthday song for ${birthdayPersonName}${yourName ? ` from ${yourName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
@@ -214,6 +245,31 @@ export default function CreateBirthdayBlast() {
                 />
               </div>
 
+              <div className="space-y-3">
+                <Label>Select Genres</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableGenres.map((genre) => (
+                    <div key={genre.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`genre-${genre.id}`}
+                        checked={selectedGenres.includes(genre.id)}
+                        onCheckedChange={() => handleGenreToggle(genre.id)}
+                        data-testid={`checkbox-genre-${genre.id}`}
+                      />
+                      <label
+                        htmlFor={`genre-${genre.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {genre.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedGenres.length === 0 && (
+                  <p className="text-xs text-destructive">Please select at least one genre</p>
+                )}
+              </div>
+
               <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4">
                 <p className="text-sm font-medium mb-3">You'll receive 5 songs:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -229,7 +285,7 @@ export default function CreateBirthdayBlast() {
               <Button 
                 className="w-full bg-amber-500 hover:bg-amber-600"
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || selectedGenres.length === 0}
                 data-testid="button-generate-songs"
               >
                 <PartyPopper className="w-4 h-4 mr-2" />

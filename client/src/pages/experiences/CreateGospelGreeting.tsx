@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Church, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -20,7 +21,17 @@ interface GeneratedSong {
   theme: string;
 }
 
-// Poll for creation completion
+const availableGenres = [
+  { id: "gospel", label: "Gospel" },
+  { id: "soul", label: "Soul" },
+  { id: "contemporary-christian", label: "Contemporary Christian" },
+  { id: "hymn", label: "Hymn / Traditional" },
+  { id: "r&b", label: "R&B" },
+  { id: "acoustic", label: "Acoustic" },
+  { id: "choir", label: "Choir" },
+  { id: "inspirational", label: "Inspirational" },
+];
+
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -40,12 +51,34 @@ export default function CreateGospelGreeting() {
   const [recipientName, setRecipientName] = useState("");
   const [occasion, setOccasion] = useState("encouragement");
   const [eventInfo, setEventInfo] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(["gospel", "soul"]);
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
   const [shareLink, setShareLink] = useState("");
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const themes = [
+    { id: "faith", label: "Faith & Trust" },
+    { id: "hope", label: "Hope & Strength" },
+  ];
+
+  const occasions = [
+    { value: "encouragement", label: "Encouragement" },
+    { value: "healing", label: "Healing & Recovery" },
+    { value: "celebration", label: "Celebration" },
+    { value: "comfort", label: "Comfort & Peace" },
+    { value: "gratitude", label: "Gratitude & Thanks" },
+  ];
+
+  const handleGenreToggle = (genreId: string) => {
+    setSelectedGenres(prev => 
+      prev.includes(genreId) 
+        ? prev.filter(g => g !== genreId)
+        : [...prev, genreId]
+    );
+  };
 
   const handlePlayPause = (idx: number, audioUrl: string) => {
     if (!audioUrl) {
@@ -81,24 +114,20 @@ export default function CreateGospelGreeting() {
     return null;
   }
 
-  const themes = [
-    { id: "faith", label: "Faith & Trust" },
-    { id: "hope", label: "Hope & Strength" },
-  ];
-
-  const occasions = [
-    { value: "encouragement", label: "Encouragement" },
-    { value: "healing", label: "Healing & Recovery" },
-    { value: "celebration", label: "Celebration" },
-    { value: "comfort", label: "Comfort & Peace" },
-    { value: "gratitude", label: "Gratitude & Thanks" },
-  ];
-
   const handleGenerate = async () => {
     if (!recipientName.trim()) {
       toast({
         title: "Name Required",
         description: "Please enter the recipient's name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedGenres.length === 0) {
+      toast({
+        title: "Genre Required",
+        description: "Please select at least one genre.",
         variant: "destructive",
       });
       return;
@@ -110,20 +139,19 @@ export default function CreateGospelGreeting() {
     try {
       for (let i = 0; i < 2; i++) {
         setCurrentStep(i + 1);
+        const genre = selectedGenres[i % selectedGenres.length];
         
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: recipientName,
           occasion: occasion,
           tone: 'spiritual',
-          genre: 'gospel',
+          genre: genre,
           voiceType: 'soulful',
           customMessage: `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
         
         const initialCreation = await response.json();
-        
-        // Poll for completion
         const completedCreation = await pollForCompletion(initialCreation.id);
         
         setSongs(prev => [...prev, {
@@ -228,6 +256,31 @@ export default function CreateGospelGreeting() {
                 />
               </div>
 
+              <div className="space-y-3">
+                <Label>Select Genres</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableGenres.map((genre) => (
+                    <div key={genre.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`genre-${genre.id}`}
+                        checked={selectedGenres.includes(genre.id)}
+                        onCheckedChange={() => handleGenreToggle(genre.id)}
+                        data-testid={`checkbox-genre-${genre.id}`}
+                      />
+                      <label
+                        htmlFor={`genre-${genre.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {genre.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedGenres.length === 0 && (
+                  <p className="text-xs text-destructive">Please select at least one genre</p>
+                )}
+              </div>
+
               <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-4">
                 <p className="text-sm font-medium mb-3">Your greeting will include:</p>
                 <div className="space-y-2">
@@ -244,7 +297,7 @@ export default function CreateGospelGreeting() {
               <Button 
                 className="w-full bg-purple-500 hover:bg-purple-600"
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || selectedGenres.length === 0}
                 data-testid="button-generate-songs"
               >
                 <Church className="w-4 h-4 mr-2" />
