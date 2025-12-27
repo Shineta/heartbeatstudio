@@ -48,10 +48,9 @@ export async function setupAuth(app: Express) {
   // SESSION_SECRET is guaranteed to exist due to check above
   const sessionSecret = SESSION_SECRET as string;
   
-  // Trust proxy in production - required for secure cookies behind Replit's HTTPS proxy
-  if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-  }
+  // Trust proxy - required for secure cookies behind Replit's HTTPS proxy
+  // Always enable since Replit always uses a proxy
+  app.set('trust proxy', 1);
   
   // Session configuration
   app.use(
@@ -66,7 +65,7 @@ export async function setupAuth(app: Express) {
       cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // Always secure on Replit (uses HTTPS)
         sameSite: 'lax', // Required for cookies to work with redirects
       },
     })
