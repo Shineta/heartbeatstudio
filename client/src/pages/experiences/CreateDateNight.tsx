@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Music, Sparkles, Loader2, Play, Share2, CheckCircle2 } from "lucide-react";
+import { Heart, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -41,6 +41,41 @@ export default function CreateDateNight() {
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
   const [shareLink, setShareLink] = useState("");
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlayPause = (idx: number, audioUrl: string) => {
+    if (!audioUrl) {
+      toast({
+        title: "Audio Not Available",
+        description: "This song's audio is still processing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playingIndex === idx) {
+      // Pause current song
+      audioRef.current?.pause();
+      setPlayingIndex(null);
+    } else {
+      // Stop any currently playing song
+      audioRef.current?.pause();
+      
+      // Play new song
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.play().catch((err) => {
+        console.error('Audio play error:', err);
+        toast({
+          title: "Playback Error",
+          description: "Unable to play the audio. Please try again.",
+          variant: "destructive",
+        });
+      });
+      audioRef.current.onended = () => setPlayingIndex(null);
+      setPlayingIndex(idx);
+    }
+  };
 
   if (!isAuthenticated) {
     setLocation('/auth');
@@ -248,8 +283,17 @@ export default function CreateDateNight() {
                         <h4 className="font-semibold">{song.title}</h4>
                         <p className="text-sm text-muted-foreground">{song.mood} love song</p>
                       </div>
-                      <Button size="icon" variant="ghost" data-testid={`button-play-${idx}`}>
-                        <Play className="w-4 h-4" />
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => handlePlayPause(idx, song.audioUrl)}
+                        data-testid={`button-play-${idx}`}
+                      >
+                        {playingIndex === idx ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
                       </Button>
                     </div>
                   ))}

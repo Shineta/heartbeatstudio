@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Cake, Music, Sparkles, Loader2, Play, Share2, CheckCircle2 } from "lucide-react";
+import { Cake, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,6 +39,37 @@ export default function CreateBirthdayBlast() {
   const [generating, setGenerating] = useState(false);
   const [song, setSong] = useState<GeneratedSong | null>(null);
   const [shareLink, setShareLink] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlayPause = (audioUrl: string) => {
+    if (!audioUrl) {
+      toast({
+        title: "Audio Not Available",
+        description: "This song's audio is still processing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current?.pause();
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.play().catch((err) => {
+        console.error('Audio play error:', err);
+        toast({
+          title: "Playback Error",
+          description: "Unable to play the audio. Please try again.",
+          variant: "destructive",
+        });
+      });
+      audioRef.current.onended = () => setIsPlaying(false);
+      setIsPlaying(true);
+    }
+  };
 
   if (!isAuthenticated) {
     setLocation('/auth');
@@ -219,8 +250,17 @@ export default function CreateBirthdayBlast() {
                     <h4 className="font-semibold text-lg">{song.title}</h4>
                     <p className="text-sm text-muted-foreground">Birthday song for {birthdayPersonName}</p>
                   </div>
-                  <Button size="icon" variant="ghost" data-testid="button-play">
-                    <Play className="w-5 h-5" />
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => handlePlayPause(song.audioUrl)}
+                    data-testid="button-play"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
                   </Button>
                 </div>
               </CardContent>
