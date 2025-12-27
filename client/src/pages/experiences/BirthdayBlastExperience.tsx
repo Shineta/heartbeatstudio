@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Cake, Check, Sparkles, Music, Image, Link2, ArrowLeft, Loader2 } from "lucide-react";
+import { Cake, Sparkles, Music, Image, Link2, ArrowLeft, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -193,7 +193,7 @@ export default function BirthdayBlastExperience() {
           </CardContent>
         </Card>
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <Button 
             size="lg" 
             className="px-12 py-6 text-lg bg-amber-500 hover:bg-amber-600"
@@ -208,9 +208,23 @@ export default function BirthdayBlastExperience() {
             )}
             Celebrate a Birthday — $2.50
           </Button>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-sm text-muted-foreground">
             Secure checkout powered by Stripe
           </p>
+          
+          {isAuthenticated && (
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-2">Already purchased?</p>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation('/experience/birthday-blast/create')}
+                data-testid="button-start-creating"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Start Creating
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

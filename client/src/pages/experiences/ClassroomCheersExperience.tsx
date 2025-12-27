@@ -219,7 +219,7 @@ export default function ClassroomCheersExperience() {
           </CardContent>
         </Card>
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <Button 
             size="lg" 
             className="px-12 py-6 text-lg bg-emerald-500 hover:bg-emerald-600"
@@ -234,9 +234,23 @@ export default function ClassroomCheersExperience() {
             )}
             Celebrate Your Classroom — $5
           </Button>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-sm text-muted-foreground">
             Secure checkout powered by Stripe
           </p>
+          
+          {isAuthenticated && (
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-2">Already purchased?</p>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation('/experience/classroom-cheers/create')}
+                data-testid="button-start-creating"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Start Creating
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

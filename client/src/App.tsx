@@ -19,6 +19,10 @@ import DateNightExperience from "@/pages/experiences/DateNightExperience";
 import BirthdayBlastExperience from "@/pages/experiences/BirthdayBlastExperience";
 import GospelGreetingExperience from "@/pages/experiences/GospelGreetingExperience";
 import ClassroomCheersExperience from "@/pages/experiences/ClassroomCheersExperience";
+import CreateDateNight from "@/pages/experiences/CreateDateNight";
+import CreateBirthdayBlast from "@/pages/experiences/CreateBirthdayBlast";
+import CreateGospelGreeting from "@/pages/experiences/CreateGospelGreeting";
+import CreateClassroomCheers from "@/pages/experiences/CreateClassroomCheers";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -53,6 +57,10 @@ function Router() {
       <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />
       <Route path="/experience/classroom-cheers" component={ClassroomCheersExperience} />
+      <Route path="/experience/date-night/create" component={isAuthenticated ? CreateDateNight : AuthPage} />
+      <Route path="/experience/birthday-blast/create" component={isAuthenticated ? CreateBirthdayBlast : AuthPage} />
+      <Route path="/experience/gospel-greeting/create" component={isAuthenticated ? CreateGospelGreeting : AuthPage} />
+      <Route path="/experience/classroom-cheers/create" component={isAuthenticated ? CreateClassroomCheers : AuthPage} />
       <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />

@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Check, Sparkles, Music, Image, Link2, ArrowLeft, Loader2 } from "lucide-react";
+import { Heart, Sparkles, Music, Image, Link2, ArrowLeft, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -198,7 +198,7 @@ export default function DateNightExperience() {
           </CardContent>
         </Card>
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <Button 
             size="lg" 
             className="px-12 py-6 text-lg bg-rose-500 hover:bg-rose-600"
@@ -213,9 +213,23 @@ export default function DateNightExperience() {
             )}
             Create Date Night — $5
           </Button>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-sm text-muted-foreground">
             Secure checkout powered by Stripe
           </p>
+          
+          {isAuthenticated && (
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-2">Already purchased?</p>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation('/experience/date-night/create')}
+                data-testid="button-start-creating"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Start Creating
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
