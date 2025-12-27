@@ -75,16 +75,27 @@ export class WebhookHandlers {
         // Get line items to determine what was purchased
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
         
+        // Accumulate all credits from all line items first
+        let totalCreditsToAdd = 0;
+        const purchasedProducts: string[] = [];
+        
         for (const item of lineItems.data) {
           const product = await stripe.products.retrieve(item.price?.product as string);
           const productName = product.name;
-          const creditsToAdd = CREDIT_AMOUNTS[productName] || 0;
+          const quantity = item.quantity || 1;
+          const creditsForItem = (CREDIT_AMOUNTS[productName] || 0) * quantity;
 
-          if (creditsToAdd > 0) {
-            const newCredits = (user.songsRemaining ?? 0) + creditsToAdd;
-            await storage.updateUser(user.id, { songsRemaining: newCredits });
-            console.log(`[Webhook] Granted ${creditsToAdd} credits to user ${user.id} for ${productName}. New total: ${newCredits}`);
+          if (creditsForItem > 0) {
+            totalCreditsToAdd += creditsForItem;
+            purchasedProducts.push(`${productName} (${creditsForItem} credits)`);
           }
+        }
+
+        // Update user with accumulated credits in a single operation
+        if (totalCreditsToAdd > 0) {
+          const newCredits = (user.songsRemaining ?? 0) + totalCreditsToAdd;
+          await storage.updateUser(user.id, { songsRemaining: newCredits });
+          console.log(`[Webhook] Granted ${totalCreditsToAdd} total credits to user ${user.id} for: ${purchasedProducts.join(', ')}. New total: ${newCredits}`);
         }
       }
 
