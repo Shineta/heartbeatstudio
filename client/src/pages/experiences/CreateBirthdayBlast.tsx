@@ -24,6 +24,7 @@ const availableGenres = [
   { id: "pop", label: "Pop" },
   { id: "dance", label: "Dance / EDM" },
   { id: "hip-hop", label: "Hip Hop" },
+  { id: "rap", label: "Rap" },
   { id: "rock", label: "Rock" },
   { id: "soul", label: "Soul" },
   { id: "country", label: "Country" },

@@ -25,6 +25,7 @@ const availableGenres = [
   { id: "kids", label: "Kids / Children's" },
   { id: "pop", label: "Pop" },
   { id: "hip-hop", label: "Hip Hop" },
+  { id: "rap", label: "Rap" },
   { id: "rock", label: "Rock" },
   { id: "country", label: "Country" },
   { id: "electronic", label: "Electronic" },

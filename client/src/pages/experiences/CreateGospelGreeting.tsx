@@ -26,6 +26,7 @@ const availableGenres = [
   { id: "soul", label: "Soul" },
   { id: "contemporary-christian", label: "Contemporary Christian" },
   { id: "hymn", label: "Hymn / Traditional" },
+  { id: "rap", label: "Rap" },
   { id: "r&b", label: "R&B" },
   { id: "acoustic", label: "Acoustic" },
   { id: "choir", label: "Choir" },
