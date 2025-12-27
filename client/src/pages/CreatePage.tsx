@@ -458,7 +458,16 @@ export default function CreatePage() {
       // Check if it's a "no songs remaining" error
       if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
         title = "Out of Songs";
-        errorMessage = "You've used all your available songs. Get more songs to continue creating!";
+        errorMessage = "You've used all your available songs. Redirecting to get more...";
+        toast({
+          title,
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          setLocation('/#pricing');
+        }, 1500);
+        return;
       }
       
       toast({
@@ -507,7 +516,16 @@ export default function CreatePage() {
       // Check if it's a "no songs remaining" error
       if (errorMessage.includes("No songs remaining") || errorMessage.includes("songsRemaining")) {
         title = "Out of Songs";
-        errorMessage = "You've used all your available songs. Get more songs to continue creating!";
+        errorMessage = "You've used all your available songs. Redirecting to get more...";
+        toast({
+          title,
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          setLocation('/#pricing');
+        }, 1500);
+        return;
       }
       
       toast({
