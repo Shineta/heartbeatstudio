@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Cake, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
+import { Cake, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, PartyPopper } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,9 +16,9 @@ interface GeneratedSong {
   title: string;
   audioUrl: string;
   coverUrl: string;
+  theme: string;
 }
 
-// Poll for creation completion
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -39,12 +39,21 @@ export default function CreateBirthdayBlast() {
   const [yourName, setYourName] = useState("");
   const [eventInfo, setEventInfo] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [song, setSong] = useState<GeneratedSong | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [songs, setSongs] = useState<GeneratedSong[]>([]);
   const [shareLink, setShareLink] = useState("");
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlayPause = (audioUrl: string) => {
+  const songThemes = [
+    { theme: "Classic Birthday", description: "Traditional happy birthday celebration", genre: "pop", tone: "joyful" },
+    { theme: "Dance Party", description: "Upbeat dance track to get the party started", genre: "dance", tone: "energetic" },
+    { theme: "Heartfelt Wishes", description: "Warm and emotional birthday message", genre: "soul", tone: "heartfelt" },
+    { theme: "Fun & Silly", description: "Playful and humorous birthday tune", genre: "pop", tone: "playful" },
+    { theme: "Birthday Anthem", description: "Epic celebration anthem for their special day", genre: "rock", tone: "epic" },
+  ];
+
+  const handlePlayPause = (idx: number, audioUrl: string) => {
     if (!audioUrl) {
       toast({
         title: "Audio Not Available",
@@ -54,9 +63,9 @@ export default function CreateBirthdayBlast() {
       return;
     }
 
-    if (isPlaying) {
+    if (playingIndex === idx) {
       audioRef.current?.pause();
-      setIsPlaying(false);
+      setPlayingIndex(null);
     } else {
       audioRef.current?.pause();
       audioRef.current = new Audio(audioUrl);
@@ -68,8 +77,8 @@ export default function CreateBirthdayBlast() {
           variant: "destructive",
         });
       });
-      audioRef.current.onended = () => setIsPlaying(false);
-      setIsPlaying(true);
+      audioRef.current.onended = () => setPlayingIndex(null);
+      setPlayingIndex(idx);
     }
   };
 
@@ -89,34 +98,39 @@ export default function CreateBirthdayBlast() {
     }
 
     setGenerating(true);
+    setCurrentStep(1);
 
     try {
-      const response = await apiRequest('POST', '/api/creations', {
-        type: 'song',
-        recipientName: birthdayPersonName,
-        occasion: 'birthday',
-        tone: 'joyful',
-        genre: 'pop',
-        voiceType: 'upbeat',
-        customMessage: `A special birthday song for ${birthdayPersonName}${yourName ? ` from ${yourName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
-      });
-      
-      const initialCreation = await response.json();
-      
-      // Poll for completion
-      const completedCreation = await pollForCompletion(initialCreation.id);
-      
-      setSong({
-        title: completedCreation.title || `Happy Birthday ${birthdayPersonName}`,
-        audioUrl: completedCreation.mediaUrl || '',
-        coverUrl: completedCreation.imageUrl || '',
-      });
+      for (let i = 0; i < 5; i++) {
+        setCurrentStep(i + 1);
+        
+        const response = await apiRequest('POST', '/api/creations', {
+          type: 'song',
+          recipientName: birthdayPersonName,
+          occasion: 'birthday',
+          tone: songThemes[i].tone,
+          genre: songThemes[i].genre,
+          voiceType: 'upbeat',
+          customMessage: `A ${songThemes[i].theme.toLowerCase()} birthday song for ${birthdayPersonName}${yourName ? ` from ${yourName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
+        });
+        
+        const initialCreation = await response.json();
+        const completedCreation = await pollForCompletion(initialCreation.id);
+        
+        setSongs(prev => [...prev, {
+          title: completedCreation.title || `${songThemes[i].theme} for ${birthdayPersonName}`,
+          audioUrl: completedCreation.mediaUrl || '',
+          coverUrl: completedCreation.imageUrl || '',
+          theme: songThemes[i].theme,
+        }]);
+      }
 
+      setCurrentStep(6);
       setShareLink(`${window.location.origin}/share/birthday-${Date.now()}`);
       
       toast({
-        title: "Birthday Song Created!",
-        description: "Your birthday song is ready to share.",
+        title: "Birthday Songs Created!",
+        description: "Your birthday songs are ready to share.",
       });
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -125,6 +139,7 @@ export default function CreateBirthdayBlast() {
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
+      setCurrentStep(0);
     } finally {
       setGenerating(false);
     }
@@ -149,19 +164,19 @@ export default function CreateBirthdayBlast() {
           </div>
           <Badge className="mb-2 bg-amber-500">Birthday Blast Experience</Badge>
           <h1 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-            Create a Birthday Song
+            Create Birthday Songs
           </h1>
-          <p className="text-muted-foreground mt-2">A personalized birthday song with festive artwork</p>
+          <p className="text-muted-foreground mt-2">5 personalized birthday songs with festive artwork</p>
         </div>
 
-        {!song && !generating && (
+        {currentStep === 0 && (
           <Card className="max-w-xl mx-auto border-amber-200 dark:border-amber-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-500" />
                 Enter Birthday Details
               </CardTitle>
-              <CardDescription>We'll create a joyful birthday song just for them</CardDescription>
+              <CardDescription>We'll create 5 unique birthday songs just for them</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -200,31 +215,25 @@ export default function CreateBirthdayBlast() {
               </div>
 
               <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4">
-                <p className="text-sm font-medium mb-2">You'll receive:</p>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center gap-2">
-                    <Music className="w-4 h-4 text-amber-500" />
-                    1 personalized birthday song
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    Festive birthday cover art
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Share2 className="w-4 h-4 text-amber-500" />
-                    Shareable link to send
-                  </li>
-                </ul>
+                <p className="text-sm font-medium mb-3">You'll receive 5 songs:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {songThemes.map((song, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm">
+                      <Music className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span className="font-medium">{song.theme}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <Button 
                 className="w-full bg-amber-500 hover:bg-amber-600"
                 onClick={handleGenerate}
                 disabled={generating}
-                data-testid="button-generate-song"
+                data-testid="button-generate-songs"
               >
-                <Cake className="w-4 h-4 mr-2" />
-                Generate Birthday Song
+                <PartyPopper className="w-4 h-4 mr-2" />
+                Generate Birthday Songs
               </Button>
             </CardContent>
           </Card>
@@ -235,48 +244,67 @@ export default function CreateBirthdayBlast() {
             <CardContent className="py-12 text-center">
               <Loader2 className="w-12 h-12 animate-spin text-amber-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Creating Birthday Magic</h3>
-              <p className="text-muted-foreground">
-                Generating a special birthday song for {birthdayPersonName}...
+              <p className="text-muted-foreground mb-6">
+                Generating song {currentStep} of 5: {songThemes[currentStep - 1]?.theme || ''}
               </p>
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-3 h-3 rounded-full ${
+                      step < currentStep ? 'bg-amber-500' : 
+                      step === currentStep ? 'bg-amber-500 animate-pulse' : 
+                      'bg-amber-200'
+                    }`}
+                  />
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {song && (
-          <div className="space-y-6 max-w-xl mx-auto">
+        {currentStep === 6 && songs.length > 0 && (
+          <div className="space-y-6">
             <Card className="border-amber-200 dark:border-amber-800">
               <CardHeader className="text-center">
                 <div className="flex justify-center mb-2">
                   <CheckCircle2 className="w-12 h-12 text-green-500" />
                 </div>
-                <CardTitle className="text-2xl">Birthday Song Ready!</CardTitle>
-                <CardDescription>Share this with {birthdayPersonName}</CardDescription>
+                <CardTitle className="text-2xl">Birthday Songs Ready!</CardTitle>
+                <CardDescription>Share these with {birthdayPersonName}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30">
-                  <div className="w-20 h-20 rounded-lg bg-amber-200 dark:bg-amber-800 flex items-center justify-center overflow-hidden">
-                    {song.coverUrl ? (
-                      <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <Cake className="w-10 h-10 text-amber-500" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg">{song.title}</h4>
-                    <p className="text-sm text-muted-foreground">Birthday song for {birthdayPersonName}</p>
-                  </div>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={() => handlePlayPause(song.audioUrl)}
-                    data-testid="button-play"
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-5 h-5" />
-                    ) : (
-                      <Play className="w-5 h-5" />
-                    )}
-                  </Button>
+                <div className="grid gap-4">
+                  {songs.map((song, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30"
+                    >
+                      <div className="w-16 h-16 rounded-lg bg-amber-200 dark:bg-amber-800 flex items-center justify-center overflow-hidden">
+                        {song.coverUrl ? (
+                          <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <Cake className="w-8 h-8 text-amber-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{song.title}</h4>
+                        <p className="text-sm text-muted-foreground">{song.theme}</p>
+                      </div>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => handlePlayPause(idx, song.audioUrl)}
+                        data-testid={`button-play-${idx}`}
+                      >
+                        {playingIndex === idx ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

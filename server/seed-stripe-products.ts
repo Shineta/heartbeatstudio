@@ -81,18 +81,18 @@ async function seedProducts() {
     console.log('Creating Birthday Blast product...');
     const birthdayBlast = await stripe.products.create({
       name: 'Birthday Blast',
-      description: '1 birthday song + 1 visual animation',
+      description: '5 birthday songs + 5 themed visuals - Complete birthday celebration',
       metadata: {
         type: 'kit',
-        songs: '1',
-        visuals: '1',
+        songs: '5',
+        visuals: '5',
         theme: 'birthday',
       },
     });
 
     await stripe.prices.create({
       product: birthdayBlast.id,
-      unit_amount: 250,
+      unit_amount: 500,
       currency: 'usd',
       metadata: { plan: 'birthday_blast' },
     });

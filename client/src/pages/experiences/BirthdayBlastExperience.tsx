@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Cake, Sparkles, Music, Image, Link2, ArrowLeft, Loader2 } from "lucide-react";
+import { Cake, Sparkles, Music, Image, Link2, ArrowLeft, Loader2, PartyPopper } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -75,13 +75,13 @@ export default function BirthdayBlastExperience() {
   const features = [
     {
       icon: Music,
-      title: "1 Personalized Birthday Song",
-      description: "A custom song with their name and your special message"
+      title: "5 Personalized Birthday Songs",
+      description: "Classic, Dance Party, Heartfelt, Fun & Silly, and Birthday Anthem"
     },
     {
       icon: Image,
-      title: "1 Themed Birthday Visual",
-      description: "A festive cover art to match the celebration"
+      title: "5 Themed Birthday Visuals",
+      description: "Unique festive cover art for each song"
     },
     {
       icon: Sparkles,
@@ -90,9 +90,17 @@ export default function BirthdayBlastExperience() {
     },
     {
       icon: Link2,
-      title: "Shareable Link",
-      description: "Send your birthday song instantly via text, email, or social"
+      title: "Shareable Experience Link",
+      description: "Send all 5 songs instantly via text, email, or social"
     },
+  ];
+
+  const songStyles = [
+    { name: "Classic Birthday", desc: "Traditional happy birthday celebration" },
+    { name: "Dance Party", desc: "Upbeat track to get the party started" },
+    { name: "Heartfelt Wishes", desc: "Warm and emotional birthday message" },
+    { name: "Fun & Silly", desc: "Playful and humorous birthday tune" },
+    { name: "Birthday Anthem", desc: "Epic celebration anthem" },
   ];
 
   return (
@@ -124,11 +132,11 @@ export default function BirthdayBlastExperience() {
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            A fast, joyful birthday moment that feels personal — even last minute.
+            A complete birthday celebration with 5 unique songs — from classic wishes to party anthems.
           </p>
           
           <div className="flex items-center justify-center gap-4">
-            <span className="text-4xl font-bold text-amber-500">$2.50</span>
+            <span className="text-4xl font-bold text-amber-500">$5</span>
             <span className="text-muted-foreground">one-time purchase</span>
           </div>
         </div>
@@ -136,7 +144,7 @@ export default function BirthdayBlastExperience() {
         <Card className="mb-12 border-amber-200 dark:border-amber-800">
           <CardHeader>
             <CardTitle className="text-2xl">What's Included</CardTitle>
-            <CardDescription>Everything you need for a memorable birthday surprise</CardDescription>
+            <CardDescription>Everything you need for an unforgettable birthday celebration</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -157,6 +165,31 @@ export default function BirthdayBlastExperience() {
 
         <Card className="mb-12 border-amber-200 dark:border-amber-800">
           <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <PartyPopper className="w-6 h-6 text-amber-500" />
+              Your 5 Birthday Songs
+            </CardTitle>
+            <CardDescription>Each song has its own unique style and cover art</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {songStyles.map((song, idx) => (
+                <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30">
+                  <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold text-sm">
+                    {idx + 1}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{song.name}</h4>
+                    <p className="text-sm text-muted-foreground">{song.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-12 border-amber-200 dark:border-amber-800">
+          <CardHeader>
             <CardTitle className="text-2xl">How It Works</CardTitle>
           </CardHeader>
           <CardContent>
@@ -165,28 +198,28 @@ export default function BirthdayBlastExperience() {
                 <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold">1</div>
                 <div>
                   <h3 className="font-semibold">Purchase the Experience</h3>
-                  <p className="text-muted-foreground">Quick payment of just $2.50</p>
+                  <p className="text-muted-foreground">Quick payment of just $5</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold">2</div>
                 <div>
                   <h3 className="font-semibold">Add Their Name</h3>
-                  <p className="text-muted-foreground">Enter the birthday person's name</p>
+                  <p className="text-muted-foreground">Enter the birthday person's name and any special details</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold">3</div>
                 <div>
-                  <h3 className="font-semibold">Generate the Song</h3>
-                  <p className="text-muted-foreground">We create a personalized birthday song with festive artwork</p>
+                  <h3 className="font-semibold">Generate 5 Songs</h3>
+                  <p className="text-muted-foreground">We create 5 unique birthday songs with festive artwork for each</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold">4</div>
                 <div>
                   <h3 className="font-semibold">Share the Joy</h3>
-                  <p className="text-muted-foreground">Send it instantly and watch them smile</p>
+                  <p className="text-muted-foreground">Send all 5 songs instantly and watch them celebrate</p>
                 </div>
               </div>
             </div>
@@ -204,9 +237,9 @@ export default function BirthdayBlastExperience() {
             {loading || productsLoading ? (
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
             ) : (
-              <Cake className="w-5 h-5 mr-2" />
+              <PartyPopper className="w-5 h-5 mr-2" />
             )}
-            Celebrate a Birthday — $2.50
+            Celebrate a Birthday — $5
           </Button>
           <p className="text-sm text-muted-foreground">
             Secure checkout powered by Stripe
