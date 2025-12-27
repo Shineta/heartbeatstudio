@@ -465,7 +465,7 @@ export default function CreatePage() {
           variant: "destructive",
         });
         setTimeout(() => {
-          setLocation('/#pricing');
+          window.location.href = '/#pricing';
         }, 1500);
         return;
       }
@@ -523,7 +523,7 @@ export default function CreatePage() {
           variant: "destructive",
         });
         setTimeout(() => {
-          setLocation('/#pricing');
+          window.location.href = '/#pricing';
         }, 1500);
         return;
       }
