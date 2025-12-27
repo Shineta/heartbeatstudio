@@ -465,7 +465,7 @@ export default function CreatePage() {
         });
         setTimeout(() => {
           console.log("[SongError] Redirecting now...");
-          window.location.href = '/#pricing';
+          window.location.href = '/pricing';
         }, 1500);
         return;
       }
@@ -523,7 +523,7 @@ export default function CreatePage() {
         });
         setTimeout(() => {
           console.log("[SongError] Redirecting now...");
-          window.location.href = '/#pricing';
+          window.location.href = '/pricing';
         }, 1500);
         return;
       }
