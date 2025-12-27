@@ -1893,6 +1893,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin-only: Seed Stripe products (creates products in current Stripe environment)
+  app.post('/api/admin/seed-stripe-products', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+      
+      const createdProducts: string[] = [];
+      const existingProducts = await stripe.products.list({ limit: 100 });
+      const productNames = existingProducts.data.map(p => p.name);
+      
+      // Credit Pack
+      if (!productNames.includes('Credit Pack')) {
+        const creditPack = await stripe.products.create({
+          name: 'Credit Pack',
+          description: '5 songs + cover art - Perfect for a special occasion',
+          metadata: { type: 'one_time', songs: '5' },
+        });
+        await stripe.prices.create({
+          product: creditPack.id,
+          unit_amount: 499,
+          currency: 'usd',
+          metadata: { plan: 'credit_pack' },
+        });
+        createdProducts.push('Credit Pack');
+      }
+      
+      // Subscription
+      if (!productNames.includes('Subscription')) {
+        const subscription = await stripe.products.create({
+          name: 'Subscription',
+          description: '15 songs per month - For those who celebrate often',
+          metadata: { type: 'subscription', songs_per_month: '15' },
+        });
+        await stripe.prices.create({
+          product: subscription.id,
+          unit_amount: 1000,
+          currency: 'usd',
+          recurring: { interval: 'month' },
+          metadata: { plan: 'subscription' },
+        });
+        createdProducts.push('Subscription');
+      }
+      
+      // Date Night Kit
+      if (!productNames.includes('Date Night Kit')) {
+        const dateNightKit = await stripe.products.create({
+          name: 'Date Night Kit',
+          description: '3 love songs + 3 covers - Perfect for romantic celebrations',
+          metadata: { type: 'kit', songs: '3', covers: '3', theme: 'love' },
+        });
+        await stripe.prices.create({
+          product: dateNightKit.id,
+          unit_amount: 500,
+          currency: 'usd',
+          metadata: { plan: 'date_night_kit' },
+        });
+        createdProducts.push('Date Night Kit');
+      }
+      
+      // Birthday Blast
+      if (!productNames.includes('Birthday Blast')) {
+        const birthdayBlast = await stripe.products.create({
+          name: 'Birthday Blast',
+          description: '1 birthday song + 1 visual animation',
+          metadata: { type: 'kit', songs: '1', visuals: '1', theme: 'birthday' },
+        });
+        await stripe.prices.create({
+          product: birthdayBlast.id,
+          unit_amount: 250,
+          currency: 'usd',
+          metadata: { plan: 'birthday_blast' },
+        });
+        createdProducts.push('Birthday Blast');
+      }
+      
+      // Gospel Greeting
+      if (!productNames.includes('Gospel Greeting')) {
+        const gospelGreeting = await stripe.products.create({
+          name: 'Gospel Greeting',
+          description: '2 spiritual messages + 2 images',
+          metadata: { type: 'kit', songs: '2', images: '2', theme: 'spiritual' },
+        });
+        await stripe.prices.create({
+          product: gospelGreeting.id,
+          unit_amount: 300,
+          currency: 'usd',
+          metadata: { plan: 'gospel_greeting' },
+        });
+        createdProducts.push('Gospel Greeting');
+      }
+      
+      // Classroom Cheers
+      if (!productNames.includes('Classroom Cheers')) {
+        const classroomCheers = await stripe.products.create({
+          name: 'Classroom Cheers',
+          description: '5 group songs for teachers & students',
+          metadata: { type: 'kit', songs: '5', theme: 'education' },
+        });
+        await stripe.prices.create({
+          product: classroomCheers.id,
+          unit_amount: 500,
+          currency: 'usd',
+          metadata: { plan: 'classroom_cheers' },
+        });
+        createdProducts.push('Classroom Cheers');
+      }
+      
+      res.json({ 
+        message: createdProducts.length > 0 
+          ? `Created ${createdProducts.length} products: ${createdProducts.join(', ')}`
+          : 'All products already exist',
+        created: createdProducts,
+      });
+    } catch (error: any) {
+      console.error('Error seeding Stripe products:', error);
+      res.status(500).json({ message: error.message || 'Failed to seed products' });
+    }
+  });
+
   // Customer portal for managing subscription
   app.post('/api/stripe/portal', isAuthenticated, async (req: Request, res: Response) => {
     try {
