@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles, CreditCard, Crown, Loader2, Heart, Cake, Church, GraduationCap } from "lucide-react";
+import { Check, Sparkles, CreditCard, Crown, Loader2, Heart, Cake, Church, GraduationCap, Music, Image, Link2, AlertCircle, Clock, Lightbulb, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
@@ -18,19 +18,40 @@ interface StripeProduct {
   }[];
 }
 
-const planConfig = [
+interface PlanFeature {
+  text: string;
+  included: boolean;
+  warning?: boolean;
+}
+
+interface CreditPlan {
+  name: string;
+  stripeName: string | null;
+  price: string;
+  period: string;
+  description: string;
+  icon: typeof Sparkles;
+  features: PlanFeature[];
+  cta: string;
+  highlighted: boolean;
+  badge: string | null;
+  mode: string | null;
+}
+
+const creditPlans: CreditPlan[] = [
   {
     name: "Free Plan",
     stripeName: null,
     price: "$0",
     period: "forever",
-    description: "Get started with AI-powered celebrations",
+    description: "Try it out and explore the basics",
     icon: Sparkles,
     features: [
-      "3 song generations",
-      "Email authentication required",
-      "Basic AI voices & styles",
-      "Share via link",
+      { text: "3 credits (1 credit = 1 song)", included: true },
+      { text: "Standard AI voices & styles", included: true },
+      { text: "AI-generated cover art", included: true },
+      { text: "Shareable link", included: true },
+      { text: "Email sign-in required", included: false, warning: true },
     ],
     cta: "Start Free",
     highlighted: false,
@@ -42,14 +63,14 @@ const planConfig = [
     stripeName: "Credit Pack",
     price: "$4.99",
     period: "one-time",
-    description: "Perfect for a special occasion",
+    description: "Perfect for a single occasion",
     icon: CreditCard,
     features: [
-      "5 songs + cover art",
-      "Premium AI voices",
-      "High-quality audio",
-      "Shareable links",
-      "Never expires",
+      { text: "5 credits (make up to 5 songs)", included: true },
+      { text: "Premium AI voices & styles", included: true },
+      { text: "Higher-quality audio", included: true },
+      { text: "AI cover art + shareable links", included: true },
+      { text: "Credits never expire", included: true },
     ],
     cta: "Buy Credits",
     highlighted: false,
@@ -61,15 +82,15 @@ const planConfig = [
     stripeName: "Subscription",
     price: "$10",
     period: "per month",
-    description: "For those who celebrate often",
+    description: "For people who celebrate often",
     icon: Crown,
     features: [
-      "15 songs per month",
-      "All premium voices & styles",
-      "Priority generation",
-      "Email & SMS delivery",
-      "Advanced scheduling",
-      "Cancel anytime",
+      { text: "15 credits every month", included: true },
+      { text: "All premium voices & styles", included: true },
+      { text: "Priority generation", included: true },
+      { text: "Email & SMS delivery", included: true },
+      { text: "Schedule messages to send later", included: true },
+      { text: "Cancel anytime", included: true },
     ],
     cta: "Subscribe Now",
     highlighted: true,
@@ -78,41 +99,78 @@ const planConfig = [
   },
 ];
 
-const kitConfig = [
+const experiences = [
   {
-    name: "Date Night Kit",
+    name: "Date Night Experience",
     stripeName: "Date Night Kit",
     price: "$5",
-    description: "3 love songs, 3 covers",
+    emoji: "heart",
+    tagline: "A romantic, ready-to-send experience — perfect for anniversaries, surprises, or \"just because.\"",
     icon: Heart,
-    theme: "love",
+    color: "from-rose-500/20 to-pink-500/20",
+    borderColor: "border-rose-200 dark:border-rose-800",
+    includes: [
+      "3 love songs with emotional progression (sweet → playful → intimate)",
+      "Pre-written romantic prompts (just add names)",
+      "Matching cover art set",
+      "Exclusive Date Night styles not available with credits",
+      "One shareable experience link",
+    ],
+    cta: "Create Date Night",
     mode: "payment",
   },
   {
-    name: "Birthday Blast",
+    name: "Birthday Blast Experience",
     stripeName: "Birthday Blast",
     price: "$2.50",
-    description: "1 birthday song, 1 visual",
+    emoji: "party",
+    tagline: "A fast, joyful birthday moment that feels personal — even last minute.",
     icon: Cake,
-    theme: "birthday",
+    color: "from-amber-500/20 to-orange-500/20",
+    borderColor: "border-amber-200 dark:border-amber-800",
+    includes: [
+      "1 personalized birthday song",
+      "1 themed birthday visual",
+      "Pre-filled celebratory prompts",
+      "Shareable link",
+    ],
+    cta: "Celebrate a Birthday",
     mode: "payment",
   },
   {
-    name: "Gospel Greeting",
+    name: "Gospel Greeting Experience",
     stripeName: "Gospel Greeting",
     price: "$3",
-    description: "2 spiritual messages, 2 images",
+    emoji: "pray",
+    tagline: "A spiritually grounded message rooted in warmth, encouragement, and faith.",
     icon: Church,
-    theme: "spiritual",
+    color: "from-purple-500/20 to-indigo-500/20",
+    borderColor: "border-purple-200 dark:border-purple-800",
+    includes: [
+      "2 gospel-inspired audio messages",
+      "Soulful, church-style vocal delivery",
+      "2 uplifting visuals",
+      "Shareable experience link",
+    ],
+    cta: "Send a Gospel Greeting",
     mode: "payment",
   },
   {
-    name: "Classroom Cheers",
+    name: "Classroom Cheers Experience",
     stripeName: "Classroom Cheers",
     price: "$5",
-    description: "5 group songs for teachers/students",
+    emoji: "grad",
+    tagline: "Encouragement and celebration for students and educators.",
     icon: GraduationCap,
-    theme: "education",
+    color: "from-emerald-500/20 to-teal-500/20",
+    borderColor: "border-emerald-200 dark:border-emerald-800",
+    includes: [
+      "5 group songs (class, team, or grade level)",
+      "School-friendly tones & lyrics",
+      "Coordinated classroom visuals",
+      "Easy sharing for families & classrooms",
+    ],
+    cta: "Celebrate Your Classroom",
     mode: "payment",
   },
 ];
@@ -122,13 +180,13 @@ export default function PricingSection() {
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const { data: productsData, isLoading: productsLoading, error: productsError } = useQuery<{ products: StripeProduct[] }>({
+  const { data: productsData, isLoading: productsLoading } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ['/api/stripe/products'],
     retry: 3,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  const handleSelectPlan = async (plan: typeof planConfig[0]) => {
+  const handleSelectPlan = async (plan: typeof creditPlans[0]) => {
     if (plan.name === "Free Plan") {
       setLocation('/auth');
       return;
@@ -142,7 +200,6 @@ export default function PricingSection() {
       return;
     }
 
-    // Check if products are still loading
     if (productsLoading) {
       toast({
         title: "Loading",
@@ -200,8 +257,7 @@ export default function PricingSection() {
     }
   };
 
-  const handleSelectKit = async (kit: typeof kitConfig[0]) => {
-    // Check if products are still loading
+  const handleSelectExperience = async (experience: typeof experiences[0]) => {
     if (productsLoading) {
       toast({
         title: "Loading",
@@ -211,14 +267,14 @@ export default function PricingSection() {
     }
 
     const stripeProduct = productsData?.products?.find(
-      p => p.name === kit.stripeName
+      p => p.name === experience.stripeName
     );
 
     if (!stripeProduct || stripeProduct.prices.length === 0) {
-      console.error('[Pricing] Kit not found:', kit.stripeName, 'Available:', productsData?.products?.map(p => p.name));
+      console.error('[Pricing] Experience not found:', experience.stripeName, 'Available:', productsData?.products?.map(p => p.name));
       toast({
         title: "Temporarily Unavailable",
-        description: "This kit is being set up. Please try again shortly.",
+        description: "This experience is being set up. Please try again shortly.",
         variant: "destructive",
       });
       return;
@@ -226,11 +282,11 @@ export default function PricingSection() {
 
     const priceId = stripeProduct.prices[0].id;
 
-    setLoadingPlan(kit.name);
+    setLoadingPlan(experience.name);
     try {
       const response = await apiRequest('POST', '/api/stripe/checkout', {
         priceId,
-        mode: kit.mode,
+        mode: experience.mode,
       });
       const data = await response.json();
       
@@ -244,7 +300,7 @@ export default function PricingSection() {
       if (error.message?.includes('Unauthorized') || error.message?.includes('401')) {
         toast({
           title: "Sign in required",
-          description: "Please sign in to purchase a kit.",
+          description: "Please sign in to purchase this experience.",
         });
         setLocation('/auth');
       } else {
@@ -260,139 +316,355 @@ export default function PricingSection() {
   };
 
   return (
-    <section className="py-16 px-6 bg-muted/30">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your celebration style
+    <section className="py-16 px-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+            Simple Pricing. Meaningful Moments.
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Create songs, messages, and visuals that celebrate the people you love — whether you want full creative control or a ready-made experience.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {planConfig.map((plan) => (
-            <Card 
-              key={plan.name} 
-              className={`relative ${plan.highlighted ? 'border-primary shadow-lg scale-105' : ''} hover-elevate flex flex-col`}
-              data-testid={`card-pricing-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              {plan.badge && (
-                <Badge 
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 ${
-                    plan.highlighted 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-secondary text-secondary-foreground'
-                  }`}
-                >
-                  {plan.badge}
-                </Badge>
-              )}
-              <CardHeader className="text-center pt-6">
-                <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <plan.icon className="w-6 h-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                  {plan.name}
+        {/* Choose How You Want to Create */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+            <Music className="w-5 h-5" />
+            <span className="font-semibold">Choose How You Want to Create</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <Card className="text-left">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="text-2xl">1</span>
+                  Create Freely with Credits
                 </CardTitle>
-                <CardDescription className="text-sm">{plan.description}</CardDescription>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                    {plan.price}
-                  </span>
-                  <span className="text-muted-foreground text-sm ml-1">/ {plan.period}</span>
-                </div>
               </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-2">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+              <CardContent>
+                <p className="text-muted-foreground">Best if you know what you want and like to customize.</p>
               </CardContent>
-              <CardFooter className="pt-0">
-                <Button 
-                  className="w-full"
-                  variant={plan.highlighted ? "default" : "outline"}
-                  disabled={loadingPlan === plan.name}
-                  onClick={() => handleSelectPlan(plan)}
-                  data-testid={`button-select-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  {loadingPlan === plan.name ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    plan.cta
-                  )}
-                </Button>
-              </CardFooter>
             </Card>
-          ))}
+            
+            <Card className="text-left">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="text-2xl">2</span>
+                  Choose a Special Experience
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Best if you want something beautiful, fast, and emotionally guided.</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          All plans include AI-generated cover art and shareable links. No hidden fees.
-        </p>
-
-        {/* Themed Kits Section */}
-        <div className="mt-16">
+        {/* Credit-Based Plans Section */}
+        <div className="mb-20">
           <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-              Themed Kits & Bundles
-            </h3>
-            <p className="text-muted-foreground">
-              Pre-packaged celebrations for every occasion
-            </p>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+              Credit-Based Plans
+            </h2>
+            <p className="text-muted-foreground">For creators who want flexibility</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            {kitConfig.map((kit) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {creditPlans.map((plan) => (
               <Card 
-                key={kit.name} 
-                className="hover-elevate flex flex-col"
-                data-testid={`card-kit-${kit.name.toLowerCase().replace(/\s+/g, '-')}`}
+                key={plan.name}
+                className={`relative flex flex-col ${plan.highlighted ? 'ring-2 ring-primary shadow-lg' : ''}`}
+                data-testid={`card-plan-${plan.name}`}
               >
+                {plan.badge && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
+                    {plan.badge}
+                  </Badge>
+                )}
+                
                 <CardHeader className="text-center pb-2">
-                  <div className="mx-auto mb-2 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <kit.icon className="w-5 h-5 text-primary" />
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <plan.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                    {kit.name}
-                  </CardTitle>
-                  <CardDescription className="text-xs">{kit.description}</CardDescription>
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground ml-1">· {plan.period}</span>
+                  </div>
+                  <CardDescription className="mt-2">{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center pb-2">
-                  <span className="text-2xl font-bold text-primary" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                    {kit.price}
-                  </span>
+                
+                <CardContent className="flex-1">
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        {feature.warning ? (
+                          <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                        ) : (
+                          <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        )}
+                        <span className={feature.warning ? 'text-muted-foreground' : ''}>{feature.text}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
-                <CardFooter className="pt-0">
+                
+                <CardFooter>
                   <Button 
                     className="w-full"
-                    variant="outline"
-                    size="sm"
-                    disabled={loadingPlan === kit.name}
-                    onClick={() => handleSelectKit(kit)}
-                    data-testid={`button-buy-${kit.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    variant={plan.highlighted ? "default" : "outline"}
+                    onClick={() => handleSelectPlan(plan)}
+                    disabled={loadingPlan === plan.name}
+                    data-testid={`button-plan-${plan.name}`}
                   >
-                    {loadingPlan === kit.name ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      "Buy Kit"
-                    )}
+                    {loadingPlan === plan.name ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : null}
+                    {plan.cta}
                   </Button>
                 </CardFooter>
               </Card>
             ))}
+          </div>
+
+          {/* How Credits Work */}
+          <div className="mt-8 text-center">
+            <Card className="inline-block px-8 py-4 bg-muted/50">
+              <p className="text-lg font-medium">
+                <span className="text-primary font-bold">How Credits Work:</span>{' '}
+                1 credit = 1 song. Every song includes cover art and a shareable link.
+              </p>
+            </Card>
+          </div>
+        </div>
+
+        {/* Special Experiences Section */}
+        <div className="mb-20">
+          <div className="text-center mb-8">
+            <Badge variant="secondary" className="mb-4 px-4 py-1 text-base">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Special Experiences
+            </Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+              Themed Kits
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Done-for-you moments — no writing, no guessing. These aren't just songs. They're guided experiences designed for specific moments in life.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {experiences.map((exp) => (
+              <Card 
+                key={exp.name}
+                className={`relative overflow-hidden bg-gradient-to-br ${exp.color} ${exp.borderColor} border-2`}
+                data-testid={`card-experience-${exp.name}`}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center">
+                        <exp.icon className="w-5 h-5" />
+                      </div>
+                      <CardTitle className="text-xl">{exp.name}</CardTitle>
+                    </div>
+                    <span className="text-2xl font-bold">{exp.price}</span>
+                  </div>
+                  <CardDescription className="text-foreground/80">{exp.tagline}</CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <p className="text-sm font-semibold mb-3 text-foreground/70">Includes:</p>
+                  <ul className="space-y-2">
+                    {exp.includes.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                
+                <CardFooter>
+                  <Button 
+                    className="w-full"
+                    onClick={() => handleSelectExperience(exp)}
+                    disabled={loadingPlan === exp.name}
+                    data-testid={`button-experience-${exp.name}`}
+                  >
+                    {loadingPlan === exp.name ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : null}
+                    {exp.cta}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Comparison Section */}
+        <div className="mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+              Credits vs Special Experiences
+            </h2>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            <Card>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-2 divide-x">
+                  <div className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-primary" />
+                      Credits
+                    </h3>
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Full creative control
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Write your own prompts
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Flexible styles
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Best for creators
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Songs only
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="p-6 bg-primary/5">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      Special Experiences
+                    </h3>
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Done-for-you
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Prompts included
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Exclusive themed styles
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Best for busy or emotional moments
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Songs + visuals + structure
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Not Sure What to Choose */}
+        <div className="mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+              Not Sure What to Choose?
+            </h2>
+          </div>
+
+          <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Lightbulb className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">"I want to customize everything"</p>
+                  <p className="text-sm text-muted-foreground">→ Credits</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">"I'm short on time"</p>
+                  <p className="text-sm text-muted-foreground">→ Special Experience</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Heart className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">"I want this to feel special"</p>
+                  <p className="text-sm text-muted-foreground">→ Special Experience</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <RefreshCw className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">"I'll use this often"</p>
+                  <p className="text-sm text-muted-foreground">→ Subscription</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Every Plan Includes */}
+        <div className="text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+            Every Plan Includes
+          </h2>
+          
+          <div className="flex flex-wrap justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Image className="w-5 h-5 text-primary" />
+              </div>
+              <span className="font-medium">AI-generated cover art</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-primary" />
+              </div>
+              <span className="font-medium">Shareable links</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Check className="w-5 h-5 text-primary" />
+              </div>
+              <span className="font-medium">No hidden fees</span>
+            </div>
           </div>
         </div>
       </div>
