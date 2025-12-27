@@ -11,7 +11,9 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +52,8 @@ export default function RealDashboard() {
   const [uploadingCover, setUploadingCover] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCreationId, setSelectedCreationId] = useState<string | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedLovedOne, setSelectedLovedOne] = useState<LovedOne | null>(null);
 
   const { data: lovedOnes = [], isLoading } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -525,7 +529,8 @@ export default function RealDashboard() {
                       toast({ title: "Coming Soon", description: "Animation creator will be available soon!" });
                     }}
                     onClick={() => {
-                      toast({ title: "Profile View", description: "Detailed profile view coming soon!" });
+                      setSelectedLovedOne(lovedOne);
+                      setProfileDialogOpen(true);
                     }}
                   />
                 ))}
@@ -919,6 +924,125 @@ export default function RealDashboard() {
               </Button>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog for Loved One Details */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-loved-one-profile">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Profile Details</DialogTitle>
+          </DialogHeader>
+          {selectedLovedOne && (
+            <div className="space-y-6">
+              {/* Header with Avatar */}
+              <div className="flex items-center gap-4">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={selectedLovedOne.avatarUrl || undefined} alt={selectedLovedOne.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                    {selectedLovedOne.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                    {selectedLovedOne.name}
+                  </h2>
+                  {selectedLovedOne.nickname && (
+                    <p className="text-muted-foreground">"{selectedLovedOne.nickname}"</p>
+                  )}
+                  <Badge variant="secondary" className="mt-1">
+                    <Heart className="w-3 h-3 mr-1" />
+                    {selectedLovedOne.relationship}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Details Section */}
+              <div className="space-y-4">
+                {selectedLovedOne.birthday && (
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                    <Cake className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">Birthday</p>
+                      <p className="text-muted-foreground">
+                        {(() => {
+                          const [month, day] = selectedLovedOne.birthday!.split('-');
+                          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                            'July', 'August', 'September', 'October', 'November', 'December'];
+                          return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedLovedOne.interests && (
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                    <Gift className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">Interests</p>
+                      <p className="text-muted-foreground">{selectedLovedOne.interests}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedLovedOne.insideJokes && (
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                    <Sparkles className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">Inside Jokes & Special Memories</p>
+                      <p className="text-muted-foreground">{selectedLovedOne.insideJokes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {!selectedLovedOne.birthday && !selectedLovedOne.interests && !selectedLovedOne.insideJokes && (
+                  <p className="text-center text-muted-foreground py-4">
+                    No additional details added yet
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex flex-col gap-1 h-auto py-3"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    window.location.href = `/create?type=song&lovedOneId=${selectedLovedOne.id}`;
+                  }}
+                  data-testid="button-profile-create-song"
+                >
+                  <Music className="w-5 h-5" />
+                  <span className="text-xs">Create Song</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex flex-col gap-1 h-auto py-3"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    window.location.href = `/create?type=card&lovedOneId=${selectedLovedOne.id}`;
+                  }}
+                  data-testid="button-profile-create-card"
+                >
+                  <Gift className="w-5 h-5" />
+                  <span className="text-xs">Create Card</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex flex-col gap-1 h-auto py-3"
+                  onClick={() => {
+                    toast({ title: "Coming Soon", description: "Animation creator will be available soon!" });
+                  }}
+                  data-testid="button-profile-create-animation"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span className="text-xs">Animation</span>
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
