@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, Users } from "lucide-react";
@@ -39,6 +40,7 @@ export default function CreateClassroomCheers() {
   const [className, setClassName] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [gradeLevel, setGradeLevel] = useState("elementary");
+  const [eventInfo, setEventInfo] = useState("");
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
@@ -119,7 +121,7 @@ export default function CreateClassroomCheers() {
           tone: 'encouraging',
           genre: 'kids',
           voiceType: 'cheerful',
-          customMessage: `A ${songThemes[i].theme.toLowerCase()} song for ${className}${teacherName ? ` with ${teacherName}` : ''}`,
+          customMessage: `A ${songThemes[i].theme.toLowerCase()} song for ${className}${teacherName ? ` with ${teacherName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
         
         const initialCreation = await response.json();
@@ -225,6 +227,19 @@ export default function CreateClassroomCheers() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventInfo">Event Details (optional)</Label>
+                <Textarea
+                  id="eventInfo"
+                  placeholder="Add details about the class or event (e.g., end of year celebration, field day, class mascot, special achievements...)"
+                  value={eventInfo}
+                  onChange={(e) => setEventInfo(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                  data-testid="input-event-info"
+                />
               </div>
 
               <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-4">

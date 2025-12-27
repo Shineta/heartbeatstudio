@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Church, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
@@ -38,6 +39,7 @@ export default function CreateGospelGreeting() {
   const { isAuthenticated } = useAuth();
   const [recipientName, setRecipientName] = useState("");
   const [occasion, setOccasion] = useState("encouragement");
+  const [eventInfo, setEventInfo] = useState("");
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
@@ -116,7 +118,7 @@ export default function CreateGospelGreeting() {
           tone: 'spiritual',
           genre: 'gospel',
           voiceType: 'soulful',
-          customMessage: `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`,
+          customMessage: `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
         });
         
         const initialCreation = await response.json();
@@ -211,6 +213,19 @@ export default function CreateGospelGreeting() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventInfo">Event Details (optional)</Label>
+                <Textarea
+                  id="eventInfo"
+                  placeholder="Add details about the occasion (e.g., church event, what they're going through, special message...)"
+                  value={eventInfo}
+                  onChange={(e) => setEventInfo(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                  data-testid="input-event-info"
+                />
               </div>
 
               <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-4">

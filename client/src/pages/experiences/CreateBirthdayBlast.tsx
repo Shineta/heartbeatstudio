@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Cake, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -36,6 +37,7 @@ export default function CreateBirthdayBlast() {
   const { isAuthenticated } = useAuth();
   const [birthdayPersonName, setBirthdayPersonName] = useState("");
   const [yourName, setYourName] = useState("");
+  const [eventInfo, setEventInfo] = useState("");
   const [generating, setGenerating] = useState(false);
   const [song, setSong] = useState<GeneratedSong | null>(null);
   const [shareLink, setShareLink] = useState("");
@@ -96,7 +98,7 @@ export default function CreateBirthdayBlast() {
         tone: 'joyful',
         genre: 'pop',
         voiceType: 'upbeat',
-        customMessage: `A special birthday song for ${birthdayPersonName}${yourName ? ` from ${yourName}` : ''}`,
+        customMessage: `A special birthday song for ${birthdayPersonName}${yourName ? ` from ${yourName}` : ''}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
       });
       
       const initialCreation = await response.json();
@@ -181,6 +183,19 @@ export default function CreateBirthdayBlast() {
                   value={yourName}
                   onChange={(e) => setYourName(e.target.value)}
                   data-testid="input-your-name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventInfo">Event Details (optional)</Label>
+                <Textarea
+                  id="eventInfo"
+                  placeholder="Add details about the birthday party or celebration (e.g., turning 30, surprise party, their favorite things...)"
+                  value={eventInfo}
+                  onChange={(e) => setEventInfo(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                  data-testid="input-event-info"
                 />
               </div>
 
