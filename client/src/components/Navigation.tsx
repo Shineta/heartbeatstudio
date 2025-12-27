@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, X, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,7 +75,7 @@ export default function Navigation() {
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" data-testid="link-logo-home">
             <Heart className="w-6 h-6 text-primary fill-primary heartbeat" />
             <div className="flex flex-col">
               <span className="text-xl font-semibold leading-tight" style={{ fontFamily: 'Fredoka, sans-serif' }}>
@@ -84,7 +85,7 @@ export default function Navigation() {
                 by Horton's Tech Innovations
               </span>
             </div>
-          </div>
+          </Link>
 
           {!isAuthenticated ? (
             <>
