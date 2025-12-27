@@ -118,6 +118,7 @@ const experiences = [
     ],
     cta: "Create Date Night",
     mode: "payment",
+    route: "/experience/date-night",
   },
   {
     name: "Birthday Blast Experience",
@@ -136,6 +137,7 @@ const experiences = [
     ],
     cta: "Celebrate a Birthday",
     mode: "payment",
+    route: "/experience/birthday-blast",
   },
   {
     name: "Gospel Greeting Experience",
@@ -154,6 +156,7 @@ const experiences = [
     ],
     cta: "Send a Gospel Greeting",
     mode: "payment",
+    route: "/experience/gospel-greeting",
   },
   {
     name: "Classroom Cheers Experience",
@@ -172,6 +175,7 @@ const experiences = [
     ],
     cta: "Celebrate Your Classroom",
     mode: "payment",
+    route: "/experience/classroom-cheers",
   },
 ];
 
@@ -257,62 +261,8 @@ export default function PricingSection() {
     }
   };
 
-  const handleSelectExperience = async (experience: typeof experiences[0]) => {
-    if (productsLoading) {
-      toast({
-        title: "Loading",
-        description: "Please wait while we load pricing information.",
-      });
-      return;
-    }
-
-    const stripeProduct = productsData?.products?.find(
-      p => p.name === experience.stripeName
-    );
-
-    if (!stripeProduct || stripeProduct.prices.length === 0) {
-      console.error('[Pricing] Experience not found:', experience.stripeName, 'Available:', productsData?.products?.map(p => p.name));
-      toast({
-        title: "Temporarily Unavailable",
-        description: "This experience is being set up. Please try again shortly.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const priceId = stripeProduct.prices[0].id;
-
-    setLoadingPlan(experience.name);
-    try {
-      const response = await apiRequest('POST', '/api/stripe/checkout', {
-        priceId,
-        mode: experience.mode,
-      });
-      const data = await response.json();
-      
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      if (error.message?.includes('Unauthorized') || error.message?.includes('401')) {
-        toast({
-          title: "Sign in required",
-          description: "Please sign in to purchase this experience.",
-        });
-        setLocation('/auth');
-      } else {
-        toast({
-          title: "Checkout Failed",
-          description: error.message || "Unable to start checkout. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setLoadingPlan(null);
-    }
+  const handleSelectExperience = (experience: typeof experiences[0]) => {
+    setLocation(experience.route);
   };
 
   return (
@@ -493,14 +443,8 @@ export default function PricingSection() {
                   <Button 
                     className="w-full"
                     onClick={() => handleSelectExperience(exp)}
-                    disabled={loadingPlan === exp.name || productsLoading}
                     data-testid={`button-experience-${exp.name}`}
                   >
-                    {loadingPlan === exp.name ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : productsLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
                     {exp.cta}
                   </Button>
                 </CardFooter>

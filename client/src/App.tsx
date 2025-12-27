@@ -15,6 +15,10 @@ import SharePage from "@/pages/SharePage";
 import MixtapePage from "@/pages/MixtapePage";
 import EditMixtapePage from "@/pages/EditMixtapePage";
 import PricingPage from "@/pages/PricingPage";
+import DateNightExperience from "@/pages/experiences/DateNightExperience";
+import BirthdayBlastExperience from "@/pages/experiences/BirthdayBlastExperience";
+import GospelGreetingExperience from "@/pages/experiences/GospelGreetingExperience";
+import ClassroomCheersExperience from "@/pages/experiences/ClassroomCheersExperience";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,7 +26,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/')) {
+    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/') && !location.startsWith('/experience/')) {
       setLocation('/auth');
     }
   }, [isAuthenticated, isLoading, location, setLocation]);
@@ -45,6 +49,10 @@ function Router() {
       <Route path="/auth/verify-magic-link" component={VerifyMagicLink} />
       <Route path="/auth/reset-password" component={ResetPasswordPage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/experience/date-night" component={DateNightExperience} />
+      <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
+      <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />
+      <Route path="/experience/classroom-cheers" component={ClassroomCheersExperience} />
       <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
