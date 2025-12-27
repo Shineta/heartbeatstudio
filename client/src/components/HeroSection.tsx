@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Heart, Sparkles } from "lucide-react";
-import heroImage from "@assets/generated_images/multi-occasion_celebration_hero_image.png";
+import heroImage from "@assets/generated_images/african_american_multi-occasion_celebration.png";
 
 export default function HeroSection() {
   return (
