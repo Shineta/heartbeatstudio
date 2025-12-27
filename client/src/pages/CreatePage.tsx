@@ -166,8 +166,11 @@ export default function CreatePage() {
 
   // Poll for song status updates when generating
   useEffect(() => {
+    console.log('[SongPoll] Effect running, createdSong:', createdSong?.id, 'status:', createdSong?.status);
+    
     if (!createdSong?.id || createdSong?.status !== 'generating') {
       if (songPollingRef.current.interval) {
+        console.log('[SongPoll] Clearing interval - status is not generating');
         clearInterval(songPollingRef.current.interval);
         songPollingRef.current.interval = null;
       }
@@ -177,21 +180,30 @@ export default function CreatePage() {
     songPollingRef.current.toastShown = false;
     
     if (songPollingRef.current.interval) {
+      console.log('[SongPoll] Interval already exists, skipping');
       return;
     }
     
     const songId = createdSong.id;
+    console.log('[SongPoll] Starting polling for song:', songId);
     
     songPollingRef.current.interval = setInterval(async () => {
+      console.log('[SongPoll] Polling for status...');
       try {
         const res = await fetch(`/api/creations/${songId}`, {
           credentials: 'include',
         });
-        if (!res.ok) return;
+        console.log('[SongPoll] Response status:', res.status);
+        if (!res.ok) {
+          console.log('[SongPoll] Response not ok, skipping');
+          return;
+        }
         
         const updatedSong = await res.json();
+        console.log('[SongPoll] Got song status:', updatedSong.status);
         
         if (updatedSong.status === 'ready' && !songPollingRef.current.toastShown) {
+          console.log('[SongPoll] Song is ready! Updating state...');
           songPollingRef.current.toastShown = true;
           setCreatedSong(updatedSong);
           setSongProgress(100);
@@ -202,6 +214,7 @@ export default function CreatePage() {
           toast({ title: "Success", description: "Your song is ready!" });
           queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
         } else if (updatedSong.status === 'failed' && !songPollingRef.current.toastShown) {
+          console.log('[SongPoll] Song failed! Updating state...');
           songPollingRef.current.toastShown = true;
           setCreatedSong(updatedSong);
           if (songPollingRef.current.interval) {
@@ -211,11 +224,12 @@ export default function CreatePage() {
           toast({ title: "Error", description: "Song generation failed. Please try again.", variant: "destructive" });
         }
       } catch (error) {
-        console.error('Failed to poll song status:', error);
+        console.error('[SongPoll] Failed to poll song status:', error);
       }
     }, 5000);
     
     return () => {
+      console.log('[SongPoll] Cleanup - clearing interval');
       if (songPollingRef.current.interval) {
         clearInterval(songPollingRef.current.interval);
         songPollingRef.current.interval = null;
