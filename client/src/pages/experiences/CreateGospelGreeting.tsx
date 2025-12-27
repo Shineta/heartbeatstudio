@@ -13,6 +13,7 @@ import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { gospelGenres } from "@/lib/genres";
 
 interface GeneratedSong {
   title: string;
@@ -20,18 +21,6 @@ interface GeneratedSong {
   coverUrl: string;
   theme: string;
 }
-
-const availableGenres = [
-  { id: "gospel", label: "Gospel" },
-  { id: "soul", label: "Soul" },
-  { id: "contemporary-christian", label: "Contemporary Christian" },
-  { id: "hymn", label: "Hymn / Traditional" },
-  { id: "rap", label: "Rap" },
-  { id: "r&b", label: "R&B" },
-  { id: "acoustic", label: "Acoustic" },
-  { id: "choir", label: "Choir" },
-  { id: "inspirational", label: "Inspirational" },
-];
 
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -260,7 +249,7 @@ export default function CreateGospelGreeting() {
               <div className="space-y-3">
                 <Label>Select Genres</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  {availableGenres.map((genre) => (
+                  {gospelGenres.map((genre) => (
                     <div key={genre.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`genre-${genre.id}`}

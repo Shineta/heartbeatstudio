@@ -12,6 +12,7 @@ import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { birthdayGenres } from "@/lib/genres";
 
 interface GeneratedSong {
   title: string;
@@ -19,18 +20,6 @@ interface GeneratedSong {
   coverUrl: string;
   theme: string;
 }
-
-const availableGenres = [
-  { id: "pop", label: "Pop" },
-  { id: "dance", label: "Dance / EDM" },
-  { id: "hip-hop", label: "Hip Hop" },
-  { id: "rap", label: "Rap" },
-  { id: "rock", label: "Rock" },
-  { id: "soul", label: "Soul" },
-  { id: "country", label: "Country" },
-  { id: "r&b", label: "R&B" },
-  { id: "jazz", label: "Jazz" },
-];
 
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -249,7 +238,7 @@ export default function CreateBirthdayBlast() {
               <div className="space-y-3">
                 <Label>Select Genres</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  {availableGenres.map((genre) => (
+                  {birthdayGenres.map((genre) => (
                     <div key={genre.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`genre-${genre.id}`}

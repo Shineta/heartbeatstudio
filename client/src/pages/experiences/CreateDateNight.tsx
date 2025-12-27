@@ -12,6 +12,7 @@ import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { dateNightGenres } from "@/lib/genres";
 
 interface GeneratedSong {
   title: string;
@@ -19,18 +20,6 @@ interface GeneratedSong {
   coverUrl: string;
   mood: string;
 }
-
-const availableGenres = [
-  { id: "soul", label: "Soul" },
-  { id: "r&b", label: "R&B" },
-  { id: "pop", label: "Pop" },
-  { id: "rap", label: "Rap" },
-  { id: "jazz", label: "Jazz" },
-  { id: "acoustic", label: "Acoustic" },
-  { id: "country", label: "Country" },
-  { id: "electronic", label: "Electronic" },
-  { id: "classical", label: "Classical" },
-];
 
 async function pollForCompletion(creationId: string, maxAttempts = 60): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -247,7 +236,7 @@ export default function CreateDateNight() {
               <div className="space-y-3">
                 <Label>Select Genres</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  {availableGenres.map((genre) => (
+                  {dateNightGenres.map((genre) => (
                     <div key={genre.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`genre-${genre.id}`}
