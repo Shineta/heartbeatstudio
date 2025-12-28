@@ -118,9 +118,14 @@ Preferred communication style: Simple, everyday language.
 - **Suno API**: AI song generation with vocals and music
   - Endpoint: `https://api.sunoapi.org/suno-api/generate-music`
   - Requires SUNO_API_KEY environment variable
-  - Generates complete songs (45 seconds) with vocals, music, lyrics, and cover art
-  - Model: v4_5PLUS for highest quality output
+  - Generates complete songs (~3 minutes) with vocals, music, lyrics, and cover art
+  - Model: V5 for highest quality output
   - Returns MP3 audio files, lyrics, and optional cover images
+  - **Boost Music Style (V4.5)**: Enhanced style descriptions for better genre accuracy
+    - Uses `/api/v1/style/generate` endpoint for conversational style prompts
+    - Rap sub-genres get detailed style descriptions (Trap, Boom Bap, Old School, etc.)
+    - Boosted styles are cached for 1 hour to reduce API calls
+    - Fallback to basic style if boost fails
 
 **Authentication**
 - **Custom Multi-Method Authentication**:

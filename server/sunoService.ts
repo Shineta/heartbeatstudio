@@ -481,6 +481,119 @@ interface SunoConcatResponse {
   };
 }
 
+interface SunoBoostStyleResponse {
+  code: number;
+  msg: string;
+  data: {
+    taskId: string;
+    param: string;
+    result: string;
+    creditsConsumed: number;
+    creditsRemaining: number;
+    successFlag: string;
+    errorCode?: number;
+    errorMessage?: string;
+    createTime: string;
+  };
+}
+
+// Detailed descriptions for rap sub-genres to be boosted by V4.5
+const rapSubGenreDescriptions: Record<string, string> = {
+  "trap": "Create a hard-hitting trap track with heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, and aggressive vocal delivery with ad-libs.",
+  "boom-bap": "Create a classic boom bap hip hop track with chopped soul samples, punchy drum breaks, vintage vinyl crackle, and lyrical flow with boom bap groove.",
+  "conscious-rap": "Create a conscious hip hop track with thoughtful lyricism, soulful samples, live instrumentation, and meaningful spoken word delivery about real issues.",
+  "gangsta-rap": "Create a gangsta rap track with West Coast G-funk synths, hard-hitting drums, deep bass, and aggressive street narrative delivery.",
+  "melodic-rap": "Create a melodic rap track with auto-tuned vocals, emotional melodies, lush synth pads, gentle trap beats, and singing-rap hybrid delivery.",
+  "old-school-rap": "Create a classic old school hip hop track with boom bap drums, vinyl samples, nostalgic 80s-90s production, and smooth flow with simple hooks.",
+  "southern-rap": "Create a Southern hip hop track with crunk energy, thick bass, trunk-rattling beats, call-and-response hooks, and drawled vocal delivery.",
+  "east-coast-rap": "Create an East Coast hip hop track with boom bap foundation, jazz samples, lyrical complexity, and classic New York rap delivery.",
+  "west-coast-rap": "Create a West Coast hip hop track with G-funk synths, laid-back grooves, smooth bass lines, and California sunshine vibes.",
+  "drill": "Create a drill rap track with sliding 808s, dark minor key melodies, aggressive hi-hat patterns, and intense rapid-fire vocal delivery.",
+};
+
+// Cache for boosted styles to avoid redundant API calls
+const boostedStyleCache: Map<string, { style: string; timestamp: number }> = new Map();
+const CACHE_DURATION_MS = 1000 * 60 * 60; // 1 hour cache
+
+/**
+ * Boost Music Style using V4.5's enhanced style capability.
+ * Takes a style description and returns an enhanced, more detailed version.
+ */
+async function boostMusicStyle(styleDescription: string): Promise<string> {
+  // Check cache first
+  const cacheKey = styleDescription.toLowerCase().trim();
+  const cached = boostedStyleCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+    console.log(`[Suno] Using cached boosted style for: ${cacheKey.substring(0, 30)}...`);
+    return cached.style;
+  }
+
+  try {
+    console.log(`[Suno Boost] Boosting style: ${styleDescription.substring(0, 50)}...`);
+    
+    const response = await axios.post<SunoBoostStyleResponse>(
+      `${SUNO_API_BASE_URL}/api/v1/style/generate`,
+      {
+        content: styleDescription,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${SUNO_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 30000, // 30 second timeout
+      }
+    );
+
+    if (response.data.code !== 200) {
+      console.error(`[Suno Boost] API returned error: ${response.data.msg}`);
+      return styleDescription; // Fall back to original
+    }
+
+    const boostedStyle = response.data.data.result;
+    if (!boostedStyle) {
+      console.warn(`[Suno Boost] No result returned, using original`);
+      return styleDescription;
+    }
+
+    console.log(`[Suno Boost] Success! Boosted style: ${boostedStyle.substring(0, 80)}...`);
+    
+    // Cache the result
+    boostedStyleCache.set(cacheKey, { style: boostedStyle, timestamp: Date.now() });
+    
+    return boostedStyle;
+  } catch (error: any) {
+    console.error(`[Suno Boost] Error boosting style: ${error.message}`);
+    return styleDescription; // Fall back to original on error
+  }
+}
+
+/**
+ * Get a detailed style description for rap sub-genres.
+ * Returns null if the genre is not a recognized rap sub-genre.
+ */
+function getRapSubGenreStyle(genre: string): string | null {
+  const normalized = genre.toLowerCase().trim();
+  
+  // Check for rap sub-genre patterns
+  for (const [key, description] of Object.entries(rapSubGenreDescriptions)) {
+    if (normalized.includes(key) || normalized.includes(key.replace('-', ' '))) {
+      return description;
+    }
+  }
+  
+  // Check for specific formatted patterns like "Trap Rap", "Old School Rap"
+  const subGenreMatch = normalized.match(/^(.+?)\s*rap$/);
+  if (subGenreMatch) {
+    const subGenre = subGenreMatch[1].trim().replace(/\s+/g, '-');
+    if (rapSubGenreDescriptions[subGenre]) {
+      return rapSubGenreDescriptions[subGenre];
+    }
+  }
+  
+  return null;
+}
+
 /**
  * Resolve the genre into a canonical key that matches our style map.
  * - Any "gospel-like" genre → "black-gospel"
@@ -950,8 +1063,24 @@ export async function generateSongWithLyrics(params: {
       style = styleMatch[1].trim().substring(0, 100);
       console.log(`[Suno] Using CUSTOM style from notes: ${style}`);
     } else {
-      style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
-      console.log(`[Suno] Using auto-generated style: ${style}`);
+      // Check if this is a rap sub-genre that needs boosting
+      const rapSubGenreStyle = getRapSubGenreStyle(params.genre || '');
+      
+      if (rapSubGenreStyle) {
+        // Use V4.5 Boost Style API for rap sub-genres
+        console.log(`[Suno] Detected rap sub-genre in: ${params.genre}`);
+        try {
+          style = await boostMusicStyle(rapSubGenreStyle);
+          console.log(`[Suno] Using BOOSTED rap sub-genre style: ${style.substring(0, 80)}...`);
+        } catch (err) {
+          // Fall back to the detailed description without boost
+          style = rapSubGenreStyle.substring(0, 200);
+          console.log(`[Suno] Boost failed, using fallback rap style: ${style.substring(0, 80)}...`);
+        }
+      } else {
+        style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
+        console.log(`[Suno] Using auto-generated style: ${style}`);
+      }
     }
 
     // Step 1: Generate initial clip (uses V4 for longer initial output)
