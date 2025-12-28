@@ -575,7 +575,16 @@ async function boostMusicStyle(styleDescription: string): Promise<string> {
 function getRapSubGenreStyle(genre: string): string | null {
   const normalized = genre.toLowerCase().trim();
   
-  // Check for rap sub-genre patterns
+  // Direct key lookup for resolved genres like "trap-rap", "boom-bap-rap", etc.
+  const resolvedKeyMatch = normalized.match(/^(.+?)-rap$/);
+  if (resolvedKeyMatch) {
+    const subGenreKey = resolvedKeyMatch[1];
+    if (rapSubGenreDescriptions[subGenreKey]) {
+      return rapSubGenreDescriptions[subGenreKey];
+    }
+  }
+  
+  // Check for rap sub-genre patterns in the key names
   for (const [key, description] of Object.entries(rapSubGenreDescriptions)) {
     if (normalized.includes(key) || normalized.includes(key.replace('-', ' '))) {
       return description;
@@ -592,6 +601,20 @@ function getRapSubGenreStyle(genre: string): string | null {
   }
   
   return null;
+}
+
+/**
+ * Check if a genre is any type of rap sub-genre.
+ */
+function isRapSubGenre(genre: string): boolean {
+  const normalized = genre.toLowerCase().trim();
+  return normalized.includes('rap') || 
+         normalized.includes('hip-hop') || 
+         normalized.includes('hip hop') ||
+         normalized.includes('trap') ||
+         normalized.includes('drill') ||
+         normalized.includes('boom-bap') ||
+         normalized.includes('boom bap');
 }
 
 /**
@@ -625,7 +648,19 @@ function resolveGenre(input?: string): string {
   if (g === "hip hop" || g === "hip-hop") return "hiphop";
   if (g === "hiphop") return "hiphop";
   if (g === "rap") return "rap";
-  if (g === "old school rap" || g === "old school hip hop" || g === "80s hip hop") return "old-school-rap";
+  
+  // Handle all rap sub-genres - preserve the sub-genre for boost feature
+  // These match the frontend's rapSubGenres configuration
+  if (g.includes("trap") && g.includes("rap")) return "trap-rap";
+  if (g.includes("boom bap") || g.includes("boom-bap")) return "boom-bap-rap";
+  if (g.includes("conscious")) return "conscious-rap";
+  if (g.includes("gangsta")) return "gangsta-rap";
+  if (g.includes("melodic") && g.includes("rap")) return "melodic-rap";
+  if (g.includes("old school") && (g.includes("rap") || g.includes("hip hop"))) return "old-school-rap";
+  if (g.includes("southern") && g.includes("rap")) return "southern-rap";
+  if (g.includes("east coast")) return "east-coast-rap";
+  if (g.includes("west coast")) return "west-coast-rap";
+  if (g.includes("drill")) return "drill-rap";
 
   if (g === "r&b" || g === "rnb" || g === "r and b" || g === "r n b" || g === "rhythm and blues") {
     return "r&b";
@@ -669,8 +704,11 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     const isDuet = voiceChoice === 'duet';
 
     // Genre-specific Black voice tags (keep short for Suno - under 35 chars)
-    // Hip-hop / Rap genres
-    if (genreType === 'rap' || genreType === 'hip-hop' || genreType === 'hiphop' || genreType === 'trap' || genreType === 'old-school-rap') {
+    // Hip-hop / Rap genres - includes all sub-genres
+    const rapGenres = ['rap', 'hip-hop', 'hiphop', 'trap', 'trap-rap', 'boom-bap', 'boom-bap-rap', 
+      'conscious-rap', 'gangsta-rap', 'melodic-rap', 'old-school-rap', 'southern-rap', 
+      'east-coast-rap', 'west-coast-rap', 'drill', 'drill-rap'];
+    if (rapGenres.includes(genreType) || genreType.includes('rap')) {
       if (isDuet) return 'BLACK RAP DUET, ';
       return isMale ? 'BLACK MALE RAP VOCALS, ' : 'BLACK FEMALE RAP VOCALS, ';
     }
@@ -788,12 +826,22 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     folk: "BLACK FOLK, acoustic soul, storytelling, warm vocals",
     bluegrass: "BLACK BLUEGRASS, banjo, soulful harmonies, roots",
 
-    // Hip-hop / Rap - authentic Black hip-hop
+    // Hip-hop / Rap - authentic Black hip-hop with all sub-genres
     rap: "BLACK HIP HOP, 808 bass, trap hi-hats, melodic flow",
     "hip-hop": "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
     hiphop: "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
     trap: "BLACK TRAP, 808 sub bass, triplet hi-hats, Atlanta",
+    "trap-rap": "BLACK TRAP, heavy 808s, hi-hat rolls, dark synths",
+    "boom-bap-rap": "BLACK BOOM BAP, soul samples, punchy drums, 90s",
+    "conscious-rap": "CONSCIOUS HIP HOP, soulful, thoughtful, live band",
+    "gangsta-rap": "GANGSTA RAP, G-funk synths, West Coast bass",
+    "melodic-rap": "MELODIC RAP, auto-tune, emotional, lush pads",
     "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
+    "southern-rap": "SOUTHERN RAP, crunk, trunk-rattling bass, ATL",
+    "east-coast-rap": "EAST COAST RAP, boom bap, jazz samples, NYC",
+    "west-coast-rap": "WEST COAST RAP, G-funk, smooth bass, Cali",
+    "drill-rap": "DRILL RAP, sliding 808s, dark melody, UK/Chi",
+    drill: "DRILL RAP, sliding 808s, dark melody, aggressive",
 
     // Electronic styles - Black electronic (Chicago house, Detroit techno)
     electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
