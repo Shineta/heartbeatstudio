@@ -13,7 +13,7 @@ import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { classroomGenres } from "@/lib/genres";
+import { classroomGenres, rapSubGenres } from "@/lib/genres";
 
 interface GeneratedSong {
   title: string;
@@ -43,6 +43,7 @@ export default function CreateClassroomCheers() {
   const [gradeLevel, setGradeLevel] = useState("elementary");
   const [eventInfo, setEventInfo] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>(["kids"]);
+  const [selectedRapStyle, setSelectedRapStyle] = useState<string>("trap");
   const [generating, setGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [songs, setSongs] = useState<GeneratedSong[]>([]);
@@ -264,19 +265,35 @@ export default function CreateClassroomCheers() {
                 <Label>Select Genres</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {classroomGenres.map((genre) => (
-                    <div key={genre.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`genre-${genre.id}`}
-                        checked={selectedGenres.includes(genre.id)}
-                        onCheckedChange={() => handleGenreToggle(genre.id)}
-                        data-testid={`checkbox-genre-${genre.id}`}
-                      />
-                      <label
-                        htmlFor={`genre-${genre.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {genre.label}
-                      </label>
+                    <div key={genre.id} className="flex flex-col gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`genre-${genre.id}`}
+                          checked={selectedGenres.includes(genre.id)}
+                          onCheckedChange={() => handleGenreToggle(genre.id)}
+                          data-testid={`checkbox-genre-${genre.id}`}
+                        />
+                        <label
+                          htmlFor={`genre-${genre.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {genre.label}
+                        </label>
+                      </div>
+                      {genre.id === "rap" && selectedGenres.includes("rap") && (
+                        <Select value={selectedRapStyle} onValueChange={setSelectedRapStyle}>
+                          <SelectTrigger className="h-8 text-xs ml-6" data-testid="select-rap-style">
+                            <SelectValue placeholder="Select style" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {rapSubGenres.map((sub) => (
+                              <SelectItem key={sub.id} value={sub.id}>
+                                {sub.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   ))}
                 </div>

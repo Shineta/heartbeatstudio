@@ -2,7 +2,7 @@ export const allGenres = [
   { id: "pop", label: "Pop" },
   { id: "dance", label: "Dance / EDM" },
   { id: "hip-hop", label: "Hip Hop" },
-  { id: "rap", label: "Rap" },
+  { id: "rap", label: "Rap", hasSubGenres: true },
   { id: "rock", label: "Rock" },
   { id: "soul", label: "Soul" },
   { id: "r&b", label: "R&B" },
@@ -17,6 +17,19 @@ export const allGenres = [
   { id: "choir", label: "Choir" },
   { id: "inspirational", label: "Inspirational" },
   { id: "kids", label: "Kids / Children's" },
+];
+
+export const rapSubGenres = [
+  { id: "trap", label: "Trap" },
+  { id: "boom-bap", label: "Boom Bap" },
+  { id: "conscious-rap", label: "Conscious Rap" },
+  { id: "gangsta-rap", label: "Gangsta Rap" },
+  { id: "melodic-rap", label: "Melodic Rap" },
+  { id: "old-school-rap", label: "Old School" },
+  { id: "southern-rap", label: "Southern Rap" },
+  { id: "east-coast-rap", label: "East Coast" },
+  { id: "west-coast-rap", label: "West Coast" },
+  { id: "drill", label: "Drill" },
 ];
 
 export const classroomGenres = allGenres.filter(g => 
