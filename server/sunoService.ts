@@ -506,7 +506,7 @@ const rapSubGenreDescriptions: Record<string, string> = {
   "melodic-rap": "Create a melodic rap track with auto-tuned vocals, emotional melodies, lush synth pads, gentle trap beats, and singing-rap hybrid delivery.",
   "old-school-rap": "Create a classic old school hip hop track with boom bap drums, vinyl samples, nostalgic 80s-90s production, and smooth flow with simple hooks.",
   "southern-rap": "Create a Southern hip hop track with crunk energy, thick bass, trunk-rattling beats, call-and-response hooks, and drawled vocal delivery.",
-  "east-coast-rap": "Create an East Coast hip hop track with boom bap foundation, jazz samples, lyrical complexity, and classic New York rap delivery.",
+  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling multisyllabic flow",
   "west-coast-rap": "Create a West Coast hip hop track with G-funk synths, laid-back grooves, smooth bass lines, and California sunshine vibes.",
   "drill": "Create a drill rap track with sliding 808s, dark minor key melodies, aggressive hi-hat patterns, and intense rapid-fire vocal delivery.",
 };
@@ -838,7 +838,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     "melodic-rap": "MELODIC RAP, auto-tune, emotional, lush pads",
     "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
     "southern-rap": "SOUTHERN RAP, crunk, trunk-rattling bass, ATL",
-    "east-coast-rap": "EAST COAST RAP, boom bap, jazz samples, NYC",
+    "east-coast-rap": "EAST COAST RAP, 92 BPM boom bap, MPC chops, NYC",
     "west-coast-rap": "WEST COAST RAP, G-funk, smooth bass, Cali",
     "drill-rap": "DRILL RAP, sliding 808s, dark melody, UK/Chi",
     drill: "DRILL RAP, sliding 808s, dark melody, aggressive",
