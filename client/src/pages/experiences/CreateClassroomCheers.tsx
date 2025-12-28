@@ -133,7 +133,12 @@ export default function CreateClassroomCheers() {
     try {
       for (let i = 0; i < 5; i++) {
         setCurrentStep(i + 1);
-        const genre = selectedGenres[i % selectedGenres.length];
+        let genre = selectedGenres[i % selectedGenres.length];
+        // Use specific rap sub-genre when rap is selected
+        if (genre === 'rap' && selectedRapStyle) {
+          const rapLabel = rapSubGenres.find(r => r.id === selectedRapStyle)?.label || 'Rap';
+          genre = `${rapLabel} Rap`;
+        }
         
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
