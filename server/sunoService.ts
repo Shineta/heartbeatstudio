@@ -498,17 +498,18 @@ interface SunoBoostStyleResponse {
 }
 
 // Detailed descriptions for rap sub-genres to be boosted by V4.5
+// CRITICAL: All rap styles must explicitly say "rapping not singing" to prevent Suno from using melodic vocals
 const rapSubGenreDescriptions: Record<string, string> = {
-  "trap": "Create a hard-hitting trap track with heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, and aggressive vocal delivery with ad-libs.",
-  "boom-bap": "Create a classic boom bap hip hop track with chopped soul samples, punchy drum breaks, vintage vinyl crackle, and lyrical flow with boom bap groove.",
-  "conscious-rap": "Create a conscious hip hop track with thoughtful lyricism, soulful samples, live instrumentation, and meaningful spoken word delivery about real issues.",
-  "gangsta-rap": "Create a gangsta rap track with West Coast G-funk synths, hard-hitting drums, deep bass, and aggressive street narrative delivery.",
-  "melodic-rap": "Create a melodic rap track with auto-tuned vocals, emotional melodies, lush synth pads, gentle trap beats, and singing-rap hybrid delivery.",
-  "old-school-rap": "Create a classic old school hip hop track with boom bap drums, vinyl samples, nostalgic 80s-90s production, and smooth flow with simple hooks.",
-  "southern-rap": "Create a Southern hip hop track with crunk energy, thick bass, trunk-rattling beats, call-and-response hooks, and drawled vocal delivery.",
-  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling multisyllabic flow",
-  "west-coast-rap": "Create a West Coast hip hop track with G-funk synths, laid-back grooves, smooth bass lines, and California sunshine vibes.",
-  "drill": "Create a drill rap track with sliding 808s, dark minor key melodies, aggressive hi-hat patterns, and intense rapid-fire vocal delivery.",
+  "trap": "Hard-hitting trap with rapping not singing, heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, aggressive spoken bars with ad-libs.",
+  "boom-bap": "Classic boom bap with rapping not singing, chopped soul samples, punchy drum breaks, vinyl crackle, rhythmic spoken flow with boom bap groove.",
+  "conscious-rap": "Conscious hip hop with rapping not singing, thoughtful lyricism, soulful samples, live instrumentation, meaningful spoken word delivery.",
+  "gangsta-rap": "Gangsta rap with rapping not singing, West Coast G-funk synths, hard-hitting drums, deep bass, aggressive spoken street narrative.",
+  "melodic-rap": "Melodic rap with rapping and auto-tune, emotional melodies, lush synth pads, gentle trap beats, melodic spoken delivery not full singing.",
+  "old-school-rap": "Classic old school hip hop with rapping not singing, boom bap drums, vinyl samples, nostalgic 80s-90s production, smooth spoken flow.",
+  "southern-rap": "Southern hip hop with rapping not singing, crunk energy, thick bass, trunk-rattling beats, drawled spoken delivery with call-and-response.",
+  "east-coast-rap": "90s East Coast boom-bap with rapping not singing, 92 BPM, SP-1200 chopped jazz samples, dusty vinyl crackle, DJ Premier scratches, NYC storytelling flow.",
+  "west-coast-rap": "West Coast hip hop with rapping not singing, G-funk synths, laid-back grooves, smooth bass lines, California spoken flow.",
+  "drill": "Drill rap with rapping not singing, sliding 808s, dark minor key melodies, aggressive hi-hat patterns, intense rapid-fire spoken delivery.",
 };
 
 // Cache for boosted styles to avoid redundant API calls
@@ -703,14 +704,15 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     const isMale = voiceChoice === 'male';
     const isDuet = voiceChoice === 'duet';
 
-    // Genre-specific Black voice tags (keep short for Suno - under 35 chars)
+    // Genre-specific Black voice tags - RAP genres need explicit "no singing" instruction
     // Hip-hop / Rap genres - includes all sub-genres
     const rapGenres = ['rap', 'hip-hop', 'hiphop', 'trap', 'trap-rap', 'boom-bap', 'boom-bap-rap', 
       'conscious-rap', 'gangsta-rap', 'melodic-rap', 'old-school-rap', 'southern-rap', 
       'east-coast-rap', 'west-coast-rap', 'drill', 'drill-rap'];
     if (rapGenres.includes(genreType) || genreType.includes('rap')) {
-      if (isDuet) return 'BLACK RAP DUET, ';
-      return isMale ? 'BLACK MALE RAP VOCALS, ' : 'BLACK FEMALE RAP VOCALS, ';
+      // Explicit instruction: rhythmic spoken rap, NO melodic singing
+      if (isDuet) return 'BLACK RAP DUET, spoken rhythmic flow, no singing, ';
+      return isMale ? 'BLACK MALE RAPPER, spoken bars, no singing, ' : 'BLACK FEMALE RAPPER, spoken bars, no singing, ';
     }
     // Gospel
     if (genreType === 'gospel' || genreType === 'black-gospel') {
@@ -826,22 +828,22 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     folk: "BLACK FOLK, acoustic soul, storytelling, warm vocals",
     bluegrass: "BLACK BLUEGRASS, banjo, soulful harmonies, roots",
 
-    // Hip-hop / Rap - authentic Black hip-hop with all sub-genres
-    rap: "BLACK HIP HOP, 808 bass, trap hi-hats, melodic flow",
-    "hip-hop": "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
-    hiphop: "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
-    trap: "BLACK TRAP, 808 sub bass, triplet hi-hats, Atlanta",
-    "trap-rap": "BLACK TRAP, heavy 808s, hi-hat rolls, dark synths",
-    "boom-bap-rap": "BLACK BOOM BAP, soul samples, punchy drums, 90s",
-    "conscious-rap": "CONSCIOUS HIP HOP, soulful, thoughtful, live band",
-    "gangsta-rap": "GANGSTA RAP, G-funk synths, West Coast bass",
-    "melodic-rap": "MELODIC RAP, auto-tune, emotional, lush pads",
-    "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
-    "southern-rap": "SOUTHERN RAP, crunk, trunk-rattling bass, ATL",
-    "east-coast-rap": "EAST COAST RAP, 92 BPM boom bap, MPC chops, NYC",
-    "west-coast-rap": "WEST COAST RAP, G-funk, smooth bass, Cali",
-    "drill-rap": "DRILL RAP, sliding 808s, dark melody, UK/Chi",
-    drill: "DRILL RAP, sliding 808s, dark melody, aggressive",
+    // Hip-hop / Rap - explicit "rapping, no singing" for all sub-genres
+    rap: "BLACK HIP HOP, rapping not singing, 808 bass, trap hi-hats",
+    "hip-hop": "BOOM BAP, rapping not singing, MPC drums, jazz samples",
+    hiphop: "BOOM BAP, rapping not singing, MPC drums, jazz samples",
+    trap: "BLACK TRAP, rapping not singing, 808 sub bass, hi-hats",
+    "trap-rap": "TRAP RAP, rapping not singing, heavy 808s, dark synths",
+    "boom-bap-rap": "BOOM BAP, rapping not singing, soul samples, 90s",
+    "conscious-rap": "CONSCIOUS RAP, rapping not singing, soulful, live band",
+    "gangsta-rap": "GANGSTA RAP, rapping not singing, G-funk synths",
+    "melodic-rap": "MELODIC RAP, rapping with auto-tune, lush pads",
+    "old-school-rap": "OLD SCHOOL RAP, rapping not singing, breakbeats",
+    "southern-rap": "SOUTHERN RAP, rapping not singing, crunk, heavy bass",
+    "east-coast-rap": "EAST COAST RAP, rapping not singing, boom bap, NYC",
+    "west-coast-rap": "WEST COAST RAP, rapping not singing, G-funk, Cali",
+    "drill-rap": "DRILL RAP, rapping not singing, sliding 808s, dark",
+    drill: "DRILL RAP, rapping not singing, sliding 808s, aggressive",
 
     // Electronic styles - Black electronic (Chicago house, Detroit techno)
     electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
