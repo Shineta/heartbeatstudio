@@ -1,5 +1,7 @@
 # Heartbeat Studio
 
+**Local Development Guide**: See [SETUP.md](./SETUP.md) for detailed setup instructions.
+
 ## Overview
 
 Heartbeat Studio is an AI-powered celebration platform that helps users create personalized gifts for loved ones. The application enables users to generate AI songs, greeting cards, and animations, then schedule and deliver them at meaningful moments. Built as a full-stack TypeScript application, it combines emotional design principles with AI generation capabilities to make celebrating others effortless and joyful.
