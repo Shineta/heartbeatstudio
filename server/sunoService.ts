@@ -498,73 +498,22 @@ interface SunoBoostStyleResponse {
 }
 
 // Detailed descriptions for rap sub-genres to be boosted by V4.5
-// CRITICAL: All rap styles must explicitly say "rapping not singing" to prevent Suno from using melodic vocals
 const rapSubGenreDescriptions: Record<string, string> = {
-  "trap": "Hard-hitting trap with rapping not singing, heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, aggressive spoken bars with ad-libs.",
-  "boom-bap": "Classic boom bap with rapping not singing, chopped soul samples, punchy drum breaks, vinyl crackle, rhythmic spoken flow with boom bap groove.",
-  "conscious-rap": "Conscious hip hop with rapping not singing, thoughtful lyricism, soulful samples, live instrumentation, meaningful spoken word delivery.",
-  "gangsta-rap": "Gangsta rap with rapping not singing, West Coast G-funk synths, hard-hitting drums, deep bass, aggressive spoken street narrative.",
-  "melodic-rap": "Melodic rap with rapping and auto-tune, emotional melodies, lush synth pads, gentle trap beats, melodic spoken delivery not full singing.",
-  "old-school-rap": "Classic old school hip hop with rapping not singing, boom bap drums, vinyl samples, nostalgic 80s-90s production, smooth spoken flow.",
-  "southern-rap": "Southern hip hop with rapping not singing, crunk energy, thick bass, trunk-rattling beats, drawled spoken delivery with call-and-response.",
-  "east-coast-rap": "90s East Coast boom-bap with rapping not singing, 92 BPM, SP-1200 chopped jazz samples, dusty vinyl crackle, DJ Premier scratches, NYC storytelling flow.",
-  "west-coast-rap": "West Coast hip hop with rapping not singing, G-funk synths, laid-back grooves, smooth bass lines, California spoken flow.",
-  "drill": "Drill rap with rapping not singing, sliding 808s, dark minor key melodies, aggressive hi-hat patterns, intense rapid-fire spoken delivery.",
+  "trap": "Create a hard-hitting trap track with heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, and aggressive vocal delivery with ad-libs.",
+  "boom-bap": "Create a classic boom bap hip hop track with chopped soul samples, punchy drum breaks, vintage vinyl crackle, and lyrical flow with boom bap groove.",
+  "conscious-rap": "Create a conscious hip hop track with thoughtful lyricism, soulful samples, live instrumentation, and meaningful spoken word delivery about real issues.",
+  "gangsta-rap": "Create a gangsta rap track with West Coast G-funk synths, hard-hitting drums, deep bass, and aggressive street narrative delivery.",
+  "melodic-rap": "Create a melodic rap track with auto-tuned vocals, emotional melodies, lush synth pads, gentle trap beats, and singing-rap hybrid delivery.",
+  "old-school-rap": "Create a classic old school hip hop track with boom bap drums, vinyl samples, nostalgic 80s-90s production, and smooth flow with simple hooks.",
+  "southern-rap": "Create a Southern hip hop track with crunk energy, thick bass, trunk-rattling beats, call-and-response hooks, and drawled vocal delivery.",
+  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling multisyllabic flow",
+  "west-coast-rap": "Create a West Coast hip hop track with G-funk synths, laid-back grooves, smooth bass lines, and California sunshine vibes.",
+  "drill": "Create a drill rap track with sliding 808s, dark minor key melodies, aggressive hi-hat patterns, and intense rapid-fire vocal delivery.",
 };
 
 // Cache for boosted styles to avoid redundant API calls
 const boostedStyleCache: Map<string, { style: string; timestamp: number }> = new Map();
 const CACHE_DURATION_MS = 1000 * 60 * 60; // 1 hour cache
-
-// Retry configuration for handling Suno API failures
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY_MS = 5000; // 5 seconds
-
-/**
- * Sleep utility for retry delays
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Wrapper to retry a function with exponential backoff
- */
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  operationName: string,
-  maxRetries: number = MAX_RETRIES
-): Promise<T> {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      lastError = error;
-      const errorMessage = error?.message || String(error);
-      
-      // Check if this is a retryable error (internal server errors, timeouts)
-      const isRetryable = 
-        errorMessage.includes('Internal Error') ||
-        errorMessage.includes('Please try again') ||
-        errorMessage.includes('timeout') ||
-        errorMessage.includes('GENERATE_AUDIO_FAILED') ||
-        errorMessage.includes('Song generation failed');
-      
-      if (!isRetryable || attempt === maxRetries) {
-        console.error(`[Suno Retry] ${operationName} failed after ${attempt} attempt(s): ${errorMessage}`);
-        throw error;
-      }
-      
-      const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1); // Exponential backoff
-      console.log(`[Suno Retry] ${operationName} failed (attempt ${attempt}/${maxRetries}), retrying in ${delay/1000}s: ${errorMessage}`);
-      await sleep(delay);
-    }
-  }
-  
-  throw lastError || new Error(`${operationName} failed after ${maxRetries} attempts`);
-}
 
 /**
  * Boost Music Style using V4.5's enhanced style capability.
@@ -754,15 +703,14 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     const isMale = voiceChoice === 'male';
     const isDuet = voiceChoice === 'duet';
 
-    // Genre-specific Black voice tags - RAP genres need explicit "no singing" instruction
+    // Genre-specific Black voice tags (keep short for Suno - under 35 chars)
     // Hip-hop / Rap genres - includes all sub-genres
     const rapGenres = ['rap', 'hip-hop', 'hiphop', 'trap', 'trap-rap', 'boom-bap', 'boom-bap-rap', 
       'conscious-rap', 'gangsta-rap', 'melodic-rap', 'old-school-rap', 'southern-rap', 
       'east-coast-rap', 'west-coast-rap', 'drill', 'drill-rap'];
     if (rapGenres.includes(genreType) || genreType.includes('rap')) {
-      // Explicit instruction: rhythmic spoken rap, NO melodic singing
-      if (isDuet) return 'BLACK RAP DUET, spoken rhythmic flow, no singing, ';
-      return isMale ? 'BLACK MALE RAPPER, spoken bars, no singing, ' : 'BLACK FEMALE RAPPER, spoken bars, no singing, ';
+      if (isDuet) return 'BLACK RAP DUET, ';
+      return isMale ? 'BLACK MALE RAP VOCALS, ' : 'BLACK FEMALE RAP VOCALS, ';
     }
     // Gospel
     if (genreType === 'gospel' || genreType === 'black-gospel') {
@@ -878,22 +826,22 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     folk: "BLACK FOLK, acoustic soul, storytelling, warm vocals",
     bluegrass: "BLACK BLUEGRASS, banjo, soulful harmonies, roots",
 
-    // Hip-hop / Rap - explicit "rapping, no singing" for all sub-genres
-    rap: "BLACK HIP HOP, rapping not singing, 808 bass, trap hi-hats",
-    "hip-hop": "BOOM BAP, rapping not singing, MPC drums, jazz samples",
-    hiphop: "BOOM BAP, rapping not singing, MPC drums, jazz samples",
-    trap: "BLACK TRAP, rapping not singing, 808 sub bass, hi-hats",
-    "trap-rap": "TRAP RAP, rapping not singing, heavy 808s, dark synths",
-    "boom-bap-rap": "BOOM BAP, rapping not singing, soul samples, 90s",
-    "conscious-rap": "CONSCIOUS RAP, rapping not singing, soulful, live band",
-    "gangsta-rap": "GANGSTA RAP, rapping not singing, G-funk synths",
-    "melodic-rap": "MELODIC RAP, rapping with auto-tune, lush pads",
-    "old-school-rap": "OLD SCHOOL RAP, rapping not singing, breakbeats",
-    "southern-rap": "SOUTHERN RAP, rapping not singing, crunk, heavy bass",
-    "east-coast-rap": "EAST COAST RAP, rapping not singing, boom bap, NYC",
-    "west-coast-rap": "WEST COAST RAP, rapping not singing, G-funk, Cali",
-    "drill-rap": "DRILL RAP, rapping not singing, sliding 808s, dark",
-    drill: "DRILL RAP, rapping not singing, sliding 808s, aggressive",
+    // Hip-hop / Rap - authentic Black hip-hop with all sub-genres
+    rap: "BLACK HIP HOP, 808 bass, trap hi-hats, melodic flow",
+    "hip-hop": "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
+    hiphop: "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
+    trap: "BLACK TRAP, 808 sub bass, triplet hi-hats, Atlanta",
+    "trap-rap": "BLACK TRAP, heavy 808s, hi-hat rolls, dark synths",
+    "boom-bap-rap": "BLACK BOOM BAP, soul samples, punchy drums, 90s",
+    "conscious-rap": "CONSCIOUS HIP HOP, soulful, thoughtful, live band",
+    "gangsta-rap": "GANGSTA RAP, G-funk synths, West Coast bass",
+    "melodic-rap": "MELODIC RAP, auto-tune, emotional, lush pads",
+    "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
+    "southern-rap": "SOUTHERN RAP, crunk, trunk-rattling bass, ATL",
+    "east-coast-rap": "EAST COAST RAP, 92 BPM boom bap, MPC chops, NYC",
+    "west-coast-rap": "WEST COAST RAP, G-funk, smooth bass, Cali",
+    "drill-rap": "DRILL RAP, sliding 808s, dark melody, UK/Chi",
+    drill: "DRILL RAP, sliding 808s, dark melody, aggressive",
 
     // Electronic styles - Black electronic (Chicago house, Detroit techno)
     electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
@@ -956,16 +904,14 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
 
 async function pollTaskStatus(
   taskId: string,
-  maxAttempts = 36, // 36 attempts × 5 seconds = 3 minutes max
+  maxAttempts = 90,
 ): Promise<SunoTaskResponse["data"]["response"]> {
   let lastStatus: string = "UNKNOWN";
   let lastError: string | undefined;
-  let pendingCount = 0;
-  const MAX_PENDING_BEFORE_FAIL = 24; // If stuck in PENDING for 2 minutes, fail fast
 
   for (let i = 0; i < maxAttempts; i++) {
     if (i > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 second intervals
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     }
 
     const response = await axios.get<SunoTaskResponse>(
@@ -999,17 +945,6 @@ async function pollTaskStatus(
       `[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`,
     );
 
-    // Track how long we've been stuck in PENDING
-    if (status === "PENDING") {
-      pendingCount++;
-      if (pendingCount >= MAX_PENDING_BEFORE_FAIL) {
-        console.error(`[Suno] Stuck in PENDING status for ${pendingCount * 5} seconds, failing fast to retry`);
-        throw new Error("Song generation failed - Suno API not responding. Please try again.");
-      }
-    } else {
-      pendingCount = 0; // Reset if status changed
-    }
-
     if (
       status === "SUCCESS" &&
       taskResponse?.sunoData &&
@@ -1034,9 +969,9 @@ async function pollTaskStatus(
     }
   }
 
-  const timeoutMessage = `Song generation timed out after 3 minutes. Last status: ${lastStatus}${
+  const timeoutMessage = `Song generation timed out after 15 minutes. Last status: ${lastStatus}${
     lastError ? `. Error: ${lastError}` : ""
-  }. Suno API may be experiencing issues.`;
+  }`;
   console.error(`[Suno] ${timeoutMessage}`);
   throw new Error(timeoutMessage);
 }
@@ -1196,54 +1131,50 @@ export async function generateSongWithLyrics(params: {
       }
     }
 
-    // Step 1: Generate initial clip with retry logic for Suno API failures
+    // Step 1: Generate initial clip (uses V4 for longer initial output)
     console.log(
       `[Suno] Starting extended song generation (~3 minutes) for: ${params.title} [genre=${resolvedGenre}]`,
     );
 
-    // Wrap initial generation in retry logic
-    const initialTrack = await withRetry(async () => {
-      const response = await axios.post<SunoGenerateResponse>(
-        `${SUNO_API_BASE_URL}/api/v1/generate`,
-        {
-          prompt: params.lyrics, // lyrics in custom mode
-          style,
-          title: params.title,
-          customMode: true,
-          instrumental: false,
-          model: "V5",
-          callBackUrl: callbackUrl,
+    const response = await axios.post<SunoGenerateResponse>(
+      `${SUNO_API_BASE_URL}/api/v1/generate`,
+      {
+        prompt: params.lyrics, // lyrics in custom mode
+        style,
+        title: params.title,
+        customMode: true,
+        instrumental: false,
+        model: "V5",
+        callBackUrl: callbackUrl,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${SUNO_API_KEY}`,
+          "Content-Type": "application/json",
         },
-        {
-          headers: {
-            Authorization: `Bearer ${SUNO_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      },
+    );
 
-      if (response.data.code !== 200) {
-        throw new Error(response.data.msg || "Failed to generate song");
-      }
+    if (response.data.code !== 200) {
+      throw new Error(response.data.msg || "Failed to generate song");
+    }
 
-      const taskId = response.data.data.taskId;
-      console.log(
-        `[Suno] Initial clip generation started with taskId: ${taskId}`,
-      );
+    const taskId = response.data.data.taskId;
+    console.log(
+      `[Suno] Initial clip generation started with taskId: ${taskId}`,
+    );
 
-      const result = await pollTaskStatus(taskId);
+    const initialResult = await pollTaskStatus(taskId);
 
-      if (
-        !result ||
-        !result.sunoData ||
-        result.sunoData.length === 0
-      ) {
-        throw new Error("No audio data returned from Suno API");
-      }
+    if (
+      !initialResult ||
+      !initialResult.sunoData ||
+      initialResult.sunoData.length === 0
+    ) {
+      throw new Error("No audio data returned from Suno API");
+    }
 
-      return result.sunoData[0];
-    }, "Initial clip generation");
-
+    const initialTrack = initialResult.sunoData[0];
     const initialDuration = initialTrack.duration || 60;
     console.log(
       `[Suno] Initial clip completed: ${initialDuration}s, ID: ${initialTrack.id}`,
@@ -1276,19 +1207,16 @@ export async function generateSongWithLyrics(params: {
       );
 
       try {
-        // Wrap extension in retry logic
-        const extension = await withRetry(async () => {
-          return await extendSong({
-            audioId: currentAudioId,
-            continueAt,
-            prompt: `${continuationBase} Use similar themes and flow as these lyrics: ${params.lyrics.slice(
-              0,
-              200,
-            )}...`,
-            style,
-            title: `${params.title} Part ${extensionCount + 1}`,
-          });
-        }, `Extension ${extensionCount}`, 2); // 2 retries for extensions
+        const extension = await extendSong({
+          audioId: currentAudioId,
+          continueAt,
+          prompt: `${continuationBase} Use similar themes and flow as these lyrics: ${params.lyrics.slice(
+            0,
+            200,
+          )}...`,
+          style,
+          title: `${params.title} Part ${extensionCount + 1}`,
+        });
 
         currentAudioId = extension.audioId;
         currentDuration += extension.duration - (currentDuration - continueAt);
@@ -1299,7 +1227,7 @@ export async function generateSongWithLyrics(params: {
         );
       } catch (extendError: any) {
         console.error(
-          `[Suno] Extension ${extensionCount} failed after retries:`,
+          `[Suno] Extension ${extensionCount} failed:`,
           extendError.message,
         );
         break;
@@ -1317,11 +1245,13 @@ export async function generateSongWithLyrics(params: {
         finalAudioUrl = await concatenateClips(clipIds);
       } catch (concatError: any) {
         console.error(
-          `[Suno] Concatenation failed, using initial track audio:`,
+          `[Suno] Concatenation failed, using last extension:`,
           concatError.message,
         );
-        // Use the initial track's audio URL as fallback
-        finalAudioUrl = initialTrack.audioUrl;
+        const lastResult = await pollTaskStatus(taskId);
+        if (lastResult?.sunoData?.[0]?.audioUrl) {
+          finalAudioUrl = lastResult.sunoData[0].audioUrl;
+        }
       }
     }
 
