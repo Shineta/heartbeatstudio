@@ -956,14 +956,16 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
 
 async function pollTaskStatus(
   taskId: string,
-  maxAttempts = 90,
+  maxAttempts = 36, // 36 attempts × 5 seconds = 3 minutes max
 ): Promise<SunoTaskResponse["data"]["response"]> {
   let lastStatus: string = "UNKNOWN";
   let lastError: string | undefined;
+  let pendingCount = 0;
+  const MAX_PENDING_BEFORE_FAIL = 24; // If stuck in PENDING for 2 minutes, fail fast
 
   for (let i = 0; i < maxAttempts; i++) {
     if (i > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 second intervals
     }
 
     const response = await axios.get<SunoTaskResponse>(
@@ -997,6 +999,17 @@ async function pollTaskStatus(
       `[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`,
     );
 
+    // Track how long we've been stuck in PENDING
+    if (status === "PENDING") {
+      pendingCount++;
+      if (pendingCount >= MAX_PENDING_BEFORE_FAIL) {
+        console.error(`[Suno] Stuck in PENDING status for ${pendingCount * 5} seconds, failing fast to retry`);
+        throw new Error("Song generation failed - Suno API not responding. Please try again.");
+      }
+    } else {
+      pendingCount = 0; // Reset if status changed
+    }
+
     if (
       status === "SUCCESS" &&
       taskResponse?.sunoData &&
@@ -1021,9 +1034,9 @@ async function pollTaskStatus(
     }
   }
 
-  const timeoutMessage = `Song generation timed out after 15 minutes. Last status: ${lastStatus}${
+  const timeoutMessage = `Song generation timed out after 3 minutes. Last status: ${lastStatus}${
     lastError ? `. Error: ${lastError}` : ""
-  }`;
+  }. Suno API may be experiencing issues.`;
   console.error(`[Suno] ${timeoutMessage}`);
   throw new Error(timeoutMessage);
 }
