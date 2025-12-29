@@ -516,6 +516,56 @@ const rapSubGenreDescriptions: Record<string, string> = {
 const boostedStyleCache: Map<string, { style: string; timestamp: number }> = new Map();
 const CACHE_DURATION_MS = 1000 * 60 * 60; // 1 hour cache
 
+// Retry configuration for handling Suno API failures
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 5000; // 5 seconds
+
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Wrapper to retry a function with exponential backoff
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  operationName: string,
+  maxRetries: number = MAX_RETRIES
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const errorMessage = error?.message || String(error);
+      
+      // Check if this is a retryable error (internal server errors, timeouts)
+      const isRetryable = 
+        errorMessage.includes('Internal Error') ||
+        errorMessage.includes('Please try again') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('GENERATE_AUDIO_FAILED') ||
+        errorMessage.includes('Song generation failed');
+      
+      if (!isRetryable || attempt === maxRetries) {
+        console.error(`[Suno Retry] ${operationName} failed after ${attempt} attempt(s): ${errorMessage}`);
+        throw error;
+      }
+      
+      const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1); // Exponential backoff
+      console.log(`[Suno Retry] ${operationName} failed (attempt ${attempt}/${maxRetries}), retrying in ${delay/1000}s: ${errorMessage}`);
+      await sleep(delay);
+    }
+  }
+  
+  throw lastError || new Error(`${operationName} failed after ${maxRetries} attempts`);
+}
+
 /**
  * Boost Music Style using V4.5's enhanced style capability.
  * Takes a style description and returns an enhanced, more detailed version.
@@ -1133,50 +1183,54 @@ export async function generateSongWithLyrics(params: {
       }
     }
 
-    // Step 1: Generate initial clip (uses V4 for longer initial output)
+    // Step 1: Generate initial clip with retry logic for Suno API failures
     console.log(
       `[Suno] Starting extended song generation (~3 minutes) for: ${params.title} [genre=${resolvedGenre}]`,
     );
 
-    const response = await axios.post<SunoGenerateResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/generate`,
-      {
-        prompt: params.lyrics, // lyrics in custom mode
-        style,
-        title: params.title,
-        customMode: true,
-        instrumental: false,
-        model: "V5",
-        callBackUrl: callbackUrl,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${SUNO_API_KEY}`,
-          "Content-Type": "application/json",
+    // Wrap initial generation in retry logic
+    const initialTrack = await withRetry(async () => {
+      const response = await axios.post<SunoGenerateResponse>(
+        `${SUNO_API_BASE_URL}/api/v1/generate`,
+        {
+          prompt: params.lyrics, // lyrics in custom mode
+          style,
+          title: params.title,
+          customMode: true,
+          instrumental: false,
+          model: "V5",
+          callBackUrl: callbackUrl,
         },
-      },
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${SUNO_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
-    if (response.data.code !== 200) {
-      throw new Error(response.data.msg || "Failed to generate song");
-    }
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg || "Failed to generate song");
+      }
 
-    const taskId = response.data.data.taskId;
-    console.log(
-      `[Suno] Initial clip generation started with taskId: ${taskId}`,
-    );
+      const taskId = response.data.data.taskId;
+      console.log(
+        `[Suno] Initial clip generation started with taskId: ${taskId}`,
+      );
 
-    const initialResult = await pollTaskStatus(taskId);
+      const result = await pollTaskStatus(taskId);
 
-    if (
-      !initialResult ||
-      !initialResult.sunoData ||
-      initialResult.sunoData.length === 0
-    ) {
-      throw new Error("No audio data returned from Suno API");
-    }
+      if (
+        !result ||
+        !result.sunoData ||
+        result.sunoData.length === 0
+      ) {
+        throw new Error("No audio data returned from Suno API");
+      }
 
-    const initialTrack = initialResult.sunoData[0];
+      return result.sunoData[0];
+    }, "Initial clip generation");
+
     const initialDuration = initialTrack.duration || 60;
     console.log(
       `[Suno] Initial clip completed: ${initialDuration}s, ID: ${initialTrack.id}`,
@@ -1209,16 +1263,19 @@ export async function generateSongWithLyrics(params: {
       );
 
       try {
-        const extension = await extendSong({
-          audioId: currentAudioId,
-          continueAt,
-          prompt: `${continuationBase} Use similar themes and flow as these lyrics: ${params.lyrics.slice(
-            0,
-            200,
-          )}...`,
-          style,
-          title: `${params.title} Part ${extensionCount + 1}`,
-        });
+        // Wrap extension in retry logic
+        const extension = await withRetry(async () => {
+          return await extendSong({
+            audioId: currentAudioId,
+            continueAt,
+            prompt: `${continuationBase} Use similar themes and flow as these lyrics: ${params.lyrics.slice(
+              0,
+              200,
+            )}...`,
+            style,
+            title: `${params.title} Part ${extensionCount + 1}`,
+          });
+        }, `Extension ${extensionCount}`, 2); // 2 retries for extensions
 
         currentAudioId = extension.audioId;
         currentDuration += extension.duration - (currentDuration - continueAt);
@@ -1229,7 +1286,7 @@ export async function generateSongWithLyrics(params: {
         );
       } catch (extendError: any) {
         console.error(
-          `[Suno] Extension ${extensionCount} failed:`,
+          `[Suno] Extension ${extensionCount} failed after retries:`,
           extendError.message,
         );
         break;
@@ -1247,13 +1304,11 @@ export async function generateSongWithLyrics(params: {
         finalAudioUrl = await concatenateClips(clipIds);
       } catch (concatError: any) {
         console.error(
-          `[Suno] Concatenation failed, using last extension:`,
+          `[Suno] Concatenation failed, using initial track audio:`,
           concatError.message,
         );
-        const lastResult = await pollTaskStatus(taskId);
-        if (lastResult?.sunoData?.[0]?.audioUrl) {
-          finalAudioUrl = lastResult.sunoData[0].audioUrl;
-        }
+        // Use the initial track's audio URL as fallback
+        finalAudioUrl = initialTrack.audioUrl;
       }
     }
 
