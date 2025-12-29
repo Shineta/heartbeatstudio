@@ -499,16 +499,16 @@ interface SunoBoostStyleResponse {
 
 // Detailed descriptions for rap sub-genres to be boosted by V4.5
 const rapSubGenreDescriptions: Record<string, string> = {
-  "trap": "Create a hard-hitting trap track with heavy 808 bass, crisp hi-hats with rapid rolls, dark atmospheric synths, and aggressive vocal delivery with ad-libs.",
-  "boom-bap": "Create a classic boom bap hip hop track with chopped soul samples, punchy drum breaks, vintage vinyl crackle, and lyrical flow with boom bap groove.",
-  "conscious-rap": "Create a conscious hip hop track with thoughtful lyricism, soulful samples, live instrumentation, and meaningful spoken word delivery about real issues.",
-  "gangsta-rap": "Create a gangsta rap track with West Coast G-funk synths, hard-hitting drums, deep bass, and aggressive street narrative delivery.",
-  "melodic-rap": "Create a melodic rap track with auto-tuned vocals, emotional melodies, lush synth pads, gentle trap beats, and singing-rap hybrid delivery.",
-  "old-school-rap": "Create a classic old school hip hop track with boom bap drums, vinyl samples, nostalgic 80s-90s production, and smooth flow with simple hooks.",
-  "southern-rap": "Create a Southern hip hop track with crunk energy, thick bass, trunk-rattling beats, call-and-response hooks, and drawled vocal delivery.",
-  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling multisyllabic flow",
-  "west-coast-rap": "Create a West Coast hip hop track with G-funk synths, laid-back grooves, smooth bass lines, and California sunshine vibes.",
-  "drill": "Create a drill rap track with sliding 808s, dark minor key melodies, aggressive hi-hat patterns, and intense rapid-fire vocal delivery.",
+  "trap": "140 BPM trap with heavy 808 sub bass, triplet hi-hat rolls, dark synths, aggressive MC rap verses with no melodic singing, Future/Young Thug style",
+  "boom-bap": "92 BPM boom bap with punchy MPC drums, soul sample chops, vinyl scratches, lyrical MC rap verses with no singing, 90s NYC golden era style",
+  "conscious-rap": "88 BPM conscious hip-hop with live jazz samples, soulful production, thoughtful MC rap verses with no singing, Common/Talib Kweli style",
+  "gangsta-rap": "94 BPM gangsta rap with G-funk synths, hard drums, deep bass, aggressive MC rap verses with no melodic singing, NWA/Snoop Dogg style",
+  "melodic-rap": "130 BPM melodic rap with auto-tune, emotional melodies, lush pads, trap beats, singing-rap hybrid delivery, Drake/Juice WRLD style",
+  "old-school-rap": "98 BPM old school hip-hop with breakbeats, turntable scratches, 808 drums, classic MC rap verses with no singing, Run DMC style",
+  "southern-rap": "75 BPM southern rap with crunk energy, trunk-rattling 808s, call-response hooks, drawled MC rap verses with no melodic singing, Outkast style",
+  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling MC rap verses with no singing",
+  "west-coast-rap": "90 BPM West Coast G-funk with Moog synths, talk-box, Parliament bass, laid-back MC rap verses with no melodic singing, Dr. Dre production style",
+  "drill": "140 BPM drill with sliding 808s, dark minor key melodies, aggressive hi-hats, intense rapid-fire MC rap verses with no melodic singing, UK/Chicago drill style",
 };
 
 // Cache for boosted styles to avoid redundant API calls
@@ -826,22 +826,22 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     folk: "BLACK FOLK, acoustic soul, storytelling, warm vocals",
     bluegrass: "BLACK BLUEGRASS, banjo, soulful harmonies, roots",
 
-    // Hip-hop / Rap - authentic Black hip-hop with all sub-genres
-    rap: "BLACK HIP HOP, 808 bass, trap hi-hats, melodic flow",
-    "hip-hop": "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
-    hiphop: "BLACK BOOM BAP, 90s East Coast, MPC drums, jazz",
-    trap: "BLACK TRAP, 808 sub bass, triplet hi-hats, Atlanta",
-    "trap-rap": "BLACK TRAP, heavy 808s, hi-hat rolls, dark synths",
-    "boom-bap-rap": "BLACK BOOM BAP, soul samples, punchy drums, 90s",
-    "conscious-rap": "CONSCIOUS HIP HOP, soulful, thoughtful, live band",
-    "gangsta-rap": "GANGSTA RAP, G-funk synths, West Coast bass",
-    "melodic-rap": "MELODIC RAP, auto-tune, emotional, lush pads",
-    "old-school-rap": "OLD SCHOOL BLACK HIP HOP, breakbeats, 80s",
-    "southern-rap": "SOUTHERN RAP, crunk, trunk-rattling bass, ATL",
-    "east-coast-rap": "EAST COAST RAP, 92 BPM boom bap, MPC chops, NYC",
-    "west-coast-rap": "WEST COAST RAP, G-funk, smooth bass, Cali",
-    "drill-rap": "DRILL RAP, sliding 808s, dark melody, UK/Chi",
-    drill: "DRILL RAP, sliding 808s, dark melody, aggressive",
+    // Hip-hop / Rap - authentic Black hip-hop with all sub-genres (explicit rap vocals, no singing)
+    rap: "BLACK HIP HOP, 808 bass, MC rap verses, no singing",
+    "hip-hop": "BLACK BOOM BAP, MPC drums, rap verses, no singing",
+    hiphop: "BLACK BOOM BAP, MPC drums, rap verses, no singing",
+    trap: "BLACK TRAP, 808s, hi-hats, rap verses, no singing",
+    "trap-rap": "BLACK TRAP, 808s, hi-hats, rap verses, no singing",
+    "boom-bap-rap": "BOOM BAP, soul samples, rap verses, no singing",
+    "conscious-rap": "CONSCIOUS RAP, soulful, rap verses, no singing",
+    "gangsta-rap": "GANGSTA RAP, G-funk, rap verses, no singing",
+    "melodic-rap": "MELODIC RAP, auto-tune, singing-rap hybrid",
+    "old-school-rap": "OLD SCHOOL RAP, breakbeats, rap verses, no singing",
+    "southern-rap": "SOUTHERN RAP, crunk 808s, rap verses, no singing",
+    "east-coast-rap": "EAST COAST RAP, boom bap, rap verses, no singing",
+    "west-coast-rap": "WEST COAST RAP, G-funk, rap verses, no singing",
+    "drill-rap": "DRILL RAP, sliding 808s, rap verses, no singing",
+    drill: "DRILL RAP, sliding 808s, rap verses, no singing",
 
     // Electronic styles - Black electronic (Chicago house, Detroit techno)
     electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
