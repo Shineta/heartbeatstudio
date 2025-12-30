@@ -1478,7 +1478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tones = [tone1, tone2, tone3];
       const notes = [notes1 || '', notes2 || '', notes3 || ''];
       const voices = [voice1 || undefined, voice2 || undefined, voice3 || undefined];
-      const durations = [duration1 || 'quick', duration2 || 'quick', duration3 || 'quick'];
+      const durations = [duration1 || 'extended', duration2 || 'extended', duration3 || 'extended'];
       const customTitles = [customTitle1 || undefined, customTitle2 || undefined, customTitle3 || undefined];
       const customLyrics = [customLyrics1 || undefined, customLyrics2 || undefined, customLyrics3 || undefined];
 
