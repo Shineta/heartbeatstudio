@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,9 +40,8 @@ export default function ContactPage() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Contact form submitted:", data);
-      return { success: true };
+      const response = await apiRequest('POST', '/api/contact', data);
+      return response.json();
     },
     onSuccess: () => {
       setSubmitted(true);

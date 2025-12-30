@@ -153,3 +153,48 @@ export async function sendPasswordResetEmail(to: string, resetLink: string) {
 
   await client.send(msg);
 }
+
+export async function sendContactFormEmail(data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  const {client, fromEmail} = await getUncachableSendGridClient();
+  
+  const subjectLabels: Record<string, string> = {
+    general: 'General Question',
+    billing: 'Billing & Payments',
+    technical: 'Technical Issue',
+    feedback: 'Feedback & Suggestions',
+    partnership: 'Partnership Inquiry',
+    other: 'Other'
+  };
+  
+  const msg = {
+    to: 'heartbeatstudio6@gmail.com',
+    from: fromEmail,
+    replyTo: data.email,
+    subject: `[Contact Form] ${subjectLabels[data.subject] || data.subject} - from ${data.name}`,
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #FF4D8C; font-family: 'Fredoka', sans-serif;">New Contact Form Submission</h1>
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 8px 0;"><strong>Name:</strong> ${data.name}</p>
+          <p style="margin: 8px 0;"><strong>Email:</strong> ${data.email}</p>
+          <p style="margin: 8px 0;"><strong>Subject:</strong> ${subjectLabels[data.subject] || data.subject}</p>
+        </div>
+        <h2 style="color: #333; font-size: 18px;">Message:</h2>
+        <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+          <p style="font-size: 16px; color: #333; line-height: 1.6; white-space: pre-wrap;">${data.message}</p>
+        </div>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #999; text-align: center;">
+          Sent from Heartbeat Studio Contact Form
+        </p>
+      </div>
+    `,
+  };
+
+  await client.send(msg);
+}

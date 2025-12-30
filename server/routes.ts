@@ -9,7 +9,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
-import { sendMagicLinkEmail, sendPasswordResetEmail } from "./emailService";
+import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
 import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shared/schema";
 
@@ -381,6 +381,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: 'Logged out successfully' });
     });
+  });
+
+  // ========== CONTACT FORM ROUTE ==========
+  
+  const contactFormSchema = z.object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    subject: z.string().min(1),
+    message: z.string().min(10),
+  });
+
+  app.post('/api/contact', async (req: Request, res: Response) => {
+    try {
+      const data = contactFormSchema.parse(req.body);
+      await sendContactFormEmail(data);
+      res.json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid form data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to send message. Please try again.' });
+    }
   });
 
   // ========== LOVED ONES ROUTES ==========
