@@ -1193,9 +1193,11 @@ export async function generateSongWithLyrics(params: {
     // Duration-based settings:
     // - quick (~60 seconds): faster generation, 1 extension max
     // - extended (~3 minutes): longer song, up to 3 extensions
-    const isExtended = params.duration === 'extended';
+    // DEFAULT to extended if not specified
+    const isExtended = params.duration !== 'quick';
     const targetDuration = isExtended ? 180 : 60;
     const maxExtensions = isExtended ? 3 : 1;
+    console.log(`[Suno] Duration mode: ${isExtended ? 'extended' : 'quick'}, target: ${targetDuration}s, max extensions: ${maxExtensions}`);
     
     let currentDuration = initialDuration;
     let currentAudioId = initialTrack.id;
