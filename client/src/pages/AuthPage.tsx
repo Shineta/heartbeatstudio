@@ -11,12 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Heart, Mail, Lock, User, Sparkles } from 'lucide-react';
+import { Heart, Mail, Lock, User, Sparkles, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const registerSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
 });
@@ -63,7 +64,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', firstName: '', lastName: '' },
+    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '' },
   });
 
   const loginForm = useForm<LoginForm>({
@@ -248,6 +249,29 @@ export default function AuthPage() {
                             placeholder="you@example.com" 
                             className="pl-10"
                             data-testid="input-email"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="tel" 
+                            placeholder="(555) 123-4567" 
+                            className="pl-10"
+                            data-testid="input-phone"
                           />
                         </div>
                       </FormControl>

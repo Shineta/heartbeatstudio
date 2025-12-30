@@ -64,21 +64,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const schema = z.object({
         email: z.string().email(),
         password: z.string().min(6),
+        phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
       });
       
-      const { email, password, firstName, lastName } = schema.parse(req.body);
+      const { email, password, phoneNumber, firstName, lastName } = schema.parse(req.body);
+      
+      // Normalize phone number by removing all non-digit characters except +
+      const normalizedPhone = phoneNumber.replace(/[^\d+]/g, '');
       
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email already registered' });
       }
       
+      // Check if phone number is already registered
+      const existingPhone = await storage.getUserByPhoneNumber(normalizedPhone);
+      if (existingPhone) {
+        return res.status(400).json({ message: 'Phone number already registered to another account' });
+      }
+      
       const hashedPassword = await hashPassword(password);
       const isAdmin = isAdminEmail(email);
       const user = await storage.createUser({
         email,
+        phoneNumber: normalizedPhone,
         password: hashedPassword,
         firstName,
         lastName,
