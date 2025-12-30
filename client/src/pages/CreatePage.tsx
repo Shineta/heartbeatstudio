@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
+import { rapSubGenres } from "@/lib/genres";
 
 interface LyricsPreview {
   lyrics: string;
@@ -44,6 +45,7 @@ const songFormSchema = z.object({
   occasion: z.string().min(1, "Occasion is required"),
   tone: z.string().min(1, "Tone is required"),
   genre: z.string().min(1, "Genre is required"),
+  subGenre: z.string().optional(),
   voice: z.string().optional(),
   duration: z.string().optional(),
   songDetails: z.string().min(10, "Please share some details about the song (at least 10 characters)"),
@@ -290,6 +292,7 @@ export default function CreatePage() {
       occasion: "",
       tone: "sweet",
       genre: "r&b",
+      subGenre: "",
       voice: "",
       duration: "extended",
       songDetails: "",
@@ -747,9 +750,18 @@ export default function CreatePage() {
     });
   };
 
+  // Helper to combine genre + subGenre for rap styles
+  const getEffectiveGenre = (data: z.infer<typeof songFormSchema>) => {
+    if (data.genre === "rap" && data.subGenre) {
+      return data.subGenre;
+    }
+    return data.genre;
+  };
+
   // Step 1: Generate AI questionnaire based on initial song details
   const onGenerateQuestionnaire = (data: z.infer<typeof songFormSchema>) => {
-    questionnaireMutation.mutate(data);
+    const effectiveGenre = getEffectiveGenre(data);
+    questionnaireMutation.mutate({ ...data, genre: effectiveGenre });
   };
 
   // Step 2: Submit questionnaire answers and generate lyrics
@@ -1902,7 +1914,15 @@ export default function CreatePage() {
                           <FormItem>
                             <FormLabel>Genre</FormLabel>
                             <FormControl>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (value !== "rap") {
+                                    songForm.setValue("subGenre", "");
+                                  }
+                                }} 
+                                value={field.value}
+                              >
                                 <SelectTrigger data-testid="select-song-genre">
                                   <SelectValue placeholder="Select genre" />
                                 </SelectTrigger>
@@ -1915,16 +1935,6 @@ export default function CreatePage() {
                                   <SelectItem value="motown">Motown</SelectItem>
                                   <SelectItem value="rap">Rap</SelectItem>
                                   <SelectItem value="hiphop">Hip-Hop</SelectItem>
-                                  <SelectItem value="trap">Trap</SelectItem>
-                                  <SelectItem value="boom-bap-rap">Boom Bap</SelectItem>
-                                  <SelectItem value="conscious-rap">Conscious Rap</SelectItem>
-                                  <SelectItem value="gangsta-rap">Gangsta Rap</SelectItem>
-                                  <SelectItem value="melodic-rap">Melodic Rap</SelectItem>
-                                  <SelectItem value="old-school-rap">Old School Rap</SelectItem>
-                                  <SelectItem value="southern-rap">Southern Rap</SelectItem>
-                                  <SelectItem value="east-coast-rap">East Coast Rap</SelectItem>
-                                  <SelectItem value="west-coast-rap">West Coast Rap</SelectItem>
-                                  <SelectItem value="drill">Drill</SelectItem>
                                   <SelectItem value="afrobeat">Afrobeat</SelectItem>
                                   <SelectItem value="jazz">Jazz</SelectItem>
                                   <SelectItem value="blues">Blues</SelectItem>
@@ -1937,6 +1947,33 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
+
+                      {songForm.watch("genre") === "rap" && (
+                        <FormField
+                          control={songForm.control}
+                          name="subGenre"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Rap Style</FormLabel>
+                              <FormControl>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger data-testid="select-song-subgenre">
+                                    <SelectValue placeholder="Select rap style (optional)" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {rapSubGenres.map((subGenre) => (
+                                      <SelectItem key={subGenre.id} value={subGenre.id}>
+                                        {subGenre.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       <FormField
                         control={songForm.control}
