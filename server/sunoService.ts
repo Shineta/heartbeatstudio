@@ -506,7 +506,7 @@ const rapSubGenreDescriptions: Record<string, string> = {
   "melodic-rap": "130 BPM melodic rap with auto-tune, emotional melodies, lush pads, trap beats, singing-rap hybrid delivery, Drake/Juice WRLD style",
   "old-school-rap": "98 BPM old school hip-hop with breakbeats, turntable scratches, 808 drums, classic MC rap verses with no singing, Run DMC style",
   "southern-rap": "75 BPM southern rap with crunk energy, trunk-rattling 808s, call-response hooks, drawled MC rap verses with no melodic singing, Outkast style",
-  "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling MC rap verses with no singing",
+  "east-coast-rap": "90s EAST COAST BOOM BAP 90 BPM minor key, hard punchy kick, crisp snare on 2 and 4, tight minimal hi-hats NO TRAP ROLLS, sub bass steady non-sliding, jazz piano samples, vinyl crackle, soul chops, string stabs, tape saturation, CONFIDENT ARTICULATE GRITTY NYC MALE RAPPER, bar-focused cadence wordplay, NO SINGING NO AUTO-TUNE NO MELODIC HOOKS NO POP MELODIES NO DRILL BASS SLIDES, simple chant-based hook, dense lyrical verses, classic East Coast grit",
   "west-coast-rap": "90 BPM West Coast G-funk with Moog synths, talk-box, Parliament bass, laid-back MC rap verses with no melodic singing, Dr. Dre production style",
   "drill": "140 BPM DRILL RAP, heavy sliding 808 bass, dark minimal production in minor key, sparse eerie piano and bell melodies, aggressive punchy drums, monotone deadpan cold delivery, talk-rap with NO SINGING, ad-libs grunts and threats, simple repetitive hook, short punchy verses, raw gritty street energy",
 };
