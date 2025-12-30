@@ -1109,6 +1109,23 @@ export async function generateSongWithLyrics(params: {
     // Check if additional notes contain style override (look for "style:" prefix)
     let style: string;
     const styleMatch = params.additionalNotes?.match(/style:\s*(.+?)(?:\n|$)/i);
+    
+    // Extract artist inspiration from notes (patterns: "like [artist]", "inspired by [artist]", "[artist] style", "sound like [artist]")
+    let artistInspiration = '';
+    if (params.additionalNotes) {
+      const artistPatterns = [
+        /(?:like|inspired by|sound(?:s)? like|in the style of|similar to|channeling|channel|vibes? (?:of|like))\s+([A-Z][a-zA-Z0-9\s\-'\.]+?)(?:\s*(?:style|vibe|sound|energy|flow|,|\.|$))/i,
+        /([A-Z][a-zA-Z0-9\s\-'\.]+?)\s+(?:style|inspired|vibe|sound|energy|flow)(?:\s|,|\.|$)/i,
+      ];
+      for (const pattern of artistPatterns) {
+        const match = params.additionalNotes.match(pattern);
+        if (match && match[1] && match[1].trim().length > 2 && match[1].trim().length < 40) {
+          artistInspiration = match[1].trim();
+          console.log(`[Suno] Detected artist inspiration: ${artistInspiration}`);
+          break;
+        }
+      }
+    }
 
     if (styleMatch && styleMatch[1]) {
       style = styleMatch[1].trim().substring(0, 100);
@@ -1142,6 +1159,12 @@ export async function generateSongWithLyrics(params: {
         style = `${style}, MC RAP VERSES ONLY, SPOKEN FLOW, NO SINGING`;
         console.log(`[Suno] Final rap style with directive: ${style.substring(0, 100)}...`);
       }
+    }
+    
+    // Append artist inspiration to style if detected
+    if (artistInspiration) {
+      style = `${style}, ${artistInspiration} inspired, ${artistInspiration} style`;
+      console.log(`[Suno] Added artist inspiration to style: ${artistInspiration}`);
     }
 
     // Step 1: Generate initial clip (uses V4 for longer initial output)
