@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -101,6 +101,19 @@ export default function CreatePage() {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // AI Questionnaire state
+  interface QuestionnaireData {
+    intro: string;
+    questions: Array<{
+      id: string;
+      question: string;
+      hint?: string;
+    }>;
+  }
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireData | null>(null);
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const [songFormData, setSongFormData] = useState<z.infer<typeof songFormSchema> | null>(null);
   
   // Lyrics preview state
   const [lyricsPreview, setLyricsPreview] = useState<LyricsPreview | null>(null);
@@ -383,6 +396,38 @@ export default function CreatePage() {
     },
   });
 
+  // Generate AI questionnaire for personalized follow-up questions
+  const questionnaireMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof songFormSchema>) => {
+      const res = await apiRequest("POST", "/api/generate/questionnaire", data);
+      return await res.json() as QuestionnaireData;
+    },
+    onSuccess: (data: QuestionnaireData, variables) => {
+      setQuestionnaire(data);
+      setSongFormData(variables);
+      setQuestionnaireAnswers({});
+      toast({ title: "Questions Ready!", description: "Answer these to make your song truly personal." });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to generate questions. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Generate lyrics preview only (fast)
   const lyricsPreviewMutation = useMutation({
     mutationFn: async (data: z.infer<typeof songFormSchema>) => {
@@ -394,6 +439,7 @@ export default function CreatePage() {
       setEditedLyrics(data.lyrics);
       setEditedTitle(data.title);
       setPendingSongData(variables);
+      setQuestionnaire(null); // Clear questionnaire after lyrics are generated
       toast({ title: "Lyrics Ready!", description: "Review and edit your lyrics before creating the song." });
     },
     onError: (error: Error) => {
@@ -701,9 +747,44 @@ export default function CreatePage() {
     });
   };
 
-  // Generate lyrics preview first
-  const onGenerateLyrics = (data: z.infer<typeof songFormSchema>) => {
-    lyricsPreviewMutation.mutate(data);
+  // Step 1: Generate AI questionnaire based on initial song details
+  const onGenerateQuestionnaire = (data: z.infer<typeof songFormSchema>) => {
+    questionnaireMutation.mutate(data);
+  };
+
+  // Step 2: Submit questionnaire answers and generate lyrics
+  const onSubmitQuestionnaire = () => {
+    if (!songFormData) return;
+    
+    // Combine original song details with questionnaire answers
+    const answersText = Object.entries(questionnaireAnswers)
+      .filter(([_, answer]) => answer.trim())
+      .map(([id, answer]) => {
+        const question = questionnaire?.questions.find(q => q.id === id);
+        return question ? `Q: ${question.question}\nA: ${answer}` : answer;
+      })
+      .join('\n\n');
+    
+    // Append questionnaire answers to song details for more personalized lyrics
+    const enhancedSongDetails = `${songFormData.songDetails}\n\n--- Additional Context from Questionnaire ---\n${answersText}`;
+    
+    lyricsPreviewMutation.mutate({
+      ...songFormData,
+      songDetails: enhancedSongDetails,
+    });
+  };
+
+  // Skip questionnaire and generate lyrics directly
+  const onSkipQuestionnaire = () => {
+    if (!songFormData) return;
+    lyricsPreviewMutation.mutate(songFormData);
+  };
+
+  // Go back to form from questionnaire
+  const onBackFromQuestionnaire = () => {
+    setQuestionnaire(null);
+    setSongFormData(null);
+    setQuestionnaireAnswers({});
   };
 
   // Create song with the edited lyrics
@@ -851,7 +932,7 @@ export default function CreatePage() {
   };
 
   // Go back to form from lyrics preview
-  const onBackToForm = () => {
+  const onBackFromLyricsPreview = () => {
     setLyricsPreview(null);
     setPendingSongData(null);
     setEditedLyrics("");
@@ -1420,6 +1501,90 @@ export default function CreatePage() {
                   </CardFooter>
                 </Card>
               </div>
+            ) : questionnaire ? (
+              /* AI Questionnaire Step */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    Let's Make This Personal
+                  </CardTitle>
+                  <CardDescription>
+                    {questionnaire.intro}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Your initial details:</span>{" "}
+                      {songFormData?.songDetails}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {questionnaire.questions.map((q, index) => (
+                      <div key={q.id} className="space-y-2">
+                        <label className="text-sm font-medium flex items-start gap-2">
+                          <span className="bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+                            {index + 1}
+                          </span>
+                          {q.question}
+                        </label>
+                        {q.hint && (
+                          <p className="text-xs text-muted-foreground ml-7">{q.hint}</p>
+                        )}
+                        <Textarea
+                          value={questionnaireAnswers[q.id] || ''}
+                          onChange={(e) => setQuestionnaireAnswers(prev => ({
+                            ...prev,
+                            [q.id]: e.target.value
+                          }))}
+                          placeholder="Your answer..."
+                          className="min-h-[60px] resize-none ml-7"
+                          data-testid={`textarea-question-${q.id}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    onClick={onBackFromQuestionnaire}
+                    disabled={lyricsPreviewMutation.isPending}
+                    data-testid="button-back-from-questionnaire"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onSkipQuestionnaire}
+                    disabled={lyricsPreviewMutation.isPending}
+                    data-testid="button-skip-questionnaire"
+                  >
+                    Skip Questions
+                  </Button>
+                  <Button
+                    onClick={onSubmitQuestionnaire}
+                    disabled={lyricsPreviewMutation.isPending}
+                    className="flex-1"
+                    data-testid="button-submit-questionnaire"
+                  >
+                    {lyricsPreviewMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Lyrics...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Personalized Lyrics
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
             ) : lyricsPreview ? (
               /* Lyrics Preview Step */
               <Card>
@@ -1502,7 +1667,7 @@ export default function CreatePage() {
                 <CardFooter className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     variant="outline"
-                    onClick={onBackToForm}
+                    onClick={onBackFromLyricsPreview}
                     disabled={songWithLyricsMutation.isPending}
                     data-testid="button-back-to-form"
                   >
@@ -1565,7 +1730,7 @@ export default function CreatePage() {
                     </div>
                   </div>
                   <Form {...songForm}>
-                    <form onSubmit={songForm.handleSubmit(onGenerateLyrics)} className="space-y-6">
+                    <form onSubmit={songForm.handleSubmit(onGenerateQuestionnaire)} className="space-y-6">
                       {/* Client Mode Toggle */}
                       <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
                         <div className="flex items-center gap-3">
@@ -1927,15 +2092,15 @@ export default function CreatePage() {
                         </p>
                       </div>
 
-                      {lyricsPreviewMutation.isPending && (
+                      {questionnaireMutation.isPending && (
                         <Card className="bg-primary/5 border-primary/20">
                           <CardContent className="pt-6">
                             <div className="flex items-center justify-center gap-3">
                               <Loader2 className="w-6 h-6 animate-spin text-primary" />
                               <div className="text-center">
-                                <p className="font-semibold text-lg">Writing Lyrics...</p>
+                                <p className="font-semibold text-lg">Preparing Your Questions...</p>
                                 <p className="text-sm text-muted-foreground">
-                                  AI is crafting personalized lyrics for you
+                                  AI is analyzing your story to ask the right follow-up questions
                                 </p>
                               </div>
                             </div>
@@ -1943,16 +2108,16 @@ export default function CreatePage() {
                         </Card>
                       )}
 
-                      <Button type="submit" className="w-full" disabled={lyricsPreviewMutation.isPending} data-testid="button-generate-lyrics">
-                        {lyricsPreviewMutation.isPending ? (
+                      <Button type="submit" className="w-full" disabled={questionnaireMutation.isPending} data-testid="button-continue-to-questions">
+                        {questionnaireMutation.isPending ? (
                           <>
-                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                            Generating Lyrics...
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Preparing Questions...
                           </>
                         ) : (
                           <>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Generate Lyrics Preview
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Continue to Questions
                           </>
                         )}
                       </Button>
