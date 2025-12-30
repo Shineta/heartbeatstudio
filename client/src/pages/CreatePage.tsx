@@ -46,7 +46,7 @@ const songFormSchema = z.object({
   genre: z.string().min(1, "Genre is required"),
   voice: z.string().optional(),
   duration: z.string().optional(),
-  additionalNotes: z.string().optional(),
+  songDetails: z.string().min(10, "Please share some details about the song (at least 10 characters)"),
 });
 
 const animationFormSchema = z.object({
@@ -279,7 +279,7 @@ export default function CreatePage() {
       genre: "r&b",
       voice: "",
       duration: "extended",
-      additionalNotes: "",
+      songDetails: "",
     },
   });
 
@@ -418,7 +418,7 @@ export default function CreatePage() {
 
   // Create song with custom/edited lyrics
   const songWithLyricsMutation = useMutation({
-    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; additionalNotes?: string; voice?: string; duration?: string; customCoverImageUrl?: string }) => {
+    mutationFn: async (data: { lovedOneId?: string; tone: string; genre: string; title: string; lyrics: string; songDetails?: string; voice?: string; duration?: string; customCoverImageUrl?: string }) => {
       const res = await apiRequest("POST", "/api/generate/song-with-lyrics", data);
       return await res.json() as Creation;
     },
@@ -716,7 +716,7 @@ export default function CreatePage() {
       genre: pendingSongData.genre,
       title: editedTitle,
       lyrics: editedLyrics,
-      additionalNotes: pendingSongData.additionalNotes,
+      songDetails: pendingSongData.songDetails,
       voice: pendingSongData.voice,
       duration: pendingSongData.duration,
       customCoverImageUrl: customCoverImageUrl || undefined,
@@ -1852,20 +1852,20 @@ export default function CreatePage() {
 
                       <FormField
                         control={songForm.control}
-                        name="additionalNotes"
+                        name="songDetails"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Additional Notes (optional)</FormLabel>
+                            <FormLabel>Song Details <span className="text-destructive">*</span></FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Add any special details to make your song unique. For example: 'This song is for a Christmas night celebration' or 'She just won a basketball game' or 'He recently lost his grandmother'"
+                                placeholder="Tell us about the person and why you're creating this song. For example: 'Kurt is my Digital Promise coach who has been incredibly supportive this past year. He helped me get my district to adopt an app I created.'"
                                 className="min-h-[100px] resize-none"
                                 {...field}
-                                data-testid="textarea-song-notes"
+                                data-testid="textarea-song-details"
                               />
                             </FormControl>
                             <p className="text-xs text-muted-foreground">
-                              Share specific moments, achievements, or situations to personalize the lyrics
+                              Share the story behind this song - we'll ask follow-up questions to make it truly personal
                             </p>
                             <FormMessage />
                           </FormItem>

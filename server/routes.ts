@@ -766,10 +766,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Generate AI Questionnaire - personalized follow-up questions based on song details
+  app.post('/api/generate/questionnaire', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { lovedOneId, recipientName, relationship, occasion, tone, genre, songDetails } = req.body;
+      
+      if (!songDetails || songDetails.length < 10) {
+        return res.status(400).json({ message: "Please provide more details about the song (at least 10 characters)" });
+      }
+
+      let lovedOne;
+      if (lovedOneId) {
+        lovedOne = await storage.getLovedOneById(lovedOneId);
+      }
+
+      const { generateSongQuestionnaire } = await import('./openaiService');
+      
+      const questionnaire = await generateSongQuestionnaire({
+        recipientName: lovedOne?.name || recipientName || "someone special",
+        relationship: lovedOne?.relationship || relationship || "friend",
+        occasion,
+        tone,
+        genre,
+        songDetails,
+      });
+
+      res.json(questionnaire);
+    } catch (error: any) {
+      console.error("Error generating questionnaire:", error);
+      res.status(500).json({ message: error.message || "Failed to generate questions" });
+    }
+  });
+
   // Generate Lyrics Preview Only (fast, no song creation)
   app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { lovedOneId, tone, genre, occasion, recipientName, relationship, additionalNotes } = req.body;
+      const { lovedOneId, tone, genre, occasion, recipientName, relationship, songDetails, additionalNotes } = req.body;
+      // Support both songDetails (new) and additionalNotes (legacy)
+      const details = songDetails || additionalNotes;
       
       let lovedOne;
       if (lovedOneId) {
@@ -784,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre: genre || "pop",
         interests: lovedOne?.interests || undefined,
         insideJokes: lovedOne?.insideJokes || undefined,
-        additionalNotes: additionalNotes || undefined,
+        additionalNotes: details || undefined,
       });
 
       res.json(lyrics);
@@ -798,7 +832,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, genre, title, lyrics, additionalNotes, voice, duration, customCoverImageUrl } = req.body;
+      const { lovedOneId, tone, genre, title, lyrics, songDetails, additionalNotes, voice, duration, customCoverImageUrl } = req.body;
+      // Support both songDetails (new) and additionalNotes (legacy)
+      const details = songDetails || additionalNotes;
       
       if (!lyrics || !title) {
         return res.status(400).json({ message: "Lyrics and title are required" });
@@ -870,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tone: tone || "sweet",
             genre: genre || "pop",
             voice: voice || undefined,
-            additionalNotes: additionalNotes || undefined,
+            additionalNotes: details || undefined,
             duration: duration || "extended",
           });
 

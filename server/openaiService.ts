@@ -408,6 +408,62 @@ export async function generateCardImage(params: {
   return b64Json;
 }
 
+// Generate personalized follow-up questions based on initial song details
+// Used for the AI questionnaire feature to gather more context
+export interface QuestionnaireParams {
+  recipientName: string;
+  relationship: string;
+  occasion?: string;
+  tone?: string;
+  genre?: string;
+  songDetails: string;
+}
+
+export interface GeneratedQuestions {
+  intro: string;
+  questions: Array<{
+    id: string;
+    question: string;
+    hint?: string;
+  }>;
+}
+
+export async function generateSongQuestionnaire(params: QuestionnaireParams): Promise<GeneratedQuestions> {
+  const prompt = `You are helping create a personalized song for ${params.recipientName} (${params.relationship}).
+
+The user has shared these initial details:
+"${params.songDetails}"
+
+${params.occasion ? `Occasion: ${params.occasion}` : ''}
+${params.tone ? `Desired tone: ${params.tone}` : ''}
+${params.genre ? `Genre: ${params.genre}` : ''}
+
+Based on these details, generate 5-8 thoughtful follow-up questions to help make this song deeply personal. Your questions should:
+1. Dig deeper into the story/context they mentioned
+2. Ask about specific details that can be woven into lyrics (names, places, moments, inside jokes)
+3. Explore what makes this person special
+4. Understand what emotions or messages they want to convey
+5. Clarify any terms or references they mentioned
+
+Be conversational and warm in your question phrasing. Each question should help gather unique details for the lyrics.
+
+Return JSON with:
+- "intro": A short warm message acknowledging what they shared (1-2 sentences, e.g., "I'd love to write a song for Kurt! Let me ask some questions to make it personal:")
+- "questions": Array of question objects with:
+  - "id": Unique identifier (q1, q2, etc.)
+  - "question": The follow-up question
+  - "hint": Optional hint in parentheses to guide their answer`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+
+  const content = JSON.parse(response.choices[0]?.message?.content || '{"intro": "", "questions": []}');
+  return content as GeneratedQuestions;
+}
+
 // Generate song cover art - Cassette tape style using Nano Banana Realistic
 // Returns a URL to the generated image (not base64)
 // If customImageUrl is provided, uses image-to-image to stylize it with retro cassette tape aesthetic
