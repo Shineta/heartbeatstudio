@@ -1,0 +1,80 @@
+{
+  "className": "EastCoastBoomBap",
+  "region": "New York / East Coast USA",
+  "primaryInfluence": "90s Golden Era Boom Bap",
+  "tempo": {
+    "bpm": [88, 96],
+    "swing": "classic boom bap swing",
+    "feel": "head-nod, gritty, street cypher"
+  },
+  "rhythm": {
+    "drumPattern": "boom bap",
+    "snarePlacement": "hard snare on 2 and 4",
+    "kickStyle": "simple, punchy, non-trap",
+    "hiHats": "tight, minimal, no rolls"
+  },
+  "bass": {
+    "type": "sampled bass or upright-style bass",
+    "behavior": "steady, rhythmic, no slides",
+    "volume": "supportive, not overpowering"
+  },
+  "melodySource": {
+    "type": "sample-based",
+    "sources": [
+      "jazz records",
+      "soul records",
+      "vinyl loops",
+      "minor-key piano chops"
+    ],
+    "processing": [
+      "low-pass filtering",
+      "vinyl crackle",
+      "time-stretched sampling"
+    ]
+  },
+  "vocalStyle": {
+    "delivery": "confident, gritty, articulate",
+    "cadence": "bar-heavy, punchline-driven",
+    "emotion": "controlled intensity",
+    "melody": "none",
+    "autotune": false
+  },
+  "lyricalFocus": {
+    "priority": "lyricism",
+    "themes": [
+      "street perspective",
+      "identity",
+      "survival",
+      "self-respect",
+      "wisdom earned",
+      "community truth"
+    ],
+    "structure": "dense verses, minimal hook"
+  },
+  "songStructure": {
+    "intro": "sample or scratch",
+    "hook": "short phrase or scratch hook",
+    "verses": "long, uninterrupted rap sections",
+    "bridge": "DJ cut or instrumental break"
+  },
+  "djElements": {
+    "scratches": true,
+    "drops": "classic DJ transitions",
+    "vocalCuts": true
+  },
+  "mixStyle": {
+    "drums": "front and center",
+    "vocals": "dry, present, no reverb wash",
+    "overall": "raw, not glossy"
+  },
+  "hardRestrictions": {
+    "noTrapDrums": true,
+    "noDrillBass": true,
+    "noMelodicHooks": true,
+    "noSinging": true,
+    "noPopStructure": true,
+    "noEDMBuilds": true
+  },
+  "referenceEnergy": "NY cypher, boom bap basement session",
+  "overallVibe": "raw East Coast lyricism over classic boom bap"
+}
