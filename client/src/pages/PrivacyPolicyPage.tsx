@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
                 If you have questions about this Privacy Policy or our privacy practices, please contact us at:
               </p>
               <p className="text-muted-foreground mt-2">
-                <strong>Email:</strong> privacy@heartbeatstudio.com<br />
+                <strong>Email:</strong> heartbeatstudio6@gmail.com<br />
                 <strong>Company:</strong> Horton's Tech Innovations
               </p>
             </section>

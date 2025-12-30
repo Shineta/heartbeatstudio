@@ -62,7 +62,7 @@ export default function HelpCenterPage() {
         },
         {
           q: "Can I get a refund?",
-          a: "For billing issues or refund requests, please contact us at support@heartbeatstudio.com. We review each request individually."
+          a: "For billing issues or refund requests, please contact us at heartbeatstudio6@gmail.com. We review each request individually."
         }
       ]
     },

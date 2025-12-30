@@ -111,7 +111,7 @@ export default function ContactPage() {
               <CardContent className="p-6 text-center">
                 <Mail className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h3 className="font-semibold mb-1">Email</h3>
-                <p className="text-sm text-muted-foreground">support@heartbeatstudio.com</p>
+                <p className="text-sm text-muted-foreground">heartbeatstudio6@gmail.com</p>
               </CardContent>
             </Card>
             <Card>
