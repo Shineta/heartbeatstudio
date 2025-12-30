@@ -10,6 +10,7 @@ import { generateCardContent, generateCardImage, generateSongLyrics, generateSon
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
+import { sendPasswordResetSMS, isTwilioConfigured } from "./smsService";
 import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shared/schema";
 
@@ -254,9 +255,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const resetLink = `${BASE_URL}/auth/reset-password?token=${token}`;
       
+      // Send password reset via email
       await sendPasswordResetEmail(email, resetLink);
       
-      res.json({ message: 'If an account exists with this email, you will receive a password reset link.' });
+      // Also send via SMS if user has a phone number and Twilio is configured
+      let smsSent = false;
+      if (user.phoneNumber && isTwilioConfigured()) {
+        smsSent = await sendPasswordResetSMS(user.phoneNumber, resetLink);
+      }
+      
+      const message = smsSent 
+        ? 'Password reset link sent to your email and phone.'
+        : 'If an account exists with this email, you will receive a password reset link.';
+      
+      res.json({ message });
     } catch (error: any) {
       console.error("Password reset error:", error);
       res.status(400).json({ message: error.message || 'Failed to send password reset email' });

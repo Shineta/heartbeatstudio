@@ -139,6 +139,13 @@ Preferred communication style: Simple, everyday language.
   - SESSION_SECRET environment variable required (throws error if missing)
   - Session fixation protection via regeneration on all auth flows
 
+**SMS Service (Twilio)**
+- **Password Reset via SMS**: Sends reset link to user's phone number
+  - Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+  - Falls back to email-only if Twilio not configured
+  - Phone numbers are normalized and stored with unique constraint to prevent abuse
+- **Service file**: `server/smsService.ts` handles all SMS operations
+
 **Database**
 - **Neon PostgreSQL**: Serverless Postgres database
   - Connection string via DATABASE_URL environment variable
