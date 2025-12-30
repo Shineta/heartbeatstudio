@@ -15,6 +15,11 @@ import SharePage from "@/pages/SharePage";
 import MixtapePage from "@/pages/MixtapePage";
 import EditMixtapePage from "@/pages/EditMixtapePage";
 import PricingPage from "@/pages/PricingPage";
+import FeaturesPage from "@/pages/FeaturesPage";
+import HowItWorksPage from "@/pages/HowItWorksPage";
+import HelpCenterPage from "@/pages/HelpCenterPage";
+import ContactPage from "@/pages/ContactPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import DateNightExperience from "@/pages/experiences/DateNightExperience";
 import BirthdayBlastExperience from "@/pages/experiences/BirthdayBlastExperience";
 import GospelGreetingExperience from "@/pages/experiences/GospelGreetingExperience";
@@ -30,7 +35,15 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && location !== '/auth' && location !== '/' && location !== '/pricing' && !location.startsWith('/auth/verify-magic-link') && !location.startsWith('/auth/reset-password') && !location.startsWith('/share/') && !location.startsWith('/experience/') && !location.startsWith('/experiences/')) {
+    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/contact', '/privacy'];
+    const isPublicPath = publicPaths.includes(location) || 
+      location.startsWith('/auth/verify-magic-link') || 
+      location.startsWith('/auth/reset-password') || 
+      location.startsWith('/share/') || 
+      location.startsWith('/experience/') || 
+      location.startsWith('/experiences/');
+    
+    if (!isLoading && !isAuthenticated && !isPublicPath) {
       setLocation('/auth');
     }
   }, [isAuthenticated, isLoading, location, setLocation]);
@@ -53,6 +66,11 @@ function Router() {
       <Route path="/auth/verify-magic-link" component={VerifyMagicLink} />
       <Route path="/auth/reset-password" component={ResetPasswordPage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/features" component={FeaturesPage} />
+      <Route path="/how-it-works" component={HowItWorksPage} />
+      <Route path="/help" component={HelpCenterPage} />
+      <Route path="/contact" component={ContactPage} />
+      <Route path="/privacy" component={PrivacyPolicyPage} />
       <Route path="/experience/date-night" component={DateNightExperience} />
       <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />
