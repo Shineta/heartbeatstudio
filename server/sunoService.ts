@@ -1113,6 +1113,7 @@ export async function generateSongWithLyrics(params: {
     } else {
       // Check if this is a rap sub-genre that needs boosting
       const rapSubGenreStyle = getRapSubGenreStyle(params.genre || '');
+      const isRapGenre = isRapSubGenre(params.genre || '') || isRapSubGenre(resolvedGenre);
       
       if (rapSubGenreStyle) {
         // Use V4.5 Boost Style API for rap sub-genres
@@ -1128,6 +1129,15 @@ export async function generateSongWithLyrics(params: {
       } else {
         style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
         console.log(`[Suno] Using auto-generated style: ${style}`);
+      }
+      
+      // CRITICAL: For ALL rap genres (except melodic-rap), append rap directive at END
+      // Suno prioritizes the last vocal instruction, so this ensures spoken rap delivery
+      if (isRapGenre && !params.genre?.toLowerCase().includes('melodic')) {
+        // Remove any conflicting vocal descriptors and append strong rap directive
+        style = style.replace(/,?\s*(vocals?|singing|melodic|sung)\b/gi, '');
+        style = `${style}, MC RAP VERSES ONLY, SPOKEN FLOW, NO SINGING`;
+        console.log(`[Suno] Final rap style with directive: ${style.substring(0, 100)}...`);
       }
     }
 
