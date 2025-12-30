@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
-import { rapSubGenres } from "@/lib/genres";
+import { rapSubGenres, jazzSubGenres } from "@/lib/genres";
 
 interface LyricsPreview {
   lyrics: string;
@@ -750,9 +750,9 @@ export default function CreatePage() {
     });
   };
 
-  // Helper to combine genre + subGenre for rap styles
+  // Helper to combine genre + subGenre for rap and jazz styles
   const getEffectiveGenre = (data: z.infer<typeof songFormSchema>) => {
-    if (data.genre === "rap" && data.subGenre) {
+    if ((data.genre === "rap" || data.genre === "jazz") && data.subGenre) {
       return data.subGenre;
     }
     return data.genre;
@@ -1917,7 +1917,7 @@ export default function CreatePage() {
                               <Select 
                                 onValueChange={(value) => {
                                   field.onChange(value);
-                                  if (value !== "rap") {
+                                  if (value !== "rap" && value !== "jazz") {
                                     songForm.setValue("subGenre", "");
                                   }
                                 }} 
@@ -1962,6 +1962,33 @@ export default function CreatePage() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {rapSubGenres.map((subGenre) => (
+                                      <SelectItem key={subGenre.id} value={subGenre.id}>
+                                        {subGenre.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {songForm.watch("genre") === "jazz" && (
+                        <FormField
+                          control={songForm.control}
+                          name="subGenre"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Jazz Style</FormLabel>
+                              <FormControl>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger data-testid="select-song-jazz-subgenre">
+                                    <SelectValue placeholder="Select jazz style (optional)" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {jazzSubGenres.map((subGenre) => (
                                       <SelectItem key={subGenre.id} value={subGenre.id}>
                                         {subGenre.label}
                                       </SelectItem>

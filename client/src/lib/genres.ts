@@ -32,6 +32,19 @@ export const rapSubGenres = [
   { id: "drill", label: "Drill" },
 ];
 
+export const jazzSubGenres = [
+  { id: "smooth-jazz", label: "Smooth Jazz" },
+  { id: "bebop", label: "Bebop" },
+  { id: "swing", label: "Swing" },
+  { id: "cool-jazz", label: "Cool Jazz" },
+  { id: "latin-jazz", label: "Latin Jazz" },
+  { id: "fusion", label: "Jazz Fusion" },
+  { id: "vocal-jazz", label: "Vocal Jazz" },
+  { id: "contemporary-jazz", label: "Contemporary Jazz" },
+  { id: "acid-jazz", label: "Acid Jazz" },
+  { id: "nu-jazz", label: "Nu Jazz" },
+];
+
 export const classroomGenres = allGenres.filter(g => 
   ["kids", "pop", "hip-hop", "rap", "rock", "country", "electronic", "r&b", "jazz", "gospel"].includes(g.id)
 );
