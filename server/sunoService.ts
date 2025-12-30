@@ -508,7 +508,7 @@ const rapSubGenreDescriptions: Record<string, string> = {
   "southern-rap": "75 BPM southern rap with crunk energy, trunk-rattling 808s, call-response hooks, drawled MC rap verses with no melodic singing, Outkast style",
   "east-coast-rap": "90s East Coast boom-bap at 92 BPM, SP-1200 chopped jazz piano samples, dusty vinyl crackle, layered kick-snare swing, DJ Premier-style scratched hooks, NYC street storytelling MC rap verses with no singing",
   "west-coast-rap": "90 BPM West Coast G-funk with Moog synths, talk-box, Parliament bass, laid-back MC rap verses with no melodic singing, Dr. Dre production style",
-  "drill": "142 BPM UK DRILL BEAT, sliding 808 bass with portamento, dark orchestral strings and flute melodies in minor key, syncopated tresillo hi-hat patterns with rapid rolls, snare on 4th beat, aggressive deadpan grim MC rap delivery with Auto-Tune, ad-libs SKRR BOW OOH, UK drill flow, no melodic singing",
+  "drill": "140 BPM DRILL RAP, heavy sliding 808 bass, dark minimal production in minor key, sparse eerie piano and bell melodies, aggressive punchy drums, monotone deadpan cold delivery, talk-rap with NO SINGING, ad-libs grunts and threats, simple repetitive hook, short punchy verses, raw gritty street energy",
 };
 
 // Cache for boosted styles to avoid redundant API calls
@@ -840,8 +840,8 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     "southern-rap": "SOUTHERN RAP, crunk 808s, rap verses, no singing",
     "east-coast-rap": "EAST COAST RAP, boom bap, rap verses, no singing",
     "west-coast-rap": "WEST COAST RAP, G-funk, rap verses, no singing",
-    "drill-rap": "UK DRILL, 142 BPM, sliding 808 bass, dark flute and strings, syncopated hi-hats, deadpan aggressive rap, no singing",
-    drill: "UK DRILL, 142 BPM, sliding 808 bass, dark flute and strings, syncopated hi-hats, deadpan aggressive rap, no singing",
+    "drill-rap": "DRILL RAP, 140 BPM, heavy sliding 808s, dark minimal minor key, monotone deadpan cold talk-rap, NO SINGING, raw gritty street energy",
+    drill: "DRILL RAP, 140 BPM, heavy sliding 808s, dark minimal minor key, monotone deadpan cold talk-rap, NO SINGING, raw gritty street energy",
 
     // Electronic styles - Black electronic (Chicago house, Detroit techno)
     electronic: "BLACK ELECTRONIC, Detroit techno, synth soul",
