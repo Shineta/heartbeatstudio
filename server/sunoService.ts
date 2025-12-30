@@ -904,7 +904,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
 
 async function pollTaskStatus(
   taskId: string,
-  maxAttempts = 90,
+  maxAttempts = 120, // Default 20 minutes (120 * 10s)
 ): Promise<SunoTaskResponse["data"]["response"]> {
   let lastStatus: string = "UNKNOWN";
   let lastError: string | undefined;
@@ -921,6 +921,7 @@ async function pollTaskStatus(
         headers: {
           Authorization: `Bearer ${SUNO_API_KEY}`,
         },
+        timeout: 30000, // 30 second timeout for poll requests
       },
     );
 
@@ -969,7 +970,7 @@ async function pollTaskStatus(
     }
   }
 
-  const timeoutMessage = `Song generation timed out after 15 minutes. Last status: ${lastStatus}${
+  const timeoutMessage = `Song generation timed out after 20 minutes. Last status: ${lastStatus}${
     lastError ? `. Error: ${lastError}` : ""
   }`;
   console.error(`[Suno] ${timeoutMessage}`);
@@ -1008,6 +1009,7 @@ async function extendSong(params: {
         Authorization: `Bearer ${SUNO_API_KEY}`,
         "Content-Type": "application/json",
       },
+      timeout: 60000, // 60 second timeout for extension API call
     },
   );
 
@@ -1049,6 +1051,7 @@ async function concatenateClips(clipIds: string[]): Promise<string> {
         Authorization: `Bearer ${SUNO_API_KEY}`,
         "Content-Type": "application/json",
       },
+      timeout: 60000, // 60 second timeout for concat API call
     },
   );
 
@@ -1162,6 +1165,7 @@ export async function generateSongWithLyrics(params: {
           Authorization: `Bearer ${SUNO_API_KEY}`,
           "Content-Type": "application/json",
         },
+        timeout: 60000, // 60 second timeout for initial API call
       },
     );
 
