@@ -38,6 +38,8 @@ export default function ResetPasswordPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [resetMethod, setResetMethod] = useState<'email' | 'sms'>('email');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   const requestForm = useForm<RequestResetForm>({
     resolver: zodResolver(requestResetSchema),
@@ -277,45 +279,45 @@ export default function ResetPasswordPage() {
                   </form>
                 </Form>
               ) : (
-                <Form {...requestSMSForm}>
-                  <form onSubmit={requestSMSForm.handleSubmit((data) => requestResetSMSMutation.mutate(data))} className="space-y-3">
-                    <FormField
-                      control={requestSMSForm.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                              <Input 
-                                name={field.name}
-                                value={field.value}
-                                onChange={field.onChange}
-                                onBlur={field.onBlur}
-                                ref={field.ref}
-                                type="tel" 
-                                placeholder="(555) 123-4567" 
-                                className="pl-10"
-                                data-testid="input-phone"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={requestResetSMSMutation.isPending}
-                      data-testid="button-request-reset-sms"
-                    >
-                      {requestResetSMSMutation.isPending ? 'Sending...' : 'Send Reset Link via SMS'}
-                    </Button>
-                  </form>
-                </Form>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (phoneNumber.replace(/\D/g, '').length < 10) {
+                    setPhoneError('Please enter a valid phone number');
+                    return;
+                  }
+                  setPhoneError('');
+                  requestResetSMSMutation.mutate({ phoneNumber });
+                }} className="space-y-3">
+                  <div className="space-y-2">
+                    <label htmlFor="phone-input" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                      <input
+                        id="phone-input"
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="(555) 123-4567"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        data-testid="input-phone"
+                      />
+                    </div>
+                    {phoneError && (
+                      <p className="text-sm font-medium text-destructive">{phoneError}</p>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={requestResetSMSMutation.isPending}
+                    data-testid="button-request-reset-sms"
+                  >
+                    {requestResetSMSMutation.isPending ? 'Sending...' : 'Send Reset Link via SMS'}
+                  </Button>
+                </form>
               )}
             </>
           )}
