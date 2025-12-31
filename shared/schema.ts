@@ -136,3 +136,29 @@ export const insertMixtapeSchema = createInsertSchema(mixtapes).omit({
 
 export type InsertMixtape = z.infer<typeof insertMixtapeSchema>;
 export type Mixtape = typeof mixtapes.$inferSelect;
+
+// Scheduled deliveries for songs/cards/animations
+export const scheduledDeliveries = pgTable("scheduled_deliveries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  creationId: varchar("creation_id").notNull().references(() => creations.id, { onDelete: 'cascade' }),
+  recipientEmail: varchar("recipient_email"),
+  recipientPhone: varchar("recipient_phone"),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  deliveredAt: timestamp("delivered_at"),
+  status: varchar("status").notNull().default('pending'), // 'pending', 'sent', 'failed', 'cancelled'
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertScheduledDeliverySchema = createInsertSchema(scheduledDeliveries).omit({
+  id: true,
+  deliveredAt: true,
+  failureReason: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertScheduledDelivery = z.infer<typeof insertScheduledDeliverySchema>;
+export type ScheduledDelivery = typeof scheduledDeliveries.$inferSelect;
