@@ -1042,7 +1042,6 @@ export default function RealDashboard() {
                       <Input 
                         type="datetime-local" 
                         {...field} 
-                        min={new Date().toISOString().slice(0, 16)}
                         data-testid="input-schedule-datetime"
                       />
                     </FormControl>

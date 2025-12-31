@@ -1445,9 +1445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const creationId = req.params.id;
       
       const schema = z.object({
-        scheduledAt: z.string().refine(date => new Date(date) > new Date(), {
-          message: "Scheduled time must be in the future"
-        }),
+        scheduledAt: z.string(),
         recipientEmail: z.string().email().optional(),
         recipientPhone: z.string().optional(),
       }).refine(data => data.recipientEmail || data.recipientPhone, {
