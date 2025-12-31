@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone, Trash2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,9 +58,6 @@ export default function RealDashboard() {
   const [renamingCreation, setRenamingCreation] = useState<Creation | null>(null);
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [regeneratingCover, setRegeneratingCover] = useState<string | null>(null);
-  const [uploadingCover, setUploadingCover] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedCreationId, setSelectedCreationId] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedLovedOne, setSelectedLovedOne] = useState<LovedOne | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
@@ -392,11 +389,6 @@ export default function RealDashboard() {
     }
   };
 
-  const handleUploadClick = (creationId: string) => {
-    setSelectedCreationId(creationId);
-    fileInputRef.current?.click();
-  };
-
   const handleDownload = async (creation: Creation) => {
     if (!creation.mediaUrl) {
       toast({
@@ -429,53 +421,8 @@ export default function RealDashboard() {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedCreationId) return;
-
-    setUploadingCover(selectedCreationId);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch(`/api/creations/${selectedCreationId}/upload-cover`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Upload failed');
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-      toast({ title: "Success", description: "Cover image uploaded!" });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload cover",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingCover(null);
-      setSelectedCreationId(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-        data-testid="input-cover-upload"
-      />
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
@@ -853,42 +800,23 @@ export default function RealDashboard() {
                               </Button>
                             )}
                             {creation.type === 'song' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUploadClick(creation.id);
-                                  }}
-                                  disabled={uploadingCover === creation.id}
-                                  data-testid={`button-upload-cover-${creation.id}`}
-                                >
-                                  {uploadingCover === creation.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Upload className="w-4 h-4" />
-                                  )}
-                                  <span className="ml-1">Upload</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRegenerateCover(creation.id);
-                                  }}
-                                  disabled={regeneratingCover === creation.id}
-                                  data-testid={`button-regenerate-cover-${creation.id}`}
-                                >
-                                  {regeneratingCover === creation.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="w-4 h-4" />
-                                  )}
-                                  <span className="ml-1">New Cover</span>
-                                </Button>
-                              </>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRegenerateCover(creation.id);
+                                }}
+                                disabled={regeneratingCover === creation.id}
+                                data-testid={`button-regenerate-cover-${creation.id}`}
+                              >
+                                {regeneratingCover === creation.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-4 h-4" />
+                                )}
+                                <span className="ml-1">New Cover</span>
+                              </Button>
                             )}
                             <Button
                               size="sm"
