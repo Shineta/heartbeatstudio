@@ -1439,6 +1439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Schedule a creation for delivery
   app.post('/api/creations/:id/schedule', isAuthenticated, async (req: Request, res: Response) => {
+    console.log('[Schedule] Received request:', { creationId: req.params.id, body: req.body });
     try {
       const userId = (req.user as any).id;
       const creationId = req.params.id;
@@ -1482,6 +1483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'pending',
       });
       
+      console.log('[Schedule] Created delivery:', delivery);
       res.json(delivery);
     } catch (error: any) {
       console.error("Error scheduling delivery:", error);
