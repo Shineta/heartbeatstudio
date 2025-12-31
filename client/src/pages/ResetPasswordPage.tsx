@@ -317,6 +317,10 @@ export default function ResetPasswordPage() {
                   >
                     {requestResetSMSMutation.isPending ? 'Sending...' : 'Send Reset Link via SMS'}
                   </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Note: SMS delivery may be delayed by your carrier. If you don't receive a message within a few minutes, please try the email option instead.
+                  </p>
                 </form>
               )}
             </>
