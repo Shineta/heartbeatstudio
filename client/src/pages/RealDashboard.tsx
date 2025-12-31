@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +21,7 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { LovedOne, Creation, Mixtape } from "@shared/schema";
+import type { LovedOne, Creation, Mixtape, ScheduledDelivery } from "@shared/schema";
 
 const lovedOneFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -41,6 +41,15 @@ const renameFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
+const scheduleFormSchema = z.object({
+  scheduledAt: z.string().min(1, "Date and time required"),
+  recipientEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  recipientPhone: z.string().optional().or(z.literal("")),
+}).refine(data => data.recipientEmail || data.recipientPhone, {
+  message: "Please provide an email or phone number",
+  path: ["recipientEmail"],
+});
+
 export default function RealDashboard() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,6 +63,8 @@ export default function RealDashboard() {
   const [selectedCreationId, setSelectedCreationId] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedLovedOne, setSelectedLovedOne] = useState<LovedOne | null>(null);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [schedulingCreation, setSchedulingCreation] = useState<Creation | null>(null);
 
   const { data: lovedOnes = [], isLoading } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -71,6 +82,10 @@ export default function RealDashboard() {
 
   const { data: mixtapes = [], isLoading: mixtapesLoading } = useQuery<Mixtape[]>({
     queryKey: ['/api/mixtapes'],
+  });
+
+  const { data: scheduledDeliveries = [], isLoading: scheduledLoading } = useQuery<ScheduledDelivery[]>({
+    queryKey: ['/api/scheduled-deliveries'],
   });
 
   const form = useForm<z.infer<typeof lovedOneFormSchema>>({
@@ -221,6 +236,87 @@ export default function RealDashboard() {
     if (!renamingCreation) return;
     renameMutation.mutate({ id: renamingCreation.id, title: data.title });
   };
+
+  const scheduleForm = useForm<z.infer<typeof scheduleFormSchema>>({
+    resolver: zodResolver(scheduleFormSchema),
+    defaultValues: {
+      scheduledAt: "",
+      recipientEmail: "",
+      recipientPhone: "",
+    },
+  });
+
+  const scheduleMutation = useMutation({
+    mutationFn: async (data: { creationId: string; scheduledAt: string; recipientEmail?: string; recipientPhone?: string }) => {
+      return await apiRequest("POST", `/api/creations/${data.creationId}/schedule`, {
+        scheduledAt: data.scheduledAt,
+        recipientEmail: data.recipientEmail || undefined,
+        recipientPhone: data.recipientPhone || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/scheduled-deliveries'] });
+      toast({ title: "Scheduled!", description: "Your creation will be delivered at the scheduled time." });
+      setScheduleDialogOpen(false);
+      setSchedulingCreation(null);
+      scheduleForm.reset();
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to schedule. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleScheduleClick = (creation: Creation) => {
+    setSchedulingCreation(creation);
+    scheduleForm.reset({
+      scheduledAt: "",
+      recipientEmail: "",
+      recipientPhone: "",
+    });
+    setScheduleDialogOpen(true);
+  };
+
+  const onScheduleSubmit = (data: z.infer<typeof scheduleFormSchema>) => {
+    if (!schedulingCreation) return;
+    scheduleMutation.mutate({
+      creationId: schedulingCreation.id,
+      scheduledAt: data.scheduledAt,
+      recipientEmail: data.recipientEmail,
+      recipientPhone: data.recipientPhone,
+    });
+  };
+
+  const cancelScheduleMutation = useMutation({
+    mutationFn: async (deliveryId: string) => {
+      return await apiRequest("PATCH", `/api/scheduled-deliveries/${deliveryId}/cancel`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/scheduled-deliveries'] });
+      toast({ title: "Cancelled", description: "Scheduled delivery has been cancelled." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const toggleSongSelection = (songId: string) => {
     const creation = creations.find(c => c.id === songId);
@@ -490,6 +586,7 @@ export default function RealDashboard() {
             <TabsTrigger value="loved-ones" data-testid="tab-loved-ones">Loved Ones</TabsTrigger>
             <TabsTrigger value="creations" data-testid="tab-creations">My Creations</TabsTrigger>
             <TabsTrigger value="mixtapes" data-testid="tab-mixtapes">Mixtapes</TabsTrigger>
+            <TabsTrigger value="scheduled" data-testid="tab-scheduled">Scheduled</TabsTrigger>
           </TabsList>
           
           <TabsContent value="loved-ones">
@@ -670,6 +767,18 @@ export default function RealDashboard() {
                             >
                               Share
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleScheduleClick(creation);
+                              }}
+                              data-testid={`button-schedule-${creation.id}`}
+                            >
+                              <Clock className="w-4 h-4" />
+                              <span className="ml-1">Schedule</span>
+                            </Button>
                             {creation.type === 'song' && creation.mediaUrl && (
                               <Button
                                 size="sm"
@@ -826,8 +935,187 @@ export default function RealDashboard() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="scheduled">
+            {scheduledLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading scheduled deliveries...</p>
+              </div>
+            ) : scheduledDeliveries.length === 0 ? (
+              <div className="text-center py-12">
+                <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No scheduled deliveries</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Schedule a song or card to be sent at a specific time
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {scheduledDeliveries.map((delivery) => {
+                  const creation = creations.find(c => c.id === delivery.creationId);
+                  return (
+                    <Card key={delivery.id} data-testid={`card-scheduled-${delivery.id}`}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              {creation?.type === 'song' ? (
+                                <Music className="w-6 h-6 text-primary" />
+                              ) : (
+                                <Send className="w-6 h-6 text-primary" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-base truncate">{creation?.title || 'Untitled'}</CardTitle>
+                              <CardDescription className="truncate">
+                                {delivery.recipientEmail && (
+                                  <span className="flex items-center gap-1">
+                                    <Mail className="w-3 h-3" />
+                                    {delivery.recipientEmail}
+                                  </span>
+                                )}
+                                {delivery.recipientPhone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="w-3 h-3" />
+                                    {delivery.recipientPhone}
+                                  </span>
+                                )}
+                              </CardDescription>
+                            </div>
+                          </div>
+                          <Badge variant={
+                            delivery.status === 'pending' ? 'default' :
+                            delivery.status === 'sent' ? 'secondary' :
+                            'destructive'
+                          }>
+                            {delivery.status === 'pending' ? 'Scheduled' :
+                             delivery.status === 'sent' ? 'Sent' :
+                             'Cancelled'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(delivery.scheduledAt).toLocaleString()}</span>
+                        </div>
+                        {delivery.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => cancelScheduleMutation.mutate(delivery.id)}
+                            disabled={cancelScheduleMutation.isPending}
+                            data-testid={`button-cancel-${delivery.id}`}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Cancel
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent data-testid="dialog-schedule-delivery">
+          <DialogHeader>
+            <DialogTitle>Schedule Delivery</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Send "{schedulingCreation?.title}" at a specific date and time.
+          </p>
+          <Form {...scheduleForm}>
+            <form onSubmit={scheduleForm.handleSubmit(onScheduleSubmit)} className="space-y-4">
+              <FormField
+                control={scheduleForm.control}
+                name="scheduledAt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date & Time</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="datetime-local" 
+                        {...field} 
+                        min={new Date().toISOString().slice(0, 16)}
+                        data-testid="input-schedule-datetime"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={scheduleForm.control}
+                name="recipientEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recipient Email (optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="friend@example.com" 
+                        {...field} 
+                        data-testid="input-schedule-email"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={scheduleForm.control}
+                name="recipientPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recipient Phone (optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="tel" 
+                        placeholder="+1 (555) 123-4567" 
+                        {...field} 
+                        data-testid="input-schedule-phone"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Provide at least an email or phone number to send the delivery.
+              </p>
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setScheduleDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={scheduleMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-confirm-schedule"
+                >
+                  {scheduleMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Clock className="w-4 h-4 mr-2" />
+                  )}
+                  Schedule
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={mixtapeDialogOpen} onOpenChange={setMixtapeDialogOpen}>
         <DialogContent data-testid="dialog-create-mixtape">
