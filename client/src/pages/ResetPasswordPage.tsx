@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
         title: 'Check your phone!', 
         description: 'If an account exists with this phone number, you will receive a password reset link via SMS.' 
       });
-      requestSMSForm.reset();
+      setPhoneNumber('');
     },
     onError: (error: any) => {
       toast({ variant: 'destructive', title: 'Failed to send reset SMS', description: error.message });
