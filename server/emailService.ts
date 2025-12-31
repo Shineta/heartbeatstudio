@@ -198,3 +198,57 @@ export async function sendContactFormEmail(data: {
 
   await client.send(msg);
 }
+
+export async function sendCreationShareEmail(
+  to: string, 
+  creationTitle: string, 
+  shareLink: string, 
+  creationType: string,
+  senderName: string
+) {
+  const {client, fromEmail} = await getUncachableSendGridClient();
+  
+  const typeLabels: Record<string, string> = {
+    song: 'personalized song',
+    card: 'greeting card',
+    animation: 'animation'
+  };
+  
+  const typeLabel = typeLabels[creationType] || 'creation';
+  
+  const msg = {
+    to,
+    from: fromEmail,
+    subject: `${senderName} sent you a ${typeLabel} - Heartbeat Studio`,
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #FF4D8C; font-family: 'Fredoka', sans-serif;">You've Got a Special ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}!</h1>
+        <p style="font-size: 16px; color: #333; line-height: 1.6;">
+          ${senderName} has created a special ${typeLabel} just for you using Heartbeat Studio.
+        </p>
+        <div style="background: linear-gradient(135deg, #FF4D8C 0%, #FF8C42 100%); padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center;">
+          <p style="font-size: 24px; color: white; font-weight: bold; margin: 0 0 10px 0; font-family: 'Fredoka', sans-serif;">
+            "${creationTitle}"
+          </p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${shareLink}" 
+             style="display: inline-block; background-color: #FF4D8C; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            View Your ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">
+          Or copy and paste this link into your browser:<br>
+          <a href="${shareLink}" style="color: #FF4D8C;">${shareLink}</a>
+        </p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #999; text-align: center;">
+          Heartbeat Studio by Horton's Tech Innovations<br>
+          Making celebrations effortless and joyful
+        </p>
+      </div>
+    `,
+  };
+
+  await client.send(msg);
+}

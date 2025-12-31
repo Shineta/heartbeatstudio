@@ -10,6 +10,7 @@ import { generateCardContent, generateCardImage, generateSongLyrics, generateSon
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
+import { startScheduler } from "./schedulerService";
 import { sendPasswordResetSMS, isTwilioConfigured } from "./smsService";
 import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shared/schema";
@@ -2397,5 +2398,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  startScheduler(60000);
+  
   return httpServer;
 }

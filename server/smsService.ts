@@ -110,3 +110,47 @@ export async function sendVerificationSMS(to: string, code: string): Promise<boo
     return false;
   }
 }
+
+export async function sendCreationShareSMS(
+  to: string, 
+  creationTitle: string,
+  shareLink: string,
+  creationType: string,
+  senderName: string
+): Promise<boolean> {
+  try {
+    if (!isTwilioConfigured()) {
+      console.log('[SMS] Twilio not configured, skipping SMS');
+      return false;
+    }
+    
+    const client = getTwilioClient();
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    
+    if (!fromNumber) {
+      console.log('[SMS] No Twilio phone number configured');
+      return false;
+    }
+    
+    const normalizedTo = normalizePhoneNumber(to);
+    
+    const typeLabels: Record<string, string> = {
+      song: 'personalized song',
+      card: 'greeting card',
+      animation: 'animation'
+    };
+    const typeLabel = typeLabels[creationType] || 'creation';
+    
+    const message = await client.messages.create({
+      body: `${senderName} created a ${typeLabel} for you on Heartbeat Studio: "${creationTitle}" - Listen now: ${shareLink}`,
+      from: fromNumber,
+      to: normalizedTo,
+    });
+    
+    console.log(`[SMS] Creation share SMS sent to ${normalizedTo}, SID: ${message.sid}`);
+    return true;
+  } catch (error: any) {
+    console.error('[SMS] Failed to send creation share SMS:', error.message);
+    return false;
+  }
+}
