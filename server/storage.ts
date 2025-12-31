@@ -5,6 +5,7 @@ import {
   creations,
   magicLinkTokens,
   mixtapes,
+  scheduledDeliveries,
   type User,
   type UpsertUser,
   type LovedOne,
@@ -15,9 +16,11 @@ import {
   type InsertMagicLinkToken,
   type Mixtape,
   type InsertMixtape,
+  type ScheduledDelivery,
+  type InsertScheduledDelivery,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -56,6 +59,14 @@ export interface IStorage {
   getMixtapeByShareableLink(link: string): Promise<Mixtape | undefined>;
   createMixtape(mixtape: InsertMixtape): Promise<Mixtape>;
   updateMixtape(id: string, mixtape: Partial<InsertMixtape>): Promise<Mixtape | undefined>;
+  
+  // Scheduled delivery operations
+  getScheduledDeliveriesByUserId(userId: string): Promise<ScheduledDelivery[]>;
+  getScheduledDeliveryById(id: string): Promise<ScheduledDelivery | undefined>;
+  getPendingScheduledDeliveries(): Promise<ScheduledDelivery[]>;
+  createScheduledDelivery(delivery: InsertScheduledDelivery): Promise<ScheduledDelivery>;
+  updateScheduledDelivery(id: string, delivery: Partial<ScheduledDelivery>): Promise<ScheduledDelivery | undefined>;
+  cancelScheduledDelivery(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -239,6 +250,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(mixtapes.id, id))
       .returning();
     return updated;
+  }
+
+  // Scheduled delivery operations
+  async getScheduledDeliveriesByUserId(userId: string): Promise<ScheduledDelivery[]> {
+    return await db
+      .select()
+      .from(scheduledDeliveries)
+      .where(eq(scheduledDeliveries.userId, userId))
+      .orderBy(desc(scheduledDeliveries.scheduledAt));
+  }
+
+  async getScheduledDeliveryById(id: string): Promise<ScheduledDelivery | undefined> {
+    const [delivery] = await db.select().from(scheduledDeliveries).where(eq(scheduledDeliveries.id, id));
+    return delivery;
+  }
+
+  async getPendingScheduledDeliveries(): Promise<ScheduledDelivery[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(scheduledDeliveries)
+      .where(and(
+        eq(scheduledDeliveries.status, 'pending'),
+        lte(scheduledDeliveries.scheduledAt, now)
+      ));
+  }
+
+  async createScheduledDelivery(delivery: InsertScheduledDelivery): Promise<ScheduledDelivery> {
+    const [created] = await db.insert(scheduledDeliveries).values(delivery).returning();
+    return created;
+  }
+
+  async updateScheduledDelivery(id: string, delivery: Partial<ScheduledDelivery>): Promise<ScheduledDelivery | undefined> {
+    const [updated] = await db
+      .update(scheduledDeliveries)
+      .set({ ...delivery, updatedAt: new Date() })
+      .where(eq(scheduledDeliveries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async cancelScheduledDelivery(id: string): Promise<void> {
+    await db
+      .update(scheduledDeliveries)
+      .set({ status: 'cancelled', updatedAt: new Date() })
+      .where(eq(scheduledDeliveries.id, id));
   }
 }
 
