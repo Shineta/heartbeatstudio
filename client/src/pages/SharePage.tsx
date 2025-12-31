@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Download, Sparkles, Play, Video } from 'lucide-react';
@@ -20,6 +20,7 @@ interface Creation {
 
 export default function SharePage() {
   const [, params] = useRoute('/share/:link');
+  const [, setLocation] = useLocation();
   const shareLink = params?.link;
   const [creation, setCreation] = useState<Creation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,7 +127,7 @@ export default function SharePage() {
               <span className="text-xs text-muted-foreground">By Hortons Tech Innovations</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" data-testid="button-create-own" onClick={handleComingSoon}>
+          <Button variant="outline" size="sm" data-testid="button-create-own" onClick={() => setLocation('/create')}>
             <Sparkles className="w-4 h-4 mr-2" />
             Create Your Own
           </Button>
@@ -274,7 +275,7 @@ export default function SharePage() {
             <p className="text-muted-foreground mb-6">
               Make personalized AI-powered songs, cards, and animations for your loved ones
             </p>
-            <Button size="lg" data-testid="button-get-started" onClick={handleComingSoon}>
+            <Button size="lg" data-testid="button-get-started" onClick={() => setLocation('/create')}>
               <Sparkles className="w-5 h-5 mr-2" />
               Get Started Free
             </Button>
