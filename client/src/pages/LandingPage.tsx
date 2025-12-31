@@ -1,3 +1,4 @@
+import { useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeatureCard from "@/components/FeatureCard";
@@ -11,6 +12,12 @@ import cardPreview from '@assets/generated_images/Card_maker_preview_e83ca765.pn
 import animationPreview from '@assets/generated_images/Animation_maker_preview_2accf1ac.png';
 
 export default function LandingPage() {
+  const [, setLocation] = useLocation();
+
+  const handleTryIt = (type: 'song' | 'card' | 'animation') => {
+    setLocation(`/create?type=${type}`);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="fixed top-4 right-4 z-50">
@@ -38,21 +45,21 @@ export default function LandingPage() {
               description="Create personalized 30-60 second songs with custom lyrics, music, and cover art in any style or genre."
               icon={Music}
               imageUrl={songPreview}
-              onTryIt={() => console.log('Try AI Song Creator')}
+              onTryIt={() => handleTryIt('song')}
             />
             <FeatureCard
               title="AI Card Maker"
               description="Generate beautiful greeting cards with AI-crafted messages and stunning illustrations for any occasion."
               icon={Mail}
               imageUrl={cardPreview}
-              onTryIt={() => console.log('Try AI Card Maker')}
+              onTryIt={() => handleTryIt('card')}
             />
             <FeatureCard
               title="Mini Animations"
               description="Make 10-30 second animated videos with photos, text, and music that bring your celebrations to life."
               icon={Film}
               imageUrl={animationPreview}
-              onTryIt={() => console.log('Try Mini Animations')}
+              onTryIt={() => handleTryIt('animation')}
             />
           </div>
         </div>

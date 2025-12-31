@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -90,6 +90,10 @@ const mixtapeFormSchema = z.object({
 export default function CreatePage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  const searchParams = new URLSearchParams(searchString);
+  const defaultTab = searchParams.get('type') || 'card';
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
   const [createdAnimation, setCreatedAnimation] = useState<Creation | null>(null);
@@ -984,7 +988,7 @@ export default function CreatePage() {
           </p>
         </div>
 
-        <Tabs defaultValue="card" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="card" data-testid="tab-card">
               <Mail className="w-4 h-4 mr-2" />
