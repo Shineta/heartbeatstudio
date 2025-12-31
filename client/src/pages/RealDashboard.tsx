@@ -11,7 +11,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Upload, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -317,6 +317,50 @@ export default function RealDashboard() {
       });
     },
   });
+
+  const [deletingCreation, setDeletingCreation] = useState<Creation | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/creations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      toast({ title: "Deleted", description: "Song has been permanently deleted." });
+      setDeleteDialogOpen(false);
+      setDeletingCreation(null);
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteClick = (creation: Creation) => {
+    setDeletingCreation(creation);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingCreation) {
+      deleteMutation.mutate(deletingCreation.id);
+    }
+  };
 
   const toggleSongSelection = (songId: string) => {
     const creation = creations.find(c => c.id === songId);
@@ -736,8 +780,23 @@ export default function RealDashboard() {
                             Song is being created... This may take 2-4 minutes.
                           </div>
                         ) : creation.status === 'failed' ? (
-                          <div className="text-sm text-red-600 dark:text-red-400 text-center py-2">
-                            Generation failed. Please try creating a new song.
+                          <div className="space-y-3">
+                            <div className="text-sm text-red-600 dark:text-red-400 text-center py-2">
+                              Generation failed. Please try creating a new song.
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(creation);
+                              }}
+                              className="w-full text-destructive hover:text-destructive"
+                              data-testid={`button-delete-failed-${creation.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span className="ml-1">Delete</span>
+                            </Button>
                           </div>
                         ) : (
                           <div className="flex gap-2 flex-wrap">
@@ -831,6 +890,19 @@ export default function RealDashboard() {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(creation);
+                              }}
+                              className="text-destructive hover:text-destructive"
+                              data-testid={`button-delete-${creation.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span className="ml-1">Delete</span>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -1114,6 +1186,41 @@ export default function RealDashboard() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent data-testid="dialog-delete-creation">
+          <DialogHeader>
+            <DialogTitle>Delete Creation</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Are you sure you want to delete "{deletingCreation?.title}"? This action cannot be undone.
+          </p>
+          <div className="flex gap-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="flex-1"
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Delete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
