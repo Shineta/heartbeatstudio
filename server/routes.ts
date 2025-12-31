@@ -276,6 +276,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Request password reset via SMS only (for when email delivery is unreliable)
+  app.post('/api/auth/reset-password-sms', async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({ phoneNumber: z.string().min(10) });
+      const { phoneNumber } = schema.parse(req.body);
+      
+      // Find user by phone number
+      const user = await storage.getUserByPhoneNumber(phoneNumber);
+      
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ message: 'If an account exists with this phone number, you will receive a password reset link via SMS.' });
+      }
+      
+      if (!isTwilioConfigured()) {
+        return res.status(503).json({ message: 'SMS service is not available. Please use email reset instead.' });
+      }
+      
+      const token = generateMagicLinkToken(user.email);
+      
+      // Store token in database for one-time use validation
+      await storage.createMagicLinkToken({
+        email: user.email,
+        token,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      });
+      
+      const resetLink = `${BASE_URL}/auth/reset-password?token=${token}`;
+      
+      // Send password reset via SMS only
+      const smsSent = await sendPasswordResetSMS(phoneNumber, resetLink);
+      
+      if (smsSent) {
+        res.json({ message: 'Password reset link sent to your phone via SMS.' });
+      } else {
+        res.status(500).json({ message: 'Failed to send SMS. Please try again or use email reset.' });
+      }
+    } catch (error: any) {
+      console.error("SMS password reset error:", error);
+      res.status(400).json({ message: error.message || 'Failed to send password reset SMS' });
+    }
+  });
+
   // Set new password with token
   app.post('/api/auth/set-password', async (req: Request, res: Response) => {
     try {

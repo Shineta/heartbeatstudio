@@ -9,10 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Heart, Lock, Mail } from 'lucide-react';
+import { Heart, Lock, Mail, Phone, MessageSquare } from 'lucide-react';
 
 const requestResetSchema = z.object({
   email: z.string().email('Please enter a valid email'),
+});
+
+const requestResetSMSSchema = z.object({
+  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
 });
 
 const setPasswordSchema = z.object({
@@ -24,6 +28,7 @@ const setPasswordSchema = z.object({
 });
 
 type RequestResetForm = z.infer<typeof requestResetSchema>;
+type RequestResetSMSForm = z.infer<typeof requestResetSMSSchema>;
 type SetPasswordForm = z.infer<typeof setPasswordSchema>;
 
 export default function ResetPasswordPage() {
@@ -32,10 +37,16 @@ export default function ResetPasswordPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [resetMethod, setResetMethod] = useState<'email' | 'sms'>('email');
 
   const requestForm = useForm<RequestResetForm>({
     resolver: zodResolver(requestResetSchema),
     defaultValues: { email: '' },
+  });
+
+  const requestSMSForm = useForm<RequestResetSMSForm>({
+    resolver: zodResolver(requestResetSMSSchema),
+    defaultValues: { phoneNumber: '' },
   });
 
   const setPasswordForm = useForm<SetPasswordForm>({
@@ -65,6 +76,31 @@ export default function ResetPasswordPage() {
     },
     onError: (error: any) => {
       toast({ variant: 'destructive', title: 'Failed to send reset email', description: error.message });
+    },
+  });
+
+  const requestResetSMSMutation = useMutation({
+    mutationFn: async (data: RequestResetSMSForm) => {
+      const response = await fetch('/api/auth/reset-password-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send reset SMS');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ 
+        title: 'Check your phone!', 
+        description: 'If an account exists with this phone number, you will receive a password reset link via SMS.' 
+      });
+      requestSMSForm.reset();
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to send reset SMS', description: error.message });
     },
   });
 
@@ -112,7 +148,9 @@ export default function ResetPasswordPage() {
           <CardDescription>
             {token 
               ? 'Enter your new password below' 
-              : 'Enter your email and we\'ll send you a link to reset your password'}
+              : resetMethod === 'email'
+                ? 'Enter your email and we\'ll send you a link to reset your password'
+                : 'Enter your phone number and we\'ll send you a reset link via SMS'}
           </CardDescription>
         </CardHeader>
         
@@ -177,41 +215,105 @@ export default function ResetPasswordPage() {
               </form>
             </Form>
           ) : (
-            <Form {...requestForm}>
-              <form onSubmit={requestForm.handleSubmit((data) => requestResetMutation.mutate(data))} className="space-y-3">
-                <FormField
-                  control={requestForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input 
-                            {...field} 
-                            type="email" 
-                            placeholder="you@example.com" 
-                            className="pl-10"
-                            data-testid="input-email"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={requestResetMutation.isPending}
-                  data-testid="button-request-reset"
+            <>
+              {/* Method toggle */}
+              <div className="flex gap-2 mb-4">
+                <Button
+                  type="button"
+                  variant={resetMethod === 'email' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setResetMethod('email')}
+                  data-testid="button-reset-email"
                 >
-                  {requestResetMutation.isPending ? 'Sending...' : 'Send Reset Link'}
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
                 </Button>
-              </form>
-            </Form>
+                <Button
+                  type="button"
+                  variant={resetMethod === 'sms' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setResetMethod('sms')}
+                  data-testid="button-reset-sms"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  SMS
+                </Button>
+              </div>
+
+              {resetMethod === 'email' ? (
+                <Form {...requestForm}>
+                  <form onSubmit={requestForm.handleSubmit((data) => requestResetMutation.mutate(data))} className="space-y-3">
+                    <FormField
+                      control={requestForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input 
+                                {...field} 
+                                type="email" 
+                                placeholder="you@example.com" 
+                                className="pl-10"
+                                data-testid="input-email"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={requestResetMutation.isPending}
+                      data-testid="button-request-reset"
+                    >
+                      {requestResetMutation.isPending ? 'Sending...' : 'Send Reset Link via Email'}
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <Form {...requestSMSForm}>
+                  <form onSubmit={requestSMSForm.handleSubmit((data) => requestResetSMSMutation.mutate(data))} className="space-y-3">
+                    <FormField
+                      control={requestSMSForm.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input 
+                                {...field} 
+                                type="tel" 
+                                placeholder="(555) 123-4567" 
+                                className="pl-10"
+                                data-testid="input-phone"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={requestResetSMSMutation.isPending}
+                      data-testid="button-request-reset-sms"
+                    >
+                      {requestResetSMSMutation.isPending ? 'Sending...' : 'Send Reset Link via SMS'}
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </>
           )}
 
           <div className="text-center text-sm">
