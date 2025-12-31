@@ -1357,6 +1357,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== SCHEDULED DELIVERY ROUTES ==========
+
+  // Get user's scheduled deliveries
+  app.get('/api/scheduled-deliveries', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const deliveries = await storage.getScheduledDeliveriesByUserId(userId);
+      res.json(deliveries);
+    } catch (error) {
+      console.error("Error fetching scheduled deliveries:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled deliveries" });
+    }
+  });
+
+  // Schedule a creation for delivery
+  app.post('/api/creations/:id/schedule', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const creationId = req.params.id;
+      
+      const schema = z.object({
+        scheduledAt: z.string().refine(date => new Date(date) > new Date(), {
+          message: "Scheduled time must be in the future"
+        }),
+        recipientEmail: z.string().email().optional(),
+        recipientPhone: z.string().optional(),
+      }).refine(data => data.recipientEmail || data.recipientPhone, {
+        message: "At least one of email or phone is required"
+      });
+      
+      const { scheduledAt, recipientEmail, recipientPhone } = schema.parse(req.body);
+      
+      // Verify the creation belongs to this user
+      const creation = await storage.getCreationById(creationId);
+      if (!creation) {
+        return res.status(404).json({ message: "Creation not found" });
+      }
+      if (creation.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to schedule this creation" });
+      }
+      
+      // Normalize phone number if provided
+      let normalizedPhone = recipientPhone;
+      if (recipientPhone) {
+        normalizedPhone = recipientPhone.replace(/[^\d+]/g, '');
+        if (!normalizedPhone.startsWith('+')) {
+          normalizedPhone = '+1' + normalizedPhone;
+        }
+      }
+      
+      const delivery = await storage.createScheduledDelivery({
+        userId,
+        creationId,
+        recipientEmail: recipientEmail || null,
+        recipientPhone: normalizedPhone || null,
+        scheduledAt: new Date(scheduledAt),
+        status: 'pending',
+      });
+      
+      res.json(delivery);
+    } catch (error: any) {
+      console.error("Error scheduling delivery:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: error.errors[0]?.message || 'Invalid input' });
+      }
+      res.status(500).json({ message: error.message || "Failed to schedule delivery" });
+    }
+  });
+
+  // Cancel a scheduled delivery
+  app.patch('/api/scheduled-deliveries/:id/cancel', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const deliveryId = req.params.id;
+      
+      const delivery = await storage.getScheduledDeliveryById(deliveryId);
+      if (!delivery) {
+        return res.status(404).json({ message: "Scheduled delivery not found" });
+      }
+      if (delivery.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this delivery" });
+      }
+      if (delivery.status !== 'pending') {
+        return res.status(400).json({ message: "Can only cancel pending deliveries" });
+      }
+      
+      await storage.cancelScheduledDelivery(deliveryId);
+      res.json({ message: "Delivery cancelled successfully" });
+    } catch (error) {
+      console.error("Error cancelling scheduled delivery:", error);
+      res.status(500).json({ message: "Failed to cancel delivery" });
+    }
+  });
+
   // ========== MIXTAPE ROUTES ==========
 
   // Get user's mixtapes
