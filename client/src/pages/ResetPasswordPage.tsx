@@ -289,7 +289,11 @@ export default function ResetPasswordPage() {
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input 
-                                {...field} 
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                ref={field.ref}
                                 type="tel" 
                                 placeholder="(555) 123-4567" 
                                 className="pl-10"
