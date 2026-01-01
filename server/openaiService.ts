@@ -508,14 +508,40 @@ export async function analyzePhotosForFaces(imageUrls: string[]): Promise<Analyz
   console.log(`[FamilyPortrait] Analyzing ${imageUrls.length} photos for faces...`);
   console.log(`[FamilyPortrait] Image URLs:`, imageUrls);
 
-  const imageContents = imageUrls.map((url, index) => ({
-    type: "image_url" as const,
-    image_url: { url, detail: "high" as const }
-  }));
+  // Fetch images and convert to base64 for reliable analysis
+  // (OpenAI may not be able to access external URLs)
+  const imageContents: Array<{ type: "image_url"; image_url: { url: string; detail: "high" } }> = [];
+  
+  for (const url of imageUrls) {
+    try {
+      console.log(`[FamilyPortrait] Fetching image: ${url}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error(`[FamilyPortrait] Failed to fetch image ${url}: ${response.status}`);
+        continue;
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      const contentType = response.headers.get('content-type') || 'image/png';
+      const dataUrl = `data:${contentType};base64,${base64}`;
+      
+      imageContents.push({
+        type: "image_url" as const,
+        image_url: { url: dataUrl, detail: "high" as const }
+      });
+      console.log(`[FamilyPortrait] Successfully converted image to base64 (${Math.round(base64.length / 1024)}KB)`);
+    } catch (error: any) {
+      console.error(`[FamilyPortrait] Error fetching image ${url}:`, error.message);
+    }
+  }
+
+  if (imageContents.length === 0) {
+    throw new Error('Could not load any images for analysis');
+  }
 
   const prompt = `You are analyzing photos to identify people for a family portrait.
 
-Look at these ${imageUrls.length} photos carefully and identify ALL people visible in each photo.
+Look at these ${imageContents.length} photos carefully and identify ALL people visible in each photo.
 
 For each person you see, provide:
 - A descriptive name like "Person 1", "Person 2", etc.
