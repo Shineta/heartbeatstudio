@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -1381,25 +1381,64 @@ export default function CreatePage() {
                       Share
                     </Button>
                     {portraitVariations.length > 1 && (
-                      <Button
-                        variant="secondary"
-                        onClick={async () => {
-                          const selectedUrl = portraitVariations[selectedVariationIndex];
-                          try {
-                            await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
-                              imageUrl: selectedUrl
-                            });
-                            setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                            queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-                            toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
-                          } catch {
-                            toast({ title: "Error", description: "Failed to save selection", variant: "destructive" });
-                          }
-                        }}
-                        data-testid="button-save-variation"
-                      >
-                        Use This Image
-                      </Button>
+                      <>
+                        <Button
+                          variant="secondary"
+                          onClick={async () => {
+                            const selectedUrl = portraitVariations[selectedVariationIndex];
+                            try {
+                              await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
+                                imageUrl: selectedUrl
+                              });
+                              setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
+                              queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                              toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
+                            } catch {
+                              toast({ title: "Error", description: "Failed to save selection", variant: "destructive" });
+                            }
+                          }}
+                          data-testid="button-save-variation"
+                        >
+                          Use This Image
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const selectedUrl = portraitVariations[selectedVariationIndex];
+                            navigator.clipboard.writeText(selectedUrl);
+                            toast({ title: "Copied!", description: `Image ${selectedVariationIndex + 1} link copied to clipboard` });
+                          }}
+                          data-testid="button-copy-image-link"
+                        >
+                          <Link className="w-4 h-4 mr-2" />
+                          Copy Image Link
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={async () => {
+                            const selectedUrl = portraitVariations[selectedVariationIndex];
+                            try {
+                              const response = await fetch(selectedUrl);
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `family-portrait-${selectedVariationIndex + 1}.png`;
+                              document.body.appendChild(a);
+                              a.click();
+                              window.URL.revokeObjectURL(url);
+                              document.body.removeChild(a);
+                              toast({ title: "Downloaded!", description: `Image ${selectedVariationIndex + 1} saved` });
+                            } catch {
+                              toast({ title: "Error", description: "Failed to download image", variant: "destructive" });
+                            }
+                          }}
+                          data-testid="button-download-image"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </>
                     )}
                   </CardFooter>
                 </Card>
