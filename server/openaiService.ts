@@ -670,7 +670,26 @@ Additional Requirements:
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
   } else {
-    prompt += `\n- Dress everyone in coordinated, matching outfits appropriate for the scene, but DO NOT change their faces, hair, or body types`;
+    // Scene-specific outfit recommendations
+    const outfitSuggestions: Record<string, string> = {
+      'studio': 'elegant matching formal wear (suits, dresses, or coordinated colors)',
+      'living-room': 'comfortable matching casual wear (sweaters, nice shirts, coordinated colors)',
+      'holiday': 'festive holiday outfits (matching Christmas sweaters, red and green colors, holiday dresses)',
+      'outdoors': 'casual coordinated outdoor wear (khakis, polo shirts, summer dresses)',
+      'graduation': 'formal graduation attire (caps and gowns, formal suits and dresses)',
+      'birthday': 'festive party outfits (bright coordinated colors, party wear)',
+    };
+    const suggestedOutfit = outfitSuggestions[scene] || 'coordinated matching outfits appropriate for the scene';
+    
+    prompt += `
+
+OUTFIT CHANGE REQUIRED:
+- YOU MUST change everyone's clothing to new, coordinated outfits
+- DO NOT keep their original outfits from the photos
+- Dress everyone in: ${suggestedOutfit}
+- All family members should wear matching or coordinated clothing
+- Outfits should look cohesive as a family group
+- Still preserve their faces, hair, skin tones, and body types exactly as in the reference photos`;
   }
 
   return prompt;
