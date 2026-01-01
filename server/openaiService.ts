@@ -506,30 +506,41 @@ export interface AnalyzedPhotos {
 
 export async function analyzePhotosForFaces(imageUrls: string[]): Promise<AnalyzedPhotos> {
   console.log(`[FamilyPortrait] Analyzing ${imageUrls.length} photos for faces...`);
+  console.log(`[FamilyPortrait] Image URLs:`, imageUrls);
 
   const imageContents = imageUrls.map((url, index) => ({
     type: "image_url" as const,
-    image_url: { url, detail: "low" as const }
+    image_url: { url, detail: "high" as const }
   }));
 
-  const prompt = `Analyze these ${imageUrls.length} photos and identify all the people/subjects visible.
-For each person detected, provide:
-- A brief description (age estimate, gender, notable features like hair color, glasses, etc.)
+  const prompt = `You are analyzing photos to identify people for a family portrait.
+
+Look at these ${imageUrls.length} photos carefully and identify ALL people visible in each photo.
+
+For each person you see, provide:
+- A descriptive name like "Person 1", "Person 2", etc.
+- A brief description including: approximate age, gender, hair color/style, facial hair, glasses, and any other distinguishing features
 - Which image number (1-indexed) they appear in
 
-Return as JSON with format:
+IMPORTANT: 
+- Every photo should have at least one person detected unless it's truly empty
+- Look carefully - people may be in the foreground, background, or partially visible
+- Include everyone you can see, even if partially obscured
+
+Return as JSON with this exact format:
 {
   "faces": [
-    { "name": "Person 1", "description": "Young woman with brown hair", "imageIndex": 1 },
-    { "name": "Person 2", "description": "Older man with glasses and gray hair", "imageIndex": 1 },
-    { "name": "Person 3", "description": "Child around 8 years old with blonde hair", "imageIndex": 2 }
+    { "name": "Person 1", "description": "Young woman, approximately 25-30, with long brown hair and glasses", "imageIndex": 1 },
+    { "name": "Person 2", "description": "Middle-aged man, approximately 50, with gray hair and beard", "imageIndex": 1 },
+    { "name": "Person 3", "description": "Child, approximately 8-10 years old, with blonde hair", "imageIndex": 2 }
   ],
   "totalPeople": 3
 }
 
-Important: List each unique person only once, even if they appear in multiple photos.`;
+If the same person appears in multiple photos, list them only once with the first imageIndex where they appear.`;
 
   try {
+    console.log('[FamilyPortrait] Sending request to OpenAI for face analysis...');
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -542,10 +553,13 @@ Important: List each unique person only once, even if they appear in multiple ph
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 1000,
+      max_tokens: 2000,
     });
 
-    const result = JSON.parse(response.choices[0]?.message?.content || '{"faces": [], "totalPeople": 0}');
+    const rawContent = response.choices[0]?.message?.content || '{"faces": [], "totalPeople": 0}';
+    console.log(`[FamilyPortrait] OpenAI raw response:`, rawContent);
+    
+    const result = JSON.parse(rawContent);
     
     // Add unique IDs to each face
     result.faces = result.faces.map((face: any, index: number) => ({
@@ -554,9 +568,11 @@ Important: List each unique person only once, even if they appear in multiple ph
     }));
 
     console.log(`[FamilyPortrait] Detected ${result.totalPeople} people in ${imageUrls.length} photos`);
+    console.log(`[FamilyPortrait] Faces found:`, JSON.stringify(result.faces, null, 2));
     return result;
   } catch (error: any) {
     console.error('[FamilyPortrait] Error analyzing photos:', error.message);
+    console.error('[FamilyPortrait] Full error:', error);
     throw new Error('Failed to analyze photos for faces');
   }
 }
