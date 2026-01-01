@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { stripTimelineMarker } from "@/lib/timelineParser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -706,7 +707,9 @@ export default function RealDashboard() {
                         <p className="text-sm text-muted-foreground mb-2">
                           {creation.type === 'song' ? 'Song' : 'Card'} • {creation.tone}
                         </p>
-                        <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
+                        <p className="text-sm line-clamp-3 mb-4">
+                          {stripTimelineMarker(creation.content)}
+                        </p>
                         
                         {creation.type === 'song' && creation.mediaUrl && (
                           <div className="mb-4">

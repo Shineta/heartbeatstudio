@@ -387,6 +387,87 @@ Return as JSON with 'message' and 'title' fields.`;
   return content;
 }
 
+// Helper to convert years code to readable label
+function getYearsLabel(code: string): string {
+  const labels: Record<string, string> = {
+    'less-than-1': 'less than a year',
+    '1-2': '1-2 years',
+    '3-5': '3-5 years',
+    '5-10': '5-10 years',
+    '10-20': '10-20 years',
+    '20+': 'over 20 years',
+    'lifetime': 'a lifetime',
+  };
+  return labels[code] || code;
+}
+
+// Generate Memory Timeline card content (past, present, future sections)
+export async function generateTimelineCardContent(params: {
+  recipientName: string;
+  relationship: string;
+  occasion?: string;
+  tone: string;
+  yearsKnown?: string;
+  memories: string[];
+  futureWish?: string;
+  interests?: string;
+  insideJokes?: string;
+}): Promise<{ 
+  title: string;
+  coverMessage: string;
+  thenSection: { heading: string; content: string };
+  nowSection: { heading: string; content: string };
+  futureSection: { heading: string; content: string };
+}> {
+  const memoriesText = params.memories.filter(m => m.trim()).map((m, i) => `Memory ${i + 1}: ${m}`).join('\n');
+  const yearsLabel = params.yearsKnown ? getYearsLabel(params.yearsKnown) : 'years';
+  
+  const prompt = `Create a heartfelt Memory Timeline greeting card for ${params.recipientName}, my ${params.relationship}.
+This card tells a mini-story of our relationship through time.
+
+CONTEXT:
+- How long we've known each other: ${yearsLabel}
+- Occasion: ${params.occasion || 'celebration of our relationship'}
+- Tone: ${params.tone}
+${memoriesText ? `\nMEMORIES SHARED:\n${memoriesText}` : ''}
+${params.futureWish ? `\nFUTURE WISH: ${params.futureWish}` : ''}
+${params.interests ? `\nTheir interests: ${params.interests}` : ''}
+${params.insideJokes ? `\nInside jokes we share: ${params.insideJokes}` : ''}
+
+Generate a beautiful Memory Timeline card with these sections:
+
+1. COVER: A short, impactful title (3-5 words) and a brief teaser message (1 sentence)
+2. THEN (Past): A poetic reflection on our shared memories and how we started (2-3 sentences)
+3. NOW (Present): A celebration of who they are today and what they mean to me now (2-3 sentences)  
+4. FUTURE (What's Next): A hopeful wish or dream for our future together (1-2 sentences)
+
+Make it ${params.tone}, personal, and emotionally resonant. Reference the specific memories if provided.
+
+Return as JSON with this structure:
+{
+  "title": "...",
+  "coverMessage": "...",
+  "thenSection": { "heading": "Then...", "content": "..." },
+  "nowSection": { "heading": "Now & Always", "content": "..." },
+  "futureSection": { "heading": "What's Next", "content": "..." }
+}`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+
+  const content = JSON.parse(response.choices[0]?.message?.content || '{}');
+  return {
+    title: content.title || 'Our Story',
+    coverMessage: content.coverMessage || '',
+    thenSection: content.thenSection || { heading: 'Then...', content: '' },
+    nowSection: content.nowSection || { heading: 'Now & Always', content: '' },
+    futureSection: content.futureSection || { heading: "What's Next", content: '' },
+  };
+}
+
 // Generate card image (returns base64)
 export async function generateCardImage(params: {
   recipientName: string;
