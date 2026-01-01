@@ -221,6 +221,11 @@ export default function CreatePage() {
   // State for attaching a song to a card
   const [attachedSongId, setAttachedSongId] = useState<string | null>(null);
 
+  // State for editing card message
+  const [isEditingCardMessage, setIsEditingCardMessage] = useState(false);
+  const [editedCardMessage, setEditedCardMessage] = useState("");
+  const [isRegeneratingMessage, setIsRegeneratingMessage] = useState(false);
+
   // Auto-redirect to mixtape player when generation is complete
   useEffect(() => {
     if (createdMixtape && createdMixtape.status === 'complete' && createdMixtape.shareableLink) {
@@ -1378,7 +1383,103 @@ export default function CreatePage() {
                         className="w-full rounded-md"
                       />
                     ) : null}
-                    <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                    
+                    {/* Editable Card Message */}
+                    <div className="space-y-3">
+                      {isEditingCardMessage ? (
+                        <div className="space-y-3">
+                          <Textarea
+                            value={editedCardMessage}
+                            onChange={(e) => setEditedCardMessage(e.target.value)}
+                            className="min-h-[120px] resize-none"
+                            placeholder="Enter your message..."
+                            data-testid="textarea-edit-card-message"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
+                                    content: editedCardMessage
+                                  });
+                                  setCreatedCard({ ...createdCard, content: editedCardMessage });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                  setIsEditingCardMessage(false);
+                                  toast({ title: "Saved!", description: "Message updated" });
+                                } catch {
+                                  toast({ title: "Error", description: "Failed to save message", variant: "destructive" });
+                                }
+                              }}
+                              data-testid="button-save-message"
+                            >
+                              <Check className="w-4 h-4 mr-1" />
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setIsEditingCardMessage(false);
+                                setEditedCardMessage(createdCard.content || "");
+                              }}
+                              data-testid="button-cancel-edit-message"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                      )}
+                      
+                      {/* Edit and Regenerate Message Buttons */}
+                      {!isEditingCardMessage && (
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditedCardMessage(createdCard.content || "");
+                              setIsEditingCardMessage(true);
+                            }}
+                            data-testid="button-edit-message"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit Message
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={isRegeneratingMessage}
+                            onClick={async () => {
+                              setIsRegeneratingMessage(true);
+                              try {
+                                const res = await apiRequest("POST", "/api/regenerate/card-message", {
+                                  creationId: createdCard.id
+                                });
+                                const data = await res.json();
+                                setCreatedCard({ ...createdCard, content: data.message });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                toast({ title: "Regenerated!", description: "New message created" });
+                              } catch {
+                                toast({ title: "Error", description: "Failed to regenerate message", variant: "destructive" });
+                              } finally {
+                                setIsRegeneratingMessage(false);
+                              }
+                            }}
+                            data-testid="button-regenerate-message"
+                          >
+                            {isRegeneratingMessage ? (
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4 mr-1" />
+                            )}
+                            Regenerate Message
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-3">
                     <Button onClick={() => {

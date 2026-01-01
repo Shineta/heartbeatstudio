@@ -967,6 +967,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Regenerate card message
+  app.post('/api/regenerate/card-message', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { creationId } = req.body;
+      
+      if (!creationId) {
+        return res.status(400).json({ message: 'Creation ID is required' });
+      }
+      
+      // Get the existing card
+      const existingCard = await storage.getCreationById(creationId);
+      if (!existingCard || existingCard.userId !== userId) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+      
+      // Get loved one if associated
+      let lovedOne;
+      if (existingCard.lovedOneId) {
+        lovedOne = await storage.getLovedOneById(existingCard.lovedOneId);
+      }
+      
+      // Generate new card content
+      const cardContent = await generateCardContent({
+        recipientName: lovedOne?.name || "someone special",
+        relationship: lovedOne?.relationship || "friend",
+        occasion: existingCard.title?.replace(/^(A |An |The )?/i, '').replace(/ Card$/i, '') || "celebration",
+        tone: existingCard.tone || "sweet",
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
+      });
+      
+      // Update the card with new message
+      await storage.updateCreation(creationId, { content: cardContent.message });
+      
+      res.json({ message: cardContent.message });
+    } catch (error: any) {
+      console.error("Error regenerating card message:", error);
+      res.status(500).json({ message: error.message || "Failed to regenerate message" });
+    }
+  });
+
   // ========== FAMILY PORTRAIT COMPOSER ==========
   
   // Upload multiple photos for family portrait analysis
