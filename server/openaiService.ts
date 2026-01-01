@@ -539,26 +539,33 @@ export async function analyzePhotosForFaces(imageUrls: string[]): Promise<Analyz
     throw new Error('Could not load any images for analysis');
   }
 
-  const prompt = `You are analyzing photos to identify people for a family portrait.
+  const prompt = `You are analyzing photos to identify people for a family portrait AI generation. Your descriptions will be used to recreate their exact likeness.
 
 Look at these ${imageContents.length} photos carefully and identify ALL people visible in each photo.
 
-For each person you see, provide:
-- A descriptive name like "Person 1", "Person 2", etc.
-- A brief description including: approximate age, gender, hair color/style, facial hair, glasses, and any other distinguishing features
-- Which image number (1-indexed) they appear in
+For each person you see, provide DETAILED descriptions including:
+- Approximate age and gender
+- Skin tone (light, medium, dark, olive, etc.)
+- Face shape (round, oval, square, heart-shaped, etc.)
+- Hair: color, texture (straight, wavy, curly, coily, braided, locs, etc.), length, style
+- Eyes: shape, size, any distinctive features
+- Nose and mouth characteristics if notable
+- Facial hair if any (beard, mustache, stubble, clean-shaven)
+- Glasses if wearing any (frame style, color)
+- Any distinctive features: dimples, freckles, birthmarks, etc.
+- Current clothing/outfit (important for reference)
 
 IMPORTANT: 
+- Be VERY SPECIFIC about facial features - these descriptions will be used to recreate their exact likeness
 - Every photo should have at least one person detected unless it's truly empty
 - Look carefully - people may be in the foreground, background, or partially visible
-- Include everyone you can see, even if partially obscured
 
 Return as JSON with this exact format:
 {
   "faces": [
-    { "name": "Person 1", "description": "Young woman, approximately 25-30, with long brown hair and glasses", "imageIndex": 1 },
-    { "name": "Person 2", "description": "Middle-aged man, approximately 50, with gray hair and beard", "imageIndex": 1 },
-    { "name": "Person 3", "description": "Child, approximately 8-10 years old, with blonde hair", "imageIndex": 2 }
+    { "name": "Person 1", "description": "Young woman, approximately 25-30, medium-dark brown skin, oval face, long black locs hairstyle, brown eyes, full lips, wearing a light blue polka dot shirt", "imageIndex": 1 },
+    { "name": "Person 2", "description": "Young adult, approximately 20-25, dark brown skin, round face, short black hair in a fade cut, wearing glasses with dark frames, clean-shaven, wearing a navy blue formal suit with bow tie", "imageIndex": 1 },
+    { "name": "Person 3", "description": "Young woman, approximately 20-25, dark brown skin, oval face, long black braids, wearing glasses, graduation cap and gown", "imageIndex": 2 }
   ],
   "totalPeople": 3
 }
@@ -615,7 +622,10 @@ export interface FamilyPortraitParams {
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
   const { selectedFaces, scene, style, keepOutfits } = params;
 
-  const peopleDescriptions = selectedFaces.map(f => f.description).join(', ');
+  // Build detailed numbered list of people with their descriptions
+  const peopleDescriptions = selectedFaces.map((f, i) => 
+    `Person ${i + 1}: ${f.description}`
+  ).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
     'studio': 'professional photography studio with neutral gray background and soft studio lighting',
@@ -627,36 +637,46 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   };
 
   const styleDescriptions: Record<string, string> = {
-    'watercolor': 'artistic watercolor painting style with soft edges and flowing colors',
-    'cartoon': 'fun cartoon illustration style with bold outlines and vibrant colors',
+    'watercolor': 'artistic watercolor painting style with soft edges and flowing colors, but PRESERVING exact facial features and likeness',
+    'cartoon': 'fun cartoon illustration style with bold outlines and vibrant colors, while MAINTAINING each person\'s unique facial features and likeness',
     'studio-photo': 'professional studio photography with perfect lighting and high resolution',
-    'oil-painting': 'classic oil painting style with rich textures and warm tones',
-    'digital-art': 'modern digital art style with clean lines and vivid colors',
+    'oil-painting': 'classic oil painting style with rich textures and warm tones, but PRESERVING exact facial likeness',
+    'digital-art': 'modern digital art style with clean lines and vivid colors, while MAINTAINING each person\'s unique facial features',
     'vintage': 'nostalgic vintage photograph style with warm sepia tones',
   };
 
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
   const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
 
-  let prompt = `Create a beautiful family portrait photo combining the following people into one unified group photo:
+  let prompt = `IMPORTANT: Use the REFERENCE PHOTOS provided to capture EXACT facial likeness. This is a face-swap/compositing task.
 
-People to include: ${peopleDescriptions}
+Create a group portrait using the faces from the provided reference photos:
+
+${peopleDescriptions}
+
+CRITICAL REQUIREMENTS - FACE PRESERVATION:
+- You MUST preserve the EXACT facial features from each reference photo
+- Copy each person's face precisely: same bone structure, eyes, nose, mouth, skin tone, and facial hair
+- Hair texture, color, and style must match the reference photos exactly
+- Do NOT generate new or generic faces - extract faces from the provided images
+- Each person should be immediately recognizable to their family members
 
 Scene: ${sceneDesc}
 
 Art style: ${styleDesc}
 
-Requirements:
-- All people should be posed together naturally as a family group
-- Maintain consistent lighting and color grading across all subjects
-- Make it look like everyone was photographed together at the same moment
+Composition Requirements:
+- Arrange all ${selectedFaces.length} people together naturally as a family group
+- Maintain consistent lighting across all subjects
 - Professional quality suitable for printing and framing`;
 
   if (keepOutfits) {
-    prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
+    prompt += `\n- Keep each person's original clothing from their source photos`;
   } else {
-    prompt += `\n- Dress everyone in coordinated, matching outfits appropriate for the scene`;
+    prompt += `\n- Dress everyone in coordinated outfits appropriate for the scene`;
   }
+
+  prompt += `\n\nREMINDER: The faces MUST look exactly like the people in the reference photos. This is the #1 priority.`;
 
   return prompt;
 }
