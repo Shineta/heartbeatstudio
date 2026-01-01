@@ -491,17 +491,19 @@ export async function generateSongCover(params: {
   return imageUrl;
 }
 
-// Family Portrait Composer - Analyze photos for faces/subjects
+// Family Portrait Composer - Analyze photos for faces/subjects (people AND pets)
 export interface DetectedFace {
   id: string;
-  name: string; // Auto-generated like "Person 1", "Person 2"
+  name: string; // Auto-generated like "Person 1", "Dog 1", "Cat 1"
   description: string; // Brief description for reference
   imageIndex: number; // Which uploaded image this face is from
+  type?: 'person' | 'pet'; // Type of subject (person or pet)
 }
 
 export interface AnalyzedPhotos {
   faces: DetectedFace[];
   totalPeople: number;
+  totalPets?: number;
 }
 
 export async function analyzePhotosForFaces(imageUrls: string[]): Promise<AnalyzedPhotos> {
@@ -539,34 +541,43 @@ export async function analyzePhotosForFaces(imageUrls: string[]): Promise<Analyz
     throw new Error('Could not load any images for analysis');
   }
 
-  const prompt = `You are analyzing photos to identify people for a family portrait.
+  const prompt = `You are analyzing photos to identify PEOPLE and PETS for a family portrait.
 
-Look at these ${imageContents.length} photos carefully and identify ALL people visible in each photo.
+Look at these ${imageContents.length} photos carefully and identify ALL people AND pets visible in each photo.
 
-For each person you see, provide:
+For each PERSON you see, provide:
 - A descriptive name like "Person 1", "Person 2", etc.
 - A brief description of OBSERVABLE PHYSICAL FEATURES ONLY: approximate age range, hair color/style/length, skin tone, glasses, and clothing/accessories visible
 - Which image number (1-indexed) they appear in
+- Type: "person"
+
+For each PET you see (dogs, cats, etc.), provide:
+- A descriptive name like "Dog 1", "Cat 1", etc.
+- A brief description: breed (if identifiable), color, size, distinctive markings
+- Which image number (1-indexed) they appear in
+- Type: "pet"
 
 CRITICAL RULES:
-- DO NOT assume or mention gender - describe only what you can directly observe
-- Focus on distinctive features: hairstyle, glasses, clothing, accessories
-- Use neutral language like "person" or "adult" rather than gendered terms
-- Every photo should have at least one person detected unless it's truly empty
-- Look carefully - people may be in the foreground, background, or partially visible
-- Include everyone you can see, even if partially obscured
+- DETECT BOTH PEOPLE AND PETS - include beloved family pets!
+- DO NOT assume or mention gender for people - describe only what you can directly observe
+- For pets: describe breed, color, fur type, size, and any distinctive markings or accessories (collars, bandanas)
+- Focus on distinctive features that help identify the individual
+- Every photo should have at least one subject detected unless it's truly empty
+- Look carefully - subjects may be in the foreground, background, or partially visible
 
 Return as JSON with this exact format:
 {
   "faces": [
-    { "name": "Person 1", "description": "Adult, approximately 25-30, with long brown hair in locs and round glasses, wearing a brown blazer", "imageIndex": 1 },
-    { "name": "Person 2", "description": "Adult, approximately 50, with short gray hair and a beard, wearing a blue suit", "imageIndex": 1 },
-    { "name": "Person 3", "description": "Young person, approximately 8-10, with blonde curly hair, wearing a red shirt", "imageIndex": 2 }
+    { "name": "Person 1", "description": "Adult, approximately 25-30, with long brown hair in locs and round glasses, wearing a brown blazer", "imageIndex": 1, "type": "person" },
+    { "name": "Person 2", "description": "Adult, approximately 50, with short gray hair and a beard, wearing a blue suit", "imageIndex": 1, "type": "person" },
+    { "name": "Dog 1", "description": "German Shepherd mix, black and tan coloring, medium-large size, wearing a chain collar", "imageIndex": 2, "type": "pet" },
+    { "name": "Dog 2", "description": "Blue Heeler/Australian Cattle Dog, gray with black spots, medium size, friendly expression", "imageIndex": 3, "type": "pet" }
   ],
-  "totalPeople": 3
+  "totalPeople": 2,
+  "totalPets": 2
 }
 
-If the same person appears in multiple photos, list them only once with the first imageIndex where they appear.`;
+If the same person or pet appears in multiple photos, list them only once with the first imageIndex where they appear.`;
 
   try {
     console.log('[FamilyPortrait] Sending request to OpenAI for face analysis...');
@@ -596,8 +607,10 @@ If the same person appears in multiple photos, list them only once with the firs
       id: `face-${index + 1}`,
     }));
 
-    console.log(`[FamilyPortrait] Detected ${result.totalPeople} people in ${imageUrls.length} photos`);
-    console.log(`[FamilyPortrait] Faces found:`, JSON.stringify(result.faces, null, 2));
+    const peopleCount = result.totalPeople || 0;
+    const petCount = result.totalPets || 0;
+    console.log(`[FamilyPortrait] Detected ${peopleCount} people and ${petCount} pets in ${imageUrls.length} photos`);
+    console.log(`[FamilyPortrait] Subjects found:`, JSON.stringify(result.faces, null, 2));
     return result;
   } catch (error: any) {
     console.error('[FamilyPortrait] Error analyzing photos:', error.message);
@@ -618,9 +631,18 @@ export interface FamilyPortraitParams {
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
   const { selectedFaces, scene, style, keepOutfits } = params;
 
+  // Separate people and pets
+  const people = selectedFaces.filter(f => f.type !== 'pet');
+  const pets = selectedFaces.filter(f => f.type === 'pet');
+
   // Build detailed per-person descriptions with emphasis on faithfulness
-  const peopleDetails = selectedFaces.map((f, i) => 
+  const peopleDetails = people.map((f, i) => 
     `Person ${i + 1}: ${f.description} - MUST reproduce this person EXACTLY as they appear in the reference photo`
+  ).join('\n');
+  
+  // Build pet descriptions
+  const petDetails = pets.map((f, i) => 
+    `Pet ${i + 1}: ${f.description} - MUST reproduce this pet EXACTLY as they appear in the reference photo (breed, coloring, size, markings)`
   ).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
@@ -644,28 +666,42 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
   const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
 
-  let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each person from the reference photos.
+  // Build the subjects section based on what's selected
+  let subjectsSection = '';
+  if (people.length > 0) {
+    subjectsSection += `PEOPLE TO INCLUDE (copy their exact appearance from the reference photos):
+${peopleDetails}`;
+  }
+  if (pets.length > 0) {
+    if (people.length > 0) subjectsSection += '\n\n';
+    subjectsSection += `PETS TO INCLUDE (reproduce their exact appearance from the reference photos):
+${petDetails}`;
+  }
+
+  let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each ${people.length > 0 ? 'person' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pet' : ''} from the reference photos.
 
 CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
-- Reproduce each person EXACTLY as they appear in the reference photos
+- Reproduce each subject EXACTLY as they appear in the reference photos
 - DO NOT change, modify, or reinterpret anyone's appearance, gender presentation, body type, or facial features
 - Preserve exact hairstyles, hair textures (locs, braids, curls, etc.), skin tones, facial structures
 - Each person must look like THEMSELVES from the photos, not a different person
 - DO NOT substitute or swap any features - copy faithfully from the source images
+${pets.length > 0 ? `- For pets: preserve exact breed appearance, coloring, markings, fur pattern, and size
+- Each pet must look like the SAME animal from the reference photo` : ''}
 
-PEOPLE TO INCLUDE (copy their exact appearance from the reference photos):
-${peopleDetails}
+${subjectsSection}
 
 Scene: ${sceneDesc}
 
 Art style: ${styleDesc}
 
 Additional Requirements:
-- All people should be posed together naturally as a family group
+- All ${people.length > 0 ? 'people' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pets' : ''} should be posed together naturally as a family group
 - Maintain consistent lighting and color grading across all subjects
 - Make it look like everyone was photographed together at the same moment
 - Professional quality suitable for printing and framing
-- PRESERVE each person's authentic appearance exactly as shown in their reference photo`;
+- PRESERVE each subject's authentic appearance exactly as shown in their reference photo
+${pets.length > 0 ? `- Position pets naturally with the family (sitting, standing nearby, being held, etc.)` : ''}`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;

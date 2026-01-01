@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -152,6 +152,7 @@ export default function CreatePage() {
     name: string;
     description: string;
     imageIndex: number;
+    type?: 'person' | 'pet';
   }
   const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
   const [selectedFaceIds, setSelectedFaceIds] = useState<string[]>([]);
@@ -1806,6 +1807,12 @@ export default function CreatePage() {
                                               <span className="text-primary-foreground text-xs">✓</span>
                                             )}
                                           </div>
+                                          {/* Pet or Person icon */}
+                                          {face.type === 'pet' ? (
+                                            <Dog className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                          ) : (
+                                            <User className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                          )}
                                           <div className="flex-1">
                                             <p className="text-sm font-medium">{face.name}</p>
                                             <p className="text-xs text-muted-foreground">{face.description}</p>
@@ -1825,7 +1832,7 @@ export default function CreatePage() {
                                     </div>
                                   ))}
                                   <p className="text-xs text-muted-foreground">
-                                    Click the pencil icon to correct any misidentified people
+                                    Click the pencil icon to correct any misidentified people or pets
                                   </p>
                                 </div>
 
