@@ -840,7 +840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('[Card] Generating family portrait as cover image...');
         
         const { buildFamilyPortraitPrompt } = await import('./openaiService');
-        const { generateImageStandard } = await import('./nanoBananaService');
+        const { generateImage } = await import('./nanoBananaService');
         
         const prompt = buildFamilyPortraitPrompt({
           imageUrls: portraitData.imageUrls,
@@ -850,9 +850,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           keepOutfits: portraitData.keepOutfits ?? true,
         });
 
-        console.log(`[Card] Family portrait prompt: ${prompt.substring(0, 200)}...`);
+        console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);
 
-        const generatedUrls = await generateImageStandard({
+        // Use Pro model with 4K resolution for better quality family portraits
+        const generatedUrls = await generateImage({
           prompt,
           numImages: 1,
           imageSize: '4:3',
@@ -1056,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[FamilyPortrait] Generating portrait with ${selectedFaces.length} people in ${scene} scene, ${style} style`);
       
       const { buildFamilyPortraitPrompt } = await import('./openaiService');
-      const { generateImageStandard } = await import('./nanoBananaService');
+      const { generateImage } = await import('./nanoBananaService');
       
       // Build the compositing prompt
       const prompt = buildFamilyPortraitPrompt({
@@ -1067,10 +1068,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keepOutfits: keepOutfits ?? true,
       });
 
-      console.log(`[FamilyPortrait] Using prompt: ${prompt.substring(0, 200)}...`);
+      console.log(`[FamilyPortrait] Using Pro 4K model with prompt: ${prompt.substring(0, 200)}...`);
 
-      // Use Nano Banana's image-to-image with the uploaded photos
-      const generatedUrls = await generateImageStandard({
+      // Use Nano Banana Pro model with 4K resolution for better quality portraits
+      const generatedUrls = await generateImage({
         prompt,
         numImages: 1,
         imageSize: '4:3',

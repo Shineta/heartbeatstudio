@@ -60,7 +60,11 @@ export async function generateImage(params: {
 
   if (USE_PRO_MODEL) {
     // Pro model uses 'resolution' instead of 'image_size' and 'type'
-    requestBody.resolution = '2K'; // Options: 1K, 2K, 4K
+    requestBody.resolution = '4K'; // Options: 1K, 2K, 4K - using 4K for best quality
+    // Pro model also supports image-to-image with reference images
+    if (imageUrls && imageUrls.length > 0) {
+      requestBody.imageUrls = imageUrls;
+    }
   } else {
     // Standard model uses 'type' and 'image_size'
     requestBody.type = imageUrls && imageUrls.length > 0 ? 'IMAGETOIAMGE' : 'TEXTTOIAMGE';
