@@ -545,10 +545,13 @@ Look at these ${imageContents.length} photos carefully and identify ALL people v
 
 For each person you see, provide:
 - A descriptive name like "Person 1", "Person 2", etc.
-- A brief description including: approximate age, gender, hair color/style, facial hair, glasses, and any other distinguishing features
+- A brief description of OBSERVABLE PHYSICAL FEATURES ONLY: approximate age range, hair color/style/length, skin tone, glasses, and clothing/accessories visible
 - Which image number (1-indexed) they appear in
 
-IMPORTANT: 
+CRITICAL RULES:
+- DO NOT assume or mention gender - describe only what you can directly observe
+- Focus on distinctive features: hairstyle, glasses, clothing, accessories
+- Use neutral language like "person" or "adult" rather than gendered terms
 - Every photo should have at least one person detected unless it's truly empty
 - Look carefully - people may be in the foreground, background, or partially visible
 - Include everyone you can see, even if partially obscured
@@ -556,9 +559,9 @@ IMPORTANT:
 Return as JSON with this exact format:
 {
   "faces": [
-    { "name": "Person 1", "description": "Young woman, approximately 25-30, with long brown hair and glasses", "imageIndex": 1 },
-    { "name": "Person 2", "description": "Middle-aged man, approximately 50, with gray hair and beard", "imageIndex": 1 },
-    { "name": "Person 3", "description": "Child, approximately 8-10 years old, with blonde hair", "imageIndex": 2 }
+    { "name": "Person 1", "description": "Adult, approximately 25-30, with long brown hair in locs and round glasses, wearing a brown blazer", "imageIndex": 1 },
+    { "name": "Person 2", "description": "Adult, approximately 50, with short gray hair and a beard, wearing a blue suit", "imageIndex": 1 },
+    { "name": "Person 3", "description": "Young person, approximately 8-10, with blonde curly hair, wearing a red shirt", "imageIndex": 2 }
   ],
   "totalPeople": 3
 }
