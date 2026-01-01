@@ -6,7 +6,7 @@ import multer from 'multer';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword, isAdminEmail } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover, generateTimelineCardContent } from "./openaiService";
+import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
@@ -794,10 +794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { 
-        lovedOneId, tone, occasion, style, coverImageSource, portraitData,
-        cardType, timelineYearsKnown, timelineMemory1, timelineMemory2, timelineMemory3, timelineFutureWish 
-      } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData } = req.body;
       
       // Validate coverImageSource if provided
       const validCoverSources = ['ai', 'portrait', 'none'];
@@ -821,47 +818,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
-      const relationship = lovedOne?.relationship || req.body.relationship || "friend";
-      
-      // Handle different card types
-      let cardContent: { message: string; title: string };
-      let timelineContent: any = null;
-      
-      if (cardType === 'timeline') {
-        // Generate Memory Timeline card content
-        const memories = [timelineMemory1, timelineMemory2, timelineMemory3].filter(m => m && m.trim());
-        
-        const timeline = await generateTimelineCardContent({
-          recipientName,
-          relationship,
-          occasion,
-          tone: tone || "sweet",
-          yearsKnown: timelineYearsKnown,
-          memories,
-          futureWish: timelineFutureWish,
-          interests: lovedOne?.interests || undefined,
-          insideJokes: lovedOne?.insideJokes || undefined,
-        });
-        
-        // Store the full timeline content for rendering
-        timelineContent = timeline;
-        
-        // For compatibility, also set standard cardContent
-        cardContent = {
-          title: timeline.title,
-          message: timeline.coverMessage,
-        };
-      } else {
-        // Standard card content
-        cardContent = await generateCardContent({
-          recipientName,
-          relationship,
-          occasion,
-          tone: tone || "sweet",
-          interests: lovedOne?.interests || undefined,
-          insideJokes: lovedOne?.insideJokes || undefined,
-        });
-      }
+
+      const cardContent = await generateCardContent({
+        recipientName,
+        relationship: lovedOne?.relationship || req.body.relationship || "friend",
+        occasion,
+        tone: tone || "sweet",
+        interests: lovedOne?.interests || undefined,
+        insideJokes: lovedOne?.insideJokes || undefined,
+      });
 
       let imageUrl: string | null = null;
       
@@ -970,29 +935,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Build content string - for timeline cards, store readable message first with hidden JSON after
-      // Format: "readable message" + <!--TIMELINE:base64JSON-->
-      // This ensures legacy consumers see readable text, while new UIs can parse the timeline
-      let contentToStore = cardContent.message;
-      if (cardType === 'timeline' && timelineContent) {
-        const timelineJson = JSON.stringify({
-          cardType: 'timeline',
-          coverMessage: timelineContent.coverMessage,
-          thenSection: timelineContent.thenSection,
-          nowSection: timelineContent.nowSection,
-          futureSection: timelineContent.futureSection,
-        });
-        const encodedTimeline = Buffer.from(timelineJson).toString('base64');
-        contentToStore = `${timelineContent.coverMessage}\n\n<!--TIMELINE:${encodedTimeline}-->`;
-      }
-
       const creation = await storage.createCreation({
         userId,
         lovedOneId: lovedOneId || null,
         type: 'card',
         tone: tone || 'sweet',
         title: cardContent.title,
-        content: contentToStore,
+        content: cardContent.message,
         imageUrl,
       });
       
@@ -1004,8 +953,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const responseData = {
         ...(updatedCreation || creation),
         portraitVariations: allVariations || null,
-        cardType: cardType || 'standard',
-        timelineContent: timelineContent || null,
       };
 
       res.json(responseData);

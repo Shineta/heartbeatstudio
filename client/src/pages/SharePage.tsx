@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Heart, Download, Sparkles, Play, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { parseTimelineContent } from '@/lib/timelineParser';
 
 interface Creation {
   id: string;
@@ -240,60 +239,12 @@ export default function SharePage() {
                   <h3 className="font-semibold mb-3 text-lg">
                     {creation.type === 'song' ? 'Lyrics' : 'Message'}
                   </h3>
-                  {/* Timeline Card Display */}
-                  {(() => {
-                    const { isTimeline, timelineData, cleanContent } = parseTimelineContent(creation.content);
-                    
-                    if (isTimeline && timelineData && creation.type === 'card') {
-                      return (
-                        <div className="space-y-6 bg-muted/30 rounded-lg p-6" data-testid="text-content">
-                          {/* Cover Message */}
-                          <p className="text-center italic text-lg text-muted-foreground">
-                            {timelineData.coverMessage}
-                          </p>
-                          
-                          {/* Then Section */}
-                          <div className="border-l-4 border-primary/40 pl-4 space-y-2">
-                            <h4 className="font-semibold text-primary">
-                              {timelineData.thenSection?.heading || 'Then...'}
-                            </h4>
-                            <p className="text-muted-foreground">
-                              {timelineData.thenSection?.content}
-                            </p>
-                          </div>
-                          
-                          {/* Now Section */}
-                          <div className="border-l-4 border-primary/60 pl-4 space-y-2">
-                            <h4 className="font-semibold text-primary">
-                              {timelineData.nowSection?.heading || 'Now & Always'}
-                            </h4>
-                            <p className="text-foreground">
-                              {timelineData.nowSection?.content}
-                            </p>
-                          </div>
-                          
-                          {/* Future Section */}
-                          <div className="border-l-4 border-primary pl-4 space-y-2">
-                            <h4 className="font-semibold text-primary">
-                              {timelineData.futureSection?.heading || "What's Next"}
-                            </h4>
-                            <p className="text-foreground font-medium">
-                              {timelineData.futureSection?.content}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    
-                    return (
-                      <div 
-                        className="bg-muted/30 rounded-lg p-4 whitespace-pre-wrap"
-                        data-testid="text-content"
-                      >
-                        {cleanContent}
-                      </div>
-                    );
-                  })()}
+                  <div 
+                    className="bg-muted/30 rounded-lg p-4 whitespace-pre-wrap"
+                    data-testid="text-content"
+                  >
+                    {creation.content}
+                  </div>
                 </div>
               )}
 

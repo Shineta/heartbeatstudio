@@ -3,14 +3,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Clock } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -22,7 +22,6 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
 import { rapSubGenres, jazzSubGenres } from "@/lib/genres";
-import { parseTimelineContent, stripTimelineMarker } from "@/lib/timelineParser";
 
 interface LyricsPreview {
   lyrics: string;
@@ -37,13 +36,6 @@ const cardFormSchema = z.object({
   occasion: z.string().min(1, "Occasion is required"),
   tone: z.string().min(1, "Tone is required"),
   style: z.string().min(1, "Style is required"),
-  // Memory Timeline Card fields
-  cardType: z.enum(['standard', 'timeline']).optional().default('standard'),
-  timelineYearsKnown: z.string().optional(),
-  timelineMemory1: z.string().optional(),
-  timelineMemory2: z.string().optional(),
-  timelineMemory3: z.string().optional(),
-  timelineFutureWish: z.string().optional(),
 });
 
 const songFormSchema = z.object({
@@ -359,17 +351,8 @@ export default function CreatePage() {
       occasion: "",
       tone: "sweet",
       style: "watercolor",
-      cardType: "standard",
-      timelineYearsKnown: "",
-      timelineMemory1: "",
-      timelineMemory2: "",
-      timelineMemory3: "",
-      timelineFutureWish: "",
     },
   });
-  
-  // Watch card type to show/hide timeline fields
-  const cardType = cardForm.watch('cardType');
 
   const songForm = useForm<z.infer<typeof songFormSchema>>({
     resolver: zodResolver(songFormSchema),
@@ -426,27 +409,12 @@ export default function CreatePage() {
     },
   });
 
-  // Timeline content type for Memory Timeline cards
-  type TimelineContent = {
-    title: string;
-    coverMessage: string;
-    thenSection: { heading: string; content: string };
-    nowSection: { heading: string; content: string };
-    futureSection: { heading: string; content: string };
-  };
-  
-  type CardResponse = Creation & { 
-    portraitVariations?: string[];
-    cardType?: 'standard' | 'timeline';
-    timelineContent?: TimelineContent;
-  };
-
   const cardMutation = useMutation({
     mutationFn: async (data: z.infer<typeof cardFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/card", data);
-      return await res.json() as CardResponse;
+      return await res.json() as Creation & { portraitVariations?: string[] };
     },
-    onSuccess: (data: CardResponse) => {
+    onSuccess: (data: Creation & { portraitVariations?: string[] }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedCard(data);
       
@@ -1392,57 +1360,7 @@ export default function CreatePage() {
                         className="w-full rounded-md"
                       />
                     ) : null}
-                    
-                    {/* Timeline Card Content Display */}
-                    {(() => {
-                      const { isTimeline, timelineData, cleanContent } = parseTimelineContent(createdCard.content);
-                      
-                      if (isTimeline && timelineData) {
-                        return (
-                          <div className="space-y-6">
-                            {/* Cover Message */}
-                            <p className="text-center italic text-lg text-muted-foreground">
-                              {timelineData.coverMessage}
-                            </p>
-                            
-                            {/* Then Section */}
-                            <div className="border-l-4 border-primary/40 pl-4 space-y-2">
-                              <h4 className="font-semibold text-primary flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
-                                {timelineData.thenSection?.heading || 'Then...'}
-                              </h4>
-                              <p className="text-muted-foreground">
-                                {timelineData.thenSection?.content}
-                              </p>
-                            </div>
-                            
-                            {/* Now Section */}
-                            <div className="border-l-4 border-primary/60 pl-4 space-y-2">
-                              <h4 className="font-semibold text-primary flex items-center gap-2">
-                                <Heart className="w-4 h-4" />
-                                {timelineData.nowSection?.heading || 'Now & Always'}
-                              </h4>
-                              <p className="text-foreground">
-                                {timelineData.nowSection?.content}
-                              </p>
-                            </div>
-                            
-                            {/* Future Section */}
-                            <div className="border-l-4 border-primary pl-4 space-y-2">
-                              <h4 className="font-semibold text-primary flex items-center gap-2">
-                                <Sparkles className="w-4 h-4" />
-                                {timelineData.futureSection?.heading || "What's Next"}
-                              </h4>
-                              <p className="text-foreground font-medium">
-                                {timelineData.futureSection?.content}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      return <p className="whitespace-pre-wrap">{cleanContent}</p>;
-                    })()}
+                    <p className="whitespace-pre-wrap">{createdCard.content}</p>
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-3">
                     <Button onClick={() => {
@@ -1698,150 +1616,6 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
-
-                      {/* Card Type Selector */}
-                      <FormField
-                        control={cardForm.control}
-                        name="cardType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Card Format</FormLabel>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Button
-                                type="button"
-                                variant={field.value === 'standard' ? 'default' : 'outline'}
-                                onClick={() => field.onChange('standard')}
-                                className="h-auto py-3 flex-col gap-1"
-                                data-testid="button-card-type-standard"
-                              >
-                                <Heart className="w-5 h-5" />
-                                <span className="text-sm font-medium">Standard Card</span>
-                                <span className="text-xs text-muted-foreground">Classic greeting</span>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant={field.value === 'timeline' ? 'default' : 'outline'}
-                                onClick={() => field.onChange('timeline')}
-                                className="h-auto py-3 flex-col gap-1"
-                                data-testid="button-card-type-timeline"
-                              >
-                                <Clock className="w-5 h-5" />
-                                <span className="text-sm font-medium">Memory Timeline</span>
-                                <span className="text-xs text-muted-foreground">Past, present, future</span>
-                              </Button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Memory Timeline Fields - shown when timeline card type is selected */}
-                      {cardType === 'timeline' && (
-                        <div className="space-y-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                          <div className="flex items-center gap-2 text-primary">
-                            <Clock className="w-4 h-4" />
-                            <span className="font-medium text-sm">Memory Timeline Details</span>
-                          </div>
-                          
-                          <FormField
-                            control={cardForm.control}
-                            name="timelineYearsKnown"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>How long have you known them?</FormLabel>
-                                <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger data-testid="select-timeline-years">
-                                      <SelectValue placeholder="Select duration" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="less-than-1">Less than a year</SelectItem>
-                                      <SelectItem value="1-2">1-2 years</SelectItem>
-                                      <SelectItem value="3-5">3-5 years</SelectItem>
-                                      <SelectItem value="5-10">5-10 years</SelectItem>
-                                      <SelectItem value="10-20">10-20 years</SelectItem>
-                                      <SelectItem value="20+">20+ years</SelectItem>
-                                      <SelectItem value="lifetime">A lifetime</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-
-                          <div className="space-y-3">
-                            <Label className="text-sm">Share 1-3 Memories (short phrases)</Label>
-                            
-                            <FormField
-                              control={cardForm.control}
-                              name="timelineMemory1"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Memory 1: The day we met at the coffee shop..." 
-                                      {...field} 
-                                      data-testid="input-timeline-memory1"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={cardForm.control}
-                              name="timelineMemory2"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Memory 2: Our first road trip together..." 
-                                      {...field} 
-                                      data-testid="input-timeline-memory2"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={cardForm.control}
-                              name="timelineMemory3"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Memory 3: When you helped me through..." 
-                                      {...field} 
-                                      data-testid="input-timeline-memory3"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <FormField
-                            control={cardForm.control}
-                            name="timelineFutureWish"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Future Wish (optional)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Next chapter: More adventures together..." 
-                                    {...field} 
-                                    data-testid="input-timeline-future"
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-xs">
-                                  A hope or dream for your future together
-                                </FormDescription>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
 
                       {/* Cover Image Source */}
                       <div className="space-y-3">
