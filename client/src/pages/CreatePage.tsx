@@ -1420,18 +1420,6 @@ export default function CreatePage() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            const selectedUrl = portraitVariations[selectedVariationIndex];
-                            navigator.clipboard.writeText(selectedUrl);
-                            toast({ title: "Copied!", description: `Image ${selectedVariationIndex + 1} link copied to clipboard` });
-                          }}
-                          data-testid="button-copy-image-link"
-                        >
-                          <Link className="w-4 h-4 mr-2" />
-                          Copy Image Link
-                        </Button>
-                        <Button
-                          variant="outline"
                           onClick={async () => {
                             const selectedUrl = portraitVariations[selectedVariationIndex];
                             try {
