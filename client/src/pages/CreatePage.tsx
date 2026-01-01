@@ -95,6 +95,8 @@ export default function CreatePage() {
   const defaultTab = searchParams.get('type') || 'card';
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
+  const [portraitVariations, setPortraitVariations] = useState<string[]>([]);
+  const [selectedVariationIndex, setSelectedVariationIndex] = useState(0);
   const [createdSong, setCreatedSong] = useState<Creation | null>(null);
   const [createdAnimation, setCreatedAnimation] = useState<Creation | null>(null);
   const [createdMixtape, setCreatedMixtape] = useState<Mixtape | null>(null);
@@ -410,11 +412,20 @@ export default function CreatePage() {
   const cardMutation = useMutation({
     mutationFn: async (data: z.infer<typeof cardFormSchema>) => {
       const res = await apiRequest("POST", "/api/generate/card", data);
-      return await res.json() as Creation;
+      return await res.json() as Creation & { portraitVariations?: string[] };
     },
-    onSuccess: (data: Creation) => {
+    onSuccess: (data: Creation & { portraitVariations?: string[] }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedCard(data);
+      
+      // Capture portrait variations if available
+      if (data.portraitVariations && data.portraitVariations.length > 0) {
+        setPortraitVariations(data.portraitVariations);
+        setSelectedVariationIndex(0);
+      } else {
+        setPortraitVariations([]);
+        setSelectedVariationIndex(0);
+      }
       
       // Save family set if this was a portrait card for "Same People, New Scene" feature
       if (coverImageSource === 'portrait' && uploadedPhotoUrls.length > 0 && selectedFaceIds.length > 0) {
@@ -427,7 +438,9 @@ export default function CreatePage() {
         });
       }
       
-      toast({ title: "Success", description: "Your card has been created!" });
+      toast({ title: "Success", description: data.portraitVariations && data.portraitVariations.length > 1 
+        ? `Your card has been created! Browse ${data.portraitVariations.length} variations to pick your favorite.`
+        : "Your card has been created!" });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -1268,19 +1281,82 @@ export default function CreatePage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>{createdCard.title}</CardTitle>
+                    {portraitVariations.length > 1 && (
+                      <CardDescription>
+                        Choose your favorite from {portraitVariations.length} variations
+                      </CardDescription>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {createdCard.imageUrl && (
+                    {/* Portrait variations gallery */}
+                    {portraitVariations.length > 1 ? (
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <img
+                            src={portraitVariations[selectedVariationIndex]}
+                            alt={`Portrait variation ${selectedVariationIndex + 1}`}
+                            className="w-full rounded-md"
+                          />
+                          {/* Navigation arrows */}
+                          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                              onClick={() => setSelectedVariationIndex(prev => 
+                                prev === 0 ? portraitVariations.length - 1 : prev - 1
+                              )}
+                              data-testid="button-prev-variation"
+                            >
+                              <ArrowLeft className="w-5 h-5" />
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                              onClick={() => setSelectedVariationIndex(prev => 
+                                prev === portraitVariations.length - 1 ? 0 : prev + 1
+                              )}
+                              data-testid="button-next-variation"
+                            >
+                              <ArrowLeft className="w-5 h-5 rotate-180" />
+                            </Button>
+                          </div>
+                        </div>
+                        {/* Variation indicator dots */}
+                        <div className="flex justify-center gap-2">
+                          {portraitVariations.map((_, idx) => (
+                            <button
+                              key={idx}
+                              className={`w-3 h-3 rounded-full transition-colors ${
+                                idx === selectedVariationIndex 
+                                  ? 'bg-primary' 
+                                  : 'bg-muted hover:bg-muted-foreground/50'
+                              }`}
+                              onClick={() => setSelectedVariationIndex(idx)}
+                              data-testid={`button-variation-${idx}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-center text-sm text-muted-foreground">
+                          Variation {selectedVariationIndex + 1} of {portraitVariations.length}
+                        </p>
+                      </div>
+                    ) : createdCard.imageUrl ? (
                       <img
                         src={createdCard.imageUrl}
                         alt={createdCard.title || "Card"}
                         className="w-full rounded-md"
                       />
-                    )}
+                    ) : null}
                     <p className="whitespace-pre-wrap">{createdCard.content}</p>
                   </CardContent>
-                  <CardFooter className="flex gap-3">
-                    <Button onClick={() => setCreatedCard(null)} variant="outline">
+                  <CardFooter className="flex flex-wrap gap-3">
+                    <Button onClick={() => {
+                      setCreatedCard(null);
+                      setPortraitVariations([]);
+                      setSelectedVariationIndex(0);
+                    }} variant="outline">
                       Create Another
                     </Button>
                     <Button onClick={() => {
@@ -1292,6 +1368,27 @@ export default function CreatePage() {
                     }} data-testid="button-share-card">
                       Share
                     </Button>
+                    {portraitVariations.length > 1 && (
+                      <Button
+                        variant="secondary"
+                        onClick={async () => {
+                          const selectedUrl = portraitVariations[selectedVariationIndex];
+                          try {
+                            await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
+                              imageUrl: selectedUrl
+                            });
+                            setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
+                            queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                            toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
+                          } catch {
+                            toast({ title: "Error", description: "Failed to save selection", variant: "destructive" });
+                          }
+                        }}
+                        data-testid="button-save-variation"
+                      >
+                        Use This Image
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
 

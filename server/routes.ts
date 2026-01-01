@@ -853,25 +853,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);
 
         // Use Pro model with 4K resolution for better quality family portraits
+        // Generate 5 images so user can pick the best one (counts as 1 credit)
         const generatedUrls = await generateImage({
           prompt,
-          numImages: 1,
+          numImages: 5,
           imageSize: '4:3',
           imageUrls: portraitData.imageUrls,
         });
 
         if (generatedUrls && generatedUrls.length > 0) {
-          // Download and upload to our storage for persistence
-          const response = await fetch(generatedUrls[0]);
-          const arrayBuffer = await response.arrayBuffer();
-          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          // Download and upload ALL images to our storage for persistence
+          const uploadedImageUrls: string[] = [];
+          console.log(`[Card] Uploading ${generatedUrls.length} portrait variations...`);
           
-          imageUrl = await objectStorageService.uploadBase64Image(
-            base64,
-            `cards/${userId}`,
-            'portrait-card'
-          );
-          console.log('[Card] Family portrait uploaded:', imageUrl);
+          for (let i = 0; i < generatedUrls.length; i++) {
+            try {
+              const response = await fetch(generatedUrls[i]);
+              const arrayBuffer = await response.arrayBuffer();
+              const base64 = Buffer.from(arrayBuffer).toString('base64');
+              
+              const uploadedUrl = await objectStorageService.uploadBase64Image(
+                base64,
+                `cards/${userId}`,
+                `portrait-card-${i + 1}`
+              );
+              uploadedImageUrls.push(uploadedUrl);
+              console.log(`[Card] Portrait variation ${i + 1} uploaded:`, uploadedUrl);
+            } catch (err: any) {
+              console.error(`[Card] Failed to upload variation ${i + 1}:`, err.message);
+            }
+          }
+          
+          if (uploadedImageUrls.length === 0) {
+            return res.status(500).json({ message: 'Failed to save generated portraits. Please try again.' });
+          }
+          
+          // Use first image as default, but store all variations
+          imageUrl = uploadedImageUrls[0];
+          // Store all variations in the response (will be added to creation later)
+          (req as any).allPortraitVariations = uploadedImageUrls;
+          console.log(`[Card] ${uploadedImageUrls.length} portrait variations saved`);
         } else {
           console.error('[Card] Family portrait generation returned no images');
           return res.status(500).json({ message: 'Failed to generate family portrait. Please try again.' });
@@ -927,7 +948,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
-      res.json(updatedCreation || creation);
+      // Include all portrait variations in response if available
+      const allVariations = (req as any).allPortraitVariations;
+      const responseData = {
+        ...(updatedCreation || creation),
+        portraitVariations: allVariations || null,
+      };
+
+      res.json(responseData);
     } catch (error: any) {
       console.error("Error generating card:", error);
       res.status(500).json({ message: error.message || "Failed to generate card" });
@@ -1071,9 +1099,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[FamilyPortrait] Using Pro 4K model with prompt: ${prompt.substring(0, 200)}...`);
 
       // Use Nano Banana Pro model with 4K resolution for better quality portraits
+      // Generate 5 images so user can pick the best one (counts as 1 credit)
       const generatedUrls = await generateImage({
         prompt,
-        numImages: 1,
+        numImages: 5,
         imageSize: '4:3',
         imageUrls: imageUrls, // Pass source photos for reference
       });
