@@ -1889,13 +1889,38 @@ export default function CreatePage() {
                                       <SelectTrigger data-testid="select-portrait-scene">
                                         <SelectValue />
                                       </SelectTrigger>
-                                      <SelectContent>
+                                      <SelectContent className="max-h-[300px]">
+                                        {/* Classic Scenes */}
                                         <SelectItem value="studio">Studio</SelectItem>
                                         <SelectItem value="living-room">Living Room</SelectItem>
-                                        <SelectItem value="holiday">Holiday</SelectItem>
                                         <SelectItem value="outdoors">Outdoors</SelectItem>
-                                        <SelectItem value="graduation">Graduation</SelectItem>
+                                        <SelectItem value="beach">Beach</SelectItem>
+                                        <SelectItem value="garden">Garden</SelectItem>
+                                        {/* Life Events */}
                                         <SelectItem value="birthday">Birthday</SelectItem>
+                                        <SelectItem value="graduation">Graduation</SelectItem>
+                                        <SelectItem value="wedding">Wedding</SelectItem>
+                                        <SelectItem value="baby-shower">Baby Shower</SelectItem>
+                                        <SelectItem value="anniversary">Anniversary</SelectItem>
+                                        <SelectItem value="retirement">Retirement</SelectItem>
+                                        {/* Major Holidays */}
+                                        <SelectItem value="christmas">Christmas</SelectItem>
+                                        <SelectItem value="hanukkah">Hanukkah</SelectItem>
+                                        <SelectItem value="kwanzaa">Kwanzaa</SelectItem>
+                                        <SelectItem value="new-years">New Year's</SelectItem>
+                                        <SelectItem value="thanksgiving">Thanksgiving</SelectItem>
+                                        <SelectItem value="easter">Easter</SelectItem>
+                                        <SelectItem value="passover">Passover</SelectItem>
+                                        <SelectItem value="halloween">Halloween</SelectItem>
+                                        <SelectItem value="fourth-of-july">Fourth of July</SelectItem>
+                                        <SelectItem value="valentines">Valentine's Day</SelectItem>
+                                        <SelectItem value="mothers-day">Mother's Day</SelectItem>
+                                        <SelectItem value="fathers-day">Father's Day</SelectItem>
+                                        <SelectItem value="st-patricks">St. Patrick's Day</SelectItem>
+                                        <SelectItem value="cinco-de-mayo">Cinco de Mayo</SelectItem>
+                                        <SelectItem value="diwali">Diwali</SelectItem>
+                                        <SelectItem value="eid">Eid</SelectItem>
+                                        <SelectItem value="lunar-new-year">Lunar New Year</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>

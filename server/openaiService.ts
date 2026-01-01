@@ -652,12 +652,39 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   ).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
+    // Classic Scenes
     'studio': 'professional photography studio with neutral gray background and soft studio lighting',
     'living-room': 'cozy living room with warm ambient lighting, comfortable furniture, and family-friendly decor',
-    'holiday': 'festive holiday setting with Christmas decorations, twinkling lights, and celebratory atmosphere',
     'outdoors': 'beautiful outdoor scene with natural lighting, trees, and blue sky',
-    'graduation': 'graduation ceremony backdrop with academic colors and celebratory elements',
-    'birthday': 'birthday party setting with balloons, decorations, and festive atmosphere',
+    'beach': 'sunny beach setting with ocean waves, sand, and bright coastal atmosphere',
+    'garden': 'beautiful garden with blooming flowers, lush greenery, and natural sunlight',
+    // Life Events
+    'birthday': 'birthday party setting with balloons, confetti, birthday cake, and festive decorations',
+    'graduation': 'graduation ceremony backdrop with academic cap and gown elements, diploma, and celebratory atmosphere',
+    'wedding': 'elegant wedding venue with romantic floral arrangements, soft lighting, and celebratory atmosphere',
+    'baby-shower': 'sweet baby shower setting with pastel decorations, balloons, and baby-themed elements',
+    'anniversary': 'romantic anniversary setting with elegant decorations, flowers, and celebratory atmosphere',
+    'retirement': 'celebratory retirement party with elegant decorations, congratulations banners, and festive atmosphere',
+    // Major Holidays
+    'christmas': 'festive Christmas setting with decorated Christmas tree, twinkling lights, wrapped presents, stockings, and cozy holiday atmosphere',
+    'hanukkah': 'warm Hanukkah celebration with lit menorah, dreidels, blue and silver decorations, and gelt',
+    'kwanzaa': 'vibrant Kwanzaa setting with kinara candles, red/black/green decorations, and African-inspired elements',
+    'new-years': 'glamorous New Year\'s Eve celebration with champagne, confetti, sparklers, and "Happy New Year" decorations',
+    'thanksgiving': 'warm Thanksgiving setting with autumn leaves, pumpkins, harvest decorations, and family dinner table',
+    'easter': 'bright Easter celebration with decorated eggs, spring flowers, pastel colors, and Easter baskets',
+    'passover': 'elegant Passover Seder setting with traditional elements, candles, and festive table',
+    'halloween': 'spooky Halloween setting with jack-o-lanterns, autumn leaves, costumes, and fun decorations',
+    'fourth-of-july': 'patriotic Fourth of July celebration with American flags, red/white/blue decorations, and fireworks backdrop',
+    'valentines': 'romantic Valentine\'s Day setting with hearts, red roses, pink decorations, and love-themed elements',
+    'mothers-day': 'beautiful Mother\'s Day celebration with flowers, hearts, and warm family atmosphere',
+    'fathers-day': 'warm Father\'s Day celebration with elegant masculine decorations and family atmosphere',
+    'st-patricks': 'festive St. Patrick\'s Day setting with shamrocks, green decorations, and Irish-themed elements',
+    'cinco-de-mayo': 'vibrant Cinco de Mayo fiesta with colorful papel picado, sombreros, maracas, and festive Mexican decorations',
+    'diwali': 'beautiful Diwali celebration with diyas (oil lamps), rangoli patterns, colorful flowers, and warm festive lighting',
+    'eid': 'elegant Eid celebration with crescent moon and star decorations, lanterns, and festive atmosphere',
+    'lunar-new-year': 'festive Lunar New Year celebration with red lanterns, paper decorations, zodiac elements, and traditional decor',
+    // Legacy fallback
+    'holiday': 'festive holiday setting with decorations, twinkling lights, and celebratory atmosphere',
   };
 
   const styleDescriptions: Record<string, string> = {
@@ -720,12 +747,39 @@ ${pets.length > 0 ? `- Position pets naturally with the family (sitting, standin
   } else {
     // Scene-specific outfit recommendations
     const outfitSuggestions: Record<string, string> = {
+      // Classic Scenes
       'studio': 'elegant matching formal wear (suits, dresses, or coordinated colors)',
       'living-room': 'comfortable matching casual wear (sweaters, nice shirts, coordinated colors)',
-      'holiday': 'festive holiday outfits (matching Christmas sweaters, red and green colors, holiday dresses)',
       'outdoors': 'casual coordinated outdoor wear (khakis, polo shirts, summer dresses)',
-      'graduation': 'formal graduation attire (caps and gowns, formal suits and dresses)',
+      'beach': 'casual beach attire (Hawaiian shirts, sundresses, swimwear coverups)',
+      'garden': 'elegant garden party attire (floral dresses, linen suits, light colors)',
+      // Life Events
       'birthday': 'festive party outfits (bright coordinated colors, party wear)',
+      'graduation': 'formal graduation attire (caps and gowns, formal suits and dresses)',
+      'wedding': 'formal wedding attire (elegant suits, formal dresses, wedding party colors)',
+      'baby-shower': 'soft pastel coordinated outfits (light blues, pinks, yellows)',
+      'anniversary': 'elegant romantic attire (matching formal wear, coordinated romantic colors)',
+      'retirement': 'smart casual celebratory attire (blazers, elegant dresses, coordinated colors)',
+      // Major Holidays
+      'christmas': 'festive Christmas outfits (matching Christmas sweaters, red and green, holiday dresses)',
+      'hanukkah': 'elegant Hanukkah attire (blue and silver colors, formal wear)',
+      'kwanzaa': 'traditional Kwanzaa attire (African-inspired patterns, red/black/green colors)',
+      'new-years': 'glamorous New Year\'s Eve attire (sparkly dresses, formal suits, gold/silver accents)',
+      'thanksgiving': 'warm autumn coordinated outfits (earth tones, cozy sweaters, fall colors)',
+      'easter': 'elegant Easter Sunday attire (pastel dresses, spring suits, light colors)',
+      'passover': 'elegant formal attire for Seder (nice dresses, suits, traditional modest wear)',
+      'halloween': 'fun Halloween costumes or festive orange and black outfits',
+      'fourth-of-july': 'patriotic red, white and blue coordinated outfits',
+      'valentines': 'romantic Valentine\'s attire (red, pink, and heart-themed outfits)',
+      'mothers-day': 'elegant spring attire (floral dresses, nice blouses, soft colors)',
+      'fathers-day': 'smart casual attire (polo shirts, blazers, coordinated family colors)',
+      'st-patricks': 'festive green-themed outfits with shamrock accessories',
+      'cinco-de-mayo': 'colorful festive Mexican-inspired attire with bright colors',
+      'diwali': 'beautiful traditional Indian attire (sarees, kurtas, festive colors)',
+      'eid': 'elegant traditional attire for Eid celebration',
+      'lunar-new-year': 'festive red and gold traditional attire for Lunar New Year',
+      // Legacy fallback
+      'holiday': 'festive holiday outfits (matching sweaters, coordinated holiday colors)',
     };
     const suggestedOutfit = outfitSuggestions[scene] || 'coordinated matching outfits appropriate for the scene';
     
