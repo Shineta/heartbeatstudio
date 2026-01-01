@@ -618,7 +618,10 @@ export interface FamilyPortraitParams {
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
   const { selectedFaces, scene, style, keepOutfits } = params;
 
-  const peopleDescriptions = selectedFaces.map(f => f.description).join(', ');
+  // Build detailed per-person descriptions with emphasis on faithfulness
+  const peopleDetails = selectedFaces.map((f, i) => 
+    `Person ${i + 1}: ${f.description} - MUST reproduce this person EXACTLY as they appear in the reference photo`
+  ).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
     'studio': 'professional photography studio with neutral gray background and soft studio lighting',
@@ -641,24 +644,33 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
   const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
 
-  let prompt = `Create a beautiful family portrait photo combining the following people into one unified group photo:
+  let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each person from the reference photos.
 
-People to include: ${peopleDescriptions}
+CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
+- Reproduce each person EXACTLY as they appear in the reference photos
+- DO NOT change, modify, or reinterpret anyone's appearance, gender presentation, body type, or facial features
+- Preserve exact hairstyles, hair textures (locs, braids, curls, etc.), skin tones, facial structures
+- Each person must look like THEMSELVES from the photos, not a different person
+- DO NOT substitute or swap any features - copy faithfully from the source images
+
+PEOPLE TO INCLUDE (copy their exact appearance from the reference photos):
+${peopleDetails}
 
 Scene: ${sceneDesc}
 
 Art style: ${styleDesc}
 
-Requirements:
+Additional Requirements:
 - All people should be posed together naturally as a family group
 - Maintain consistent lighting and color grading across all subjects
 - Make it look like everyone was photographed together at the same moment
-- Professional quality suitable for printing and framing`;
+- Professional quality suitable for printing and framing
+- PRESERVE each person's authentic appearance exactly as shown in their reference photo`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
   } else {
-    prompt += `\n- Dress everyone in coordinated, matching outfits appropriate for the scene`;
+    prompt += `\n- Dress everyone in coordinated, matching outfits appropriate for the scene, but DO NOT change their faces, hair, or body types`;
   }
 
   return prompt;
