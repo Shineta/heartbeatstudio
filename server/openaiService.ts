@@ -490,3 +490,131 @@ export async function generateSongCover(params: {
 
   return imageUrl;
 }
+
+// Family Portrait Composer - Analyze photos for faces/subjects
+export interface DetectedFace {
+  id: string;
+  name: string; // Auto-generated like "Person 1", "Person 2"
+  description: string; // Brief description for reference
+  imageIndex: number; // Which uploaded image this face is from
+}
+
+export interface AnalyzedPhotos {
+  faces: DetectedFace[];
+  totalPeople: number;
+}
+
+export async function analyzePhotosForFaces(imageUrls: string[]): Promise<AnalyzedPhotos> {
+  console.log(`[FamilyPortrait] Analyzing ${imageUrls.length} photos for faces...`);
+
+  const imageContents = imageUrls.map((url, index) => ({
+    type: "image_url" as const,
+    image_url: { url, detail: "low" as const }
+  }));
+
+  const prompt = `Analyze these ${imageUrls.length} photos and identify all the people/subjects visible.
+For each person detected, provide:
+- A brief description (age estimate, gender, notable features like hair color, glasses, etc.)
+- Which image number (1-indexed) they appear in
+
+Return as JSON with format:
+{
+  "faces": [
+    { "name": "Person 1", "description": "Young woman with brown hair", "imageIndex": 1 },
+    { "name": "Person 2", "description": "Older man with glasses and gray hair", "imageIndex": 1 },
+    { "name": "Person 3", "description": "Child around 8 years old with blonde hair", "imageIndex": 2 }
+  ],
+  "totalPeople": 3
+}
+
+Important: List each unique person only once, even if they appear in multiple photos.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            ...imageContents
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1000,
+    });
+
+    const result = JSON.parse(response.choices[0]?.message?.content || '{"faces": [], "totalPeople": 0}');
+    
+    // Add unique IDs to each face
+    result.faces = result.faces.map((face: any, index: number) => ({
+      ...face,
+      id: `face-${index + 1}`,
+    }));
+
+    console.log(`[FamilyPortrait] Detected ${result.totalPeople} people in ${imageUrls.length} photos`);
+    return result;
+  } catch (error: any) {
+    console.error('[FamilyPortrait] Error analyzing photos:', error.message);
+    throw new Error('Failed to analyze photos for faces');
+  }
+}
+
+// Generate the compositing prompt for the family portrait
+export interface FamilyPortraitParams {
+  imageUrls: string[];
+  selectedFaces: DetectedFace[];
+  scene: string;
+  style: string;
+  keepOutfits: boolean;
+}
+
+export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
+  const { selectedFaces, scene, style, keepOutfits } = params;
+
+  const peopleDescriptions = selectedFaces.map(f => f.description).join(', ');
+  
+  const sceneDescriptions: Record<string, string> = {
+    'studio': 'professional photography studio with neutral gray background and soft studio lighting',
+    'living-room': 'cozy living room with warm ambient lighting, comfortable furniture, and family-friendly decor',
+    'holiday': 'festive holiday setting with Christmas decorations, twinkling lights, and celebratory atmosphere',
+    'outdoors': 'beautiful outdoor scene with natural lighting, trees, and blue sky',
+    'graduation': 'graduation ceremony backdrop with academic colors and celebratory elements',
+    'birthday': 'birthday party setting with balloons, decorations, and festive atmosphere',
+  };
+
+  const styleDescriptions: Record<string, string> = {
+    'watercolor': 'artistic watercolor painting style with soft edges and flowing colors',
+    'cartoon': 'fun cartoon illustration style with bold outlines and vibrant colors',
+    'studio-photo': 'professional studio photography with perfect lighting and high resolution',
+    'oil-painting': 'classic oil painting style with rich textures and warm tones',
+    'digital-art': 'modern digital art style with clean lines and vivid colors',
+    'vintage': 'nostalgic vintage photograph style with warm sepia tones',
+  };
+
+  const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
+  const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
+
+  let prompt = `Create a beautiful family portrait photo combining the following people into one unified group photo:
+
+People to include: ${peopleDescriptions}
+
+Scene: ${sceneDesc}
+
+Art style: ${styleDesc}
+
+Requirements:
+- All people should be posed together naturally as a family group
+- Maintain consistent lighting and color grading across all subjects
+- Make it look like everyone was photographed together at the same moment
+- Professional quality suitable for printing and framing`;
+
+  if (keepOutfits) {
+    prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
+  } else {
+    prompt += `\n- Dress everyone in coordinated, matching outfits appropriate for the scene`;
+  }
+
+  return prompt;
+}

@@ -138,6 +138,26 @@ export default function CreatePage() {
   // Custom cassette cover image state for mixtapes
   const [customCassetteImageUrl, setCustomCassetteImageUrl] = useState<string | null>(null);
   const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
+  
+  // Family Portrait Composer state
+  const [cardMode, setCardMode] = useState<'regular' | 'portrait'>('regular');
+  const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
+  const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState<string[]>([]);
+  interface DetectedFace {
+    id: string;
+    name: string;
+    description: string;
+    imageIndex: number;
+  }
+  const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
+  const [selectedFaceIds, setSelectedFaceIds] = useState<string[]>([]);
+  const [portraitScene, setPortraitScene] = useState('studio');
+  const [portraitStyle, setPortraitStyle] = useState('studio-photo');
+  const [keepOutfits, setKeepOutfits] = useState(true);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [isAnalyzingPhotos, setIsAnalyzingPhotos] = useState(false);
+  const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
+  const [createdPortrait, setCreatedPortrait] = useState<Creation | null>(null);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -372,6 +392,108 @@ export default function CreatePage() {
       });
     },
   });
+
+  // Family Portrait handlers
+  const handlePortraitPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + portraitPhotos.length > 6) {
+      toast({ title: "Too many photos", description: "Maximum 6 photos allowed", variant: "destructive" });
+      return;
+    }
+    setPortraitPhotos(prev => [...prev, ...files]);
+  };
+
+  const removePortraitPhoto = (index: number) => {
+    setPortraitPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadAndAnalyzePhotos = async () => {
+    if (portraitPhotos.length < 2) {
+      toast({ title: "Not enough photos", description: "Please upload at least 2 photos", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingPhotos(true);
+    try {
+      const formData = new FormData();
+      portraitPhotos.forEach((photo) => {
+        formData.append('photos', photo);
+      });
+
+      const uploadRes = await fetch('/api/family-portrait/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload photos');
+      }
+
+      const { imageUrls } = await uploadRes.json();
+      setUploadedPhotoUrls(imageUrls);
+      
+      setIsUploadingPhotos(false);
+      setIsAnalyzingPhotos(true);
+
+      const analyzeRes = await apiRequest('POST', '/api/family-portrait/analyze', { imageUrls });
+      const { faces } = await analyzeRes.json();
+      
+      setDetectedFaces(faces);
+      setSelectedFaceIds(faces.map((f: DetectedFace) => f.id));
+      toast({ title: "Analysis complete!", description: `Found ${faces.length} people in your photos` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to analyze photos", variant: "destructive" });
+    } finally {
+      setIsUploadingPhotos(false);
+      setIsAnalyzingPhotos(false);
+    }
+  };
+
+  const toggleFaceSelection = (faceId: string) => {
+    setSelectedFaceIds(prev => 
+      prev.includes(faceId) 
+        ? prev.filter(id => id !== faceId)
+        : [...prev, faceId]
+    );
+  };
+
+  const generateFamilyPortrait = async () => {
+    if (selectedFaceIds.length === 0) {
+      toast({ title: "No people selected", description: "Please select at least one person to include", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingPortrait(true);
+    try {
+      const selectedFaces = detectedFaces.filter(f => selectedFaceIds.includes(f.id));
+      
+      const res = await apiRequest('POST', '/api/family-portrait/generate', {
+        imageUrls: uploadedPhotoUrls,
+        selectedFaces,
+        scene: portraitScene,
+        style: portraitStyle,
+        keepOutfits,
+      });
+
+      const { creation } = await res.json();
+      setCreatedPortrait(creation);
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      toast({ title: "Portrait created!", description: "Your family portrait is ready" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to generate portrait", variant: "destructive" });
+    } finally {
+      setIsGeneratingPortrait(false);
+    }
+  };
+
+  const resetPortraitComposer = () => {
+    setPortraitPhotos([]);
+    setUploadedPhotoUrls([]);
+    setDetectedFaces([]);
+    setSelectedFaceIds([]);
+    setCreatedPortrait(null);
+  };
 
   const animationMutation = useMutation({
     mutationFn: async (data: z.infer<typeof animationFormSchema>) => {
@@ -1009,55 +1131,318 @@ export default function CreatePage() {
           </TabsList>
 
           <TabsContent value="card">
-            {createdCard ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{createdCard.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {createdCard.imageUrl && (
-                      <img
-                        src={createdCard.imageUrl}
-                        alt={createdCard.title || "Card"}
-                        className="w-full rounded-md"
-                      />
-                    )}
-                    <p className="whitespace-pre-wrap">{createdCard.content}</p>
-                  </CardContent>
-                  <CardFooter className="flex gap-3">
-                    <Button onClick={() => setCreatedCard(null)} variant="outline">
-                      Create Another
-                    </Button>
-                    <Button onClick={() => {
-                      const shareLink = createdCard.shareableLink?.startsWith('/share/')
-                        ? createdCard.shareableLink
-                        : `/share/${createdCard.shareableLink}`;
-                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                      toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                    }} data-testid="button-share-card">
-                      Share
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    AI Greeting Card Creator
-                  </CardTitle>
-                  <CardDescription>
-                    Create a personalized greeting card with AI-generated messages and images
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...cardForm}>
-                    <form onSubmit={cardForm.handleSubmit(onCardSubmit)} className="space-y-6">
-                      <FormField
-                        control={cardForm.control}
-                        name="lovedOneId"
+            {/* Mode Toggle */}
+            <div className="flex gap-2 mb-4">
+              <Button 
+                variant={cardMode === 'regular' ? 'default' : 'outline'}
+                onClick={() => setCardMode('regular')}
+                data-testid="button-card-mode-regular"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Greeting Card
+              </Button>
+              <Button 
+                variant={cardMode === 'portrait' ? 'default' : 'outline'}
+                onClick={() => setCardMode('portrait')}
+                data-testid="button-card-mode-portrait"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Family Portrait
+              </Button>
+            </div>
+
+            {/* Family Portrait Mode */}
+            {cardMode === 'portrait' && (
+              <>
+                {createdPortrait ? (
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{createdPortrait.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {createdPortrait.imageUrl && (
+                          <img
+                            src={createdPortrait.imageUrl}
+                            alt={createdPortrait.title || "Family Portrait"}
+                            className="w-full rounded-md"
+                            data-testid="img-portrait-result"
+                          />
+                        )}
+                        <p className="whitespace-pre-wrap">{createdPortrait.content}</p>
+                      </CardContent>
+                      <CardFooter className="flex gap-3">
+                        <Button onClick={resetPortraitComposer} variant="outline" data-testid="button-create-another-portrait">
+                          Create Another
+                        </Button>
+                        <Button onClick={() => {
+                          const shareLink = createdPortrait.shareableLink?.startsWith('/share/')
+                            ? createdPortrait.shareableLink
+                            : `/share/${createdPortrait.shareableLink}`;
+                          navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                          toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                        }} data-testid="button-share-portrait">
+                          Share
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Family Portrait Composer
+                      </CardTitle>
+                      <CardDescription>
+                        Upload 2-6 photos of different people and combine them into one unified group photo
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Step 1: Upload Photos */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold">Step 1: Add Photos ({portraitPhotos.length}/6)</h3>
+                          {portraitPhotos.length > 0 && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setPortraitPhotos([])}
+                              data-testid="button-clear-portrait-photos"
+                            >
+                              Clear All
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                          {portraitPhotos.map((photo, index) => (
+                            <div key={index} className="relative aspect-square">
+                              <img
+                                src={URL.createObjectURL(photo)}
+                                alt={`Photo ${index + 1}`}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                              <button
+                                onClick={() => removePortraitPhoto(index)}
+                                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
+                                data-testid={`button-remove-photo-${index}`}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                          {portraitPhotos.length < 6 && (
+                            <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                              <Upload className="w-6 h-6 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handlePortraitPhotoSelect}
+                                className="hidden"
+                                data-testid="input-portrait-photos"
+                              />
+                            </label>
+                          )}
+                        </div>
+
+                        {portraitPhotos.length >= 2 && detectedFaces.length === 0 && (
+                          <Button 
+                            onClick={uploadAndAnalyzePhotos}
+                            disabled={isUploadingPhotos || isAnalyzingPhotos}
+                            className="w-full"
+                            data-testid="button-analyze-photos"
+                          >
+                            {isUploadingPhotos ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Uploading Photos...
+                              </>
+                            ) : isAnalyzingPhotos ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Detecting People...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Analyze Photos
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Step 2: Select People */}
+                      {detectedFaces.length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="font-semibold">Step 2: Who should be included?</h3>
+                          <div className="space-y-2">
+                            {detectedFaces.map((face) => (
+                              <div 
+                                key={face.id}
+                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                                  selectedFaceIds.includes(face.id) 
+                                    ? 'bg-primary/10 border-primary' 
+                                    : 'hover:bg-muted'
+                                }`}
+                                onClick={() => toggleFaceSelection(face.id)}
+                                data-testid={`checkbox-face-${face.id}`}
+                              >
+                                <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                  selectedFaceIds.includes(face.id) 
+                                    ? 'bg-primary border-primary' 
+                                    : 'border-muted-foreground'
+                                }`}>
+                                  {selectedFaceIds.includes(face.id) && (
+                                    <span className="text-primary-foreground text-xs">✓</span>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium">{face.name}</p>
+                                  <p className="text-sm text-muted-foreground">{face.description}</p>
+                                </div>
+                                <span className="text-xs text-muted-foreground">Photo {face.imageIndex}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step 3: Choose Scene & Style */}
+                      {detectedFaces.length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="font-semibold">Step 3: Choose Scene & Style</h3>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Scene</Label>
+                              <Select value={portraitScene} onValueChange={setPortraitScene}>
+                                <SelectTrigger data-testid="select-portrait-scene">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="studio">Studio</SelectItem>
+                                  <SelectItem value="living-room">Living Room</SelectItem>
+                                  <SelectItem value="holiday">Holiday</SelectItem>
+                                  <SelectItem value="outdoors">Outdoors</SelectItem>
+                                  <SelectItem value="graduation">Graduation</SelectItem>
+                                  <SelectItem value="birthday">Birthday</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Art Style</Label>
+                              <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                <SelectTrigger data-testid="select-portrait-style">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="studio-photo">Studio Photo</SelectItem>
+                                  <SelectItem value="watercolor">Watercolor</SelectItem>
+                                  <SelectItem value="cartoon">Cartoon</SelectItem>
+                                  <SelectItem value="oil-painting">Oil Painting</SelectItem>
+                                  <SelectItem value="digital-art">Digital Art</SelectItem>
+                                  <SelectItem value="vintage">Vintage</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              id="keep-outfits"
+                              checked={keepOutfits}
+                              onCheckedChange={setKeepOutfits}
+                              data-testid="switch-keep-outfits"
+                            />
+                            <Label htmlFor="keep-outfits">Keep original outfits</Label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Generate Button */}
+                      {detectedFaces.length > 0 && selectedFaceIds.length > 0 && (
+                        <Button 
+                          onClick={generateFamilyPortrait}
+                          disabled={isGeneratingPortrait}
+                          className="w-full"
+                          data-testid="button-generate-portrait"
+                        >
+                          {isGeneratingPortrait ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Creating Family Portrait...
+                            </>
+                          ) : (
+                            <>
+                              <Heart className="w-4 h-4 mr-2 heartbeat" />
+                              Generate Family Portrait
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {/* Regular Card Mode */}
+            {cardMode === 'regular' && (
+              <>
+                {createdCard ? (
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{createdCard.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {createdCard.imageUrl && (
+                          <img
+                            src={createdCard.imageUrl}
+                            alt={createdCard.title || "Card"}
+                            className="w-full rounded-md"
+                          />
+                        )}
+                        <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                      </CardContent>
+                      <CardFooter className="flex gap-3">
+                        <Button onClick={() => setCreatedCard(null)} variant="outline">
+                          Create Another
+                        </Button>
+                        <Button onClick={() => {
+                          const shareLink = createdCard.shareableLink?.startsWith('/share/')
+                            ? createdCard.shareableLink
+                            : `/share/${createdCard.shareableLink}`;
+                          navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                          toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                        }} data-testid="button-share-card">
+                          Share
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        AI Greeting Card Creator
+                      </CardTitle>
+                      <CardDescription>
+                        Create a personalized greeting card with AI-generated messages and images
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...cardForm}>
+                        <form onSubmit={cardForm.handleSubmit(onCardSubmit)} className="space-y-6">
+                          <FormField
+                            control={cardForm.control}
+                            name="lovedOneId"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Select Loved One (optional)</FormLabel>
@@ -1215,11 +1600,13 @@ export default function CreatePage() {
                             Generate Card
                           </>
                         )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </TabsContent>
 

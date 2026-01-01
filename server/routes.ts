@@ -869,6 +869,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== FAMILY PORTRAIT COMPOSER ==========
+  
+  // Upload multiple photos for family portrait analysis
+  app.post('/api/family-portrait/upload', isAuthenticated, upload.array('photos', 6), async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length < 2) {
+        return res.status(400).json({ message: 'Please upload at least 2 photos (max 6)' });
+      }
+
+      console.log(`[FamilyPortrait] Uploading ${files.length} photos from user ${userId}`);
+      
+      // Upload all images to object storage
+      const uploadedUrls: string[] = [];
+      
+      // Construct base URL for images - use APP_URL (production) or Replit domain for public accessibility
+      const appUrl = process.env.APP_URL;
+      const replitDevDomain = process.env.REPLIT_DEV_DOMAIN;
+      const requestHost = req.headers['host'] as string || '';
+      const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+      
+      // Priority: APP_URL > Replit dev domain > request host
+      let baseUrl = appUrl || (replitDevDomain ? `https://${replitDevDomain}` : `${protocol}://${requestHost}`);
+      // Remove trailing slash if present
+      baseUrl = baseUrl.replace(/\/$/, '');
+      
+      // Warn if using localhost (won't work with external AI services)
+      const isLocalhost = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1');
+      if (isLocalhost) {
+        console.warn('[FamilyPortrait] WARNING: Using localhost base URL. AI face analysis may fail. Set APP_URL env var for production use.');
+      }
+      
+      console.log(`[FamilyPortrait] Using base URL: ${baseUrl}`);
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const base64 = file.buffer.toString('base64');
+        const imagePath = await objectStorageService.uploadBase64Image(
+          base64,
+          `family-portraits/${userId}`,
+          `source-${Date.now()}-${i}`
+        );
+        
+        // Get full URL for the image - ensure it's absolute
+        const fullUrl = imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`;
+        uploadedUrls.push(fullUrl);
+        console.log(`[FamilyPortrait] Uploaded photo ${i + 1}: ${fullUrl}`);
+      }
+
+      res.json({ 
+        imageUrls: uploadedUrls,
+        count: uploadedUrls.length
+      });
+    } catch (error: any) {
+      console.error('Error uploading family portrait photos:', error);
+      res.status(500).json({ message: error.message || 'Failed to upload photos' });
+    }
+  });
+
+  // Analyze uploaded photos for faces
+  app.post('/api/family-portrait/analyze', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { imageUrls } = req.body;
+      
+      if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length < 2) {
+        return res.status(400).json({ message: 'Please provide at least 2 image URLs' });
+      }
+
+      // Check if any URLs are localhost (won't work with AI services)
+      const hasLocalUrls = imageUrls.some(url => url.includes('localhost') || url.includes('127.0.0.1'));
+      if (hasLocalUrls) {
+        console.warn('[FamilyPortrait] Localhost URLs detected - AI analysis may fail');
+        return res.status(502).json({ 
+          message: 'Image URLs must be publicly accessible. Please ensure you are running on a public domain or set APP_URL environment variable.',
+          hint: 'localhost URLs cannot be accessed by external AI services'
+        });
+      }
+
+      console.log(`[FamilyPortrait] Analyzing ${imageUrls.length} photos for faces...`);
+      
+      const { analyzePhotosForFaces } = await import('./openaiService');
+      const result = await analyzePhotosForFaces(imageUrls);
+
+      // Validate that we got face data
+      if (!result.faces || result.faces.length === 0) {
+        console.warn('[FamilyPortrait] No faces detected in photos');
+        return res.status(400).json({ 
+          message: 'No people were detected in the uploaded photos. Please try again with clearer photos showing faces.',
+          faces: [],
+          totalPeople: 0
+        });
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error analyzing photos:', error);
+      // Provide more specific error message for common failures
+      const errorMessage = error.message?.includes('fetch') || error.message?.includes('URL')
+        ? 'Unable to access the uploaded photos. Please ensure the images are publicly accessible.'
+        : error.message || 'Failed to analyze photos. Please try again.';
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+
+  // Generate unified family portrait
+  app.post('/api/family-portrait/generate', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { imageUrls, selectedFaces, scene, style, keepOutfits, recipientName, lovedOneId } = req.body;
+      
+      if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length < 2) {
+        return res.status(400).json({ message: 'Please provide at least 2 image URLs' });
+      }
+      
+      if (!selectedFaces || !Array.isArray(selectedFaces) || selectedFaces.length === 0) {
+        return res.status(400).json({ message: 'Please select at least one person to include' });
+      }
+
+      console.log(`[FamilyPortrait] Generating portrait with ${selectedFaces.length} people in ${scene} scene, ${style} style`);
+      
+      const { buildFamilyPortraitPrompt } = await import('./openaiService');
+      const { generateImageStandard } = await import('./nanoBananaService');
+      
+      // Build the compositing prompt
+      const prompt = buildFamilyPortraitPrompt({
+        imageUrls,
+        selectedFaces,
+        scene: scene || 'studio',
+        style: style || 'studio-photo',
+        keepOutfits: keepOutfits ?? true,
+      });
+
+      console.log(`[FamilyPortrait] Using prompt: ${prompt.substring(0, 200)}...`);
+
+      // Use Nano Banana's image-to-image with the uploaded photos
+      const generatedUrls = await generateImageStandard({
+        prompt,
+        numImages: 1,
+        imageSize: '4:3',
+        imageUrls: imageUrls, // Pass source photos for reference
+      });
+
+      if (!generatedUrls || generatedUrls.length === 0) {
+        throw new Error('No image generated');
+      }
+
+      const generatedImageUrl = generatedUrls[0];
+      console.log(`[FamilyPortrait] Generated portrait: ${generatedImageUrl}`);
+
+      // Download and upload to our storage for persistence
+      const response = await fetch(generatedImageUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      
+      const finalImagePath = await objectStorageService.uploadBase64Image(
+        base64,
+        `family-portraits/${userId}`,
+        `portrait-${Date.now()}`
+      );
+
+      // The path already works as a URL since we serve public-objects
+      console.log(`[FamilyPortrait] Final portrait path: ${finalImagePath}`);
+
+      // Create a card creation with the portrait
+      const creation = await storage.createCreation({
+        userId,
+        lovedOneId: lovedOneId || null,
+        type: 'card',
+        tone: style || 'studio-photo',
+        title: `Family Portrait - ${scene || 'Studio'}`,
+        content: `A beautiful family portrait featuring ${selectedFaces.length} people in ${scene || 'studio'} setting, rendered in ${style || 'studio photo'} style.`,
+        imageUrl: finalImagePath,
+      });
+
+      const shareableLink = `portrait-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
+
+      res.json({
+        creation: updatedCreation || creation,
+        imageUrl: finalImagePath,
+      });
+    } catch (error: any) {
+      console.error('Error generating family portrait:', error);
+      res.status(500).json({ message: error.message || 'Failed to generate family portrait' });
+    }
+  });
+
   // Generate AI Animation - Coming Soon (Sora API not publicly available yet)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     // Animation generation is temporarily disabled as the Sora video API is not yet publicly available
