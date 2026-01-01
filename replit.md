@@ -128,6 +128,15 @@ Preferred communication style: Simple, everyday language.
     - Rap sub-genres get detailed style descriptions (Trap, Boom Bap, Old School, etc.)
     - Boosted styles are cached for 1 hour to reduce API calls
     - Fallback to basic style if boost fails
+- **Nano Banana API**: Image generation for greeting cards and family portraits
+  - Requires NANO_BANANA_API_KEY environment variable
+  - Used for greeting card illustrations and family portrait generation
+  - **Family Portrait Composer**: Integrated into card creator as cover image option
+    - Users choose cover image source: AI Generated, Family Portrait, or No Image
+    - Family Portrait flow: upload 2-6 photos → AI face detection → select people → choose scene/style
+    - Scenes: studio, living-room, holiday, outdoors, graduation, birthday
+    - Styles: studio-photo, watercolor, cartoon, oil-painting, digital-art, vintage
+    - Option to keep or change original outfits
 
 **Authentication**
 - **Custom Multi-Method Authentication**:

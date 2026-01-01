@@ -794,7 +794,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData } = req.body;
+      
+      // Validate coverImageSource if provided
+      const validCoverSources = ['ai', 'portrait', 'none'];
+      const effectiveCoverSource = coverImageSource && validCoverSources.includes(coverImageSource) 
+        ? coverImageSource 
+        : 'ai';
+      
+      // Validate portraitData if portrait mode selected
+      if (effectiveCoverSource === 'portrait') {
+        if (!portraitData || !Array.isArray(portraitData.imageUrls) || portraitData.imageUrls.length === 0) {
+          return res.status(400).json({ message: 'Portrait mode requires at least one uploaded photo' });
+        }
+        if (!Array.isArray(portraitData.selectedFaces) || portraitData.selectedFaces.length === 0) {
+          return res.status(400).json({ message: 'Portrait mode requires at least one selected face' });
+        }
+      }
       
       let lovedOne;
       if (lovedOneId) {
@@ -812,41 +828,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         insideJokes: lovedOne?.insideJokes || undefined,
       });
 
-      let imageUrl: string;
+      let imageUrl: string | null = null;
       
-      if (process.env.NANO_BANANA_API_KEY) {
-        console.log('[Card] Using Nano Banana API for image generation');
-        const nanoBananaImageUrl = await generateGreetingCard({
-          recipientName,
-          occasion: occasion || "celebration",
-          message: cardContent.message,
-          style: style || `${tone || 'sweet'}, warm, celebratory`,
+      // Handle different cover image sources
+      if (effectiveCoverSource === 'none') {
+        // No cover image
+        console.log('[Card] No cover image requested');
+        imageUrl = null;
+      } else if (effectiveCoverSource === 'portrait' && portraitData) {
+        // Generate family portrait as cover image
+        console.log('[Card] Generating family portrait as cover image...');
+        
+        const { buildFamilyPortraitPrompt } = await import('./openaiService');
+        const { generateImageStandard } = await import('./nanoBananaService');
+        
+        const prompt = buildFamilyPortraitPrompt({
+          imageUrls: portraitData.imageUrls,
+          selectedFaces: portraitData.selectedFaces,
+          scene: portraitData.scene || 'studio',
+          style: portraitData.style || 'studio-photo',
+          keepOutfits: portraitData.keepOutfits ?? true,
         });
-        
-        // Download the temporary image and upload to our storage
-        console.log('[Card] Downloading Nano Banana image and uploading to storage...');
-        const imageResponse = await fetch(nanoBananaImageUrl);
-        const imageBuffer = await imageResponse.arrayBuffer();
-        const imageBase64 = Buffer.from(imageBuffer).toString('base64');
-        
-        imageUrl = await objectStorageService.uploadBase64Image(
-          imageBase64,
-          `cards/${userId}`,
-          'card'
-        );
-        console.log('[Card] Image uploaded to storage:', imageUrl);
+
+        console.log(`[Card] Family portrait prompt: ${prompt.substring(0, 200)}...`);
+
+        const generatedUrls = await generateImageStandard({
+          prompt,
+          numImages: 1,
+          imageSize: '4:3',
+          imageUrls: portraitData.imageUrls,
+        });
+
+        if (generatedUrls && generatedUrls.length > 0) {
+          // Download and upload to our storage for persistence
+          const response = await fetch(generatedUrls[0]);
+          const arrayBuffer = await response.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          
+          imageUrl = await objectStorageService.uploadBase64Image(
+            base64,
+            `cards/${userId}`,
+            'portrait-card'
+          );
+          console.log('[Card] Family portrait uploaded:', imageUrl);
+        } else {
+          console.error('[Card] Family portrait generation returned no images');
+          return res.status(500).json({ message: 'Failed to generate family portrait. Please try again.' });
+        }
       } else {
-        console.log('[Card] Using OpenAI for image generation (Nano Banana API key not set)');
-        const cardImageBase64 = await generateCardImage({
-          occasion,
-          tone: tone || "sweet",
-          recipientName,
-        });
-        imageUrl = await objectStorageService.uploadBase64Image(
-          cardImageBase64,
-          `cards/${userId}`,
-          'card'
-        );
+        // Default: AI generated cover image
+        if (process.env.NANO_BANANA_API_KEY) {
+          console.log('[Card] Using Nano Banana API for image generation');
+          const nanoBananaImageUrl = await generateGreetingCard({
+            recipientName,
+            occasion: occasion || "celebration",
+            message: cardContent.message,
+            style: style || `${tone || 'sweet'}, warm, celebratory`,
+          });
+          
+          // Download the temporary image and upload to our storage
+          console.log('[Card] Downloading Nano Banana image and uploading to storage...');
+          const imageResponse = await fetch(nanoBananaImageUrl);
+          const imageBuffer = await imageResponse.arrayBuffer();
+          const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+          
+          imageUrl = await objectStorageService.uploadBase64Image(
+            imageBase64,
+            `cards/${userId}`,
+            'card'
+          );
+          console.log('[Card] Image uploaded to storage:', imageUrl);
+        } else {
+          console.log('[Card] Using OpenAI for image generation (Nano Banana API key not set)');
+          const cardImageBase64 = await generateCardImage({
+            occasion,
+            tone: tone || "sweet",
+            recipientName,
+          });
+          imageUrl = await objectStorageService.uploadBase64Image(
+            cardImageBase64,
+            `cards/${userId}`,
+            'card'
+          );
+        }
       }
 
       const creation = await storage.createCreation({

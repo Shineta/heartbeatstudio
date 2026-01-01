@@ -139,8 +139,10 @@ export default function CreatePage() {
   const [customCassetteImageUrl, setCustomCassetteImageUrl] = useState<string | null>(null);
   const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
   
-  // Family Portrait Composer state
-  const [cardMode, setCardMode] = useState<'regular' | 'portrait'>('regular');
+  // Card cover image source state
+  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'none'>('ai');
+  
+  // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
   const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState<string[]>([]);
   interface DetectedFace {
@@ -862,7 +864,22 @@ export default function CreatePage() {
   }, [createdMixtape?.id, createdMixtape?.status, toast]);
 
   const onCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
-    cardMutation.mutate(data);
+    // Include cover image source and portrait data if applicable
+    const cardData = {
+      ...data,
+      coverImageSource,
+      // Include portrait data when family portrait is selected
+      ...(coverImageSource === 'portrait' && {
+        portraitData: {
+          imageUrls: uploadedPhotoUrls,
+          selectedFaces: detectedFaces.filter(f => selectedFaceIds.includes(f.id)),
+          scene: portraitScene,
+          style: portraitStyle,
+          keepOutfits,
+        }
+      })
+    };
+    cardMutation.mutate(cardData);
   };
 
   const onAnimationSubmit = (data: z.infer<typeof animationFormSchema>) => {
@@ -1131,303 +1148,40 @@ export default function CreatePage() {
           </TabsList>
 
           <TabsContent value="card">
-            {/* Mode Toggle */}
-            <div className="flex gap-2 mb-4">
-              <Button 
-                variant={cardMode === 'regular' ? 'default' : 'outline'}
-                onClick={() => setCardMode('regular')}
-                data-testid="button-card-mode-regular"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Greeting Card
-              </Button>
-              <Button 
-                variant={cardMode === 'portrait' ? 'default' : 'outline'}
-                onClick={() => setCardMode('portrait')}
-                data-testid="button-card-mode-portrait"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Family Portrait
-              </Button>
-            </div>
-
-            {/* Family Portrait Mode */}
-            {cardMode === 'portrait' && (
-              <>
-                {createdPortrait ? (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{createdPortrait.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {createdPortrait.imageUrl && (
-                          <img
-                            src={createdPortrait.imageUrl}
-                            alt={createdPortrait.title || "Family Portrait"}
-                            className="w-full rounded-md"
-                            data-testid="img-portrait-result"
-                          />
-                        )}
-                        <p className="whitespace-pre-wrap">{createdPortrait.content}</p>
-                      </CardContent>
-                      <CardFooter className="flex gap-3">
-                        <Button onClick={resetPortraitComposer} variant="outline" data-testid="button-create-another-portrait">
-                          Create Another
-                        </Button>
-                        <Button onClick={() => {
-                          const shareLink = createdPortrait.shareableLink?.startsWith('/share/')
-                            ? createdPortrait.shareableLink
-                            : `/share/${createdPortrait.shareableLink}`;
-                          navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                          toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                        }} data-testid="button-share-portrait">
-                          Share
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="w-5 h-5 text-primary" />
-                        Family Portrait Composer
-                      </CardTitle>
-                      <CardDescription>
-                        Upload 2-6 photos of different people and combine them into one unified group photo
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {/* Step 1: Upload Photos */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">Step 1: Add Photos ({portraitPhotos.length}/6)</h3>
-                          {portraitPhotos.length > 0 && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setPortraitPhotos([])}
-                              data-testid="button-clear-portrait-photos"
-                            >
-                              Clear All
-                            </Button>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2">
-                          {portraitPhotos.map((photo, index) => (
-                            <div key={index} className="relative aspect-square">
-                              <img
-                                src={URL.createObjectURL(photo)}
-                                alt={`Photo ${index + 1}`}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                              <button
-                                onClick={() => removePortraitPhoto(index)}
-                                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
-                                data-testid={`button-remove-photo-${index}`}
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                          {portraitPhotos.length < 6 && (
-                            <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
-                              <Upload className="w-6 h-6 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={handlePortraitPhotoSelect}
-                                className="hidden"
-                                data-testid="input-portrait-photos"
-                              />
-                            </label>
-                          )}
-                        </div>
-
-                        {portraitPhotos.length >= 2 && detectedFaces.length === 0 && (
-                          <Button 
-                            onClick={uploadAndAnalyzePhotos}
-                            disabled={isUploadingPhotos || isAnalyzingPhotos}
-                            className="w-full"
-                            data-testid="button-analyze-photos"
-                          >
-                            {isUploadingPhotos ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Uploading Photos...
-                              </>
-                            ) : isAnalyzingPhotos ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Detecting People...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Analyze Photos
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Step 2: Select People */}
-                      {detectedFaces.length > 0 && (
-                        <div className="space-y-4">
-                          <h3 className="font-semibold">Step 2: Who should be included?</h3>
-                          <div className="space-y-2">
-                            {detectedFaces.map((face) => (
-                              <div 
-                                key={face.id}
-                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                                  selectedFaceIds.includes(face.id) 
-                                    ? 'bg-primary/10 border-primary' 
-                                    : 'hover:bg-muted'
-                                }`}
-                                onClick={() => toggleFaceSelection(face.id)}
-                                data-testid={`checkbox-face-${face.id}`}
-                              >
-                                <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                  selectedFaceIds.includes(face.id) 
-                                    ? 'bg-primary border-primary' 
-                                    : 'border-muted-foreground'
-                                }`}>
-                                  {selectedFaceIds.includes(face.id) && (
-                                    <span className="text-primary-foreground text-xs">✓</span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-medium">{face.name}</p>
-                                  <p className="text-sm text-muted-foreground">{face.description}</p>
-                                </div>
-                                <span className="text-xs text-muted-foreground">Photo {face.imageIndex}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Step 3: Choose Scene & Style */}
-                      {detectedFaces.length > 0 && (
-                        <div className="space-y-4">
-                          <h3 className="font-semibold">Step 3: Choose Scene & Style</h3>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Scene</Label>
-                              <Select value={portraitScene} onValueChange={setPortraitScene}>
-                                <SelectTrigger data-testid="select-portrait-scene">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="studio">Studio</SelectItem>
-                                  <SelectItem value="living-room">Living Room</SelectItem>
-                                  <SelectItem value="holiday">Holiday</SelectItem>
-                                  <SelectItem value="outdoors">Outdoors</SelectItem>
-                                  <SelectItem value="graduation">Graduation</SelectItem>
-                                  <SelectItem value="birthday">Birthday</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Art Style</Label>
-                              <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                <SelectTrigger data-testid="select-portrait-style">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="studio-photo">Studio Photo</SelectItem>
-                                  <SelectItem value="watercolor">Watercolor</SelectItem>
-                                  <SelectItem value="cartoon">Cartoon</SelectItem>
-                                  <SelectItem value="oil-painting">Oil Painting</SelectItem>
-                                  <SelectItem value="digital-art">Digital Art</SelectItem>
-                                  <SelectItem value="vintage">Vintage</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              id="keep-outfits"
-                              checked={keepOutfits}
-                              onCheckedChange={setKeepOutfits}
-                              data-testid="switch-keep-outfits"
-                            />
-                            <Label htmlFor="keep-outfits">Keep original outfits</Label>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Generate Button */}
-                      {detectedFaces.length > 0 && selectedFaceIds.length > 0 && (
-                        <Button 
-                          onClick={generateFamilyPortrait}
-                          disabled={isGeneratingPortrait}
-                          className="w-full"
-                          data-testid="button-generate-portrait"
-                        >
-                          {isGeneratingPortrait ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Creating Family Portrait...
-                            </>
-                          ) : (
-                            <>
-                              <Heart className="w-4 h-4 mr-2 heartbeat" />
-                              Generate Family Portrait
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-
-            {/* Regular Card Mode */}
-            {cardMode === 'regular' && (
-              <>
-                {createdCard ? (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{createdCard.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {createdCard.imageUrl && (
-                          <img
-                            src={createdCard.imageUrl}
-                            alt={createdCard.title || "Card"}
-                            className="w-full rounded-md"
-                          />
-                        )}
-                        <p className="whitespace-pre-wrap">{createdCard.content}</p>
-                      </CardContent>
-                      <CardFooter className="flex gap-3">
-                        <Button onClick={() => setCreatedCard(null)} variant="outline">
-                          Create Another
-                        </Button>
-                        <Button onClick={() => {
-                          const shareLink = createdCard.shareableLink?.startsWith('/share/')
-                            ? createdCard.shareableLink
-                            : `/share/${createdCard.shareableLink}`;
-                          navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                          toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                        }} data-testid="button-share-card">
-                          Share
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                ) : (
-                  <Card>
+            {createdCard ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{createdCard.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {createdCard.imageUrl && (
+                      <img
+                        src={createdCard.imageUrl}
+                        alt={createdCard.title || "Card"}
+                        className="w-full rounded-md"
+                      />
+                    )}
+                    <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                  </CardContent>
+                  <CardFooter className="flex gap-3">
+                    <Button onClick={() => setCreatedCard(null)} variant="outline">
+                      Create Another
+                    </Button>
+                    <Button onClick={() => {
+                      const shareLink = createdCard.shareableLink?.startsWith('/share/')
+                        ? createdCard.shareableLink
+                        : `/share/${createdCard.shareableLink}`;
+                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                      toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                    }} data-testid="button-share-card">
+                      Share
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            ) : (
+              <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
@@ -1588,7 +1342,198 @@ export default function CreatePage() {
                         )}
                       />
 
-                      <Button type="submit" className="w-full" disabled={cardMutation.isPending} data-testid="button-generate-card">
+                      {/* Cover Image Source */}
+                      <div className="space-y-3">
+                        <Label>Cover Image</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
+                            type="button"
+                            variant={coverImageSource === 'ai' ? 'default' : 'outline'}
+                            onClick={() => setCoverImageSource('ai')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-ai"
+                          >
+                            <Sparkles className="w-5 h-5 mb-1" />
+                            <span className="text-xs">AI Generated</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={coverImageSource === 'portrait' ? 'default' : 'outline'}
+                            onClick={() => setCoverImageSource('portrait')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-portrait"
+                          >
+                            <Users className="w-5 h-5 mb-1" />
+                            <span className="text-xs">Family Portrait</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={coverImageSource === 'none' ? 'default' : 'outline'}
+                            onClick={() => setCoverImageSource('none')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-none"
+                          >
+                            <Mail className="w-5 h-5 mb-1" />
+                            <span className="text-xs">No Image</span>
+                          </Button>
+                        </div>
+
+                        {/* Family Portrait Options - shown when portrait is selected */}
+                        {coverImageSource === 'portrait' && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Upload 2-6 photos and combine them into a group portrait for your card cover.
+                            </p>
+                            
+                            {/* Photo Upload Grid */}
+                            <div className="grid grid-cols-3 gap-2">
+                              {portraitPhotos.map((photo, index) => (
+                                <div key={index} className="relative aspect-square">
+                                  <img
+                                    src={URL.createObjectURL(photo)}
+                                    alt={`Photo ${index + 1}`}
+                                    className="w-full h-full object-cover rounded-lg"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removePortraitPhoto(index)}
+                                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
+                                    data-testid={`button-remove-photo-${index}`}
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                              {portraitPhotos.length < 6 && (
+                                <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                  <Upload className="w-6 h-6 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handlePortraitPhotoSelect}
+                                    className="hidden"
+                                    data-testid="input-portrait-photos"
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                            {/* Analyze Button */}
+                            {portraitPhotos.length >= 2 && detectedFaces.length === 0 && (
+                              <Button 
+                                type="button"
+                                onClick={uploadAndAnalyzePhotos}
+                                disabled={isUploadingPhotos || isAnalyzingPhotos}
+                                className="w-full"
+                                variant="secondary"
+                                data-testid="button-analyze-photos"
+                              >
+                                {isUploadingPhotos ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : isAnalyzingPhotos ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Detecting People...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Analyze Photos
+                                  </>
+                                )}
+                              </Button>
+                            )}
+
+                            {/* Face Selection */}
+                            {detectedFaces.length > 0 && (
+                              <>
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Select people to include:</Label>
+                                  {detectedFaces.map((face) => (
+                                    <div 
+                                      key={face.id}
+                                      className={`flex items-center gap-3 p-2 border rounded-lg cursor-pointer transition-colors ${
+                                        selectedFaceIds.includes(face.id) 
+                                          ? 'bg-primary/10 border-primary' 
+                                          : 'hover:bg-muted'
+                                      }`}
+                                      onClick={() => toggleFaceSelection(face.id)}
+                                      data-testid={`checkbox-face-${face.id}`}
+                                    >
+                                      <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
+                                        selectedFaceIds.includes(face.id) 
+                                          ? 'bg-primary border-primary' 
+                                          : 'border-muted-foreground'
+                                      }`}>
+                                        {selectedFaceIds.includes(face.id) && (
+                                          <span className="text-primary-foreground text-xs">✓</span>
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium">{face.name}</p>
+                                        <p className="text-xs text-muted-foreground">{face.description}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Scene & Style */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Scene</Label>
+                                    <Select value={portraitScene} onValueChange={setPortraitScene}>
+                                      <SelectTrigger data-testid="select-portrait-scene">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="studio">Studio</SelectItem>
+                                        <SelectItem value="living-room">Living Room</SelectItem>
+                                        <SelectItem value="holiday">Holiday</SelectItem>
+                                        <SelectItem value="outdoors">Outdoors</SelectItem>
+                                        <SelectItem value="graduation">Graduation</SelectItem>
+                                        <SelectItem value="birthday">Birthday</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Art Style</Label>
+                                    <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                      <SelectTrigger data-testid="select-portrait-style">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="studio-photo">Studio Photo</SelectItem>
+                                        <SelectItem value="watercolor">Watercolor</SelectItem>
+                                        <SelectItem value="cartoon">Cartoon</SelectItem>
+                                        <SelectItem value="oil-painting">Oil Painting</SelectItem>
+                                        <SelectItem value="digital-art">Digital Art</SelectItem>
+                                        <SelectItem value="vintage">Vintage</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    id="keep-outfits"
+                                    checked={keepOutfits}
+                                    onCheckedChange={setKeepOutfits}
+                                    data-testid="switch-keep-outfits"
+                                  />
+                                  <Label htmlFor="keep-outfits" className="text-sm">Keep original outfits</Label>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <Button type="submit" className="w-full" disabled={cardMutation.isPending || (coverImageSource === 'portrait' && (isGeneratingPortrait || selectedFaceIds.length === 0 && detectedFaces.length > 0))} data-testid="button-generate-card">
                         {cardMutation.isPending ? (
                           <>
                             <Sparkles className="w-4 h-4 mr-2 animate-spin" />
@@ -1600,13 +1545,11 @@ export default function CreatePage() {
                             Generate Card
                           </>
                         )}
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
