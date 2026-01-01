@@ -592,17 +592,28 @@ export default function CreatePage() {
       };
 
       const res = await apiRequest("POST", "/api/generate/card", cardData);
-      const newCard = await res.json() as Creation;
+      const newCard = await res.json() as Creation & { portraitVariations?: string[] };
       
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedCard(newCard);
+      
+      // Capture portrait variations if available
+      if (newCard.portraitVariations && newCard.portraitVariations.length > 0) {
+        setPortraitVariations(newCard.portraitVariations);
+        setSelectedVariationIndex(0);
+      } else {
+        setPortraitVariations([]);
+        setSelectedVariationIndex(0);
+      }
       
       // Update the saved family set with new scene/style
       setSavedFamilySet(prev => prev ? { ...prev, lastScene: scene, lastStyle: style } : null);
       
       toast({ 
         title: "New scene created!", 
-        description: `Your family in ${scene} style is ready` 
+        description: newCard.portraitVariations && newCard.portraitVariations.length > 1
+          ? `Your family in ${scene} style is ready! Browse ${newCard.portraitVariations.length} variations.`
+          : `Your family in ${scene} style is ready!`
       });
     } catch (error: any) {
       toast({ 
