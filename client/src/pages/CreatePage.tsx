@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -572,12 +572,12 @@ export default function CreatePage() {
 
   // Quick scene presets for "Same People, New Scene"
   const scenePresets = [
-    { scene: 'holiday', style: 'studio-photo', label: 'Christmas Card', icon: '🎄' },
-    { scene: 'outdoors', style: 'studio-photo', label: 'Vacation Postcard', icon: '🏖️' },
-    { scene: 'studio', style: 'studio-photo', label: 'Studio Portrait', icon: '📸' },
-    { scene: 'birthday', style: 'cartoon', label: 'Birthday Cartoon', icon: '🎂' },
-    { scene: 'studio', style: 'watercolor', label: 'Watercolor Art', icon: '🎨' },
-    { scene: 'living-room', style: 'oil-painting', label: 'Classic Painting', icon: '🖼️' },
+    { scene: 'holiday', style: 'studio-photo', label: 'Christmas Card', icon: 'TreePine' },
+    { scene: 'outdoors', style: 'studio-photo', label: 'Vacation Postcard', icon: 'Sun' },
+    { scene: 'studio', style: 'studio-photo', label: 'Studio Portrait', icon: 'Camera' },
+    { scene: 'birthday', style: 'cartoon', label: 'Birthday Cartoon', icon: 'PartyPopper' },
+    { scene: 'studio', style: 'watercolor', label: 'Watercolor Art', icon: 'Palette' },
+    { scene: 'living-room', style: 'oil-painting', label: 'Classic Painting', icon: 'Frame' },
   ];
 
   const animationMutation = useMutation({
@@ -1277,23 +1277,28 @@ export default function CreatePage() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {scenePresets.map((preset) => (
-                          <Button
-                            key={`${preset.scene}-${preset.style}`}
-                            variant="outline"
-                            className={`h-auto py-3 px-4 flex flex-col items-center gap-1 hover-elevate ${
-                              savedFamilySet.lastScene === preset.scene && savedFamilySet.lastStyle === preset.style
-                                ? 'border-primary bg-primary/10'
-                                : ''
-                            }`}
-                            onClick={() => generateFamilyVariant(preset.scene, preset.style)}
-                            disabled={isGeneratingVariant}
-                            data-testid={`button-variant-${preset.scene}-${preset.style}`}
-                          >
-                            <span className="text-2xl">{preset.icon}</span>
-                            <span className="text-xs font-medium">{preset.label}</span>
-                          </Button>
-                        ))}
+                        {scenePresets.map((preset) => {
+                          const IconComponent = {
+                            TreePine, Sun, Camera, PartyPopper, Palette, Frame
+                          }[preset.icon];
+                          return (
+                            <Button
+                              key={`${preset.scene}-${preset.style}`}
+                              variant="outline"
+                              className={`h-auto py-3 px-4 flex flex-col items-center gap-1 hover-elevate ${
+                                savedFamilySet.lastScene === preset.scene && savedFamilySet.lastStyle === preset.style
+                                  ? 'border-primary bg-primary/10'
+                                  : ''
+                              }`}
+                              onClick={() => generateFamilyVariant(preset.scene, preset.style)}
+                              disabled={isGeneratingVariant}
+                              data-testid={`button-variant-${preset.scene}-${preset.style}`}
+                            >
+                              {IconComponent && <IconComponent className="w-6 h-6" />}
+                              <span className="text-xs font-medium">{preset.label}</span>
+                            </Button>
+                          );
+                        })}
                       </div>
                       {isGeneratingVariant && (
                         <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
