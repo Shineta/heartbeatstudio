@@ -626,10 +626,11 @@ export interface FamilyPortraitParams {
   scene: string;
   style: string;
   keepOutfits: boolean;
+  removeBracesIds?: string[]; // IDs of people whose dental braces should be removed
 }
 
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
-  const { selectedFaces, scene, style, keepOutfits } = params;
+  const { selectedFaces, scene, style, keepOutfits, removeBracesIds = [] } = params;
 
   // Separate people and pets
   const people = selectedFaces.filter(f => f.type !== 'pet');
@@ -726,6 +727,20 @@ OUTFIT CHANGE REQUIRED:
 - All family members should wear matching or coordinated clothing
 - Outfits should look cohesive as a family group
 - Still preserve their faces, hair, skin tones, and body types exactly as in the reference photos`;
+  }
+
+  // Add braces removal instruction if specified
+  if (removeBracesIds.length > 0) {
+    const peopleWithBracesRemoval = people.filter(p => removeBracesIds.includes(p.id));
+    if (peopleWithBracesRemoval.length > 0) {
+      const bracesNames = peopleWithBracesRemoval.map(p => p.name || p.description.split(',')[0]).join(', ');
+      prompt += `
+
+DENTAL BRACES REMOVAL:
+- For the following people, remove any dental braces and show them with a natural, brace-free smile: ${bracesNames}
+- Their teeth should look natural and healthy without any orthodontic hardware
+- All other aspects of their appearance should remain exactly the same`;
+    }
   }
 
   return prompt;

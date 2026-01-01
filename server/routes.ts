@@ -848,6 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           scene: portraitData.scene || 'studio',
           style: portraitData.style || 'studio-photo',
           keepOutfits: portraitData.keepOutfits ?? true,
+          removeBracesIds: portraitData.removeBracesIds || [],
         });
 
         console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);
@@ -1072,7 +1073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/family-portrait/generate', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { imageUrls, selectedFaces, scene, style, keepOutfits, recipientName, lovedOneId } = req.body;
+      const { imageUrls, selectedFaces, scene, style, keepOutfits, removeBracesIds, recipientName, lovedOneId } = req.body;
       
       if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length < 2) {
         return res.status(400).json({ message: 'Please provide at least 2 image URLs' });
@@ -1094,6 +1095,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scene: scene || 'studio',
         style: style || 'studio-photo',
         keepOutfits: keepOutfits ?? true,
+        removeBracesIds: removeBracesIds || [],
       });
 
       console.log(`[FamilyPortrait] Using Pro 4K model with prompt: ${prompt.substring(0, 200)}...`);

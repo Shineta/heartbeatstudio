@@ -156,6 +156,7 @@ export default function CreatePage() {
   }
   const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
   const [selectedFaceIds, setSelectedFaceIds] = useState<string[]>([]);
+  const [removeBracesIds, setRemoveBracesIds] = useState<string[]>([]); // IDs of people to remove braces from
   const [portraitScene, setPortraitScene] = useState('studio');
   const [portraitStyle, setPortraitStyle] = useState('studio-photo');
   const [keepOutfits, setKeepOutfits] = useState(true);
@@ -170,6 +171,7 @@ export default function CreatePage() {
     selectedFaces: DetectedFace[];
     lastScene: string;
     lastStyle: string;
+    removeBracesIds: string[];
   }
   const [savedFamilySet, setSavedFamilySet] = useState<SavedFamilySet | null>(null);
   const [isGeneratingVariant, setIsGeneratingVariant] = useState(false);
@@ -436,6 +438,7 @@ export default function CreatePage() {
           selectedFaces,
           lastScene: portraitScene,
           lastStyle: portraitStyle,
+          removeBracesIds,
         });
       }
       
@@ -544,6 +547,7 @@ export default function CreatePage() {
         scene: portraitScene,
         style: portraitStyle,
         keepOutfits,
+        removeBracesIds,
       });
 
       const { creation } = await res.json();
@@ -589,6 +593,7 @@ export default function CreatePage() {
           scene,
           style,
           keepOutfits,
+          removeBracesIds: savedFamilySet.removeBracesIds,
         }
       };
 
@@ -1016,6 +1021,7 @@ export default function CreatePage() {
           scene: portraitScene,
           style: portraitStyle,
           keepOutfits,
+          removeBracesIds,
         }
       })
     };
@@ -1920,6 +1926,42 @@ export default function CreatePage() {
                                   />
                                   <Label htmlFor="keep-outfits" className="text-sm">Keep original outfits</Label>
                                 </div>
+
+                                {/* Remove braces option */}
+                                {detectedFaces.filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id)).length > 0 && (
+                                  <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+                                    <Label className="text-xs font-medium">Remove dental braces from:</Label>
+                                    <div className="space-y-1">
+                                      {detectedFaces
+                                        .filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id))
+                                        .map(face => (
+                                          <div key={face.id} className="flex items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              id={`braces-${face.id}`}
+                                              checked={removeBracesIds.includes(face.id)}
+                                              onChange={(e) => {
+                                                if (e.target.checked) {
+                                                  setRemoveBracesIds(prev => [...prev, face.id]);
+                                                } else {
+                                                  setRemoveBracesIds(prev => prev.filter(id => id !== face.id));
+                                                }
+                                              }}
+                                              className="w-4 h-4 rounded border-muted-foreground"
+                                              data-testid={`checkbox-braces-${face.id}`}
+                                            />
+                                            <Label htmlFor={`braces-${face.id}`} className="text-sm cursor-pointer">
+                                              {face.name}
+                                            </Label>
+                                          </div>
+                                        ))
+                                      }
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Check the people who have braces in photos that you want removed in the portrait
+                                    </p>
+                                  </div>
+                                )}
                               </>
                             )}
                           </div>
