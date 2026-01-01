@@ -95,6 +95,7 @@ export const creations = pgTable("creations", {
   content: text("content"), // AI-generated content (lyrics, message, etc.)
   imageUrl: varchar("image_url"), // card image or song cover
   mediaUrl: varchar("media_url"), // for future audio/video
+  songIds: text("song_ids").array(), // attached song IDs for cards
   shareableLink: varchar("shareable_link").unique(),
   status: varchar("status").default('ready'), // 'generating', 'ready', 'failed'
   createdAt: timestamp("created_at").defaultNow(),

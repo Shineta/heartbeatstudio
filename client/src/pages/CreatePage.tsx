@@ -212,6 +212,15 @@ export default function CreatePage() {
     queryKey: ['/api/loved-ones'],
   });
 
+  // Fetch user's completed songs for attaching to cards
+  const { data: userSongs = [] } = useQuery<Creation[]>({
+    queryKey: ['/api/creations'],
+    select: (data) => data.filter(c => c.type === 'song' && c.status === 'ready'),
+  });
+
+  // State for attaching a song to a card
+  const [attachedSongId, setAttachedSongId] = useState<string | null>(null);
+
   // Auto-redirect to mixtape player when generation is complete
   useEffect(() => {
     if (createdMixtape && createdMixtape.status === 'complete' && createdMixtape.shareableLink) {
@@ -1013,6 +1022,8 @@ export default function CreatePage() {
     const cardData = {
       ...data,
       coverImageSource,
+      // Include attached song if selected
+      ...(attachedSongId && { songIds: [attachedSongId] }),
       // Include portrait data when family portrait is selected
       ...(coverImageSource === 'portrait' && {
         portraitData: {
@@ -1990,6 +2001,38 @@ export default function CreatePage() {
                               </>
                             )}
                           </div>
+                        )}
+                      </div>
+
+                      {/* Attach a Song */}
+                      <div className="space-y-3">
+                        <Label className="flex items-center gap-2">
+                          <Music className="w-4 h-4" />
+                          Attach a Song (Optional)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Add a song to play when the card is viewed
+                        </p>
+                        <Select 
+                          value={attachedSongId || "none"} 
+                          onValueChange={(value) => setAttachedSongId(value === "none" ? null : value)}
+                        >
+                          <SelectTrigger data-testid="select-attached-song">
+                            <SelectValue placeholder="No song attached" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No song attached</SelectItem>
+                            {userSongs.map((song) => (
+                              <SelectItem key={song.id} value={song.id}>
+                                {song.title || "Untitled Song"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {userSongs.length === 0 && (
+                          <p className="text-xs text-muted-foreground italic">
+                            No songs available. Create a song first to attach it to your card!
+                          </p>
                         )}
                       </div>
 

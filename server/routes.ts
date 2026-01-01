@@ -936,6 +936,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Extract songIds from request (for attached songs)
+      const { songIds } = req.body;
+      
       const creation = await storage.createCreation({
         userId,
         lovedOneId: lovedOneId || null,
@@ -944,6 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: cardContent.title,
         content: cardContent.message,
         imageUrl,
+        songIds: songIds && Array.isArray(songIds) ? songIds : null,
       });
       
       const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;

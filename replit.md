@@ -91,6 +91,7 @@ Preferred communication style: Simple, everyday language.
    - User-generated AI content (songs, cards, animations)
    - Type-specific fields: tone, occasion, genre (for songs)
    - Output storage: generated content, media URLs
+   - **songIds**: Array of song IDs to attach songs to cards (plays audio when card is viewed)
    - Scheduling: send date/time, delivery method
    - Shareability: unique shareable links for distribution
    - Status tracking: draft, scheduled, sent
@@ -142,6 +143,7 @@ Preferred communication style: Simple, everyday language.
     - Quick preset buttons: Christmas Card, Vacation Postcard, Studio Portrait, Birthday Cartoon, Watercolor Art, Classic Painting
     - No need to re-upload photos - instantly create new scenes with the same people
     - Great for creating card sets (holiday collection, different occasions)
+  - **Scene expansion**: 27+ scenes organized by Classic Scenes (studio, living room, outdoors, beach, garden), Life Events (birthday, graduation, wedding, baby shower, anniversary, retirement), and Major Holidays (Christmas, Hanukkah, Kwanzaa, New Year's, Thanksgiving, Easter, Passover, Halloween, Fourth of July, Valentine's Day, Mother's Day, Father's Day, St. Patrick's Day, Cinco de Mayo, Diwali, Eid, Lunar New Year) with culturally appropriate outfit suggestions
 
 **Authentication**
 - **Custom Multi-Method Authentication**:

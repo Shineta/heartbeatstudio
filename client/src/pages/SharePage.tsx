@@ -14,8 +14,15 @@ interface Creation {
   genre?: string;
   imageUrl?: string;
   mediaUrl?: string;
+  songIds?: string[];
   shareableLink?: string;
   createdAt: string;
+}
+
+interface AttachedSong {
+  id: string;
+  title: string;
+  mediaUrl: string;
 }
 
 export default function SharePage() {
@@ -23,11 +30,14 @@ export default function SharePage() {
   const [, setLocation] = useLocation();
   const shareLink = params?.link;
   const [creation, setCreation] = useState<Creation | null>(null);
+  const [attachedSong, setAttachedSong] = useState<AttachedSong | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [songStarted, setSongStarted] = useState(false);
+  const [cardSongStarted, setCardSongStarted] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const cardAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -42,6 +52,13 @@ export default function SharePage() {
     if (audioRef.current) {
       audioRef.current.play();
       setSongStarted(true);
+    }
+  };
+
+  const handlePlayCardSong = () => {
+    if (cardAudioRef.current) {
+      cardAudioRef.current.play();
+      setCardSongStarted(true);
     }
   };
 
@@ -75,6 +92,25 @@ export default function SharePage() {
 
         const data = await response.json();
         setCreation(data);
+        
+        // If this is a card with attached songs, fetch the first song
+        if (data.type === 'card' && data.songIds && data.songIds.length > 0) {
+          try {
+            const songResponse = await fetch(`/api/creations/${data.songIds[0]}`);
+            if (songResponse.ok) {
+              const songData = await songResponse.json();
+              if (songData.mediaUrl) {
+                setAttachedSong({
+                  id: songData.id,
+                  title: songData.title || 'Song',
+                  mediaUrl: songData.mediaUrl,
+                });
+              }
+            }
+          } catch (songErr) {
+            console.error('Failed to fetch attached song:', songErr);
+          }
+        }
       } catch (err) {
         setError('Failed to load creation');
       } finally {
@@ -230,6 +266,39 @@ export default function SharePage() {
                     <source src={creation.mediaUrl} type="video/mp4" />
                     Your browser does not support the video element.
                   </video>
+                </div>
+              )}
+
+              {/* Attached Song Player for Cards */}
+              {creation.type === 'card' && attachedSong && (
+                <div className="space-y-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Play className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-lg">A Song For You</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{attachedSong.title}</p>
+                  {!cardSongStarted && (
+                    <div className="flex justify-center py-4">
+                      <Button 
+                        size="lg" 
+                        onClick={handlePlayCardSong}
+                        className="h-16 px-10 text-lg gap-3 animate-pulse"
+                        data-testid="button-play-card-song"
+                      >
+                        <Play className="w-6 h-6" />
+                        Play Song
+                      </Button>
+                    </div>
+                  )}
+                  <audio 
+                    ref={cardAudioRef}
+                    controls 
+                    className="w-full"
+                    data-testid="card-audio-player"
+                  >
+                    <source src={attachedSong.mediaUrl} type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
               )}
 
