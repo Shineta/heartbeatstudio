@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -170,6 +170,38 @@ export default function CreatePage() {
   }
   const [savedFamilySet, setSavedFamilySet] = useState<SavedFamilySet | null>(null);
   const [isGeneratingVariant, setIsGeneratingVariant] = useState(false);
+  
+  // Face editing state
+  const [editingFaceId, setEditingFaceId] = useState<string | null>(null);
+  const [editingFaceName, setEditingFaceName] = useState('');
+  const [editingFaceDescription, setEditingFaceDescription] = useState('');
+  
+  // Function to start editing a face
+  const startEditingFace = (face: DetectedFace, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering selection
+    setEditingFaceId(face.id);
+    setEditingFaceName(face.name);
+    setEditingFaceDescription(face.description);
+  };
+  
+  // Function to save face edits
+  const saveFaceEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editingFaceId) {
+      setDetectedFaces(prev => prev.map(face => 
+        face.id === editingFaceId 
+          ? { ...face, name: editingFaceName, description: editingFaceDescription }
+          : face
+      ));
+      setEditingFaceId(null);
+    }
+  };
+  
+  // Function to cancel face edit
+  const cancelFaceEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingFaceId(null);
+  };
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -1588,33 +1620,105 @@ export default function CreatePage() {
                             {detectedFaces.length > 0 && (
                               <>
                                 <div className="space-y-2">
-                                  <Label className="text-sm">Select people to include:</Label>
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">Select people to include:</Label>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setDetectedFaces([]);
+                                        setSelectedFaceIds([]);
+                                      }}
+                                      className="text-xs text-muted-foreground"
+                                      data-testid="button-reanalyze-photos"
+                                    >
+                                      <RotateCcw className="w-3 h-3 mr-1" />
+                                      Re-analyze
+                                    </Button>
+                                  </div>
                                   {detectedFaces.map((face) => (
                                     <div 
                                       key={face.id}
-                                      className={`flex items-center gap-3 p-2 border rounded-lg cursor-pointer transition-colors ${
-                                        selectedFaceIds.includes(face.id) 
-                                          ? 'bg-primary/10 border-primary' 
-                                          : 'hover:bg-muted'
+                                      className={`flex items-center gap-3 p-2 border rounded-lg transition-colors ${
+                                        editingFaceId === face.id ? 'bg-muted' : selectedFaceIds.includes(face.id) 
+                                          ? 'bg-primary/10 border-primary cursor-pointer' 
+                                          : 'hover:bg-muted cursor-pointer'
                                       }`}
-                                      onClick={() => toggleFaceSelection(face.id)}
+                                      onClick={() => editingFaceId !== face.id && toggleFaceSelection(face.id)}
                                       data-testid={`checkbox-face-${face.id}`}
                                     >
-                                      <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
-                                        selectedFaceIds.includes(face.id) 
-                                          ? 'bg-primary border-primary' 
-                                          : 'border-muted-foreground'
-                                      }`}>
-                                        {selectedFaceIds.includes(face.id) && (
-                                          <span className="text-primary-foreground text-xs">✓</span>
-                                        )}
-                                      </div>
-                                      <div className="flex-1">
-                                        <p className="text-sm font-medium">{face.name}</p>
-                                        <p className="text-xs text-muted-foreground">{face.description}</p>
-                                      </div>
+                                      {editingFaceId === face.id ? (
+                                        // Edit mode
+                                        <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
+                                          <Input
+                                            value={editingFaceName}
+                                            onChange={(e) => setEditingFaceName(e.target.value)}
+                                            placeholder="Name (e.g., Mom, John)"
+                                            className="h-8 text-sm"
+                                            data-testid={`input-edit-face-name-${face.id}`}
+                                          />
+                                          <Textarea
+                                            value={editingFaceDescription}
+                                            onChange={(e) => setEditingFaceDescription(e.target.value)}
+                                            placeholder="Description (e.g., elderly woman with gray hair and glasses)"
+                                            className="text-xs min-h-[60px]"
+                                            data-testid={`input-edit-face-description-${face.id}`}
+                                          />
+                                          <div className="flex gap-2">
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              onClick={saveFaceEdit}
+                                              data-testid={`button-save-face-${face.id}`}
+                                            >
+                                              <Check className="w-3 h-3 mr-1" />
+                                              Save
+                                            </Button>
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={cancelFaceEdit}
+                                              data-testid={`button-cancel-face-${face.id}`}
+                                            >
+                                              Cancel
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        // View mode
+                                        <>
+                                          <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
+                                            selectedFaceIds.includes(face.id) 
+                                              ? 'bg-primary border-primary' 
+                                              : 'border-muted-foreground'
+                                          }`}>
+                                            {selectedFaceIds.includes(face.id) && (
+                                              <span className="text-primary-foreground text-xs">✓</span>
+                                            )}
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-sm font-medium">{face.name}</p>
+                                            <p className="text-xs text-muted-foreground">{face.description}</p>
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={(e) => startEditingFace(face, e)}
+                                            data-testid={`button-edit-face-${face.id}`}
+                                          >
+                                            <Pencil className="w-3 h-3" />
+                                          </Button>
+                                        </>
+                                      )}
                                     </div>
                                   ))}
+                                  <p className="text-xs text-muted-foreground">
+                                    Click the pencil icon to correct any misidentified people
+                                  </p>
                                 </div>
 
                                 {/* Scene & Style */}
