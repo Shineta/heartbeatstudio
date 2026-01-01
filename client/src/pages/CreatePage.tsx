@@ -160,6 +160,16 @@ export default function CreatePage() {
   const [isAnalyzingPhotos, setIsAnalyzingPhotos] = useState(false);
   const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
   const [createdPortrait, setCreatedPortrait] = useState<Creation | null>(null);
+  
+  // "Same People, New Scene" feature - saved family set for quick regeneration
+  interface SavedFamilySet {
+    imageUrls: string[];
+    selectedFaces: DetectedFace[];
+    lastScene: string;
+    lastStyle: string;
+  }
+  const [savedFamilySet, setSavedFamilySet] = useState<SavedFamilySet | null>(null);
+  const [isGeneratingVariant, setIsGeneratingVariant] = useState(false);
 
   const { data: lovedOnes = [] } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -373,6 +383,18 @@ export default function CreatePage() {
     onSuccess: (data: Creation) => {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedCard(data);
+      
+      // Save family set if this was a portrait card for "Same People, New Scene" feature
+      if (coverImageSource === 'portrait' && uploadedPhotoUrls.length > 0 && selectedFaceIds.length > 0) {
+        const selectedFaces = detectedFaces.filter(f => selectedFaceIds.includes(f.id));
+        setSavedFamilySet({
+          imageUrls: uploadedPhotoUrls,
+          selectedFaces,
+          lastScene: portraitScene,
+          lastStyle: portraitStyle,
+        });
+      }
+      
       toast({ title: "Success", description: "Your card has been created!" });
     },
     onError: (error: Error) => {
@@ -496,6 +518,67 @@ export default function CreatePage() {
     setSelectedFaceIds([]);
     setCreatedPortrait(null);
   };
+
+  // "Same People, New Scene" - Generate a variant card with saved family set
+  const generateFamilyVariant = async (scene: string, style: string) => {
+    if (!savedFamilySet) {
+      toast({ title: "No family set saved", description: "Create a family portrait card first", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingVariant(true);
+    try {
+      // Generate a new card with the same people but different scene/style
+      const cardData = {
+        lovedOneId: cardForm.getValues('lovedOneId') || undefined,
+        recipientName: cardForm.getValues('recipientName') || 'someone special',
+        relationship: cardForm.getValues('relationship') || 'friend',
+        tone: cardForm.getValues('tone') || 'sweet',
+        occasion: cardForm.getValues('occasion') || 'celebration',
+        style: cardForm.getValues('style') || 'warm, celebratory',
+        coverImageSource: 'portrait',
+        portraitData: {
+          imageUrls: savedFamilySet.imageUrls,
+          selectedFaces: savedFamilySet.selectedFaces,
+          scene,
+          style,
+          keepOutfits,
+        }
+      };
+
+      const res = await apiRequest("POST", "/api/generate/card", cardData);
+      const newCard = await res.json() as Creation;
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      setCreatedCard(newCard);
+      
+      // Update the saved family set with new scene/style
+      setSavedFamilySet(prev => prev ? { ...prev, lastScene: scene, lastStyle: style } : null);
+      
+      toast({ 
+        title: "New scene created!", 
+        description: `Your family in ${scene} style is ready` 
+      });
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to generate variant", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsGeneratingVariant(false);
+    }
+  };
+
+  // Quick scene presets for "Same People, New Scene"
+  const scenePresets = [
+    { scene: 'holiday', style: 'studio-photo', label: 'Christmas Card', icon: '🎄' },
+    { scene: 'outdoors', style: 'studio-photo', label: 'Vacation Postcard', icon: '🏖️' },
+    { scene: 'studio', style: 'studio-photo', label: 'Studio Portrait', icon: '📸' },
+    { scene: 'birthday', style: 'cartoon', label: 'Birthday Cartoon', icon: '🎂' },
+    { scene: 'studio', style: 'watercolor', label: 'Watercolor Art', icon: '🎨' },
+    { scene: 'living-room', style: 'oil-painting', label: 'Classic Painting', icon: '🖼️' },
+  ];
 
   const animationMutation = useMutation({
     mutationFn: async (data: z.infer<typeof animationFormSchema>) => {
@@ -1179,6 +1262,53 @@ export default function CreatePage() {
                     </Button>
                   </CardFooter>
                 </Card>
+
+                {/* Same People, New Scene - Quick variant generation */}
+                {savedFamilySet && (
+                  <Card className="border-dashed border-2 border-primary/30 bg-primary/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Same People, New Scene
+                      </CardTitle>
+                      <CardDescription>
+                        Create more cards with your family in different settings - no need to re-upload photos!
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {scenePresets.map((preset) => (
+                          <Button
+                            key={`${preset.scene}-${preset.style}`}
+                            variant="outline"
+                            className={`h-auto py-3 px-4 flex flex-col items-center gap-1 hover-elevate ${
+                              savedFamilySet.lastScene === preset.scene && savedFamilySet.lastStyle === preset.style
+                                ? 'border-primary bg-primary/10'
+                                : ''
+                            }`}
+                            onClick={() => generateFamilyVariant(preset.scene, preset.style)}
+                            disabled={isGeneratingVariant}
+                            data-testid={`button-variant-${preset.scene}-${preset.style}`}
+                          >
+                            <span className="text-2xl">{preset.icon}</span>
+                            <span className="text-xs font-medium">{preset.label}</span>
+                          </Button>
+                        ))}
+                      </div>
+                      {isGeneratingVariant && (
+                        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating your new scene...
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                      <p className="text-xs text-muted-foreground">
+                        Your family set includes {savedFamilySet.selectedFaces.length} people from {savedFamilySet.imageUrls.length} photos
+                      </p>
+                    </CardFooter>
+                  </Card>
+                )}
               </div>
             ) : (
               <Card>

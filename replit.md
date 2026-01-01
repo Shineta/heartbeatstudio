@@ -137,6 +137,11 @@ Preferred communication style: Simple, everyday language.
     - Scenes: studio, living-room, holiday, outdoors, graduation, birthday
     - Styles: studio-photo, watercolor, cartoon, oil-painting, digital-art, vintage
     - Option to keep or change original outfits
+  - **Same People, New Scene**: After creating a family portrait card, users can quickly generate variants
+    - Saves the "family set" (photos + selected faces) for reuse
+    - Quick preset buttons: Christmas Card, Vacation Postcard, Studio Portrait, Birthday Cartoon, Watercolor Art, Classic Painting
+    - No need to re-upload photos - instantly create new scenes with the same people
+    - Great for creating card sets (holiday collection, different occasions)
 
 **Authentication**
 - **Custom Multi-Method Authentication**:
