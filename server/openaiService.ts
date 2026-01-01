@@ -637,9 +637,14 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   const pets = selectedFaces.filter(f => f.type === 'pet');
 
   // Build detailed per-person descriptions with emphasis on faithfulness
-  const peopleDetails = people.map((f, i) => 
-    `Person ${i + 1}: ${f.description} - MUST reproduce this person EXACTLY as they appear in the reference photo`
-  ).join('\n');
+  // Add braces removal note directly to each person's description if applicable
+  const peopleDetails = people.map((f, i) => {
+    const needsBracesRemoved = removeBracesIds.includes(f.id);
+    const bracesNote = needsBracesRemoved 
+      ? ' - IMPORTANT: This person has dental braces in the photo - YOU MUST REMOVE THE BRACES and show them with natural, brace-free teeth'
+      : '';
+    return `Person ${i + 1}: ${f.description} - MUST reproduce this person EXACTLY as they appear in the reference photo${bracesNote}`;
+  }).join('\n');
   
   // Build pet descriptions
   const petDetails = pets.map((f, i) => 
@@ -679,6 +684,12 @@ ${peopleDetails}`;
 ${petDetails}`;
   }
 
+  // Check if any braces removal is needed
+  const peopleNeedingBracesRemoval = people.filter(p => removeBracesIds.includes(p.id));
+  const bracesRemovalCritical = peopleNeedingBracesRemoval.length > 0
+    ? `\n- MANDATORY BRACES REMOVAL: Remove all dental braces/orthodontic hardware from teeth - show natural, healthy teeth WITHOUT any metal brackets or wires`
+    : '';
+
   let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each ${people.length > 0 ? 'person' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pet' : ''} from the reference photos.
 
 CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
@@ -686,7 +697,7 @@ CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
 - DO NOT change, modify, or reinterpret anyone's appearance, gender presentation, body type, or facial features
 - Preserve exact hairstyles, hair textures (locs, braids, curls, etc.), skin tones, facial structures
 - Each person must look like THEMSELVES from the photos, not a different person
-- DO NOT substitute or swap any features - copy faithfully from the source images
+- DO NOT substitute or swap any features - copy faithfully from the source images${bracesRemovalCritical}
 ${pets.length > 0 ? `- For pets: preserve exact breed appearance, coloring, markings, fur pattern, and size
 - Each pet must look like the SAME animal from the reference photo` : ''}
 
