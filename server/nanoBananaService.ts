@@ -299,6 +299,46 @@ export async function editImage(params: {
   return images[0];
 }
 
+// Generate multiple images concurrently (since Pro model only returns 1 image per request)
+export async function generateMultipleImages(params: {
+  prompt: string;
+  numImages: number;
+  imageUrls?: string[];
+}): Promise<string[]> {
+  const { prompt, numImages, imageUrls } = params;
+  
+  console.log(`[NanoBanana] Generating ${numImages} images concurrently...`);
+  
+  // Create array of promises for concurrent generation
+  const promises = Array.from({ length: numImages }, (_, i) => 
+    generateImage({
+      prompt,
+      numImages: 1,
+      imageUrls,
+    }).then(urls => {
+      console.log(`[NanoBanana] Concurrent image ${i + 1}/${numImages} completed`);
+      return urls[0];
+    }).catch(err => {
+      console.error(`[NanoBanana] Concurrent image ${i + 1}/${numImages} failed:`, err.message);
+      return null; // Return null for failed generations
+    })
+  );
+  
+  // Wait for all to complete
+  const results = await Promise.all(promises);
+  
+  // Filter out any null results from failed generations
+  const successfulImages = results.filter((url): url is string => url !== null);
+  
+  console.log(`[NanoBanana] Concurrent generation complete: ${successfulImages.length}/${numImages} successful`);
+  
+  if (successfulImages.length === 0) {
+    throw new Error('All image generations failed');
+  }
+  
+  return successfulImages;
+}
+
 export async function generateCassetteCaseImage(params: {
   title: string;
   recipientName: string;

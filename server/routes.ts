@@ -840,7 +840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('[Card] Generating family portrait as cover image...');
         
         const { buildFamilyPortraitPrompt } = await import('./openaiService');
-        const { generateImage } = await import('./nanoBananaService');
+        const { generateMultipleImages } = await import('./nanoBananaService');
         
         const prompt = buildFamilyPortraitPrompt({
           imageUrls: portraitData.imageUrls,
@@ -853,11 +853,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);
 
         // Use Pro model with 4K resolution for better quality family portraits
-        // Generate 5 images so user can pick the best one (counts as 1 credit)
-        const generatedUrls = await generateImage({
+        // Generate 5 images concurrently so user can pick the best one
+        // (Pro model only returns 1 image per request, so we make 5 parallel requests)
+        const generatedUrls = await generateMultipleImages({
           prompt,
           numImages: 5,
-          imageSize: '4:3',
           imageUrls: portraitData.imageUrls,
         });
 
@@ -1085,7 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[FamilyPortrait] Generating portrait with ${selectedFaces.length} people in ${scene} scene, ${style} style`);
       
       const { buildFamilyPortraitPrompt } = await import('./openaiService');
-      const { generateImage } = await import('./nanoBananaService');
+      const { generateMultipleImages } = await import('./nanoBananaService');
       
       // Build the compositing prompt
       const prompt = buildFamilyPortraitPrompt({
@@ -1099,11 +1099,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[FamilyPortrait] Using Pro 4K model with prompt: ${prompt.substring(0, 200)}...`);
 
       // Use Nano Banana Pro model with 4K resolution for better quality portraits
-      // Generate 5 images so user can pick the best one (counts as 1 credit)
-      const generatedUrls = await generateImage({
+      // Generate 5 images concurrently so user can pick the best one
+      // (Pro model only returns 1 image per request, so we make 5 parallel requests)
+      const generatedUrls = await generateMultipleImages({
         prompt,
         numImages: 5,
-        imageSize: '4:3',
         imageUrls: imageUrls, // Pass source photos for reference
       });
 
@@ -1111,22 +1111,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('No image generated');
       }
 
-      const generatedImageUrl = generatedUrls[0];
-      console.log(`[FamilyPortrait] Generated portrait: ${generatedImageUrl}`);
+      console.log(`[FamilyPortrait] Generated ${generatedUrls.length} portrait variations`);
 
-      // Download and upload to our storage for persistence
-      const response = await fetch(generatedImageUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      
-      const finalImagePath = await objectStorageService.uploadBase64Image(
-        base64,
-        `family-portraits/${userId}`,
-        `portrait-${Date.now()}`
-      );
+      // Download and upload ALL variations to our storage for persistence
+      const uploadedVariations: string[] = [];
+      for (let i = 0; i < generatedUrls.length; i++) {
+        try {
+          const response = await fetch(generatedUrls[i]);
+          const arrayBuffer = await response.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          
+          const uploadedPath = await objectStorageService.uploadBase64Image(
+            base64,
+            `family-portraits/${userId}`,
+            `portrait-${i + 1}`
+          );
+          uploadedVariations.push(uploadedPath);
+          console.log(`[FamilyPortrait] Uploaded variation ${i + 1}: ${uploadedPath}`);
+        } catch (err: any) {
+          console.error(`[FamilyPortrait] Failed to upload variation ${i + 1}:`, err.message);
+        }
+      }
 
-      // The path already works as a URL since we serve public-objects
-      console.log(`[FamilyPortrait] Final portrait path: ${finalImagePath}`);
+      if (uploadedVariations.length === 0) {
+        throw new Error('Failed to save any portrait variations');
+      }
+
+      const finalImagePath = uploadedVariations[0];
+      console.log(`[FamilyPortrait] ${uploadedVariations.length} variations saved, default: ${finalImagePath}`);
 
       // Create a card creation with the portrait
       const creation = await storage.createCreation({
@@ -1145,6 +1157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         creation: updatedCreation || creation,
         imageUrl: finalImagePath,
+        portraitVariations: uploadedVariations, // Include all variations for user to choose from
       });
     } catch (error: any) {
       console.error('Error generating family portrait:', error);
