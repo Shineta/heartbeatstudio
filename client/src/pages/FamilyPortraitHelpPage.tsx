@@ -8,9 +8,11 @@ import ThemeToggle from "@/components/ThemeToggle";
 import heroImage from "@assets/generated_images/family_portrait_studio_example.png";
 import watercolorExample from "@assets/generated_images/watercolor_family_portrait_style.png";
 import christmasExample from "@assets/generated_images/christmas_family_portrait_example.png";
-import goodPhotoWoman from "@assets/generated_images/good_photo_example_woman.png";
-import goodPhotoMan from "@assets/generated_images/good_photo_example_man.png";
-import goodPhotoChild from "@assets/generated_images/good_photo_example_child.png";
+import goodPhotoWoman from "@assets/generated_images/diverse_photo_example_woman.png";
+import goodPhotoMan from "@assets/generated_images/diverse_photo_example_man.png";
+import goodPhotoChild from "@assets/generated_images/diverse_photo_example_child.png";
+import petPhotoDog from "@assets/generated_images/pet_photo_example_dog.png";
+import petPhotoCat from "@assets/generated_images/pet_photo_example_cat.png";
 
 export default function FamilyPortraitHelpPage() {
   const steps = [
@@ -136,7 +138,7 @@ export default function FamilyPortraitHelpPage() {
           <p className="text-muted-foreground mb-6">
             For the best results, upload photos like these examples - clear, well-lit, and front-facing:
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             <Card className="overflow-hidden">
               <div className="aspect-square relative">
                 <img 
@@ -152,16 +154,12 @@ export default function FamilyPortraitHelpPage() {
               <CardContent className="p-4">
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Clear, well-lit face
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Front-facing view
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Natural expression
                   </li>
                 </ul>
               </CardContent>
@@ -181,16 +179,12 @@ export default function FamilyPortraitHelpPage() {
               <CardContent className="p-4">
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Good lighting
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Clean background
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Single person visible
                   </li>
                 </ul>
               </CardContent>
@@ -210,16 +204,61 @@ export default function FamilyPortraitHelpPage() {
               <CardContent className="p-4">
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Face clearly visible
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Natural smile
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     Eyes looking forward
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <h3 className="text-xl font-semibold mt-8 mb-4">Pets Welcome Too!</h3>
+          <p className="text-muted-foreground mb-4">
+            Include your furry family members - just mark them as pets during face selection:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={petPhotoDog} 
+                  alt="Pet photo example - dog"
+                  className="w-full h-full object-cover"
+                />
+                <Badge className="absolute top-3 right-3 bg-amber-500/90 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Pet
+                </Badge>
+              </div>
+              <CardContent className="p-3">
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Face clearly visible
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={petPhotoCat} 
+                  alt="Pet photo example - cat"
+                  className="w-full h-full object-cover"
+                />
+                <Badge className="absolute top-3 right-3 bg-amber-500/90 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Pet
+                </Badge>
+              </div>
+              <CardContent className="p-3">
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Looking at camera
                   </li>
                 </ul>
               </CardContent>
