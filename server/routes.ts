@@ -745,12 +745,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update creation (rename)
+  // Update creation (title, imageUrl, content, etc.)
   app.patch('/api/creations/:id', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const { id } = req.params;
-      const { title } = req.body;
+      const { title, imageUrl, content, songIds } = req.body;
 
       const creation = await storage.getCreationById(id);
       if (!creation) {
@@ -760,7 +760,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this creation" });
       }
 
-      const updated = await storage.updateCreation(id, { title });
+      // Build update object with only provided fields
+      const updateData: Record<string, any> = {};
+      if (title !== undefined) updateData.title = title;
+      if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+      if (content !== undefined) updateData.content = content;
+      if (songIds !== undefined) updateData.songIds = songIds;
+
+      const updated = await storage.updateCreation(id, updateData);
       res.json(updated);
     } catch (error) {
       console.error("Error updating creation:", error);
