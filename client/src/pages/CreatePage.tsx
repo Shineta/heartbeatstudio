@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link, ChevronsUpDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -222,6 +224,8 @@ export default function CreatePage() {
 
   // State for attaching a song to a card
   const [attachedSongId, setAttachedSongId] = useState<string | null>(null);
+  const [songSearchOpen, setSongSearchOpen] = useState(false);
+  const [songSearchQuery, setSongSearchQuery] = useState("");
 
   // State for editing card message
   const [isEditingCardMessage, setIsEditingCardMessage] = useState(false);
@@ -2212,22 +2216,77 @@ export default function CreatePage() {
                         <p className="text-xs text-muted-foreground">
                           Add a song to play when the card is viewed
                         </p>
-                        <Select 
-                          value={attachedSongId || "none"} 
-                          onValueChange={(value) => setAttachedSongId(value === "none" ? null : value)}
-                        >
-                          <SelectTrigger data-testid="select-attached-song">
-                            <SelectValue placeholder="No song attached" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No song attached</SelectItem>
-                            {userSongs.map((song) => (
-                              <SelectItem key={song.id} value={song.id}>
-                                {song.title || "Untitled Song"}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={songSearchOpen} onOpenChange={setSongSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={songSearchOpen}
+                              className="w-full justify-between"
+                              data-testid="select-attached-song"
+                            >
+                              {attachedSongId
+                                ? userSongs.find((song) => song.id === attachedSongId)?.title || "Untitled Song"
+                                : "No song attached"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <CommandInput 
+                                placeholder="Search songs..." 
+                                value={songSearchQuery}
+                                onValueChange={setSongSearchQuery}
+                                data-testid="input-song-search"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No songs found.</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandItem
+                                    value="none"
+                                    onSelect={() => {
+                                      setAttachedSongId(null);
+                                      setSongSearchOpen(false);
+                                      setSongSearchQuery("");
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        attachedSongId === null ? "opacity-100" : "opacity-0"
+                                      }`}
+                                    />
+                                    No song attached
+                                  </CommandItem>
+                                  {userSongs
+                                    .filter((song) => 
+                                      (song.title || "Untitled Song")
+                                        .toLowerCase()
+                                        .includes(songSearchQuery.toLowerCase())
+                                    )
+                                    .map((song) => (
+                                      <CommandItem
+                                        key={song.id}
+                                        value={song.title || "Untitled Song"}
+                                        onSelect={() => {
+                                          setAttachedSongId(song.id);
+                                          setSongSearchOpen(false);
+                                          setSongSearchQuery("");
+                                        }}
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            attachedSongId === song.id ? "opacity-100" : "opacity-0"
+                                          }`}
+                                        />
+                                        <Music className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {song.title || "Untitled Song"}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         {userSongs.length === 0 && (
                           <p className="text-xs text-muted-foreground italic">
                             No songs available. Create a song first to attach it to your card!
