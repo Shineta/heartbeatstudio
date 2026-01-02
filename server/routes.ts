@@ -1752,7 +1752,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Creation not found" });
       }
       
-      res.json(creation);
+      // If this is a card with attached songs, include the song data
+      let attachedSongs: any[] = [];
+      if (creation.type === 'card' && creation.songIds && creation.songIds.length > 0) {
+        const songs = await Promise.all(
+          creation.songIds.map(id => storage.getCreationById(id))
+        );
+        attachedSongs = songs.filter(Boolean).map(song => ({
+          id: song!.id,
+          title: song!.title,
+          mediaUrl: song!.mediaUrl,
+        }));
+      }
+      
+      res.json({
+        ...creation,
+        attachedSongs,
+      });
     } catch (error) {
       console.error("Error fetching shared creation:", error);
       res.status(500).json({ message: "Failed to fetch creation" });

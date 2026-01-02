@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Heart, Download, Sparkles, Play, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface AttachedSong {
+  id: string;
+  title: string;
+  mediaUrl: string;
+}
+
 interface Creation {
   id: string;
   type: 'song' | 'card' | 'animation';
@@ -15,14 +21,9 @@ interface Creation {
   imageUrl?: string;
   mediaUrl?: string;
   songIds?: string[];
+  attachedSongs?: AttachedSong[];
   shareableLink?: string;
   createdAt: string;
-}
-
-interface AttachedSong {
-  id: string;
-  title: string;
-  mediaUrl: string;
 }
 
 export default function SharePage() {
@@ -93,22 +94,11 @@ export default function SharePage() {
         const data = await response.json();
         setCreation(data);
         
-        // If this is a card with attached songs, fetch the first song
-        if (data.type === 'card' && data.songIds && data.songIds.length > 0) {
-          try {
-            const songResponse = await fetch(`/api/creations/${data.songIds[0]}`);
-            if (songResponse.ok) {
-              const songData = await songResponse.json();
-              if (songData.mediaUrl) {
-                setAttachedSong({
-                  id: songData.id,
-                  title: songData.title || 'Song',
-                  mediaUrl: songData.mediaUrl,
-                });
-              }
-            }
-          } catch (songErr) {
-            console.error('Failed to fetch attached song:', songErr);
+        // If this is a card with attached songs, use the first one
+        if (data.type === 'card' && data.attachedSongs && data.attachedSongs.length > 0) {
+          const firstSong = data.attachedSongs[0];
+          if (firstSong.mediaUrl) {
+            setAttachedSong(firstSong);
           }
         }
       } catch (err) {
