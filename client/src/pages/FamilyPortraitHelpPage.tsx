@@ -1,12 +1,16 @@
-import { ArrowLeft, Upload, Users, Wand2, Image, Sparkles, Camera } from "lucide-react";
+import { ArrowLeft, Upload, Users, Wand2, Image, Sparkles, Camera, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import heroImage from "@assets/generated_images/family_portrait_studio_example.png";
 import watercolorExample from "@assets/generated_images/watercolor_family_portrait_style.png";
 import christmasExample from "@assets/generated_images/christmas_family_portrait_example.png";
+import goodPhotoWoman from "@assets/generated_images/good_photo_example_woman.png";
+import goodPhotoMan from "@assets/generated_images/good_photo_example_man.png";
+import goodPhotoChild from "@assets/generated_images/good_photo_example_child.png";
 
 export default function FamilyPortraitHelpPage() {
   const steps = [
@@ -124,6 +128,102 @@ export default function FamilyPortraitHelpPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6">Ideal Photos to Upload</h2>
+          <p className="text-muted-foreground mb-6">
+            For the best results, upload photos like these examples - clear, well-lit, and front-facing:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={goodPhotoWoman} 
+                  alt="Good photo example - woman"
+                  className="w-full h-full object-cover"
+                />
+                <Badge className="absolute top-3 right-3 bg-green-500/90 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Ideal
+                </Badge>
+              </div>
+              <CardContent className="p-4">
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Clear, well-lit face
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Front-facing view
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Natural expression
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={goodPhotoMan} 
+                  alt="Good photo example - man"
+                  className="w-full h-full object-cover"
+                />
+                <Badge className="absolute top-3 right-3 bg-green-500/90 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Ideal
+                </Badge>
+              </div>
+              <CardContent className="p-4">
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Good lighting
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Clean background
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Single person visible
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="aspect-square relative">
+                <img 
+                  src={goodPhotoChild} 
+                  alt="Good photo example - child"
+                  className="w-full h-full object-cover"
+                />
+                <Badge className="absolute top-3 right-3 bg-green-500/90 text-white">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Ideal
+                </Badge>
+              </div>
+              <CardContent className="p-4">
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Face clearly visible
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Natural smile
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Eyes looking forward
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
