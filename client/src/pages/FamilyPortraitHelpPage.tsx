@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import heroImage from "@assets/generated_images/family_portrait_studio_example.png";
+import watercolorExample from "@assets/generated_images/watercolor_family_portrait_style.png";
+import christmasExample from "@assets/generated_images/christmas_family_portrait_example.png";
 
 export default function FamilyPortraitHelpPage() {
   const steps = [
@@ -42,6 +45,12 @@ export default function FamilyPortraitHelpPage() {
     "The 'remove braces' option works best with clear smile photos"
   ];
 
+  const styleExamples = [
+    { name: "Studio Photo", image: heroImage, description: "Professional photography style" },
+    { name: "Watercolor", image: watercolorExample, description: "Artistic brush strokes" },
+    { name: "Holiday Scene", image: christmasExample, description: "Festive celebrations" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -57,7 +66,7 @@ export default function FamilyPortraitHelpPage() {
           <ThemeToggle />
         </div>
 
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Camera className="w-10 h-10 text-primary" />
             <h1 className="text-4xl font-bold" data-testid="text-page-title">AI Family Portrait Composer</h1>
@@ -65,6 +74,15 @@ export default function FamilyPortraitHelpPage() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Create beautiful group portraits by combining individual photos into one magical scene
           </p>
+        </div>
+
+        <div className="mb-12 rounded-xl overflow-hidden shadow-lg">
+          <img 
+            src={heroImage} 
+            alt="Example AI-generated family portrait" 
+            className="w-full h-auto object-cover"
+            data-testid="img-hero-portrait"
+          />
         </div>
 
         <section className="mb-12">
@@ -82,6 +100,27 @@ export default function FamilyPortraitHelpPage() {
                     </h3>
                     <p className="text-muted-foreground">{step.description}</p>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6">Example Styles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {styleExamples.map((example) => (
+              <Card key={example.name} className="overflow-hidden">
+                <div className="aspect-square">
+                  <img 
+                    src={example.image} 
+                    alt={`${example.name} style example`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-semibold">{example.name}</h3>
+                  <p className="text-sm text-muted-foreground">{example.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -159,7 +198,7 @@ export default function FamilyPortraitHelpPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">Artistic Styles</h2>
+          <h2 className="text-2xl font-semibold mb-6">All Artistic Styles</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {['Studio Photo', 'Watercolor', 'Cartoon', 'Oil Painting', 'Digital Art', 'Vintage'].map((style) => (
               <Card key={style}>
