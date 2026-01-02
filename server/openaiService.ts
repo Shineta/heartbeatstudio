@@ -646,9 +646,48 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     return `Person ${i + 1}: ${f.description} - MUST reproduce this person EXACTLY as they appear in the reference photo${bracesNote}`;
   }).join('\n');
   
-  // Build pet descriptions
+  // Festive accessories for pets based on scene
+  const petAccessories: Record<string, string> = {
+    // Classic Scenes - subtle accessories
+    'studio': 'wearing a cute bow tie or bandana',
+    'living-room': 'wearing a cozy pet sweater or bandana',
+    'outdoors': 'wearing a colorful bandana',
+    'beach': 'wearing a fun beach-themed bandana',
+    'garden': 'wearing a floral bandana or flower collar',
+    // Life Events - festive accessories
+    'birthday': 'wearing a party hat and festive bandana',
+    'graduation': 'wearing a tiny graduation cap or bow tie',
+    'wedding': 'wearing an elegant bow tie, flower collar, or pet tuxedo/dress',
+    'baby-shower': 'wearing a pastel bandana or cute bow',
+    'anniversary': 'wearing an elegant bow tie or pearl collar',
+    'retirement': 'wearing a festive bandana or party bow tie',
+    // Major Holidays - holiday-themed accessories
+    'christmas': 'wearing a Santa hat, reindeer antlers, or festive Christmas sweater and holiday collar with bells',
+    'hanukkah': 'wearing a blue and silver festive bandana or Star of David collar charm',
+    'kwanzaa': 'wearing a red, black, and green festive bandana',
+    'new-years': 'wearing a sparkly New Year\'s party hat, bow tie, or festive gold/silver bandana',
+    'thanksgiving': 'wearing an autumn-themed bandana or pilgrim hat',
+    'easter': 'wearing bunny ears, a pastel bow, or spring flower collar',
+    'passover': 'wearing an elegant blue or purple bandana',
+    'halloween': 'wearing a fun Halloween costume (pumpkin, bat wings, witch hat, or skeleton bandana)',
+    'fourth-of-july': 'wearing patriotic red, white, and blue bandana or bow tie',
+    'valentines': 'wearing a cute heart-patterned bandana, bow tie, or cupid wings',
+    'mothers-day': 'wearing a floral bandana or flower collar',
+    'fathers-day': 'wearing a dapper bow tie or plaid bandana',
+    'st-patricks': 'wearing a green leprechaun hat, shamrock bandana, or green bow tie',
+    'cinco-de-mayo': 'wearing a colorful sombrero or festive Mexican-themed bandana',
+    'diwali': 'wearing a colorful festive bandana with gold accents',
+    'eid': 'wearing an elegant festive collar or bandana',
+    'lunar-new-year': 'wearing a red and gold festive bandana or traditional-style pet costume',
+    // Legacy fallback
+    'holiday': 'wearing festive holiday accessories (bow tie, bandana, or festive collar)',
+  };
+  
+  const petAccessory = petAccessories[scene] || 'wearing a cute festive accessory';
+  
+  // Build pet descriptions with festive accessories
   const petDetails = pets.map((f, i) => 
-    `Pet ${i + 1}: ${f.description} - MUST reproduce this pet EXACTLY as they appear in the reference photo (breed, coloring, size, markings)`
+    `Pet ${i + 1}: ${f.description} - MUST reproduce this pet EXACTLY as they appear in the reference photo (breed, coloring, size, markings), ${petAccessory}`
   ).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
@@ -740,7 +779,8 @@ Additional Requirements:
 - Make it look like everyone was photographed together at the same moment
 - Professional quality suitable for printing and framing
 - PRESERVE each subject's authentic appearance exactly as shown in their reference photo
-${pets.length > 0 ? `- Position pets naturally with the family (sitting, standing nearby, being held, etc.)` : ''}`;
+${pets.length > 0 ? `- Position pets naturally with the family (sitting, standing nearby, being held, etc.)
+- IMPORTANT: Add festive accessories to pets to make them look celebratory and part of the occasion - ${petAccessory}` : ''}`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
