@@ -3027,61 +3027,6 @@ export default function CreatePage() {
                         )}
                       />
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Custom Cover Image (optional)</label>
-                        {customCoverImageUrl ? (
-                          <div className="relative w-32 h-32">
-                            <img
-                              src={customCoverImageUrl}
-                              alt="Custom cover"
-                              className="w-full h-full object-cover rounded-lg border"
-                              data-testid="img-custom-cover-preview"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background"
-                              onClick={clearCustomCoverImage}
-                              data-testid="button-clear-cover"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <label 
-                              htmlFor="cover-upload"
-                              className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover-elevate transition-colors"
-                            >
-                              {isUploadingCover ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  <span className="text-sm">Uploading...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ImageIcon className="w-4 h-4" />
-                                  <span className="text-sm">Upload Image</span>
-                                </>
-                              )}
-                            </label>
-                            <input
-                              id="cover-upload"
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleCoverImageUpload}
-                              disabled={isUploadingCover}
-                              data-testid="input-cover-upload"
-                            />
-                          </div>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          Upload a photo to create a personalized retro cassette cover
-                        </p>
-                      </div>
-
                       {questionnaireMutation.isPending && (
                         <Card className="bg-primary/5 border-primary/20">
                           <CardContent className="pt-6">
