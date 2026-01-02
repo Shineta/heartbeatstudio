@@ -801,10 +801,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl } = req.body;
       
       // Validate coverImageSource if provided
-      const validCoverSources = ['ai', 'portrait', 'none'];
+      const validCoverSources = ['ai', 'portrait', 'upload', 'none'];
       const effectiveCoverSource = coverImageSource && validCoverSources.includes(coverImageSource) 
         ? coverImageSource 
         : 'ai';
@@ -816,6 +816,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (!Array.isArray(portraitData.selectedFaces) || portraitData.selectedFaces.length === 0) {
           return res.status(400).json({ message: 'Portrait mode requires at least one selected face' });
+        }
+      }
+      
+      // Validate uploadedCoverUrl if upload mode selected
+      if (effectiveCoverSource === 'upload') {
+        if (!uploadedCoverUrl || typeof uploadedCoverUrl !== 'string') {
+          return res.status(400).json({ message: 'Upload mode requires an uploaded cover image URL' });
         }
       }
       
@@ -905,6 +912,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('[Card] Family portrait generation returned no images');
           return res.status(500).json({ message: 'Failed to generate family portrait. Please try again.' });
         }
+      } else if (effectiveCoverSource === 'upload' && uploadedCoverUrl) {
+        // Use the user's uploaded cover image
+        console.log('[Card] Using uploaded cover image:', uploadedCoverUrl);
+        imageUrl = uploadedCoverUrl;
       } else {
         // Default: AI generated cover image
         if (process.env.NANO_BANANA_API_KEY) {

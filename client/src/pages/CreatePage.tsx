@@ -142,7 +142,9 @@ export default function CreatePage() {
   const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
   
   // Card cover image source state
-  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'none'>('ai');
+  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'upload' | 'none'>('ai');
+  const [uploadedCoverUrl, setUploadedCoverUrl] = useState<string | null>(null);
+  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -581,6 +583,48 @@ export default function CreatePage() {
     setDetectedFaces([]);
     setSelectedFaceIds([]);
     setCreatedPortrait(null);
+  };
+
+  // Handle card cover image upload
+  const handleCardCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingCoverImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/upload/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await res.json();
+      setUploadedCoverUrl(data.imageUrl);
+      toast({ title: "Uploaded!", description: "Your cover image is ready" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to upload image", variant: "destructive" });
+    } finally {
+      setIsUploadingCoverImage(false);
+    }
+  };
+
+  const clearUploadedCover = () => {
+    setUploadedCoverUrl(null);
+  };
+
+  // Handle cover source change - clear uploaded cover when switching away from 'upload'
+  const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'none') => {
+    if (coverImageSource === 'upload' && newSource !== 'upload') {
+      setUploadedCoverUrl(null);
+    }
+    setCoverImageSource(newSource);
   };
 
   // "Same People, New Scene" - Generate a variant card with saved family set
@@ -1039,6 +1083,10 @@ export default function CreatePage() {
           keepOutfits,
           removeBracesIds,
         }
+      }),
+      // Include uploaded cover URL when upload is selected
+      ...(coverImageSource === 'upload' && uploadedCoverUrl && {
+        uploadedCoverUrl
       })
     };
     cardMutation.mutate(cardData);
@@ -1766,11 +1814,11 @@ export default function CreatePage() {
                       {/* Cover Image Source */}
                       <div className="space-y-3">
                         <Label>Cover Image</Label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           <Button
                             type="button"
                             variant={coverImageSource === 'ai' ? 'default' : 'outline'}
-                            onClick={() => setCoverImageSource('ai')}
+                            onClick={() => handleCoverSourceChange('ai')}
                             className="flex-col h-auto py-3"
                             data-testid="button-cover-ai"
                           >
@@ -1780,7 +1828,7 @@ export default function CreatePage() {
                           <Button
                             type="button"
                             variant={coverImageSource === 'portrait' ? 'default' : 'outline'}
-                            onClick={() => setCoverImageSource('portrait')}
+                            onClick={() => handleCoverSourceChange('portrait')}
                             className="flex-col h-auto py-3"
                             data-testid="button-cover-portrait"
                           >
@@ -1789,8 +1837,18 @@ export default function CreatePage() {
                           </Button>
                           <Button
                             type="button"
+                            variant={coverImageSource === 'upload' ? 'default' : 'outline'}
+                            onClick={() => handleCoverSourceChange('upload')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-upload"
+                          >
+                            <Upload className="w-5 h-5 mb-1" />
+                            <span className="text-xs">Upload Image</span>
+                          </Button>
+                          <Button
+                            type="button"
                             variant={coverImageSource === 'none' ? 'default' : 'outline'}
-                            onClick={() => setCoverImageSource('none')}
+                            onClick={() => handleCoverSourceChange('none')}
                             className="flex-col h-auto py-3"
                             data-testid="button-cover-none"
                           >
@@ -1798,6 +1856,58 @@ export default function CreatePage() {
                             <span className="text-xs">No Image</span>
                           </Button>
                         </div>
+
+                        {/* Upload Image Options - shown when upload is selected */}
+                        {coverImageSource === 'upload' && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Upload your own image to use as the card cover.
+                            </p>
+                            
+                            {uploadedCoverUrl ? (
+                              <div className="relative w-full max-w-xs mx-auto">
+                                <img
+                                  src={uploadedCoverUrl}
+                                  alt="Uploaded cover"
+                                  className="w-full rounded-lg border"
+                                  data-testid="img-uploaded-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background"
+                                  onClick={clearUploadedCover}
+                                  data-testid="button-clear-cover"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                {isUploadingCoverImage ? (
+                                  <div className="flex flex-col items-center gap-2">
+                                    <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                    <span className="text-sm text-muted-foreground">Uploading...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center gap-2">
+                                    <Upload className="w-8 h-8 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">Click to upload an image</span>
+                                  </div>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleCardCoverUpload}
+                                  className="hidden"
+                                  disabled={isUploadingCoverImage}
+                                  data-testid="input-cover-image"
+                                />
+                              </label>
+                            )}
+                          </div>
+                        )}
 
                         {/* Family Portrait Options - shown when portrait is selected */}
                         {coverImageSource === 'portrait' && (
