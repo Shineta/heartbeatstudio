@@ -3185,7 +3185,7 @@ export default function CreatePage() {
                             <FormLabel>Song Details <span className="text-destructive">*</span></FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Tell us about the person and why you're creating this song. For example: 'Kurt is my Digital Promise coach who has been incredibly supportive this past year. He helped me get my district to adopt an app I created.'"
+                                placeholder="Tell us about the person and why you're creating this song. For example: 'My best friend Sarah has been there for me through everything. She always knows how to make me laugh and has the biggest heart.'"
                                 className="min-h-[100px] resize-none"
                                 {...field}
                                 data-testid="textarea-song-details"
