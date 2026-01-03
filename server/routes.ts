@@ -684,6 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             genre: genre || 'pop',
             voice: voiceType || undefined,
             duration: 'extended',
+            customMessage: customMessage || undefined,
           });
 
           // Generate AI cassette cover

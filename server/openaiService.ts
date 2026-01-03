@@ -152,6 +152,7 @@ export interface GenerateSongLyricsParams {
   interests?: string;
   insideJokes?: string;
   additionalNotes?: string;
+  customMessage?: string;
 }
 
 export interface GeneratedSongLyrics {
@@ -280,6 +281,77 @@ export async function generateSongLyrics(
   params: GenerateSongLyricsParams,
 ): Promise<GeneratedSongLyrics> {
   const normalizedGenre = normalizeGenre(params.genre);
+
+  // Check if this is a Bible verse singing request
+  const isBibleVerseSong = params.customMessage && 
+    (params.customMessage.includes('WORD-FOR-WORD') || 
+     params.customMessage.includes('Bible verse') ||
+     params.customMessage.includes('scripture'));
+
+  if (isBibleVerseSong && params.customMessage) {
+    console.log('[OpenAI] Detected Bible verse song request, using scripture as lyrics');
+    
+    // Extract the verse text from the customMessage
+    const verseMatch = params.customMessage.match(/primary lyrics:\s*"([^"]+)"/i);
+    const verseText = verseMatch ? verseMatch[1] : null;
+    
+    if (verseText) {
+      const systemPrompt = `
+You are a professional gospel songwriter. You take Bible verses and format them into singable song lyrics.
+You return ONLY valid JSON that my code can parse.
+You respect the sacred text while making it flow musically.
+`.trim();
+
+      const userPrompt = `
+Create song lyrics for ${params.recipientName} using this Bible verse as the EXACT lyrics:
+
+"${verseText}"
+
+CRITICAL INSTRUCTIONS:
+1. The verse text above MUST be sung WORD-FOR-WORD as the main lyrics
+2. You may repeat lines for musical emphasis
+3. Add section labels like [Verse], [Chorus], [Bridge] to structure it
+4. You may add a brief intro line or closing, but the scripture is the centerpiece
+5. Keep the sacred integrity of the text
+6. Genre style: ${normalizedGenre || "gospel"}
+7. Make it flow naturally when sung
+
+RETURN FORMAT (IMPORTANT):
+Return ONLY a JSON object with this exact shape:
+
+{
+  "title": "Create a meaningful title based on the verse",
+  "lyrics": "The full song lyrics with the scripture sung word-for-word, with section labels"
+}
+`.trim();
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.7,
+      });
+
+      const raw = completion.choices[0]?.message?.content || "{}";
+      let parsed: any;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (err) {
+        console.error("Failed to parse Bible verse lyrics JSON:", raw);
+        throw new Error("Failed to parse lyrics response from OpenAI");
+      }
+
+      if (!parsed.title || !parsed.lyrics) {
+        throw new Error("Bible verse lyrics response missing title or lyrics");
+      }
+
+      console.log('[OpenAI] Bible verse song lyrics generated:', parsed.title);
+      return { title: parsed.title, lyrics: parsed.lyrics };
+    }
+  }
 
   // Base prompt body describing the situation + recipient
   const basePrompt = buildBasePrompt(params, normalizedGenre);

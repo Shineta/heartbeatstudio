@@ -430,6 +430,7 @@ interface GenerateSongParams {
   customLyrics?: string;
   customTitle?: string;
   additionalNotes?: string;
+  customMessage?: string;
   duration?: 'quick' | 'extended';
 }
 
@@ -1370,6 +1371,7 @@ export async function generateSong(
     genre: resolvedGenre,
     interests: params.interests,
     insideJokes: params.insideJokes,
+    customMessage: params.customMessage,
   });
 
   return generateSongWithLyrics({
