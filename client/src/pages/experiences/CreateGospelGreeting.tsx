@@ -8,12 +8,60 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Church, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Church, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, BookOpen, Search } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { gospelGenres, rapSubGenres } from "@/lib/genres";
+
+// Popular Bible verses organized by theme
+const bibleVerses = {
+  faith: [
+    { ref: "Hebrews 11:1", text: "Now faith is the substance of things hoped for, the evidence of things not seen." },
+    { ref: "Proverbs 3:5-6", text: "Trust in the Lord with all your heart and lean not on your own understanding; in all your ways acknowledge Him, and He will make your paths straight." },
+    { ref: "Matthew 17:20", text: "If you have faith as small as a mustard seed, you can say to this mountain, 'Move from here to there,' and it will move." },
+    { ref: "Romans 10:17", text: "So faith comes from hearing, and hearing through the word of Christ." },
+    { ref: "Mark 11:24", text: "Whatever you ask for in prayer, believe that you have received it, and it will be yours." },
+  ],
+  hope: [
+    { ref: "Jeremiah 29:11", text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future." },
+    { ref: "Romans 15:13", text: "May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit." },
+    { ref: "Isaiah 40:31", text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary." },
+    { ref: "Psalm 42:11", text: "Why are you downcast, O my soul? Put your hope in God, for I will yet praise Him, my Savior and my God." },
+    { ref: "Lamentations 3:22-23", text: "Because of the Lord's great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness." },
+  ],
+  strength: [
+    { ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me." },
+    { ref: "Isaiah 41:10", text: "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you." },
+    { ref: "Joshua 1:9", text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go." },
+    { ref: "Psalm 46:1", text: "God is our refuge and strength, an ever-present help in trouble." },
+    { ref: "2 Corinthians 12:9", text: "My grace is sufficient for you, for my power is made perfect in weakness." },
+  ],
+  love: [
+    { ref: "1 Corinthians 13:4-7", text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud." },
+    { ref: "John 3:16", text: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life." },
+    { ref: "Romans 8:38-39", text: "For I am convinced that neither death nor life, neither angels nor demons, can separate us from the love of God." },
+    { ref: "1 John 4:19", text: "We love because he first loved us." },
+    { ref: "Psalm 136:26", text: "Give thanks to the God of heaven. His love endures forever." },
+  ],
+  peace: [
+    { ref: "Philippians 4:6-7", text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God will guard your hearts and minds." },
+    { ref: "John 14:27", text: "Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled." },
+    { ref: "Isaiah 26:3", text: "You will keep in perfect peace those whose minds are steadfast, because they trust in you." },
+    { ref: "Psalm 29:11", text: "The Lord gives strength to his people; the Lord blesses his people with peace." },
+    { ref: "Colossians 3:15", text: "Let the peace of Christ rule in your hearts, since as members of one body you were called to peace." },
+  ],
+  gratitude: [
+    { ref: "Psalm 100:4", text: "Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name." },
+    { ref: "1 Thessalonians 5:18", text: "Give thanks in all circumstances; for this is God's will for you in Christ Jesus." },
+    { ref: "Colossians 3:17", text: "And whatever you do, in word or deed, do everything in the name of the Lord Jesus, giving thanks to God the Father through him." },
+    { ref: "Psalm 107:1", text: "Give thanks to the Lord, for he is good; his love endures forever." },
+    { ref: "James 1:17", text: "Every good and perfect gift is from above, coming down from the Father of the heavenly lights." },
+  ],
+};
 
 interface GeneratedSong {
   title: string;
@@ -49,6 +97,25 @@ export default function CreateGospelGreeting() {
   const [shareLink, setShareLink] = useState("");
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Bible verse state
+  const [includeBibleVerse, setIncludeBibleVerse] = useState(false);
+  const [selectedVerseTheme, setSelectedVerseTheme] = useState<string>("faith");
+  const [selectedVerse, setSelectedVerse] = useState<{ ref: string; text: string } | null>(null);
+  const [verseSearch, setVerseSearch] = useState("");
+  
+  // Get all verses for search
+  const allVerses = Object.entries(bibleVerses).flatMap(([theme, verses]) => 
+    verses.map(v => ({ ...v, theme }))
+  );
+  
+  // Filter verses based on search
+  const filteredVerses = verseSearch 
+    ? allVerses.filter(v => 
+        v.ref.toLowerCase().includes(verseSearch.toLowerCase()) || 
+        v.text.toLowerCase().includes(verseSearch.toLowerCase())
+      )
+    : bibleVerses[selectedVerseTheme as keyof typeof bibleVerses] || [];
 
   const themes = [
     { id: "faith", label: "Faith & Trust" },
@@ -137,6 +204,15 @@ export default function CreateGospelGreeting() {
           genre = `${rapLabel} Rap`;
         }
         
+        // Build custom message with Bible verse if selected
+        let customMessage = `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`;
+        if (eventInfo) {
+          customMessage += `. Event details: ${eventInfo}`;
+        }
+        if (includeBibleVerse && selectedVerse) {
+          customMessage += `. IMPORTANT: Include the Bible verse ${selectedVerse.ref} in the song lyrics: "${selectedVerse.text}"`;
+        }
+        
         const response = await apiRequest('POST', '/api/creations', {
           type: 'song',
           recipientName: recipientName,
@@ -144,7 +220,7 @@ export default function CreateGospelGreeting() {
           tone: 'spiritual',
           genre: genre,
           voiceType: 'soulful',
-          customMessage: `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}${eventInfo ? `. Event details: ${eventInfo}` : ''}`,
+          customMessage: customMessage,
         });
         
         const initialCreation = await response.json();
@@ -293,6 +369,88 @@ export default function CreateGospelGreeting() {
                 )}
               </div>
 
+              {/* Bible Verse Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-purple-500" />
+                    <Label htmlFor="include-verse">Include Bible Verse</Label>
+                  </div>
+                  <Switch
+                    id="include-verse"
+                    checked={includeBibleVerse}
+                    onCheckedChange={setIncludeBibleVerse}
+                    data-testid="switch-include-verse"
+                  />
+                </div>
+                
+                {includeBibleVerse && (
+                  <div className="space-y-3 p-4 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search verses..."
+                        value={verseSearch}
+                        onChange={(e) => setVerseSearch(e.target.value)}
+                        className="pl-9"
+                        data-testid="input-verse-search"
+                      />
+                    </div>
+                    
+                    {!verseSearch && (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.keys(bibleVerses).map((theme) => (
+                          <Badge
+                            key={theme}
+                            variant={selectedVerseTheme === theme ? "default" : "outline"}
+                            className={`cursor-pointer capitalize ${selectedVerseTheme === theme ? 'bg-purple-500' : ''}`}
+                            onClick={() => {
+                              setSelectedVerseTheme(theme);
+                              setSelectedVerse(null);
+                            }}
+                            data-testid={`badge-theme-${theme}`}
+                          >
+                            {theme}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <ScrollArea className="h-48">
+                      <div className="space-y-2 pr-4">
+                        {filteredVerses.map((verse, idx) => (
+                          <div
+                            key={`${verse.ref}-${idx}`}
+                            onClick={() => setSelectedVerse({ ref: verse.ref, text: verse.text })}
+                            className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                              selectedVerse?.ref === verse.ref
+                                ? 'bg-purple-200 dark:bg-purple-800 border-purple-400'
+                                : 'bg-white dark:bg-gray-900 hover:bg-purple-100 dark:hover:bg-purple-900/50'
+                            } border`}
+                            data-testid={`verse-${verse.ref.replace(/[:\s]/g, '-')}`}
+                          >
+                            <p className="font-medium text-sm text-purple-600 dark:text-purple-400">
+                              {verse.ref}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {verse.text}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    
+                    {selectedVerse && (
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Selected verse:</p>
+                        <p className="font-medium text-purple-600 dark:text-purple-400">{selectedVerse.ref}</p>
+                        <p className="text-sm italic">"{selectedVerse.text}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-4">
                 <p className="text-sm font-medium mb-3">Your greeting will include:</p>
                 <div className="space-y-2">
@@ -303,6 +461,13 @@ export default function CreateGospelGreeting() {
                       <span className="text-muted-foreground">gospel message</span>
                     </div>
                   ))}
+                  {includeBibleVerse && selectedVerse && (
+                    <div className="flex items-center gap-2 text-sm pt-2 border-t border-purple-200 dark:border-purple-700 mt-2">
+                      <BookOpen className="w-4 h-4 text-purple-500" />
+                      <span className="font-medium">{selectedVerse.ref}</span>
+                      <span className="text-muted-foreground">sung in lyrics</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
