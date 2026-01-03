@@ -103,6 +103,9 @@ export default function CreateGospelGreeting() {
   const [selectedVerseTheme, setSelectedVerseTheme] = useState<string>("faith");
   const [selectedVerse, setSelectedVerse] = useState<{ ref: string; text: string } | null>(null);
   const [verseSearch, setVerseSearch] = useState("");
+  const [verseInputMode, setVerseInputMode] = useState<"select" | "custom">("select");
+  const [customVerseRef, setCustomVerseRef] = useState("");
+  const [customVerseText, setCustomVerseText] = useState("");
   
   // Get all verses for search
   const allVerses = Object.entries(bibleVerses).flatMap(([theme, verses]) => 
@@ -206,9 +209,13 @@ export default function CreateGospelGreeting() {
         
         // Build custom message with Bible verse if selected
         let customMessage: string;
-        if (includeBibleVerse && selectedVerse) {
+        const verseToUse = verseInputMode === "custom" && customVerseText.trim()
+          ? { ref: customVerseRef || "Scripture", text: customVerseText }
+          : selectedVerse;
+        
+        if (includeBibleVerse && verseToUse) {
           // Bible verse mode: sing the verse word-for-word as the lyrics
-          customMessage = `Create a song for ${recipientName} where the MAIN LYRICS are the Bible verse ${selectedVerse.ref}. The verse must be sung WORD-FOR-WORD as the primary lyrics: "${selectedVerse.text}". This scripture should be the centerpiece of the song, repeated and sung clearly. Theme: ${themes[i].label.toLowerCase()}.${eventInfo ? ` Context: ${eventInfo}` : ''}`;
+          customMessage = `Create a song for ${recipientName} where the MAIN LYRICS are the Bible verse ${verseToUse.ref}. The verse must be sung WORD-FOR-WORD as the primary lyrics: "${verseToUse.text}". This scripture should be the centerpiece of the song, repeated and sung clearly. Theme: ${themes[i].label.toLowerCase()}.${eventInfo ? ` Context: ${eventInfo}` : ''}`;
         } else {
           // Regular gospel message mode
           customMessage = `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`;
@@ -393,65 +400,118 @@ export default function CreateGospelGreeting() {
                 
                 {includeBibleVerse && (
                   <div className="space-y-3 p-4 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search verses..."
-                        value={verseSearch}
-                        onChange={(e) => setVerseSearch(e.target.value)}
-                        className="pl-9"
-                        data-testid="input-verse-search"
-                      />
+                    {/* Toggle between select and custom */}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={verseInputMode === "select" ? "default" : "outline"}
+                        onClick={() => setVerseInputMode("select")}
+                        className={verseInputMode === "select" ? "bg-purple-500 hover:bg-purple-600" : ""}
+                        data-testid="button-verse-mode-select"
+                      >
+                        Choose from list
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={verseInputMode === "custom" ? "default" : "outline"}
+                        onClick={() => setVerseInputMode("custom")}
+                        className={verseInputMode === "custom" ? "bg-purple-500 hover:bg-purple-600" : ""}
+                        data-testid="button-verse-mode-custom"
+                      >
+                        Enter my own
+                      </Button>
                     </div>
                     
-                    {!verseSearch && (
-                      <div className="flex flex-wrap gap-2">
-                        {Object.keys(bibleVerses).map((theme) => (
-                          <Badge
-                            key={theme}
-                            variant={selectedVerseTheme === theme ? "default" : "outline"}
-                            className={`cursor-pointer capitalize ${selectedVerseTheme === theme ? 'bg-purple-500' : ''}`}
-                            onClick={() => {
-                              setSelectedVerseTheme(theme);
-                              setSelectedVerse(null);
-                            }}
-                            data-testid={`badge-theme-${theme}`}
-                          >
-                            {theme}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <ScrollArea className="h-48">
-                      <div className="space-y-2 pr-4">
-                        {filteredVerses.map((verse, idx) => (
-                          <div
-                            key={`${verse.ref}-${idx}`}
-                            onClick={() => setSelectedVerse({ ref: verse.ref, text: verse.text })}
-                            className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                              selectedVerse?.ref === verse.ref
-                                ? 'bg-purple-200 dark:bg-purple-800 border-purple-400'
-                                : 'bg-white dark:bg-gray-900 hover:bg-purple-100 dark:hover:bg-purple-900/50'
-                            } border`}
-                            data-testid={`verse-${verse.ref.replace(/[:\s]/g, '-')}`}
-                          >
-                            <p className="font-medium text-sm text-purple-600 dark:text-purple-400">
-                              {verse.ref}
-                            </p>
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {verse.text}
-                            </p>
+                    {verseInputMode === "select" ? (
+                      <>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search verses..."
+                            value={verseSearch}
+                            onChange={(e) => setVerseSearch(e.target.value)}
+                            className="pl-9"
+                            data-testid="input-verse-search"
+                          />
+                        </div>
+                        
+                        {!verseSearch && (
+                          <div className="flex flex-wrap gap-2">
+                            {Object.keys(bibleVerses).map((theme) => (
+                              <Badge
+                                key={theme}
+                                variant={selectedVerseTheme === theme ? "default" : "outline"}
+                                className={`cursor-pointer capitalize ${selectedVerseTheme === theme ? 'bg-purple-500' : ''}`}
+                                onClick={() => {
+                                  setSelectedVerseTheme(theme);
+                                  setSelectedVerse(null);
+                                }}
+                                data-testid={`badge-theme-${theme}`}
+                              >
+                                {theme}
+                              </Badge>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                    
-                    {selectedVerse && (
-                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Selected verse:</p>
-                        <p className="font-medium text-purple-600 dark:text-purple-400">{selectedVerse.ref}</p>
-                        <p className="text-sm italic">"{selectedVerse.text}"</p>
+                        )}
+                        
+                        <ScrollArea className="h-48">
+                          <div className="space-y-2 pr-4">
+                            {filteredVerses.map((verse, idx) => (
+                              <div
+                                key={`${verse.ref}-${idx}`}
+                                onClick={() => setSelectedVerse({ ref: verse.ref, text: verse.text })}
+                                className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                                  selectedVerse?.ref === verse.ref
+                                    ? 'bg-purple-200 dark:bg-purple-800 border-purple-400'
+                                    : 'bg-white dark:bg-gray-900 hover:bg-purple-100 dark:hover:bg-purple-900/50'
+                                } border`}
+                                data-testid={`verse-${verse.ref.replace(/[:\s]/g, '-')}`}
+                              >
+                                <p className="font-medium text-sm text-purple-600 dark:text-purple-400">
+                                  {verse.ref}
+                                </p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {verse.text}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        
+                        {selectedVerse && (
+                          <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground mb-1">Selected verse:</p>
+                            <p className="font-medium text-purple-600 dark:text-purple-400">{selectedVerse.ref}</p>
+                            <p className="text-sm italic">"{selectedVerse.text}"</p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="custom-verse-ref">Verse Reference (optional)</Label>
+                          <Input
+                            id="custom-verse-ref"
+                            placeholder="e.g., John 3:16 or Psalm 23:1"
+                            value={customVerseRef}
+                            onChange={(e) => setCustomVerseRef(e.target.value)}
+                            data-testid="input-custom-verse-ref"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="custom-verse-text">Verse Text <span className="text-destructive">*</span></Label>
+                          <Textarea
+                            id="custom-verse-text"
+                            placeholder="Enter the verse text to be sung..."
+                            value={customVerseText}
+                            onChange={(e) => setCustomVerseText(e.target.value)}
+                            className="min-h-[100px] resize-none"
+                            data-testid="input-custom-verse-text"
+                          />
+                          <p className="text-xs text-muted-foreground">This text will be sung word-for-word as the lyrics</p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -468,10 +528,12 @@ export default function CreateGospelGreeting() {
                       <span className="text-muted-foreground">gospel message</span>
                     </div>
                   ))}
-                  {includeBibleVerse && selectedVerse && (
+                  {includeBibleVerse && (verseInputMode === "select" ? selectedVerse : customVerseText.trim()) && (
                     <div className="flex items-center gap-2 text-sm pt-2 border-t border-purple-200 dark:border-purple-700 mt-2">
                       <BookOpen className="w-4 h-4 text-purple-500" />
-                      <span className="font-medium">{selectedVerse.ref}</span>
+                      <span className="font-medium">
+                        {verseInputMode === "select" ? selectedVerse?.ref : (customVerseRef || "Custom verse")}
+                      </span>
                       <span className="text-muted-foreground">sung word-for-word</span>
                     </div>
                   )}
