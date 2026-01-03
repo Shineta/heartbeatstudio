@@ -17,6 +17,35 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { gospelGenres, rapSubGenres } from "@/lib/genres";
 
+// Popular full passages for quick-fill
+const popularPassages = [
+  {
+    name: "Psalm 23 (Full)",
+    ref: "Psalm 23",
+    text: "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He leads me in paths of righteousness for his name's sake. Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me. You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows. Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the Lord forever."
+  },
+  {
+    name: "The Lord's Prayer",
+    ref: "Matthew 6:9-13",
+    text: "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. For thine is the kingdom, and the power, and the glory, forever. Amen."
+  },
+  {
+    name: "Love Chapter",
+    ref: "1 Corinthians 13:4-8",
+    text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud. It does not dishonor others, it is not self-seeking, it is not easily angered, it keeps no record of wrongs. Love does not delight in evil but rejoices with the truth. It always protects, always trusts, always hopes, always perseveres. Love never fails."
+  },
+  {
+    name: "Beatitudes",
+    ref: "Matthew 5:3-12",
+    text: "Blessed are the poor in spirit, for theirs is the kingdom of heaven. Blessed are those who mourn, for they will be comforted. Blessed are the meek, for they will inherit the earth. Blessed are those who hunger and thirst for righteousness, for they will be filled. Blessed are the merciful, for they will be shown mercy. Blessed are the pure in heart, for they will see God. Blessed are the peacemakers, for they will be called children of God."
+  },
+  {
+    name: "Armor of God",
+    ref: "Ephesians 6:10-17",
+    text: "Be strong in the Lord and in his mighty power. Put on the full armor of God. Stand firm with the belt of truth, the breastplate of righteousness, feet fitted with readiness from the gospel of peace. Take up the shield of faith, the helmet of salvation, and the sword of the Spirit, which is the word of God."
+  }
+];
+
 // Popular Bible verses organized by theme
 const bibleVerses = {
   faith: [
@@ -491,10 +520,29 @@ export default function CreateGospelGreeting() {
                     ) : (
                       <div className="space-y-3">
                         <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Quick-fill popular passages:</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {popularPassages.map((passage) => (
+                              <Badge
+                                key={passage.ref}
+                                variant="outline"
+                                className="cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/50"
+                                onClick={() => {
+                                  setCustomVerseRef(passage.ref);
+                                  setCustomVerseText(passage.text);
+                                }}
+                                data-testid={`badge-passage-${passage.ref.replace(/[:\s]/g, '-')}`}
+                              >
+                                {passage.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
                           <Label htmlFor="custom-verse-ref">Verse Reference (optional)</Label>
                           <Input
                             id="custom-verse-ref"
-                            placeholder="e.g., John 3:16 or Psalm 23:1"
+                            placeholder="e.g., John 3:16 or Psalm 23"
                             value={customVerseRef}
                             onChange={(e) => setCustomVerseRef(e.target.value)}
                             data-testid="input-custom-verse-ref"
