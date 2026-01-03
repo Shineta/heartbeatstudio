@@ -205,12 +205,16 @@ export default function CreateGospelGreeting() {
         }
         
         // Build custom message with Bible verse if selected
-        let customMessage = `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`;
-        if (eventInfo) {
-          customMessage += `. Event details: ${eventInfo}`;
-        }
+        let customMessage: string;
         if (includeBibleVerse && selectedVerse) {
-          customMessage += `. IMPORTANT: Include the Bible verse ${selectedVerse.ref} in the song lyrics: "${selectedVerse.text}"`;
+          // Bible verse mode: sing the verse word-for-word as the lyrics
+          customMessage = `Create a song for ${recipientName} where the MAIN LYRICS are the Bible verse ${selectedVerse.ref}. The verse must be sung WORD-FOR-WORD as the primary lyrics: "${selectedVerse.text}". This scripture should be the centerpiece of the song, repeated and sung clearly. Theme: ${themes[i].label.toLowerCase()}.${eventInfo ? ` Context: ${eventInfo}` : ''}`;
+        } else {
+          // Regular gospel message mode
+          customMessage = `A ${themes[i].label.toLowerCase()} gospel message for ${recipientName}`;
+          if (eventInfo) {
+            customMessage += `. Event details: ${eventInfo}`;
+          }
         }
         
         const response = await apiRequest('POST', '/api/creations', {
@@ -372,9 +376,12 @@ export default function CreateGospelGreeting() {
               {/* Bible Verse Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-purple-500" />
-                    <Label htmlFor="include-verse">Include Bible Verse</Label>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-purple-500" />
+                      <Label htmlFor="include-verse">Sing a Bible Verse</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">The verse will be sung word-for-word as the main lyrics</p>
                   </div>
                   <Switch
                     id="include-verse"
@@ -465,7 +472,7 @@ export default function CreateGospelGreeting() {
                     <div className="flex items-center gap-2 text-sm pt-2 border-t border-purple-200 dark:border-purple-700 mt-2">
                       <BookOpen className="w-4 h-4 text-purple-500" />
                       <span className="font-medium">{selectedVerse.ref}</span>
-                      <span className="text-muted-foreground">sung in lyrics</span>
+                      <span className="text-muted-foreground">sung word-for-word</span>
                     </div>
                   )}
                 </div>
