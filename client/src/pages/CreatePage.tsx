@@ -156,6 +156,7 @@ export default function CreatePage() {
   const [isUploadingFestivePhoto, setIsUploadingFestivePhoto] = useState(false);
   const [isGeneratingFestive, setIsGeneratingFestive] = useState(false);
   const [generatedFestiveUrl, setGeneratedFestiveUrl] = useState<string | null>(null);
+  const [festiveInstructions, setFestiveInstructions] = useState('');
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -690,6 +691,7 @@ export default function CreatePage() {
         imageUrl: festivePhotoUrl,
         scene: festiveScene,
         style: festiveStyle,
+        instructions: festiveInstructions.trim() || undefined,
       });
       
       if (!res.ok) throw new Error('Failed to generate festive image');
@@ -2141,32 +2143,47 @@ export default function CreatePage() {
                                 
                                 {/* Scene & Style Selection */}
                                 {!generatedFestiveUrl && (
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                      <Label className="text-xs mb-1 block">Scene</Label>
-                                      <Select value={festiveScene} onValueChange={setFestiveScene}>
-                                        <SelectTrigger data-testid="select-festive-scene">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {festiveSceneOptions.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
+                                  <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs mb-1 block">Scene</Label>
+                                        <Select value={festiveScene} onValueChange={setFestiveScene}>
+                                          <SelectTrigger data-testid="select-festive-scene">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {festiveSceneOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs mb-1 block">Style</Label>
+                                        <Select value={festiveStyle} onValueChange={setFestiveStyle}>
+                                          <SelectTrigger data-testid="select-festive-style">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {festiveStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
                                     </div>
                                     <div>
-                                      <Label className="text-xs mb-1 block">Style</Label>
-                                      <Select value={festiveStyle} onValueChange={setFestiveStyle}>
-                                        <SelectTrigger data-testid="select-festive-style">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {festiveStyleOptions.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
+                                      <Label className="text-xs mb-1 block">Custom Instructions (optional)</Label>
+                                      <Input
+                                        value={festiveInstructions}
+                                        onChange={(e) => setFestiveInstructions(e.target.value)}
+                                        placeholder="e.g., no alcohol, include a dog, warm lighting"
+                                        maxLength={100}
+                                        data-testid="input-festive-instructions"
+                                      />
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        Add specific requests for your image
+                                      </p>
                                     </div>
                                   </div>
                                 )}

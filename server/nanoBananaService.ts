@@ -417,8 +417,9 @@ export async function generateFestiveTransform(params: {
   imageUrl: string;
   scene: string;
   style: string;
+  instructions?: string;
 }): Promise<string> {
-  const { imageUrl, scene, style } = params;
+  const { imageUrl, scene, style, instructions } = params;
   
   // Scene-specific descriptions - expanded to match all frontend options
   const sceneDescriptions: Record<string, string> = {
@@ -468,11 +469,14 @@ export async function generateFestiveTransform(params: {
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
   const styleInstr = styleInstructions[style] || styleInstructions['festive-photo'];
   
+  // Build custom instructions part
+  const customInstr = instructions ? `\nAdditional requirements: ${instructions}.` : '';
+  
   const prompt = `Transform this person's photo into ${sceneDesc}. 
 Keep the person as the main focus, clearly recognizable with their face prominently featured.
 Place them naturally within the festive scene.
 ${styleInstr}.
-The person should look happy and celebrating.
+The person should look happy and celebrating.${customInstr}
 High quality, visually appealing result suitable for a greeting card cover.`;
 
   console.log(`[NanoBanana] Generating festive transform: ${scene} in ${style} style`);
