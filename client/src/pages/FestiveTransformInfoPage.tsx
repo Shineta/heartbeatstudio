@@ -1,7 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Upload, Image, Palette, Clock, CheckCircle, XCircle, User, Sun, Camera, Focus } from "lucide-react";
+import { ArrowLeft, Sparkles, Upload, Image, Palette, Clock, CheckCircle, XCircle } from "lucide-react";
+
+import goodPhotoWoman from "@assets/stock_images/professional_headsho_633873f0.jpg";
+import goodPhotoMan from "@assets/stock_images/professional_headsho_45742103.jpg";
+import badPhotoGroup from "@assets/stock_images/group_photo_family_m_cd179739.jpg";
+import badPhotoDark from "@assets/stock_images/person_silhouette_da_552996f0.jpg";
 
 export default function FestiveTransformInfoPage() {
   return (
@@ -118,34 +123,36 @@ export default function FestiveTransformInfoPage() {
                   <CheckCircle className="w-5 h-5" />
                   Great Photos
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <User className="w-8 h-8 text-green-600 dark:text-green-400" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg overflow-hidden border-2 border-green-300 dark:border-green-700">
+                    <div className="aspect-[3/4] relative">
+                      <img 
+                        src={goodPhotoWoman} 
+                        alt="Good photo example - clear face, good lighting" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
                     </div>
-                    <p className="text-xs font-medium">Clear Face</p>
-                    <p className="text-xs text-muted-foreground">Face visible, looking at camera</p>
+                    <div className="p-3 bg-green-50 dark:bg-green-950/30">
+                      <p className="text-sm font-medium text-center">Clear face, good lighting</p>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <Sun className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <div className="rounded-lg overflow-hidden border-2 border-green-300 dark:border-green-700">
+                    <div className="aspect-[3/4] relative">
+                      <img 
+                        src={goodPhotoMan} 
+                        alt="Good photo example - simple background, front-facing" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
                     </div>
-                    <p className="text-xs font-medium">Good Lighting</p>
-                    <p className="text-xs text-muted-foreground">Bright, even lighting on face</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <Focus className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    <div className="p-3 bg-green-50 dark:bg-green-950/30">
+                      <p className="text-sm font-medium text-center">Simple background, front-facing</p>
                     </div>
-                    <p className="text-xs font-medium">Simple Background</p>
-                    <p className="text-xs text-muted-foreground">Plain wall or solid color</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <Camera className="w-8 h-8 text-green-600 dark:text-green-400" />
-                    </div>
-                    <p className="text-xs font-medium">Upper Body Shot</p>
-                    <p className="text-xs text-muted-foreground">Head and shoulders visible</p>
                   </div>
                 </div>
               </div>
@@ -155,35 +162,36 @@ export default function FestiveTransformInfoPage() {
                   <XCircle className="w-5 h-5" />
                   Avoid These
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center relative">
-                      <User className="w-8 h-8 text-red-400 dark:text-red-500" />
-                      <User className="w-6 h-6 text-red-400 dark:text-red-500 absolute -right-1 -bottom-1" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg overflow-hidden border-2 border-red-300 dark:border-red-700">
+                    <div className="aspect-[3/4] relative">
+                      <img 
+                        src={badPhotoGroup} 
+                        alt="Bad photo example - group photo" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1">
+                        <XCircle className="w-4 h-4" />
+                      </div>
                     </div>
-                    <p className="text-xs font-medium">Group Photos</p>
-                    <p className="text-xs text-muted-foreground">Use Family Portrait instead</p>
+                    <div className="p-3 bg-red-50 dark:bg-red-950/30">
+                      <p className="text-sm font-medium text-center">Group photos - use Family Portrait</p>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                      <User className="w-8 h-8 text-red-400 dark:text-red-500 blur-[2px]" />
+                  <div className="rounded-lg overflow-hidden border-2 border-red-300 dark:border-red-700">
+                    <div className="aspect-[3/4] relative">
+                      <img 
+                        src={badPhotoDark} 
+                        alt="Bad photo example - dark/shadowy" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1">
+                        <XCircle className="w-4 h-4" />
+                      </div>
                     </div>
-                    <p className="text-xs font-medium">Blurry Photos</p>
-                    <p className="text-xs text-muted-foreground">Need sharp, in-focus image</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                      <div className="w-8 h-8 bg-red-300 dark:bg-red-700 rounded-full opacity-50" />
+                    <div className="p-3 bg-red-50 dark:bg-red-950/30">
+                      <p className="text-sm font-medium text-center">Dark or shadowy lighting</p>
                     </div>
-                    <p className="text-xs font-medium">Dark/Shadowy</p>
-                    <p className="text-xs text-muted-foreground">Face should be well-lit</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                      <User className="w-8 h-8 text-red-400 dark:text-red-500 -rotate-45" />
-                    </div>
-                    <p className="text-xs font-medium">Profile/Side View</p>
-                    <p className="text-xs text-muted-foreground">Face camera directly</p>
                   </div>
                 </div>
               </div>
