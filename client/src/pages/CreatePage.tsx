@@ -1653,6 +1653,40 @@ export default function CreatePage() {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Attached Song Player */}
+                    {createdCard.songIds && createdCard.songIds.length > 0 && (
+                      <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Music className="w-5 h-5 text-primary" />
+                          <span className="font-medium">Attached Song</span>
+                        </div>
+                        {(() => {
+                          const attachedSong = userSongs.find(s => s.id === createdCard.songIds?.[0]);
+                          if (attachedSong?.mediaUrl) {
+                            return (
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">{attachedSong.title || "Untitled Song"}</p>
+                                <audio 
+                                  controls 
+                                  className="w-full" 
+                                  src={attachedSong.mediaUrl}
+                                  data-testid="audio-attached-song"
+                                >
+                                  Your browser does not support the audio element.
+                                </audio>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <p className="text-sm text-muted-foreground italic">
+                                {attachedSong?.title || "Song attached - will play when card is shared"}
+                              </p>
+                            );
+                          }
+                        })()}
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-3">
                     <Button onClick={() => {
