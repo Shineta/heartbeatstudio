@@ -69,9 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
+        marketingConsent: z.boolean().optional().default(false),
+        termsAccepted: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms of Service' }),
       });
       
-      const { email, password, phoneNumber, firstName, lastName } = schema.parse(req.body);
+      const { email, password, phoneNumber, firstName, lastName, marketingConsent, termsAccepted } = schema.parse(req.body);
       
       // Normalize phone number by removing all non-digit characters except +
       const normalizedPhone = phoneNumber.replace(/[^\d+]/g, '');
@@ -96,6 +98,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         isAdmin,
+        marketingConsent,
+        termsAcceptedAt: new Date(),
         songsRemaining: isAdmin ? 9999 : 3,
       });
       

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,6 +49,13 @@ export default function AdminPage() {
     enabled: !!user?.isAdmin,
   });
 
+  // Redirect non-admins to dashboard
+  useEffect(() => {
+    if (!authLoading && !user?.isAdmin) {
+      setLocation('/dashboard');
+    }
+  }, [authLoading, user?.isAdmin, setLocation]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -57,10 +64,13 @@ export default function AdminPage() {
     );
   }
 
-  // Redirect non-admins to dashboard
-  if (!authLoading && !user?.isAdmin) {
-    setLocation('/dashboard');
-    return null;
+  // Still show loading while redirect happens
+  if (!user?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   const filteredUsers = users?.filter(u => {

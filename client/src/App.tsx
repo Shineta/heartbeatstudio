@@ -31,6 +31,7 @@ import CreateBirthdayBlast from "@/pages/experiences/CreateBirthdayBlast";
 import CreateGospelGreeting from "@/pages/experiences/CreateGospelGreeting";
 import CreateClassroomCheers from "@/pages/experiences/CreateClassroomCheers";
 import AdminPage from "@/pages/AdminPage";
+import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -76,6 +77,7 @@ function Router() {
       <Route path="/festive-transform-info" component={FestiveTransformInfoPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/privacy" component={PrivacyPolicyPage} />
+      <Route path="/terms" component={TermsOfServicePage} />
       <Route path="/experience/date-night" component={DateNightExperience} />
       <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />

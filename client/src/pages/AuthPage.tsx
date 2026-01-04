@@ -22,6 +22,7 @@ const registerSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   marketingConsent: z.boolean().optional().default(false),
+  termsAccepted: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms of Service' }),
 });
 
 const loginSchema = z.object({
@@ -305,6 +306,37 @@ export default function AuthPage() {
                   )}
                 />
                 
+                <FormField
+                  control={registerForm.control}
+                  name="termsAccepted"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === true}
+                          onCheckedChange={(checked) => field.onChange(checked ? true : false)}
+                          data-testid="checkbox-terms"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          I agree to the{' '}
+                          <a 
+                            href="/terms" 
+                            target="_blank" 
+                            className="text-primary hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Terms of Service
+                          </a>
+                          {' '}and understand how my content will be used
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={registerForm.control}
                   name="marketingConsent"
