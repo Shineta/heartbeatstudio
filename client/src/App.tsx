@@ -30,6 +30,7 @@ import CreateDateNight from "@/pages/experiences/CreateDateNight";
 import CreateBirthdayBlast from "@/pages/experiences/CreateBirthdayBlast";
 import CreateGospelGreeting from "@/pages/experiences/CreateGospelGreeting";
 import CreateClassroomCheers from "@/pages/experiences/CreateClassroomCheers";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />
       <Route path="/create" component={isAuthenticated ? CreatePage : AuthPage} />
       <Route path="/mixtape/:id/edit" component={isAuthenticated ? EditMixtapePage : AuthPage} />
+      <Route path="/admin" component={isAuthenticated ? AdminPage : AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );

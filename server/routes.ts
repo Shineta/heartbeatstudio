@@ -2970,6 +2970,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin middleware - checks if user is admin
+  const isAdmin = async (req: Request, res: Response, next: Function) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const userId = (req.user as any).id;
+    const user = await storage.getUser(userId);
+    if (!user?.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+  };
+
+  // Admin: Get all users
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      // Return users without sensitive data
+      const safeUsers = allUsers.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
+        songsRemaining: user.songsRemaining,
+        subscriptionStatus: user.subscriptionStatus,
+        marketingConsent: user.marketingConsent,
+        isAdmin: user.isAdmin,
+        createdAt: user.createdAt,
+      }));
+      res.json(safeUsers);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Admin: Get stats
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const stats = {
+        totalUsers: allUsers.length,
+        usersLast30Days: allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= thirtyDaysAgo).length,
+        usersLast7Days: allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= sevenDaysAgo).length,
+        activeSubscribers: allUsers.filter(u => u.subscriptionStatus === 'active').length,
+        marketingOptIns: allUsers.filter(u => u.marketingConsent).length,
+      };
+      res.json(stats);
+    } catch (error: any) {
+      console.error('Error fetching stats:', error);
+      res.status(500).json({ message: 'Failed to fetch stats' });
+    }
+  });
+
   const httpServer = createServer(app);
   
   startScheduler(60000);
