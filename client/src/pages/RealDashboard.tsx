@@ -572,12 +572,12 @@ export default function RealDashboard() {
           />
         </div>
 
-        <Tabs defaultValue="loved-ones" className="w-full">
+        <Tabs defaultValue="creations" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="loved-ones" data-testid="tab-loved-ones">Loved Ones</TabsTrigger>
             <TabsTrigger value="creations" data-testid="tab-creations">My Creations</TabsTrigger>
             <TabsTrigger value="mixtapes" data-testid="tab-mixtapes">Mixtapes</TabsTrigger>
             <TabsTrigger value="scheduled" data-testid="tab-scheduled">Scheduled</TabsTrigger>
+            <TabsTrigger value="loved-ones" data-testid="tab-loved-ones">Loved Ones</TabsTrigger>
           </TabsList>
           
           <TabsContent value="loved-ones">
