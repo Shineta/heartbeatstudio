@@ -2196,11 +2196,26 @@ export default function CreatePage() {
                                     <>
                                       <Button
                                         type="button"
+                                        variant="default"
+                                        onClick={generateFestiveTransform}
+                                        disabled={isGeneratingFestive}
+                                        data-testid="button-regenerate-same-scene"
+                                      >
+                                        {isGeneratingFestive ? (
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                          <RefreshCw className="w-4 h-4 mr-2" />
+                                        )}
+                                        Regenerate
+                                      </Button>
+                                      <Button
+                                        type="button"
                                         variant="outline"
                                         onClick={() => setGeneratedFestiveUrl(null)}
-                                        data-testid="button-regenerate-festive"
+                                        disabled={isGeneratingFestive}
+                                        data-testid="button-try-different-scene"
                                       >
-                                        <RefreshCw className="w-4 h-4 mr-2" />
+                                        <Sparkles className="w-4 h-4 mr-2" />
                                         Try Different Scene
                                       </Button>
                                       <Button
@@ -2211,6 +2226,7 @@ export default function CreatePage() {
                                           setFestivePhotoUrl(null);
                                           setGeneratedFestiveUrl(null);
                                         }}
+                                        disabled={isGeneratingFestive}
                                         data-testid="button-new-festive-photo"
                                       >
                                         <Upload className="w-4 h-4 mr-2" />
