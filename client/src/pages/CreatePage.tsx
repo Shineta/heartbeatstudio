@@ -144,9 +144,18 @@ export default function CreatePage() {
   const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
   
   // Card cover image source state
-  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'upload' | 'none'>('ai');
+  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'upload' | 'festive' | 'none'>('ai');
   const [uploadedCoverUrl, setUploadedCoverUrl] = useState<string | null>(null);
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  
+  // Festive Transform state (single person photo transformation)
+  const [festivePhoto, setFestivePhoto] = useState<File | null>(null);
+  const [festivePhotoUrl, setFestivePhotoUrl] = useState<string | null>(null);
+  const [festiveScene, setFestiveScene] = useState('christmas');
+  const [festiveStyle, setFestiveStyle] = useState('festive-photo');
+  const [isUploadingFestivePhoto, setIsUploadingFestivePhoto] = useState(false);
+  const [isGeneratingFestive, setIsGeneratingFestive] = useState(false);
+  const [generatedFestiveUrl, setGeneratedFestiveUrl] = useState<string | null>(null);
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -624,12 +633,120 @@ export default function CreatePage() {
   };
 
   // Handle cover source change - clear uploaded cover when switching away from 'upload'
-  const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'none') => {
+  const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'festive' | 'none') => {
     if (coverImageSource === 'upload' && newSource !== 'upload') {
       setUploadedCoverUrl(null);
     }
+    if (coverImageSource === 'festive' && newSource !== 'festive') {
+      setFestivePhoto(null);
+      setFestivePhotoUrl(null);
+      setGeneratedFestiveUrl(null);
+    }
     setCoverImageSource(newSource);
   };
+  
+  // Handle festive photo upload
+  const handleFestivePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFestivePhoto(file);
+    setIsUploadingFestivePhoto(true);
+    setGeneratedFestiveUrl(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/upload/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!res.ok) throw new Error('Failed to upload photo');
+
+      const data = await res.json();
+      setFestivePhotoUrl(data.imageUrl);
+      toast({ title: "Photo uploaded!", description: "Now choose a festive scene and generate" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to upload photo", variant: "destructive" });
+      setFestivePhoto(null);
+    } finally {
+      setIsUploadingFestivePhoto(false);
+    }
+  };
+  
+  // Generate festive transformation
+  const generateFestiveTransform = async () => {
+    if (!festivePhotoUrl) {
+      toast({ title: "No photo", description: "Please upload a photo first", variant: "destructive" });
+      return;
+    }
+    
+    setIsGeneratingFestive(true);
+    try {
+      const res = await apiRequest("POST", "/api/generate/festive-transform", {
+        imageUrl: festivePhotoUrl,
+        scene: festiveScene,
+        style: festiveStyle,
+      });
+      
+      if (!res.ok) throw new Error('Failed to generate festive image');
+      
+      const data = await res.json();
+      setGeneratedFestiveUrl(data.imageUrl);
+      toast({ title: "Festive image created!", description: "Your photo has been transformed" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to generate festive image", variant: "destructive" });
+    } finally {
+      setIsGeneratingFestive(false);
+    }
+  };
+  
+  // Festive scene options - expanded to match family portrait scenes
+  const festiveSceneOptions = [
+    // Major Holidays
+    { value: 'christmas', label: 'Christmas' },
+    { value: 'hanukkah', label: 'Hanukkah' },
+    { value: 'kwanzaa', label: 'Kwanzaa' },
+    { value: 'new-years', label: 'New Year\'s' },
+    { value: 'thanksgiving', label: 'Thanksgiving' },
+    { value: 'easter', label: 'Easter' },
+    { value: 'passover', label: 'Passover' },
+    { value: 'halloween', label: 'Halloween' },
+    { value: 'valentines', label: 'Valentine\'s Day' },
+    { value: 'fourth-of-july', label: 'Fourth of July' },
+    { value: 'st-patricks', label: 'St. Patrick\'s Day' },
+    { value: 'cinco-de-mayo', label: 'Cinco de Mayo' },
+    { value: 'diwali', label: 'Diwali' },
+    { value: 'eid', label: 'Eid' },
+    { value: 'lunar-new-year', label: 'Lunar New Year' },
+    // Life Events
+    { value: 'birthday', label: 'Birthday Party' },
+    { value: 'graduation', label: 'Graduation' },
+    { value: 'wedding', label: 'Wedding' },
+    { value: 'baby-shower', label: 'Baby Shower' },
+    { value: 'anniversary', label: 'Anniversary' },
+    { value: 'retirement', label: 'Retirement' },
+    // Special Days
+    { value: 'mothers-day', label: 'Mother\'s Day' },
+    { value: 'fathers-day', label: 'Father\'s Day' },
+    // Classic Scenes
+    { value: 'winter-wonderland', label: 'Winter Wonderland' },
+    { value: 'spring-garden', label: 'Spring Garden' },
+    { value: 'summer-beach', label: 'Summer Beach' },
+    { value: 'autumn-harvest', label: 'Autumn Harvest' },
+  ];
+  
+  const festiveStyleOptions = [
+    { value: 'festive-photo', label: 'Festive Photo' },
+    { value: 'cartoon', label: 'Cartoon' },
+    { value: 'watercolor', label: 'Watercolor' },
+    { value: 'oil-painting', label: 'Oil Painting' },
+    { value: 'digital-art', label: 'Digital Art' },
+    { value: 'vintage', label: 'Vintage' },
+  ];
 
   // "Same People, New Scene" - Generate a variant card with saved family set
   const generateFamilyVariant = async (scene: string, style: string) => {
@@ -1091,6 +1208,10 @@ export default function CreatePage() {
       // Include uploaded cover URL when upload is selected
       ...(coverImageSource === 'upload' && uploadedCoverUrl && {
         uploadedCoverUrl
+      }),
+      // Include festive transformed image when festive is selected
+      ...(coverImageSource === 'festive' && generatedFestiveUrl && {
+        uploadedCoverUrl: generatedFestiveUrl
       })
     };
     cardMutation.mutate(cardData);
@@ -1818,7 +1939,7 @@ export default function CreatePage() {
                       {/* Cover Image Source */}
                       <div className="space-y-3">
                         <Label>Cover Image</Label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                           <Button
                             type="button"
                             variant={coverImageSource === 'ai' ? 'default' : 'outline'}
@@ -1838,6 +1959,16 @@ export default function CreatePage() {
                           >
                             <Users className="w-5 h-5 mb-1" />
                             <span className="text-xs">Family Portrait</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={coverImageSource === 'festive' ? 'default' : 'outline'}
+                            onClick={() => handleCoverSourceChange('festive')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-festive"
+                          >
+                            <PartyPopper className="w-5 h-5 mb-1" />
+                            <span className="text-xs">Festive Transform</span>
                           </Button>
                           <Button
                             type="button"
@@ -1909,6 +2040,149 @@ export default function CreatePage() {
                                   data-testid="input-cover-image"
                                 />
                               </label>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Festive Transform Options - shown when festive is selected */}
+                        {coverImageSource === 'festive' && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Upload a photo of one person and transform it into a festive scene for your card cover.
+                            </p>
+                            
+                            {/* Photo Upload */}
+                            {!festivePhotoUrl ? (
+                              <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                {isUploadingFestivePhoto ? (
+                                  <div className="flex flex-col items-center gap-2">
+                                    <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                    <span className="text-sm text-muted-foreground">Uploading...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center gap-2">
+                                    <User className="w-8 h-8 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">Upload a photo of one person</span>
+                                  </div>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleFestivePhotoUpload}
+                                  className="hidden"
+                                  disabled={isUploadingFestivePhoto}
+                                  data-testid="input-festive-photo"
+                                />
+                              </label>
+                            ) : (
+                              <div className="space-y-4">
+                                {/* Photo Preview */}
+                                <div className="relative w-full max-w-xs mx-auto">
+                                  <img
+                                    src={generatedFestiveUrl || festivePhotoUrl}
+                                    alt="Festive photo"
+                                    className="w-full rounded-lg border"
+                                    data-testid="img-festive-preview"
+                                  />
+                                  {!generatedFestiveUrl && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background"
+                                      onClick={() => {
+                                        setFestivePhoto(null);
+                                        setFestivePhotoUrl(null);
+                                        setGeneratedFestiveUrl(null);
+                                      }}
+                                      data-testid="button-clear-festive"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                
+                                {/* Scene & Style Selection */}
+                                {!generatedFestiveUrl && (
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Scene</Label>
+                                      <Select value={festiveScene} onValueChange={setFestiveScene}>
+                                        <SelectTrigger data-testid="select-festive-scene">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {festiveSceneOptions.map(opt => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Style</Label>
+                                      <Select value={festiveStyle} onValueChange={setFestiveStyle}>
+                                        <SelectTrigger data-testid="select-festive-style">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {festiveStyleOptions.map(opt => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Generate / Reset Buttons */}
+                                <div className="flex gap-2 justify-center">
+                                  {!generatedFestiveUrl ? (
+                                    <Button
+                                      type="button"
+                                      onClick={generateFestiveTransform}
+                                      disabled={isGeneratingFestive}
+                                      data-testid="button-generate-festive"
+                                    >
+                                      {isGeneratingFestive ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          Transforming...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <PartyPopper className="w-4 h-4 mr-2" />
+                                          Generate Festive Image
+                                        </>
+                                      )}
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setGeneratedFestiveUrl(null)}
+                                        data-testid="button-regenerate-festive"
+                                      >
+                                        <RefreshCw className="w-4 h-4 mr-2" />
+                                        Try Different Scene
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setFestivePhoto(null);
+                                          setFestivePhotoUrl(null);
+                                          setGeneratedFestiveUrl(null);
+                                        }}
+                                        data-testid="button-new-festive-photo"
+                                      >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        New Photo
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
@@ -2297,7 +2571,7 @@ export default function CreatePage() {
                         )}
                       </div>
 
-                      <Button type="submit" className="w-full" disabled={cardMutation.isPending || (coverImageSource === 'portrait' && (isGeneratingPortrait || selectedFaceIds.length === 0 && detectedFaces.length > 0))} data-testid="button-generate-card">
+                      <Button type="submit" className="w-full" disabled={cardMutation.isPending || (coverImageSource === 'portrait' && (isGeneratingPortrait || selectedFaceIds.length === 0 && detectedFaces.length > 0)) || (coverImageSource === 'festive' && (!generatedFestiveUrl || isGeneratingFestive))} data-testid="button-generate-card">
                         {cardMutation.isPending ? (
                           <>
                             <Sparkles className="w-4 h-4 mr-2 animate-spin" />

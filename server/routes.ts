@@ -1232,6 +1232,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Festive Transform - Transform single person photo into festive scene
+  app.post('/api/generate/festive-transform', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const schema = z.object({
+        imageUrl: z.string().url('Please provide a valid image URL'),
+        scene: z.string().optional().default('christmas'),
+        style: z.string().optional().default('festive-photo'),
+      });
+      
+      const validatedData = schema.parse(req.body);
+      const { imageUrl, scene, style } = validatedData;
+      
+      // Verify image URL is publicly accessible
+      if (imageUrl.includes('localhost') && !process.env.APP_URL) {
+        return res.status(400).json({ 
+          message: 'Image URL must be publicly accessible. Please ensure you are using a public domain.',
+          hint: 'Set APP_URL environment variable or use a publicly accessible image host.'
+        });
+      }
+      
+      console.log(`[FestiveTransform] Transforming photo to ${scene} scene in ${style} style`);
+      
+      const { generateFestiveTransform } = await import('./nanoBananaService');
+      
+      const generatedUrl = await generateFestiveTransform({
+        imageUrl,
+        scene,
+        style,
+      });
+      
+      if (!generatedUrl) {
+        throw new Error('No image generated from AI service');
+      }
+      
+      // Download and upload to our storage for persistence
+      const imageResponse = await fetch(generatedUrl);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download generated image');
+      }
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+      
+      const objectStorage = new ObjectStorageService();
+      const publicPath = await objectStorage.uploadBase64Image(imageBase64, 'festive-images', 'festive');
+      
+      // Return relative path that works with the app's public-objects route
+      // The frontend will use this path as-is since it's on the same origin
+      const baseUrl = getBaseUrl();
+      const publicUrl = `${baseUrl}${publicPath}`;
+      
+      console.log(`[FestiveTransform] Image saved: ${publicUrl}`);
+      
+      res.json({ imageUrl: publicUrl });
+    } catch (error: any) {
+      console.error('Error generating festive transform:', error);
+      
+      // Handle Zod validation errors
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: 'Invalid request data', 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: error.message || 'Failed to generate festive image' });
+    }
+  });
+
   // Generate AI Animation - Coming Soon (Sora API not publicly available yet)
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     // Animation generation is temporarily disabled as the Sora video API is not yet publicly available

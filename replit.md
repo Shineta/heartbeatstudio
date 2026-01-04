@@ -129,11 +129,17 @@ Preferred communication style: Simple, everyday language.
     - Rap sub-genres get detailed style descriptions (Trap, Boom Bap, Old School, etc.)
     - Boosted styles are cached for 1 hour to reduce API calls
     - Fallback to basic style if boost fails
-- **Nano Banana API**: Image generation for greeting cards and family portraits
+- **Nano Banana API**: Image generation for greeting cards, family portraits, and festive transformations
   - Requires NANO_BANANA_API_KEY environment variable
-  - Used for greeting card illustrations and family portrait generation
+  - Used for greeting card illustrations, family portrait generation, and festive photo transformation
+  - **Festive Transform**: Single person photo transformation feature
+    - Upload one person's photo and transform into festive scene
+    - 27+ festive scenes including major holidays, life events, and seasonal themes
+    - 6 art styles: festive-photo, cartoon, watercolor, oil-painting, digital-art, vintage
+    - Route: POST /api/generate/festive-transform
+    - Uses image-to-image transformation with NanoBanana Pro model
   - **Family Portrait Composer**: Integrated into card creator as cover image option
-    - Users choose cover image source: AI Generated, Family Portrait, or No Image
+    - Users choose cover image source: AI Generated, Family Portrait, Festive Transform, Upload Image, or No Image
     - Family Portrait flow: upload 2-6 photos → AI face detection → select people → choose scene/style
     - Scenes: studio, living-room, holiday, outdoors, graduation, birthday
     - Styles: studio-photo, watercolor, cartoon, oil-painting, digital-art, vintage
