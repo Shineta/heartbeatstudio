@@ -166,7 +166,7 @@ export async function setupAuth(app: Express) {
                   lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' '),
                   profileImageUrl: profile.photos?.[0]?.value,
                   isAdmin,
-                  songsRemaining: isAdmin ? 9999 : 6,
+                  songsRemaining: isAdmin ? 9999 : 3,
                 });
               }
             }

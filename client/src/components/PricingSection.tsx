@@ -47,7 +47,7 @@ const creditPlans: CreditPlan[] = [
     description: "Try it out and explore the basics",
     icon: Sparkles,
     features: [
-      { text: "6 credits (1 credit = 1 song or card)", included: true },
+      { text: "3 credits (1 credit = 1 song or card)", included: true },
       { text: "Standard AI voices & styles", included: true },
       { text: "AI-generated cover art", included: true },
       { text: "Shareable link", included: true },
@@ -66,7 +66,7 @@ const creditPlans: CreditPlan[] = [
     description: "Perfect for a single occasion",
     icon: CreditCard,
     features: [
-      { text: "10 credits (songs or cards)", included: true },
+      { text: "5 credits (songs or cards)", included: true },
       { text: "Premium AI voices & styles", included: true },
       { text: "Higher-quality audio", included: true },
       { text: "AI cover art + shareable links", included: true },
@@ -85,7 +85,7 @@ const creditPlans: CreditPlan[] = [
     description: "For people who celebrate often",
     icon: Crown,
     features: [
-      { text: "20 credits every month", included: true },
+      { text: "15 credits every month", included: true },
       { text: "All premium voices & styles", included: true },
       { text: "Priority generation", included: true },
       { text: "Email & SMS delivery", included: true },

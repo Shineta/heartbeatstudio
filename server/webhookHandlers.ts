@@ -3,7 +3,7 @@ import { storage } from './storage';
 
 // Credit amounts for each product type
 const CREDIT_AMOUNTS: Record<string, number> = {
-  'Credit Pack': 10,
+  'Credit Pack': 5,
   'Date Night Kit': 3,
   'Birthday Blast': 1,
   'Gospel Greeting': 2,
@@ -101,8 +101,8 @@ export class WebhookHandlers {
 
       // Handle subscription payments
       if (mode === 'subscription') {
-        // Grant 20 credits for subscription
-        const subscriptionCredits = 20;
+        // Grant 15 songs for subscription
+        const subscriptionCredits = 15;
         const newCredits = (user.songsRemaining ?? 0) + subscriptionCredits;
         await storage.updateUser(user.id, { 
           songsRemaining: newCredits,
