@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   subscriptionStatus: varchar("subscription_status"), // 'active', 'canceled', 'past_due', null for non-subscribers
   subscriptionEndsAt: timestamp("subscription_ends_at"), // When current subscription period ends
   isAdmin: boolean("is_admin").notNull().default(false), // Admin accounts bypass payment requirements
+  marketingConsent: boolean("marketing_consent").notNull().default(false), // User consent to receive promotional emails/SMS
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

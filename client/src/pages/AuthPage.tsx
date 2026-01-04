@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -20,6 +21,7 @@ const registerSchema = z.object({
   phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  marketingConsent: z.boolean().optional().default(false),
 });
 
 const loginSchema = z.object({
@@ -64,7 +66,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '' },
+    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false },
   });
 
   const loginForm = useForm<LoginForm>({
@@ -299,6 +301,27 @@ export default function AuthPage() {
                         </div>
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={registerForm.control}
+                  name="marketingConsent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-marketing-consent"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          Send me updates about new features, special offers, and celebration tips
+                        </FormLabel>
+                      </div>
                     </FormItem>
                   )}
                 />
