@@ -101,8 +101,8 @@ export class WebhookHandlers {
 
       // Handle subscription payments
       if (mode === 'subscription') {
-        // Grant 15 songs for subscription
-        const subscriptionCredits = 15;
+        // Grant 20 credits for subscription
+        const subscriptionCredits = 20;
         const newCredits = (user.songsRemaining ?? 0) + subscriptionCredits;
         await storage.updateUser(user.id, { 
           songsRemaining: newCredits,

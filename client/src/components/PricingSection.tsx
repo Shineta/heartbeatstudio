@@ -85,7 +85,7 @@ const creditPlans: CreditPlan[] = [
     description: "For people who celebrate often",
     icon: Crown,
     features: [
-      { text: "15 credits every month", included: true },
+      { text: "20 credits every month", included: true },
       { text: "All premium voices & styles", included: true },
       { text: "Priority generation", included: true },
       { text: "Email & SMS delivery", included: true },
