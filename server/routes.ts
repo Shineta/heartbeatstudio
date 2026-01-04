@@ -1252,10 +1252,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scene: z.string().optional().default('christmas'),
         style: z.string().optional().default('festive-photo'),
         instructions: z.string().max(100).optional(),
+        changeOutfit: z.boolean().optional().default(true),
       });
       
       const validatedData = schema.parse(req.body);
-      const { imageUrl, scene, style, instructions } = validatedData;
+      const { imageUrl, scene, style, instructions, changeOutfit } = validatedData;
       
       // Verify image URL is publicly accessible
       if (imageUrl.includes('localhost') && !process.env.APP_URL) {
@@ -1265,7 +1266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`[FestiveTransform] Transforming photo to ${scene} scene in ${style} style${instructions ? ` with instructions: ${instructions}` : ''}`);
+      console.log(`[FestiveTransform] Transforming photo to ${scene} scene in ${style} style${instructions ? ` with instructions: ${instructions}` : ''}${changeOutfit ? ' (changing outfit)' : ''}`);
       
       const { generateFestiveTransform } = await import('./nanoBananaService');
       
@@ -1274,6 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scene,
         style,
         instructions,
+        changeOutfit,
       });
       
       if (!generatedUrl) {

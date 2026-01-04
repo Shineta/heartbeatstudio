@@ -15,6 +15,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -157,6 +158,7 @@ export default function CreatePage() {
   const [isGeneratingFestive, setIsGeneratingFestive] = useState(false);
   const [generatedFestiveUrl, setGeneratedFestiveUrl] = useState<string | null>(null);
   const [festiveInstructions, setFestiveInstructions] = useState('');
+  const [festiveChangeOutfit, setFestiveChangeOutfit] = useState(true);
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -692,6 +694,7 @@ export default function CreatePage() {
         scene: festiveScene,
         style: festiveStyle,
         instructions: festiveInstructions.trim() || undefined,
+        changeOutfit: festiveChangeOutfit,
       });
       
       if (!res.ok) throw new Error('Failed to generate festive image');
@@ -2184,6 +2187,17 @@ export default function CreatePage() {
                                       <p className="text-xs text-muted-foreground mt-1">
                                         Add specific requests for your image
                                       </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Checkbox
+                                        id="festive-change-outfit"
+                                        checked={festiveChangeOutfit}
+                                        onCheckedChange={(checked) => setFestiveChangeOutfit(checked === true)}
+                                        data-testid="checkbox-festive-change-outfit"
+                                      />
+                                      <Label htmlFor="festive-change-outfit" className="text-sm cursor-pointer">
+                                        Change outfit to match the scene
+                                      </Label>
                                     </div>
                                   </div>
                                 )}

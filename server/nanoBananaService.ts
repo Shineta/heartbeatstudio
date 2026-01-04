@@ -418,8 +418,9 @@ export async function generateFestiveTransform(params: {
   scene: string;
   style: string;
   instructions?: string;
+  changeOutfit?: boolean;
 }): Promise<string> {
-  const { imageUrl, scene, style, instructions } = params;
+  const { imageUrl, scene, style, instructions, changeOutfit = true } = params;
   
   // Scene-specific descriptions - expanded to match all frontend options
   const sceneDescriptions: Record<string, string> = {
@@ -469,12 +470,48 @@ export async function generateFestiveTransform(params: {
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
   const styleInstr = styleInstructions[style] || styleInstructions['festive-photo'];
   
+  // Scene-appropriate outfits when changeOutfit is enabled
+  const sceneOutfits: Record<string, string> = {
+    'christmas': 'wearing a cozy Christmas sweater or festive red and green holiday attire',
+    'hanukkah': 'wearing elegant blue and white festive clothing',
+    'kwanzaa': 'wearing beautiful African-inspired clothing in red, black, and green colors',
+    'new-years': 'wearing glamorous formal attire, sparkly evening wear',
+    'thanksgiving': 'wearing comfortable autumn-colored clothing, cozy sweater',
+    'easter': 'wearing pastel-colored spring attire, light and cheerful clothing',
+    'passover': 'wearing elegant formal attire suitable for a traditional celebration',
+    'halloween': 'wearing a fun Halloween costume or festive orange and black attire',
+    'valentines': 'wearing romantic red or pink elegant clothing',
+    'fourth-of-july': 'wearing patriotic red, white, and blue summer attire',
+    'st-patricks': 'wearing festive green clothing with Irish-inspired style',
+    'cinco-de-mayo': 'wearing colorful traditional Mexican-inspired festive clothing',
+    'diwali': 'wearing beautiful traditional Indian festive clothing, sari or kurta',
+    'eid': 'wearing elegant traditional festive attire',
+    'lunar-new-year': 'wearing beautiful red and gold traditional Chinese festive clothing',
+    'birthday': 'wearing party attire with a birthday hat or festive accessories',
+    'graduation': 'wearing a graduation cap and gown with diploma',
+    'wedding': 'wearing elegant formal wedding attire, suit or beautiful dress',
+    'baby-shower': 'wearing soft, elegant pastel-colored party attire',
+    'anniversary': 'wearing romantic elegant formal attire',
+    'retirement': 'wearing celebratory formal attire',
+    'mothers-day': 'wearing elegant spring attire with floral touches',
+    'fathers-day': 'wearing smart casual or classic formal attire',
+    'winter-wonderland': 'wearing cozy winter clothing, warm sweater and scarf',
+    'spring-garden': 'wearing light floral spring dress or casual spring attire',
+    'summer-beach': 'wearing casual summer beach attire, tropical shirt or sundress',
+    'autumn-harvest': 'wearing cozy autumn clothing in warm earth tones',
+  };
+  
+  // Build outfit instruction
+  const outfitInstr = changeOutfit 
+    ? `\nIMPORTANT: The person must be ${sceneOutfits[scene] || 'wearing festive clothing appropriate for the occasion'}. Replace their original clothing completely with scene-appropriate attire.`
+    : '';
+  
   // Build custom instructions part
   const customInstr = instructions ? `\nAdditional requirements: ${instructions}.` : '';
   
   const prompt = `Transform this person's photo into ${sceneDesc}. 
 Keep the person as the main focus, clearly recognizable with their face prominently featured.
-Place them naturally within the festive scene.
+Place them naturally within the festive scene.${outfitInstr}
 ${styleInstr}.
 The person should look happy and celebrating.${customInstr}
 High quality, visually appealing result suitable for a greeting card cover.`;
