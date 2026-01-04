@@ -96,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         isAdmin,
-        songsRemaining: isAdmin ? 9999 : 3,
+        songsRemaining: isAdmin ? 9999 : 6,
       });
       
       // Regenerate session to prevent session fixation attacks
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user = await storage.createUser({ 
           email,
           isAdmin,
-          songsRemaining: isAdmin ? 9999 : 3,
+          songsRemaining: isAdmin ? 9999 : 6,
         });
       }
       

@@ -47,7 +47,7 @@ const creditPlans: CreditPlan[] = [
     description: "Try it out and explore the basics",
     icon: Sparkles,
     features: [
-      { text: "3 credits (1 credit = 1 song or card)", included: true },
+      { text: "6 credits (1 credit = 1 song or card)", included: true },
       { text: "Standard AI voices & styles", included: true },
       { text: "AI-generated cover art", included: true },
       { text: "Shareable link", included: true },
