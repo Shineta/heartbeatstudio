@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Upload, Image, Palette, Clock, CheckCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Upload, Image, Palette, Clock, CheckCircle, XCircle, User, Sun, Camera, Focus } from "lucide-react";
 
 export default function FestiveTransformInfoPage() {
   return (
@@ -109,6 +109,91 @@ export default function FestiveTransformInfoPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">3</span>
+                Photo Examples
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <p className="font-medium text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Great Photos
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <User className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <p className="text-xs font-medium">Clear Face</p>
+                    <p className="text-xs text-muted-foreground">Face visible, looking at camera</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <Sun className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <p className="text-xs font-medium">Good Lighting</p>
+                    <p className="text-xs text-muted-foreground">Bright, even lighting on face</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <Focus className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <p className="text-xs font-medium">Simple Background</p>
+                    <p className="text-xs text-muted-foreground">Plain wall or solid color</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <p className="text-xs font-medium">Upper Body Shot</p>
+                    <p className="text-xs text-muted-foreground">Head and shoulders visible</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-medium text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
+                  <XCircle className="w-5 h-5" />
+                  Avoid These
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center relative">
+                      <User className="w-8 h-8 text-red-400 dark:text-red-500" />
+                      <User className="w-6 h-6 text-red-400 dark:text-red-500 absolute -right-1 -bottom-1" />
+                    </div>
+                    <p className="text-xs font-medium">Group Photos</p>
+                    <p className="text-xs text-muted-foreground">Use Family Portrait instead</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <User className="w-8 h-8 text-red-400 dark:text-red-500 blur-[2px]" />
+                    </div>
+                    <p className="text-xs font-medium">Blurry Photos</p>
+                    <p className="text-xs text-muted-foreground">Need sharp, in-focus image</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <div className="w-8 h-8 bg-red-300 dark:bg-red-700 rounded-full opacity-50" />
+                    </div>
+                    <p className="text-xs font-medium">Dark/Shadowy</p>
+                    <p className="text-xs text-muted-foreground">Face should be well-lit</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <User className="w-8 h-8 text-red-400 dark:text-red-500 -rotate-45" />
+                    </div>
+                    <p className="text-xs font-medium">Profile/Side View</p>
+                    <p className="text-xs text-muted-foreground">Face camera directly</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">4</span>
                 Available Scenes
               </CardTitle>
             </CardHeader>
