@@ -2082,7 +2082,10 @@ export default function CreatePage() {
                         {coverImageSource === 'festive' && (
                           <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
                             <p className="text-sm text-muted-foreground">
-                              Upload a photo of one person and transform it into a festive scene for your card cover.
+                              Upload a photo of one person and transform it into a festive scene for your card cover.{" "}
+                              <Link href="/festive-transform-info" className="text-primary hover:underline">
+                                Learn more
+                              </Link>
                             </p>
                             
                             {/* Photo Upload */}

@@ -19,6 +19,7 @@ import FeaturesPage from "@/pages/FeaturesPage";
 import HowItWorksPage from "@/pages/HowItWorksPage";
 import HelpCenterPage from "@/pages/HelpCenterPage";
 import FamilyPortraitHelpPage from "@/pages/FamilyPortraitHelpPage";
+import FestiveTransformInfoPage from "@/pages/FestiveTransformInfoPage";
 import ContactPage from "@/pages/ContactPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import DateNightExperience from "@/pages/experiences/DateNightExperience";
@@ -36,7 +37,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/contact', '/privacy'];
+    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/festive-transform-info', '/contact', '/privacy'];
     const isPublicPath = publicPaths.includes(location) || 
       location.startsWith('/auth/verify-magic-link') || 
       location.startsWith('/auth/reset-password') || 
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorksPage} />
       <Route path="/help" component={HelpCenterPage} />
       <Route path="/help/family-portrait" component={FamilyPortraitHelpPage} />
+      <Route path="/festive-transform-info" component={FestiveTransformInfoPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/privacy" component={PrivacyPolicyPage} />
       <Route path="/experience/date-night" component={DateNightExperience} />
