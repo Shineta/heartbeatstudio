@@ -73,6 +73,9 @@ Preferred communication style: Simple, everyday language.
    - Identity (id, email, name, profile image)
    - Password field for email/password auth (nullable for OAuth-only users)
    - googleId for Google OAuth integration
+   - isAdmin flag for admin dashboard access
+   - marketingConsent for promotional email opt-in tracking
+   - termsAcceptedAt timestamp when user agreed to Terms of Service
    - Created/updated timestamps for audit trail
 
 5. **Magic Link Tokens Table**
@@ -173,6 +176,21 @@ Preferred communication style: Simple, everyday language.
   - Connection string via DATABASE_URL environment variable
   - WebSocket-enabled for real-time features
   - Migrations managed via Drizzle Kit
+
+**Admin Dashboard**
+- Accessible at `/admin` route (admin users only)
+- Features:
+  - User statistics: total users, 7-day/30-day signups, active subscribers, marketing opt-ins
+  - Full user list with search and filters (marketing opt-ins, subscribers)
+  - CSV export of filtered user data
+- Protected by `isAdmin` middleware on backend API routes
+- Non-admin users are automatically redirected to dashboard
+
+**Terms of Service**
+- Accessible at `/terms` route
+- Required acceptance during registration (checkbox must be checked)
+- Covers: AI-generated content intellectual property, acceptable use, photo uploads, credits/refunds, disclaimers
+- Acceptance timestamp stored in `termsAcceptedAt` field
 
 **Development Tools**
 - **Replit Development Extensions**: Runtime error overlay, cartographer, dev banner
