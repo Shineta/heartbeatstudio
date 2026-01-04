@@ -29,7 +29,7 @@ export default function FeaturesPage() {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">AI Song Generation</h3>
                 <p className="text-muted-foreground text-sm">
-                  Create personalized songs with custom lyrics, multiple genres, and professional-quality audio using Suno V5.
+                  Create personalized songs with custom lyrics, multiple genres, and professional-quality audio.
                 </p>
               </CardContent>
             </Card>

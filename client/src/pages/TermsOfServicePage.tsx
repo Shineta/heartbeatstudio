@@ -61,8 +61,7 @@ export default function TermsOfServicePage() {
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
               <h4>2.1 How Content Is Created</h4>
               <p>
-                The Service uses artificial intelligence technologies, including third-party AI services 
-                (such as Suno for music generation and NanoBanana for image generation), to create songs, 
+                The Service uses artificial intelligence technologies to create songs, 
                 greeting cards, and other content based on your inputs and preferences.
               </p>
               
@@ -191,11 +190,10 @@ export default function TermsOfServicePage() {
                 is also subject to the terms and policies of these providers, including but not limited to:
               </p>
               <ul>
-                <li>Suno (AI music generation)</li>
-                <li>OpenAI (text and image AI)</li>
-                <li>NanoBanana (image generation)</li>
-                <li>Stripe (payment processing)</li>
-                <li>SendGrid and Twilio (delivery services)</li>
+                <li>AI music and voice generation services</li>
+                <li>AI text and image generation services</li>
+                <li>Payment processing services</li>
+                <li>Email and SMS delivery services</li>
               </ul>
             </CardContent>
           </Card>
