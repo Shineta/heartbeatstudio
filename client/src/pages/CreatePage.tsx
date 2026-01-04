@@ -159,6 +159,8 @@ export default function CreatePage() {
   const [generatedFestiveUrl, setGeneratedFestiveUrl] = useState<string | null>(null);
   const [festiveInstructions, setFestiveInstructions] = useState('');
   const [festiveChangeOutfit, setFestiveChangeOutfit] = useState(true);
+  const [festiveRemoveGlasses, setFestiveRemoveGlasses] = useState(false);
+  const [festiveRemoveBraces, setFestiveRemoveBraces] = useState(false);
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -695,6 +697,8 @@ export default function CreatePage() {
         style: festiveStyle,
         instructions: festiveInstructions.trim() || undefined,
         changeOutfit: festiveChangeOutfit,
+        removeGlasses: festiveRemoveGlasses,
+        removeBraces: festiveRemoveBraces,
       });
       
       if (!res.ok) throw new Error('Failed to generate festive image');
@@ -2197,6 +2201,32 @@ export default function CreatePage() {
                                       />
                                       <Label htmlFor="festive-change-outfit" className="text-sm cursor-pointer">
                                         Change outfit to match the scene
+                                      </Label>
+                                    </div>
+                                    
+                                    {/* Remove Glasses option */}
+                                    <div className="flex items-center gap-2">
+                                      <Checkbox
+                                        id="festive-remove-glasses"
+                                        checked={festiveRemoveGlasses}
+                                        onCheckedChange={(checked: boolean) => setFestiveRemoveGlasses(checked === true)}
+                                        data-testid="checkbox-festive-remove-glasses"
+                                      />
+                                      <Label htmlFor="festive-remove-glasses" className="text-sm cursor-pointer">
+                                        Remove glasses
+                                      </Label>
+                                    </div>
+                                    
+                                    {/* Remove Braces option */}
+                                    <div className="flex items-center gap-2">
+                                      <Checkbox
+                                        id="festive-remove-braces"
+                                        checked={festiveRemoveBraces}
+                                        onCheckedChange={(checked: boolean) => setFestiveRemoveBraces(checked === true)}
+                                        data-testid="checkbox-festive-remove-braces"
+                                      />
+                                      <Label htmlFor="festive-remove-braces" className="text-sm cursor-pointer">
+                                        Remove braces
                                       </Label>
                                     </div>
                                   </div>

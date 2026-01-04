@@ -419,8 +419,10 @@ export async function generateFestiveTransform(params: {
   style: string;
   instructions?: string;
   changeOutfit?: boolean;
+  removeGlasses?: boolean;
+  removeBraces?: boolean;
 }): Promise<string> {
-  const { imageUrl, scene, style, instructions, changeOutfit = true } = params;
+  const { imageUrl, scene, style, instructions, changeOutfit = true, removeGlasses = false, removeBraces = false } = params;
   
   // Scene-specific descriptions - expanded to match all frontend options
   const sceneDescriptions: Record<string, string> = {
@@ -506,12 +508,24 @@ export async function generateFestiveTransform(params: {
     ? `\nIMPORTANT: The person must be ${sceneOutfits[scene] || 'wearing festive clothing appropriate for the occasion'}. Replace their original clothing completely with scene-appropriate attire.`
     : '';
   
+  // Build glasses/braces removal instructions
+  const removalInstructions: string[] = [];
+  if (removeGlasses) {
+    removalInstructions.push('Remove any glasses or eyewear from the person - show their natural face without glasses');
+  }
+  if (removeBraces) {
+    removalInstructions.push('Remove any braces from the person\'s teeth - show natural teeth without orthodontic braces');
+  }
+  const removalInstr = removalInstructions.length > 0 
+    ? `\nIMPORTANT MODIFICATIONS: ${removalInstructions.join('. ')}.`
+    : '';
+  
   // Build custom instructions part
   const customInstr = instructions ? `\nAdditional requirements: ${instructions}.` : '';
   
   const prompt = `Transform this person's photo into ${sceneDesc}. 
 Keep the person as the main focus, clearly recognizable with their face prominently featured.
-Place them naturally within the festive scene.${outfitInstr}
+Place them naturally within the festive scene.${outfitInstr}${removalInstr}
 ${styleInstr}.
 The person should look happy and celebrating.${customInstr}
 High quality, visually appealing result suitable for a greeting card cover.`;
