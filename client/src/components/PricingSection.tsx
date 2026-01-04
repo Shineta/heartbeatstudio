@@ -47,7 +47,7 @@ const creditPlans: CreditPlan[] = [
     description: "Try it out and explore the basics",
     icon: Sparkles,
     features: [
-      { text: "3 credits (1 credit = 1 song)", included: true },
+      { text: "3 credits (1 credit = 1 song or card)", included: true },
       { text: "Standard AI voices & styles", included: true },
       { text: "AI-generated cover art", included: true },
       { text: "Shareable link", included: true },
@@ -66,7 +66,7 @@ const creditPlans: CreditPlan[] = [
     description: "Perfect for a single occasion",
     icon: CreditCard,
     features: [
-      { text: "5 credits (make up to 5 songs)", included: true },
+      { text: "5 credits (songs or cards)", included: true },
       { text: "Premium AI voices & styles", included: true },
       { text: "Higher-quality audio", included: true },
       { text: "AI cover art + shareable links", included: true },
@@ -386,7 +386,7 @@ export default function PricingSection() {
             <Card className="inline-block px-8 py-4 bg-muted/50">
               <p className="text-lg font-medium">
                 <span className="text-primary font-bold">How Credits Work:</span>{' '}
-                1 credit = 1 song. Every song includes cover art and a shareable link.
+                1 credit = 1 song or 1 card. Every creation includes cover art and a shareable link.
               </p>
             </Card>
           </div>

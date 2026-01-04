@@ -804,6 +804,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl } = req.body;
       
+      // Check if user has credits available (cards cost 1 credit)
+      const user = await storage.getUser(userId);
+      const songsRemaining = user?.songsRemaining ?? 0;
+      
+      if (songsRemaining <= 0) {
+        return res.status(403).json({ 
+          message: "No credits remaining. Please purchase a Credit Pack or subscribe for more credits.",
+          creditRequired: true 
+        });
+      }
+      
+      // Deduct credit upfront
+      await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+      console.log(`[Card] User ${userId} credit deducted. Credits remaining: ${songsRemaining - 1}`);
+      
       // Validate coverImageSource if provided
       const validCoverSources = ['ai', 'portrait', 'upload', 'festive', 'none'];
       const effectiveCoverSource = coverImageSource && validCoverSources.includes(coverImageSource) 
@@ -993,6 +1008,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(responseData);
     } catch (error: any) {
       console.error("Error generating card:", error);
+      
+      // Refund the credit if card generation failed
+      try {
+        const userId = (req.user as any).id;
+        const currentUser = await storage.getUser(userId);
+        if (currentUser) {
+          const refundedCredits = (currentUser.songsRemaining ?? 0) + 1;
+          await storage.updateUser(userId, { songsRemaining: refundedCredits });
+          console.log(`[Card] Credit refunded for user ${userId} due to failure. Credits remaining: ${refundedCredits}`);
+        }
+      } catch (refundError) {
+        console.error('[Card] Failed to refund credit:', refundError);
+      }
+      
       res.status(500).json({ message: error.message || "Failed to generate card" });
     }
   });
