@@ -802,10 +802,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl } = req.body;
       
       // Validate coverImageSource if provided
-      const validCoverSources = ['ai', 'portrait', 'upload', 'none'];
+      const validCoverSources = ['ai', 'portrait', 'upload', 'festive', 'none'];
       const effectiveCoverSource = coverImageSource && validCoverSources.includes(coverImageSource) 
         ? coverImageSource 
         : 'ai';
@@ -824,6 +824,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (effectiveCoverSource === 'upload') {
         if (!uploadedCoverUrl || typeof uploadedCoverUrl !== 'string') {
           return res.status(400).json({ message: 'Upload mode requires an uploaded cover image URL' });
+        }
+      }
+      
+      // Validate festiveImageUrl if festive mode selected
+      if (effectiveCoverSource === 'festive') {
+        if (!festiveImageUrl || typeof festiveImageUrl !== 'string') {
+          return res.status(400).json({ message: 'Festive mode requires a generated festive image. Please generate a festive transform first.' });
         }
       }
       
@@ -917,6 +924,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use the user's uploaded cover image
         console.log('[Card] Using uploaded cover image:', uploadedCoverUrl);
         imageUrl = uploadedCoverUrl;
+      } else if (effectiveCoverSource === 'festive' && festiveImageUrl) {
+        // Use the pre-generated festive transform image
+        console.log('[Card] Using festive transform image:', festiveImageUrl);
+        imageUrl = festiveImageUrl;
       } else {
         // Default: AI generated cover image
         if (process.env.NANO_BANANA_API_KEY) {
@@ -1297,7 +1308,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.status(500).json({ message: error.message || 'Failed to generate festive image' });
+      // Provide actionable error messages based on error type
+      let userMessage = 'Failed to generate festive image. Please try again.';
+      if (error.message?.includes('timeout') || error.message?.includes('TIMEOUT')) {
+        userMessage = 'The image generation timed out. Please try again with a clearer photo.';
+      } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        userMessage = 'Service is temporarily busy. Please wait a moment and try again.';
+      } else if (error.message?.includes('No image generated')) {
+        userMessage = 'Could not generate image. Try using a photo with a clear face visible.';
+      } else if (error.message?.includes('download')) {
+        userMessage = 'Could not save the generated image. Please try again.';
+      }
+      
+      res.status(500).json({ message: userMessage });
     }
   });
 

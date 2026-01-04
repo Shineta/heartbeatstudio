@@ -1211,7 +1211,7 @@ export default function CreatePage() {
       }),
       // Include festive transformed image when festive is selected
       ...(coverImageSource === 'festive' && generatedFestiveUrl && {
-        uploadedCoverUrl: generatedFestiveUrl
+        festiveImageUrl: generatedFestiveUrl
       })
     };
     cardMutation.mutate(cardData);
