@@ -3,7 +3,7 @@ import { storage } from './storage';
 
 // Credit amounts for each product type
 const CREDIT_AMOUNTS: Record<string, number> = {
-  'Credit Pack': 5,
+  'Credit Pack': 10,
   'Date Night Kit': 3,
   'Birthday Blast': 1,
   'Gospel Greeting': 2,

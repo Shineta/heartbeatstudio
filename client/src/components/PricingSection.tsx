@@ -66,7 +66,7 @@ const creditPlans: CreditPlan[] = [
     description: "Perfect for a single occasion",
     icon: CreditCard,
     features: [
-      { text: "5 credits (songs or cards)", included: true },
+      { text: "10 credits (songs or cards)", included: true },
       { text: "Premium AI voices & styles", included: true },
       { text: "Higher-quality audio", included: true },
       { text: "AI cover art + shareable links", included: true },
