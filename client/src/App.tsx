@@ -39,7 +39,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/festive-transform-info', '/contact', '/privacy'];
+    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/festive-transform-info', '/contact', '/privacy', '/terms'];
     const isPublicPath = publicPaths.includes(location) || 
       location.startsWith('/auth/verify-magic-link') || 
       location.startsWith('/auth/reset-password') || 
