@@ -430,10 +430,10 @@ export async function generateFestiveTransform(params: {
     'christmas': 'a warm Christmas scene with decorated tree, twinkling lights, wrapped presents, cozy fireplace, snow visible through window, holiday ornaments',
     'hanukkah': 'a beautiful Hanukkah celebration with lit menorah, dreidels, gelt coins, blue and white decorations, warm candlelight glow',
     'kwanzaa': 'a vibrant Kwanzaa celebration with kinara candles, African-inspired patterns, red black and green decorations, unity cup, cultural elements',
-    'new-years': 'a glamorous New Year\'s Eve celebration with champagne, confetti, sparklers, balloons, midnight countdown clock, festive streamers',
+    'new-years': 'a glamorous New Year\'s Eve celebration with confetti, sparklers, balloons, midnight countdown clock showing 11:59, festive streamers, party hats',
     'thanksgiving': 'a warm Thanksgiving scene with autumn harvest decorations, pumpkins, fall leaves, cornucopia, cozy dining atmosphere',
     'easter': 'a cheerful Easter scene with colorful eggs, spring flowers, Easter baskets, pastel decorations, soft spring lighting',
-    'passover': 'an elegant Passover seder scene with ceremonial plate, matzah, wine cups, candlelight, family gathering atmosphere',
+    'passover': 'an elegant Passover seder scene with ceremonial plate, matzah, candlelight, Star of David decorations, family gathering atmosphere',
     'halloween': 'a fun Halloween scene with jack-o-lanterns, fall decorations, candy, friendly spooky atmosphere, autumn colors',
     'valentines': 'a romantic Valentine\'s Day scene with red roses, hearts, soft pink lighting, love-themed decorations',
     'fourth-of-july': 'a patriotic Fourth of July scene with American flags, red white and blue decorations, fireworks in background, summer celebration',
@@ -445,10 +445,10 @@ export async function generateFestiveTransform(params: {
     // Life Events
     'birthday': 'a joyful birthday party scene with colorful balloons, birthday cake with candles, streamers, presents, celebration atmosphere',
     'graduation': 'a proud graduation celebration scene with cap and gown elements, diploma, balloons, achievement decorations, celebratory atmosphere',
-    'wedding': 'an elegant wedding celebration with white flowers, romantic decorations, soft lighting, champagne, love and joy atmosphere',
+    'wedding': 'an elegant wedding celebration with white flowers, romantic decorations, soft lighting, wedding cake, love and joy atmosphere',
     'baby-shower': 'a sweet baby shower scene with pastel colors, baby-themed decorations, balloons, gifts, soft and joyful atmosphere',
-    'anniversary': 'a romantic anniversary celebration with elegant decorations, champagne, roses, candlelight, love and celebration',
-    'retirement': 'a celebratory retirement scene with congratulatory decorations, champagne, achievement recognition, joyful atmosphere',
+    'anniversary': 'a romantic anniversary celebration with elegant decorations, roses, candlelight, love and celebration, heart decorations',
+    'retirement': 'a celebratory retirement scene with congratulatory decorations, balloons, achievement recognition, joyful atmosphere, gold and silver accents',
     // Special Days
     'mothers-day': 'a beautiful Mother\'s Day scene with elegant flowers, spring garden, soft warm lighting, loving atmosphere',
     'fathers-day': 'a warm Father\'s Day scene with classic decorations, ties, tools, masculine touches, family celebration atmosphere',
@@ -520,14 +520,23 @@ export async function generateFestiveTransform(params: {
     ? `\nIMPORTANT MODIFICATIONS: ${removalInstructions.join('. ')}.`
     : '';
   
-  // Build custom instructions part
-  const customInstr = instructions ? `\nAdditional requirements: ${instructions}.` : '';
+  // Build custom instructions part - make prohibitions more prominent
+  let customInstr = '';
+  if (instructions) {
+    // Check if it contains "no" or "without" to treat as a prohibition
+    const lowerInstr = instructions.toLowerCase();
+    if (lowerInstr.includes('no ') || lowerInstr.includes('without') || lowerInstr.includes("don't") || lowerInstr.includes('avoid')) {
+      customInstr = `\nCRITICAL RESTRICTION - DO NOT INCLUDE: ${instructions}. This is a strict requirement.`;
+    } else {
+      customInstr = `\nAdditional requirements: ${instructions}.`;
+    }
+  }
   
   const prompt = `Transform this person's photo into ${sceneDesc}. 
 Keep the person as the main focus, clearly recognizable with their face prominently featured.
-Place them naturally within the festive scene.${outfitInstr}${removalInstr}
+Place them naturally within the festive scene.${outfitInstr}${removalInstr}${customInstr}
 ${styleInstr}.
-The person should look happy and celebrating.${customInstr}
+The person should look happy and celebrating.
 High quality, visually appealing result suitable for a greeting card cover.`;
 
   console.log(`[NanoBanana] Generating festive transform: ${scene} in ${style} style`);
