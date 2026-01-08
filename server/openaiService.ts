@@ -563,6 +563,98 @@ export async function generateSongCover(params: {
   return imageUrl;
 }
 
+// Sung Prayer - Generate dynamic suggestions based on prayer intention
+export interface PrayerSuggestion {
+  thanksgiving: Array<{ id: string; label: string; text: string }>;
+  declaration: Array<{ ref: string; text: string }>;
+  promises: Array<{ ref: string; text: string }>;
+}
+
+export async function generatePrayerSuggestions(params: {
+  intention: string;
+  prayerFor?: "myself" | "someone";
+  recipientName?: string;
+}): Promise<PrayerSuggestion> {
+  console.log(`[PrayerSuggestions] Generating suggestions for intention: "${params.intention}"`);
+
+  const forWhom = params.prayerFor === "someone" && params.recipientName 
+    ? params.recipientName 
+    : "myself";
+
+  const systemPrompt = `You are a knowledgeable Bible scholar and worship leader who helps people pray with scripture.
+You return ONLY valid JSON that can be parsed.
+You provide real, accurate Bible verses with correct references.`;
+
+  const userPrompt = `Based on this prayer intention: "${params.intention}"
+${params.prayerFor === "someone" ? `This prayer is for: ${params.recipientName || "someone else"}` : "This prayer is for myself"}
+
+Generate personalized prayer content with REAL Bible verses that directly relate to this specific intention.
+
+For a prayer about "${params.intention}", provide:
+
+1. THANKSGIVING (3-5 options): Short gratitude statements that connect to this intention
+   - Each should acknowledge God's character or past faithfulness related to the topic
+   - Keep each to 1-2 sentences
+
+2. DECLARATION SCRIPTURES (4-6 verses): Bible verses to declare/speak over the situation
+   - Must be REAL verses with accurate references
+   - Choose verses that directly address the prayer intention
+   - These are "I AM" or "God IS" style declarations
+
+3. PROMISE SCRIPTURES (4-6 verses): Bible verses that contain God's promises related to this need
+   - Must be REAL verses with accurate references
+   - Choose verses that offer hope, comfort, or assurance for this specific situation
+
+Return JSON in this exact format:
+{
+  "thanksgiving": [
+    { "id": "thank1", "label": "Short button label", "text": "Full thanksgiving sentence" },
+    { "id": "thank2", "label": "Short button label", "text": "Full thanksgiving sentence" }
+  ],
+  "declaration": [
+    { "ref": "Book Chapter:Verse", "text": "Exact scripture text" }
+  ],
+  "promises": [
+    { "ref": "Book Chapter:Verse", "text": "Exact scripture text" }
+  ]
+}`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "{}";
+    let parsed: any;
+    
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      console.error("[PrayerSuggestions] Failed to parse JSON:", raw);
+      throw new Error("Failed to parse prayer suggestions");
+    }
+
+    // Validate the response structure
+    if (!parsed.thanksgiving || !parsed.declaration || !parsed.promises) {
+      console.error("[PrayerSuggestions] Invalid response structure:", parsed);
+      throw new Error("Invalid prayer suggestions response");
+    }
+
+    console.log(`[PrayerSuggestions] Generated ${parsed.thanksgiving.length} thanksgiving, ${parsed.declaration.length} declaration, ${parsed.promises.length} promises`);
+    
+    return parsed as PrayerSuggestion;
+  } catch (error: any) {
+    console.error("[PrayerSuggestions] Error:", error.message);
+    throw error;
+  }
+}
+
 // Family Portrait Composer - Analyze photos for faces/subjects (people AND pets)
 export interface DetectedFace {
   id: string;

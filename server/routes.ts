@@ -6,7 +6,7 @@ import multer from 'multer';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToken, hashPassword, isAdminEmail } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover } from "./openaiService";
+import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover, generatePrayerSuggestions } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
@@ -1372,6 +1372,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       message: "AI Animation generation is coming soon! This feature will be available when video generation APIs become publicly accessible.",
       comingSoon: true
     });
+  });
+
+  // Generate dynamic prayer suggestions based on prayer intention
+  app.post('/api/sung-prayer/suggestions', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        intention: z.string().min(3, "Prayer intention must be at least 3 characters"),
+        prayerFor: z.enum(["myself", "someone"]).optional(),
+        recipientName: z.string().optional(),
+      });
+
+      const parsed = schema.parse(req.body);
+      
+      const suggestions = await generatePrayerSuggestions({
+        intention: parsed.intention,
+        prayerFor: parsed.prayerFor,
+        recipientName: parsed.recipientName,
+      });
+
+      res.json(suggestions);
+    } catch (error: any) {
+      console.error("[API] Error generating prayer suggestions:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: error.errors[0]?.message || "Invalid request" });
+      }
+      res.status(503).json({ message: "Unable to generate suggestions. Please try again." });
+    }
   });
 
   // Generate AI Questionnaire - personalized follow-up questions based on song details

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,42 +8,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { HandHeart, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, BookOpen, Heart, Star } from "lucide-react";
+import { HandHeart, Music, Sparkles, Loader2, Play, Pause, Share2, CheckCircle2, BookOpen, Heart, Star, Wand2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { gospelGenres } from "@/lib/genres";
 
-const thanksgivingPrompts = [
+// Default static options (used as fallback)
+const defaultThanksgivingPrompts = [
   { id: "blessings", label: "Thank God for blessings", text: "Thank you Lord for all Your blessings, for Your love that never ends" },
   { id: "family", label: "Thank God for family", text: "Thank you Lord for my family, for the love that we share" },
   { id: "health", label: "Thank God for health", text: "Thank you Lord for health and strength, for waking me up each day" },
   { id: "provision", label: "Thank God for provision", text: "Thank you Lord for Your provision, You supply all my needs" },
   { id: "grace", label: "Thank God for grace", text: "Thank you Lord for Your amazing grace, that saved a wretch like me" },
-  { id: "custom", label: "Write your own thanksgiving", text: "" },
 ];
 
-const declarationScriptures = [
+const defaultDeclarationScriptures = [
   { ref: "Psalm 23:1", text: "The Lord is my shepherd, I shall not want" },
   { ref: "Isaiah 41:10", text: "Fear not, for I am with you; be not dismayed, for I am your God" },
   { ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me" },
   { ref: "Romans 8:28", text: "All things work together for good for those who love God" },
-  { ref: "Jeremiah 29:11", text: "For I know the plans I have for you, declares the Lord, plans to prosper you" },
-  { ref: "Psalm 91:1-2", text: "He who dwells in the shelter of the Most High will rest in the shadow of the Almighty" },
-  { ref: "Isaiah 54:17", text: "No weapon formed against me shall prosper" },
-  { ref: "Deuteronomy 28:13", text: "The Lord will make you the head, not the tail" },
 ];
 
-const promiseScriptures = [
+const defaultPromiseScriptures = [
   { ref: "Matthew 11:28", text: "Come to me, all who are weary, and I will give you rest" },
   { ref: "John 14:27", text: "Peace I leave with you; my peace I give you" },
   { ref: "Psalm 30:5", text: "Weeping may endure for a night, but joy comes in the morning" },
   { ref: "Isaiah 40:31", text: "Those who hope in the Lord will renew their strength" },
-  { ref: "2 Chronicles 7:14", text: "If my people humble themselves and pray, I will heal their land" },
-  { ref: "Malachi 3:10", text: "Test me in this and see if I will not open the floodgates of heaven" },
-  { ref: "Psalm 103:3", text: "He forgives all your sins and heals all your diseases" },
-  { ref: "Romans 8:37", text: "We are more than conquerors through Him who loved us" },
 ];
 
 interface GeneratedPrayer {
@@ -74,13 +66,20 @@ export default function CreateSungPrayer() {
   const [intention, setIntention] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("gospel");
   
+  // Dynamic suggestions from AI
+  const [thanksgivingPrompts, setThanksgivingPrompts] = useState(defaultThanksgivingPrompts);
+  const [declarationScriptures, setDeclarationScriptures] = useState(defaultDeclarationScriptures);
+  const [promiseScriptures, setPromiseScriptures] = useState(defaultPromiseScriptures);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionsGenerated, setSuggestionsGenerated] = useState(false);
+  
   const [thanksgivingType, setThanksgivingType] = useState("blessings");
   const [customThanksgiving, setCustomThanksgiving] = useState("");
   
-  const [selectedDeclaration, setSelectedDeclaration] = useState<typeof declarationScriptures[0] | null>(declarationScriptures[0]);
+  const [selectedDeclaration, setSelectedDeclaration] = useState<typeof defaultDeclarationScriptures[0] | null>(defaultDeclarationScriptures[0]);
   const [customDeclaration, setCustomDeclaration] = useState("");
   
-  const [selectedPromise, setSelectedPromise] = useState<typeof promiseScriptures[0] | null>(promiseScriptures[0]);
+  const [selectedPromise, setSelectedPromise] = useState<typeof defaultPromiseScriptures[0] | null>(defaultPromiseScriptures[0]);
   const [customPromise, setCustomPromise] = useState("");
   
   const [generating, setGenerating] = useState(false);
@@ -89,6 +88,67 @@ export default function CreateSungPrayer() {
   const [shareLink, setShareLink] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch AI-generated suggestions based on intention
+  const fetchSuggestions = useCallback(async (intentionText: string) => {
+    if (intentionText.trim().length < 3) {
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    try {
+      const response = await apiRequest('POST', '/api/sung-prayer/suggestions', {
+        intention: intentionText,
+        prayerFor: prayerFor as "myself" | "someone",
+        recipientName: prayerFor === "someone" ? recipientName : undefined,
+      });
+      
+      const data = await response.json();
+      
+      if (data.thanksgiving && data.thanksgiving.length > 0) {
+        // Add custom option to thanksgiving
+        setThanksgivingPrompts([...data.thanksgiving, { id: "custom", label: "Write your own thanksgiving", text: "" }]);
+        setThanksgivingType(data.thanksgiving[0].id);
+      }
+      
+      if (data.declaration && data.declaration.length > 0) {
+        setDeclarationScriptures(data.declaration);
+        setSelectedDeclaration(data.declaration[0]);
+      }
+      
+      if (data.promises && data.promises.length > 0) {
+        setPromiseScriptures(data.promises);
+        setSelectedPromise(data.promises[0]);
+      }
+      
+      setSuggestionsGenerated(true);
+    } catch (error: any) {
+      console.error('Error fetching prayer suggestions:', error);
+      // Keep default options on error
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, [prayerFor, recipientName]);
+
+  // Debounced effect to fetch suggestions when intention changes
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (intention.trim().length >= 3) {
+      debounceRef.current = setTimeout(() => {
+        fetchSuggestions(intention);
+      }, 800);
+    }
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [intention, fetchSuggestions]);
 
   const handlePlayPause = () => {
     if (!prayer?.audioUrl) {
@@ -303,6 +363,18 @@ The song should flow naturally through all three parts, creating a complete pray
                     required
                     data-testid="textarea-intention"
                   />
+                  {loadingSuggestions && (
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <Wand2 className="w-4 h-4 animate-pulse" />
+                      <span>Personalizing scriptures for your prayer...</span>
+                    </div>
+                  )}
+                  {suggestionsGenerated && !loadingSuggestions && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Scriptures tailored to your intention</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
