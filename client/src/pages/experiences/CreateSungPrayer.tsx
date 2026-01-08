@@ -126,6 +126,15 @@ export default function CreateSungPrayer() {
   }
 
   const handleGenerate = async () => {
+    if (!intention.trim()) {
+      toast({
+        title: "Prayer Intention Required",
+        description: "Please enter what you're praying for.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (prayerFor === "someone" && !recipientName.trim()) {
       toast({
         title: "Name Required",
@@ -283,7 +292,7 @@ The song should flow naturally through all three parts, creating a complete pray
                 )}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="intention">Prayer Intention (optional)</Label>
+                  <Label htmlFor="intention">Prayer Intention <span className="text-destructive">*</span></Label>
                   <Textarea
                     id="intention"
                     placeholder="What is this prayer for? (healing, guidance, peace, etc.)"
@@ -291,6 +300,7 @@ The song should flow naturally through all three parts, creating a complete pray
                     onChange={(e) => setIntention(e.target.value)}
                     className="resize-none"
                     rows={2}
+                    required
                     data-testid="textarea-intention"
                   />
                 </div>
