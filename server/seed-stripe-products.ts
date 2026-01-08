@@ -148,6 +148,30 @@ async function seedProducts() {
     console.log('Classroom Cheers already exists, skipping...');
   }
 
+  if (!productNames.includes('Sung Prayer')) {
+    console.log('Creating Sung Prayer product...');
+    const sungPrayer = await stripe.products.create({
+      name: 'Sung Prayer',
+      description: 'Personalized sung prayer with 3-part biblical structure (Thanksgiving, Declaration, Promises)',
+      metadata: {
+        type: 'kit',
+        songs: '1',
+        parts: '3',
+        theme: 'spiritual',
+      },
+    });
+
+    await stripe.prices.create({
+      product: sungPrayer.id,
+      unit_amount: 799,
+      currency: 'usd',
+      metadata: { plan: 'sung_prayer' },
+    });
+    console.log('Sung Prayer created:', sungPrayer.id);
+  } else {
+    console.log('Sung Prayer already exists, skipping...');
+  }
+
   console.log('Stripe products seeded successfully!');
 }
 
