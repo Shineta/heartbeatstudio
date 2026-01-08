@@ -30,6 +30,8 @@ import CreateDateNight from "@/pages/experiences/CreateDateNight";
 import CreateBirthdayBlast from "@/pages/experiences/CreateBirthdayBlast";
 import CreateGospelGreeting from "@/pages/experiences/CreateGospelGreeting";
 import CreateClassroomCheers from "@/pages/experiences/CreateClassroomCheers";
+import SungPrayerExperience from "@/pages/experiences/SungPrayerExperience";
+import CreateSungPrayer from "@/pages/experiences/CreateSungPrayer";
 import AdminPage from "@/pages/AdminPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import NotFound from "@/pages/not-found";
@@ -82,19 +84,23 @@ function Router() {
       <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />
       <Route path="/experience/classroom-cheers" component={ClassroomCheersExperience} />
+      <Route path="/experience/sung-prayer" component={SungPrayerExperience} />
       <Route path="/experience/date-night/create" component={isAuthenticated ? CreateDateNight : AuthPage} />
       <Route path="/experience/birthday-blast/create" component={isAuthenticated ? CreateBirthdayBlast : AuthPage} />
       <Route path="/experience/gospel-greeting/create" component={isAuthenticated ? CreateGospelGreeting : AuthPage} />
       <Route path="/experience/classroom-cheers/create" component={isAuthenticated ? CreateClassroomCheers : AuthPage} />
+      <Route path="/experience/sung-prayer/create" component={isAuthenticated ? CreateSungPrayer : AuthPage} />
       {/* Plural aliases for experiences routes */}
       <Route path="/experiences/date-night" component={DateNightExperience} />
       <Route path="/experiences/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experiences/gospel-greeting" component={GospelGreetingExperience} />
       <Route path="/experiences/classroom-cheers" component={ClassroomCheersExperience} />
+      <Route path="/experiences/sung-prayer" component={SungPrayerExperience} />
       <Route path="/experiences/date-night/create" component={isAuthenticated ? CreateDateNight : AuthPage} />
       <Route path="/experiences/birthday-blast/create" component={isAuthenticated ? CreateBirthdayBlast : AuthPage} />
       <Route path="/experiences/gospel-greeting/create" component={isAuthenticated ? CreateGospelGreeting : AuthPage} />
       <Route path="/experiences/classroom-cheers/create" component={isAuthenticated ? CreateClassroomCheers : AuthPage} />
+      <Route path="/experiences/sung-prayer/create" component={isAuthenticated ? CreateSungPrayer : AuthPage} />
       <Route path="/share/mixtape/:link" component={MixtapePage} />
       <Route path="/share/:link" component={SharePage} />
       <Route path="/dashboard" component={isAuthenticated ? RealDashboard : AuthPage} />

@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles, CreditCard, Crown, Loader2, Heart, Cake, Church, GraduationCap, Music, Image, Link2, AlertCircle, Clock, Lightbulb, RefreshCw } from "lucide-react";
+import { Check, Sparkles, CreditCard, Crown, Loader2, Heart, Cake, Church, GraduationCap, Music, Image, Link2, AlertCircle, Clock, Lightbulb, RefreshCw, HandHeart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
@@ -176,6 +176,26 @@ const experiences = [
     cta: "Celebrate Your Classroom",
     mode: "payment",
     route: "/experience/classroom-cheers",
+  },
+  {
+    name: "Sung Prayer Experience",
+    stripeName: "Sung Prayer",
+    price: "$7.99",
+    emoji: "pray",
+    tagline: "A powerful sung prayer following the biblical pattern of Thanksgiving, Declaration, and Promises.",
+    icon: HandHeart,
+    color: "from-amber-500/20 to-orange-500/20",
+    borderColor: "border-amber-200 dark:border-amber-800",
+    includes: [
+      "1 personalized sung prayer",
+      "Three-part biblical structure",
+      "Scripture-based lyrics",
+      "Gospel, Soul, or Worship style",
+      "Shareable prayer blessing",
+    ],
+    cta: "Create Your Sung Prayer",
+    mode: "payment",
+    route: "/experience/sung-prayer",
   },
 ];
 

@@ -33,6 +33,13 @@ Preferred communication style: Simple, everyday language.
 - Creation wizard for generating AI content (songs, cards, animations) with step-by-step guidance
 - Authentication-gated routes that redirect to landing or login as needed
 
+**Experience Kits**
+- Date Night Experience: 3 romantic songs with emotional progression
+- Birthday Blast Experience: 5 personalized birthday songs
+- Gospel Greeting Experience: 2 gospel-inspired audio messages with scripture
+- Classroom Cheers Experience: 5 group songs for students and educators
+- Sung Prayer Experience: 3-part biblical prayer structure (Thanksgiving, Declaration, Promises)
+
 ### Backend Architecture
 
 **Server Framework**
