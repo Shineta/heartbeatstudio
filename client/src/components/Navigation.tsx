@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X, LogOut, Settings } from "lucide-react";
+import { Heart, Menu, X, LogOut, Settings, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -155,6 +155,29 @@ export default function Navigation() {
                               {typedUser?.email}
                             </p>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Credits Section */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Credits</h3>
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Coins className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-2xl font-bold" data-testid="text-credits-remaining" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                              {typedUser?.songsRemaining ?? 0}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              credits remaining
+                            </p>
+                          </div>
+                          <Link href="/pricing">
+                            <Button variant="outline" size="sm" data-testid="button-get-more-credits">
+                              Get More
+                            </Button>
+                          </Link>
                         </div>
                       </div>
 
