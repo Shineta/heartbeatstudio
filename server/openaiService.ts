@@ -282,6 +282,105 @@ export async function generateSongLyrics(
 ): Promise<GeneratedSongLyrics> {
   const normalizedGenre = normalizeGenre(params.genre);
 
+  // Check if this is a Sung Prayer request (THREE-PART structure)
+  const isSungPrayer = params.customMessage && 
+    params.customMessage.includes('THREE-PART BIBLICAL PRAYER STRUCTURE');
+
+  if (isSungPrayer && params.customMessage) {
+    console.log('[OpenAI] Detected Sung Prayer request, using three-part prayer structure');
+    
+    // Extract the three parts from the customMessage
+    const thanksgivingMatch = params.customMessage.match(/PART 1 - THANKSGIVING[^:]*:\s*([^\n]+(?:\n(?!PART 2)[^\n]+)*)/i);
+    const declarationMatch = params.customMessage.match(/PART 2 - DECLARE[^:]*:\s*([^\n]+(?:\n(?!PART 3)[^\n]+)*)/i);
+    const promiseMatch = params.customMessage.match(/PART 3 - CLAIMING[^:]*:\s*([^\n]+(?:\n(?!This prayer)[^\n]+)*)/i);
+    const intentionMatch = params.customMessage.match(/Prayer intention:\s*([^\n]+)/i);
+    
+    const thanksgivingText = thanksgivingMatch ? thanksgivingMatch[1].trim() : "";
+    const declarationText = declarationMatch ? declarationMatch[1].trim() : "";
+    const promiseText = promiseMatch ? promiseMatch[1].trim() : "";
+    const intentionText = intentionMatch ? intentionMatch[1].trim() : "";
+    
+    console.log('[OpenAI] Extracted prayer parts:', { 
+      thanksgiving: thanksgivingText.substring(0, 50) + '...', 
+      declaration: declarationText.substring(0, 50) + '...', 
+      promise: promiseText.substring(0, 50) + '...',
+      intention: intentionText 
+    });
+
+    const systemPrompt = `
+You are a professional gospel songwriter specializing in sung prayers.
+You create heartfelt prayer songs that SING the actual prayer words and scriptures provided.
+You return ONLY valid JSON that my code can parse.
+The scriptures and prayer words MUST be sung word-for-word - this is sacred text.
+`.trim();
+
+    const userPrompt = `
+Create a SUNG PRAYER for ${params.recipientName} following this THREE-PART BIBLICAL PRAYER STRUCTURE.
+Prayer intention: ${intentionText}
+Genre style: ${normalizedGenre || "gospel"}
+
+=== THE THREE PARTS (THESE EXACT WORDS MUST BE SUNG) ===
+
+PART 1 - THANKSGIVING (Opening with Gratitude):
+"${thanksgivingText}"
+
+PART 2 - DECLARE GOD'S WORD (Speaking Scripture - MUST BE SUNG WORD-FOR-WORD):
+"${declarationText}"
+
+PART 3 - CLAIMING PROMISES (Standing on God's Promises - MUST BE SUNG WORD-FOR-WORD):
+"${promiseText}"
+
+=== CRITICAL INSTRUCTIONS ===
+
+1. SING THE ACTUAL WORDS PROVIDED ABOVE - especially the scripture texts. Do NOT paraphrase or summarize.
+2. Structure the song as:
+   - [Intro/Thanksgiving]: Sing the thanksgiving text
+   - [Verse 1/Declaration]: Sing the declaration scripture WORD-FOR-WORD
+   - [Chorus]: A refrain based on the prayer intention
+   - [Verse 2/Promise]: Sing the promise scripture WORD-FOR-WORD
+   - [Outro/Vamp]: Praise break or repeated affirmation
+3. You may repeat lines for musical emphasis
+4. Keep the sacred integrity of the scripture text
+5. Make it flow naturally when sung, maintaining the ${normalizedGenre} style
+6. The Bible verses (declaration and promise) are the CENTERPIECE - sing them completely
+
+RETURN FORMAT (IMPORTANT):
+Return ONLY a JSON object with this exact shape:
+
+{
+  "title": "Create a meaningful title based on the prayer intention",
+  "lyrics": "The full song lyrics with the thanksgiving, scriptures, and promises sung word-for-word, with section labels"
+}
+`.trim();
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "{}";
+    let parsed: any;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      console.error("Failed to parse Sung Prayer lyrics JSON:", raw);
+      throw new Error("Failed to parse lyrics response from OpenAI");
+    }
+
+    if (!parsed.title || !parsed.lyrics) {
+      throw new Error("Sung Prayer lyrics response missing title or lyrics");
+    }
+
+    console.log('[OpenAI] Sung Prayer lyrics generated:', parsed.title);
+    console.log('[OpenAI] Lyrics preview:', parsed.lyrics.substring(0, 200) + '...');
+    return { title: parsed.title, lyrics: parsed.lyrics };
+  }
+
   // Check if this is a Bible verse singing request
   const isBibleVerseSong = params.customMessage && 
     (params.customMessage.includes('WORD-FOR-WORD') || 
