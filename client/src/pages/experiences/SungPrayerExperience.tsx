@@ -3,12 +3,13 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { HandHeart, Sparkles, Music, BookOpen, ArrowLeft, Loader2 } from "lucide-react";
+import { HandHeart, Sparkles, Music, BookOpen, ArrowLeft, Loader2, Coins } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@shared/schema";
 
 interface StripeProduct {
   id: string;
@@ -19,15 +20,44 @@ interface StripeProduct {
   }[];
 }
 
+const CREDITS_REQUIRED = 2;
+
 export default function SungPrayerExperience() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const typedUser = user as User | undefined;
   const [loading, setLoading] = useState(false);
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ['/api/stripe/products'],
   });
+  
+  const userCredits = typedUser?.songsRemaining ?? 0;
+  const hasEnoughCredits = userCredits >= CREDITS_REQUIRED;
+
+  const handleUseCredits = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to create a Sung Prayer.",
+      });
+      setLocation('/auth');
+      return;
+    }
+
+    if (!hasEnoughCredits) {
+      toast({
+        title: "Not enough credits",
+        description: `You need ${CREDITS_REQUIRED} credits to create a Sung Prayer. You have ${userCredits}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigate to creation page - credits will be deducted when prayer is generated
+    setLocation('/experience/sung-prayer/create');
+  };
 
   const handlePurchase = async () => {
     if (!isAuthenticated) {
@@ -199,11 +229,6 @@ export default function SungPrayerExperience() {
 
         <Card className="border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50">
           <CardContent className="p-8 text-center">
-            <div className="text-4xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }} data-testid="text-price">
-              $7.99
-            </div>
-            <p className="text-muted-foreground mb-6" data-testid="text-price-period">One-time purchase</p>
-            
             <div className="space-y-2 mb-6 text-sm">
               <p>1 Personalized Sung Prayer (3-part structure)</p>
               <p>Gospel, Soul, or Worship style</p>
@@ -211,29 +236,78 @@ export default function SungPrayerExperience() {
               <p>Shareable link to send as a blessing</p>
             </div>
 
-            <Button 
-              size="lg" 
-              className="w-full md:w-auto bg-amber-500 hover:bg-amber-600"
-              onClick={handlePurchase}
-              disabled={loading || productsLoading}
-              data-testid="button-purchase-sung-prayer"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
+            {isAuthenticated && hasEnoughCredits ? (
+              <>
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 mb-4 border border-primary/20">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Coins className="w-5 h-5 text-primary" />
+                    <span className="font-semibold">You have {userCredits} credits</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Use {CREDITS_REQUIRED} credits to create your Sung Prayer</p>
+                </div>
+                
+                <Button 
+                  size="lg" 
+                  className="w-full md:w-auto bg-amber-500 hover:bg-amber-600"
+                  onClick={handleUseCredits}
+                  data-testid="button-use-credits"
+                >
                   <HandHeart className="w-4 h-4 mr-2" />
-                  Create Your Sung Prayer
-                </>
-              )}
-            </Button>
+                  Create with Credits
+                </Button>
 
-            <p className="text-xs text-muted-foreground mt-4">
-              Or use 2 credits from your account
-            </p>
+                <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800">
+                  <p className="text-xs text-muted-foreground mb-2">Or purchase separately</p>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePurchase}
+                    disabled={loading || productsLoading}
+                    data-testid="button-purchase-sung-prayer"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>Buy for $7.99</>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-4xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }} data-testid="text-price">
+                  $7.99
+                </div>
+                <p className="text-muted-foreground mb-6" data-testid="text-price-period">One-time purchase</p>
+
+                <Button 
+                  size="lg" 
+                  className="w-full md:w-auto bg-amber-500 hover:bg-amber-600"
+                  onClick={handlePurchase}
+                  disabled={loading || productsLoading}
+                  data-testid="button-purchase-sung-prayer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <HandHeart className="w-4 h-4 mr-2" />
+                      Create Your Sung Prayer
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-xs text-muted-foreground mt-4">
+                  Or use {CREDITS_REQUIRED} credits from your account
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
