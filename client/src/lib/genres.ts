@@ -12,11 +12,18 @@ export const allGenres = [
   { id: "acoustic", label: "Acoustic" },
   { id: "classical", label: "Classical" },
   { id: "gospel", label: "Gospel" },
+  { id: "black-gospel", label: "Black Gospel (Clark Sisters style)" },
   { id: "contemporary-christian", label: "Contemporary Christian" },
   { id: "hymn", label: "Hymn / Traditional" },
   { id: "choir", label: "Choir" },
   { id: "inspirational", label: "Inspirational" },
   { id: "kids", label: "Kids / Children's" },
+  { id: "neo-soul", label: "Neo-Soul" },
+  { id: "motown", label: "Motown" },
+  { id: "afrobeat", label: "Afrobeat" },
+  { id: "blues", label: "Blues" },
+  { id: "funk", label: "Funk" },
+  { id: "reggae", label: "Reggae" },
 ];
 
 export const rapSubGenres = [
@@ -57,6 +64,18 @@ export const dateNightGenres = allGenres.filter(g =>
   ["soul", "r&b", "pop", "rap", "jazz", "acoustic", "country", "electronic", "classical", "gospel"].includes(g.id)
 );
 
-export const gospelGenres = allGenres.filter(g => 
-  ["gospel", "soul", "contemporary-christian", "hymn", "rap", "r&b", "acoustic", "choir", "inspirational"].includes(g.id)
-);
+export const gospelGenres = [
+  { id: "r&b", label: "R&B" },
+  { id: "gospel", label: "Gospel" },
+  { id: "black-gospel", label: "Black Gospel (Clark Sisters style)" },
+  { id: "neo-soul", label: "Neo-Soul" },
+  { id: "soul", label: "Soul" },
+  { id: "motown", label: "Motown" },
+  { id: "rap", label: "Rap" },
+  { id: "hip-hop", label: "Hip Hop" },
+  { id: "afrobeat", label: "Afrobeat" },
+  { id: "jazz", label: "Jazz" },
+  { id: "blues", label: "Blues" },
+  { id: "funk", label: "Funk" },
+  { id: "reggae", label: "Reggae" },
+];
