@@ -303,7 +303,7 @@ The song should flow naturally through all three parts, creating a complete pray
                     </SelectTrigger>
                     <SelectContent>
                       {gospelGenres.map((genre) => (
-                        <SelectItem key={genre.id} value={genre.id}>
+                        <SelectItem key={genre.id} value={genre.id} data-testid={`select-option-${genre.id}`}>
                           {genre.label}
                         </SelectItem>
                       ))}
