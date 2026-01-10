@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -8,13 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, ArrowLeft, Loader2, Lock, UserPlus, LogIn } from "lucide-react";
+import { Sparkles, Music, ArrowLeft, Loader2, Lock, UserPlus, LogIn, Play, Pause, Volume2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 
 const trySongFormSchema = z.object({
   recipientName: z.string().min(1, "Name is required"),
@@ -30,6 +31,7 @@ type TrySongFormData = z.infer<typeof trySongFormSchema>;
 interface DemoSong {
   title: string;
   lyrics: string;
+  audioUrl: string;
   genre: string;
   tone: string;
   recipientName: string;
@@ -40,8 +42,17 @@ export default function TrySongPage() {
   const [, setLocation] = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [generationStage, setGenerationStage] = useState<'lyrics' | 'audio' | null>(null);
   const [demoSong, setDemoSong] = useState<DemoSong | null>(null);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  
+  // Audio player state
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [previewLimit, setPreviewLimit] = useState(0); // 50% of total duration
+  const [showPreviewEnded, setShowPreviewEnded] = useState(false);
 
   const form = useForm<TrySongFormData>({
     resolver: zodResolver(trySongFormSchema),
@@ -55,21 +66,82 @@ export default function TrySongPage() {
     },
   });
 
-  const generateDemoLyrics = async (data: TrySongFormData): Promise<DemoSong> => {
-    const response = await fetch('/api/try/generate-lyrics', {
+  // Audio player effects
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setPreviewLimit(audio.duration * 0.5); // 50% preview limit
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      // Stop at 50% for preview
+      if (previewLimit > 0 && audio.currentTime >= previewLimit) {
+        audio.pause();
+        setIsPlaying(false);
+        setShowPreviewEnded(true);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [previewLimit]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      // Reset if we hit the preview limit
+      if (currentTime >= previewLimit && previewLimit > 0) {
+        audio.currentTime = 0;
+        setShowPreviewEnded(false);
+      }
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const generateDemoSong = async (data: TrySongFormData): Promise<DemoSong> => {
+    const response = await fetch('/api/try/generate-song', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate preview');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to generate song');
     }
 
     const result = await response.json();
     return {
       title: result.title,
       lyrics: result.lyrics,
+      audioUrl: result.audioUrl,
       genre: data.genre,
       tone: data.tone,
       recipientName: data.recipientName,
@@ -79,18 +151,29 @@ export default function TrySongPage() {
   const onSubmit = async (data: TrySongFormData) => {
     setIsGenerating(true);
     setProgress(0);
+    setGenerationStage('lyrics');
 
+    // Slower progress for actual song generation (takes longer)
     const progressInterval = setInterval(() => {
       setProgress(prev => {
+        if (prev >= 45 && generationStage === 'lyrics') return prev;
         if (prev >= 90) return prev;
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 5;
       });
-    }, 500);
+    }, 1000);
 
     try {
-      const result = await generateDemoLyrics(data);
+      // Update stage for UI
+      setTimeout(() => {
+        setGenerationStage('audio');
+        setProgress(50);
+      }, 10000);
+
+      const result = await generateDemoSong(data);
       setDemoSong(result);
       setProgress(100);
+      setShowPreviewEnded(false);
+      setCurrentTime(0);
       
       localStorage.setItem('heartbeat_try_song', JSON.stringify({
         formData: data,
@@ -99,18 +182,19 @@ export default function TrySongPage() {
       }));
       
       toast({
-        title: "Preview Ready!",
-        description: "Here's a preview of your personalized song lyrics.",
+        title: "Your Song is Ready!",
+        description: "Listen to a preview of your personalized song.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to generate preview. Please try again.",
+        description: error.message || "Failed to generate song. Please try again.",
         variant: "destructive",
       });
     } finally {
       clearInterval(progressInterval);
       setIsGenerating(false);
+      setGenerationStage(null);
     }
   };
 
@@ -334,7 +418,12 @@ export default function TrySongPage() {
                     <div className="space-y-2">
                       <Progress value={progress} className="h-2" />
                       <p className="text-sm text-muted-foreground text-center">
-                        Creating your personalized lyrics...
+                        {generationStage === 'lyrics' 
+                          ? 'Creating your personalized lyrics...' 
+                          : 'Generating your song with vocals and music...'}
+                      </p>
+                      <p className="text-xs text-muted-foreground text-center">
+                        This may take 1-2 minutes
                       </p>
                     </div>
                   )}
@@ -356,25 +445,100 @@ export default function TrySongPage() {
                   </CardDescription>
                 </div>
                 <div className="bg-primary/10 px-3 py-1 rounded-full">
-                  <span className="text-sm font-medium text-primary">Preview</span>
+                  <span className="text-sm font-medium text-primary">50% Preview</span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="bg-muted/50 rounded-lg p-6 mb-6">
-                <h3 className="font-semibold mb-3 text-lg">Your Personalized Lyrics</h3>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed font-mono">
-                  {demoSong.lyrics}
+            <CardContent className="space-y-6">
+              {/* Audio Player */}
+              <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-6 border">
+                <audio ref={audioRef} src={demoSong.audioUrl} preload="metadata" />
+                
+                <div className="flex items-center gap-4 mb-4">
+                  <Button
+                    size="icon"
+                    variant="default"
+                    onClick={togglePlayPause}
+                    className="h-14 w-14 rounded-full"
+                    data-testid="button-play-pause"
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-6 w-6" />
+                    ) : (
+                      <Play className="h-6 w-6 ml-1" />
+                    )}
+                  </Button>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Volume2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{demoSong.title}</span>
+                    </div>
+                    
+                    {/* Progress bar showing preview limit */}
+                    <div className="relative">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary transition-all duration-100"
+                          style={{ width: `${previewLimit > 0 ? (currentTime / previewLimit) * 100 : 0}%` }}
+                        />
+                      </div>
+                      {/* Show where preview ends */}
+                      <div 
+                        className="absolute top-0 h-2 bg-muted-foreground/20 rounded-r-full"
+                        style={{ 
+                          left: '50%',
+                          width: '50%'
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>Preview: {formatTime(previewLimit)} / Full: {formatTime(duration)}</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Preview ended message */}
+                {showPreviewEnded && (
+                  <div className="bg-primary/10 rounded-lg p-3 flex items-center gap-3 border border-primary/20">
+                    <Lock className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">You've heard half the song!</p>
+                      <p className="text-xs text-muted-foreground">Sign up to hear the full version</p>
+                    </div>
+                    <Button size="sm" onClick={handleSaveOrSend} data-testid="button-unlock-full">
+                      Unlock Full Song
+                    </Button>
+                  </div>
+                )}
               </div>
 
+              {/* Lyrics section - collapsible */}
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover-elevate">
+                    <span className="font-semibold">View Lyrics</span>
+                    <span className="text-muted-foreground text-sm group-open:hidden">Click to expand</span>
+                    <span className="text-muted-foreground text-sm hidden group-open:inline">Click to collapse</span>
+                  </div>
+                </summary>
+                <div className="bg-muted/30 rounded-lg p-4 mt-2 max-h-60 overflow-y-auto">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed font-mono">
+                    {demoSong.lyrics}
+                  </div>
+                </div>
+              </details>
+
+              {/* Sign up prompt */}
               <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 border border-primary/20">
                 <div className="flex items-start gap-3">
                   <Lock className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-sm">Ready to bring this to life?</h4>
+                    <h4 className="font-semibold text-sm">Love what you hear?</h4>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Sign up to generate the full audio with vocals, music, and cover art. 
+                      Sign up to get the full song, download it, and share it with your loved one. 
                       Your first 3 credits are free!
                     </p>
                   </div>
@@ -388,12 +552,20 @@ export default function TrySongPage() {
                 data-testid="button-save-song"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Sign Up to Create Full Song
+                Sign Up for Full Song
               </Button>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => setDemoSong(null)}
+                onClick={() => {
+                  setDemoSong(null);
+                  setShowPreviewEnded(false);
+                  setCurrentTime(0);
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                  }
+                }}
                 data-testid="button-try-again"
               >
                 Try Another Song
@@ -407,20 +579,19 @@ export default function TrySongPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                Ready to Create Your Song?
+                Unlock the Full Song
               </DialogTitle>
               <DialogDescription>
-                Sign up for free to generate your full song with audio, vocals, and cover art. 
-                Your lyrics preview will be saved!
+                You've heard half of "{demoSong?.title}" - sign up to unlock the complete song!
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-semibold text-sm mb-2">What you'll get:</h4>
+                <h4 className="font-semibold text-sm mb-2">What you'll unlock:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Full song with vocals and music</li>
+                  <li>• Full-length song (you've only heard 50%)</li>
                   <li>• Personalized cover art</li>
-                  <li>• Shareable link to send to your loved one</li>
+                  <li>• Download and share with your loved one</li>
                   <li>• 3 free credits to start!</li>
                 </ul>
               </div>

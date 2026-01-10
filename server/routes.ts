@@ -8,6 +8,7 @@ import { setupAuth, isAuthenticated, generateMagicLinkToken, verifyMagicLinkToke
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { generateCardContent, generateCardImage, generateSongLyrics, generateSongCover, generatePrayerSuggestions } from "./openaiService";
 import { generateGreetingCard, generateAnimation, generateCassetteCaseImage } from "./nanoBananaService";
+import { generateSongWithLyrics } from "./sunoService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
 import { startScheduler } from "./schedulerService";
@@ -549,17 +550,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     tone: z.string().min(1).max(30),
   });
 
-  // Generate lyrics preview (no audio, no storage, no credits)
-  app.post('/api/try/generate-lyrics', async (req: Request, res: Response) => {
+  // Generate song preview with audio (user can hear half the song)
+  app.post('/api/try/generate-song', async (req: Request, res: Response) => {
     try {
       // Get client IP for rate limiting
       const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
       
-      // Check rate limit
+      // Check rate limit (5 requests per minute per IP)
       if (!tryEndpointRateLimiter.isAllowed(clientIp)) {
         const remaining = tryEndpointRateLimiter.getRemainingRequests(clientIp);
         return res.status(429).json({ 
-          message: 'Too many requests. Please try again in a minute.',
+          message: 'Too many requests. Please try again later.',
           remainingRequests: remaining
         });
       }
@@ -567,10 +568,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate input
       const data = tryLyricsSchema.parse(req.body);
       
-      console.log(`[Try] Generating lyrics preview for IP: ${clientIp.substring(0, 10)}...`);
+      console.log(`[Try] Generating song with audio for IP: ${clientIp.substring(0, 10)}...`);
 
-      // Generate lyrics only (no audio, no storage)
-      const result = await generateSongLyrics({
+      // Step 1: Generate lyrics using AI
+      const lyricsResult = await generateSongLyrics({
         recipientName: data.recipientName,
         relationship: data.relationship,
         occasion: data.occasion,
@@ -579,16 +580,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interests: data.songDetails,
       });
 
+      console.log(`[Try] Lyrics generated: "${lyricsResult.title}". Now generating audio...`);
+
+      // Step 2: Generate audio using Suno with 'quick' duration for try mode
+      const songResult = await generateSongWithLyrics({
+        title: lyricsResult.title,
+        lyrics: lyricsResult.lyrics,
+        tone: data.tone,
+        genre: data.genre,
+        duration: 'quick', // Use quick mode for try feature
+      });
+
+      console.log(`[Try] Song audio generated successfully: ${songResult.audioUrl}`);
+
       res.json({
-        title: result.title,
-        lyrics: result.lyrics,
+        title: songResult.title,
+        lyrics: songResult.lyrics,
+        audioUrl: songResult.audioUrl,
+        isPreview: true, // Flag to indicate this is a preview (frontend limits playback)
       });
     } catch (error: any) {
-      console.error('[Try] Lyrics preview error:', error);
+      console.error('[Try] Song generation error:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid input', errors: error.errors });
       }
-      res.status(500).json({ message: 'Failed to generate preview. Please try again.' });
+      res.status(500).json({ message: 'Failed to generate song preview. Please try again.' });
     }
   });
 
