@@ -738,7 +738,6 @@ export default function CreatePage() {
     { value: 'baby-shower', label: 'Baby Shower' },
     { value: 'anniversary', label: 'Anniversary' },
     { value: 'retirement', label: 'Retirement' },
-    { value: 'get-well', label: 'Get Well' },
     // Special Days
     { value: 'mothers-day', label: 'Mother\'s Day' },
     { value: 'fathers-day', label: 'Father\'s Day' },
