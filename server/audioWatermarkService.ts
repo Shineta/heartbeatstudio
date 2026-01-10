@@ -2,23 +2,20 @@ import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import OpenAI from 'openai';
+import { ObjectStorageService } from './objectStorage';
+import { randomUUID } from 'crypto';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 const mkdir = promisify(fs.mkdir);
+const readFile = promisify(fs.readFile);
 
-const WATERMARK_TEXT = "Heartbeat Studio Preview";
 const WATERMARK_INTERVAL_SECONDS = 15;
-const WATERMARK_VOLUME = 0.7; // 70% volume for watermark
-
-// OpenAI client for TTS
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || 'https://api.openai.com/v1',
-});
+const WATERMARK_VOLUME = 0.6; // 60% volume for watermark (audible but not overwhelming)
 
 const TEMP_DIR = '/tmp/watermarks';
+
+// Pre-generated watermark audio file path (generated once and cached)
 const WATERMARK_FILE = path.join(TEMP_DIR, 'heartbeat_preview_watermark.mp3');
 
 /**
@@ -33,36 +30,51 @@ async function ensureTempDir(): Promise<void> {
 }
 
 /**
- * Generate the watermark audio file using OpenAI TTS
+ * Generate a simple tone watermark using FFmpeg's built-in synthesizer
+ * This creates a distinctive "beep-beep" pattern that signals it's a preview
  */
-async function generateWatermarkAudio(): Promise<string> {
+async function generateToneWatermark(): Promise<string> {
   await ensureTempDir();
   
-  // Check if watermark file already exists
   if (fs.existsSync(WATERMARK_FILE)) {
-    console.log('[Watermark] Using cached watermark audio file');
+    console.log('[Watermark] Using cached tone watermark');
     return WATERMARK_FILE;
   }
   
-  console.log('[Watermark] Generating watermark audio with TTS...');
+  console.log('[Watermark] Generating tone watermark...');
   
-  try {
-    const response = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: 'nova', // Clear, professional female voice
-      input: WATERMARK_TEXT,
-      speed: 1.0,
-    });
-    
-    const buffer = Buffer.from(await response.arrayBuffer());
-    await writeFile(WATERMARK_FILE, buffer);
-    
-    console.log('[Watermark] Watermark audio generated successfully');
-    return WATERMARK_FILE;
-  } catch (error: any) {
-    console.error('[Watermark] TTS generation failed:', error.message);
-    throw new Error('Failed to generate watermark audio');
-  }
+  return new Promise((resolve, reject) => {
+    // Generate a distinctive 3-beep pattern: beep-pause-beep-pause-beep
+    // Each beep is 150ms at 880Hz (high A note), with 100ms pauses
+    // Total duration ~1 second
+    ffmpeg()
+      .input('anullsrc=r=44100:cl=stereo')
+      .inputFormat('lavfi')
+      .complexFilter([
+        // Create three short beeps with the Heartbeat rhythm pattern
+        'sine=frequency=880:duration=0.15[b1]',
+        'sine=frequency=880:duration=0.15[b2]',
+        'sine=frequency=660:duration=0.2[b3]',
+        // Add silence between beeps
+        'aevalsrc=0:d=0.1[s1]',
+        'aevalsrc=0:d=0.1[s2]',
+        // Concatenate: beep, silence, beep, silence, lower beep
+        '[b1][s1][b2][s2][b3]concat=n=5:v=0:a=1[out]'
+      ])
+      .outputOptions(['-map', '[out]'])
+      .audioCodec('libmp3lame')
+      .audioBitrate('128k')
+      .duration(1) // Safety limit
+      .save(WATERMARK_FILE)
+      .on('end', () => {
+        console.log('[Watermark] Tone watermark generated');
+        resolve(WATERMARK_FILE);
+      })
+      .on('error', (err) => {
+        console.error('[Watermark] Tone generation error:', err.message);
+        reject(err);
+      });
+  });
 }
 
 /**
@@ -87,7 +99,7 @@ function getAudioDuration(filePath: string): Promise<number> {
 async function downloadAudio(url: string): Promise<string> {
   await ensureTempDir();
   
-  const tempFile = path.join(TEMP_DIR, `input_${Date.now()}.mp3`);
+  const tempFile = path.join(TEMP_DIR, `input_${Date.now()}_${randomUUID().slice(0, 8)}.mp3`);
   
   const response = await fetch(url);
   if (!response.ok) {
@@ -109,11 +121,11 @@ export async function addWatermarkToAudio(audioUrl: string): Promise<string> {
   await ensureTempDir();
   
   // Generate or get cached watermark audio
-  const watermarkFile = await generateWatermarkAudio();
+  const watermarkFile = await generateToneWatermark();
   
   // Download the source audio
   const inputFile = await downloadAudio(audioUrl);
-  const outputFile = path.join(TEMP_DIR, `watermarked_${Date.now()}.mp3`);
+  const outputFile = path.join(TEMP_DIR, `watermarked_${Date.now()}_${randomUUID().slice(0, 8)}.mp3`);
   
   try {
     // Get durations
@@ -124,64 +136,28 @@ export async function addWatermarkToAudio(audioUrl: string): Promise<string> {
     
     console.log(`[Watermark] Input duration: ${inputDuration}s, Watermark duration: ${watermarkDuration}s`);
     
-    // Calculate how many watermarks we need
-    const numWatermarks = Math.floor(inputDuration / WATERMARK_INTERVAL_SECONDS);
+    // Calculate watermark positions: t=0, t=15, t=30, etc.
+    // Use ceil to ensure we cover the full duration with watermarks
+    const numWatermarks = Math.max(1, Math.ceil(inputDuration / WATERMARK_INTERVAL_SECONDS));
     
-    if (numWatermarks === 0) {
-      // Song is too short, just add one watermark at the beginning
-      console.log('[Watermark] Short audio, adding single watermark');
-      return await overlayWatermarkOnce(inputFile, watermarkFile, outputFile, 0);
-    }
-    
-    // Create filter complex for multiple watermark overlays
+    // Create filter for overlaying watermarks at t=0, t=15s, t=30s, etc.
     const delays: number[] = [];
     for (let i = 0; i < numWatermarks; i++) {
-      delays.push(i * WATERMARK_INTERVAL_SECONDS * 1000); // Convert to milliseconds
+      const delaySeconds = i * WATERMARK_INTERVAL_SECONDS;
+      // Don't add watermark if it would be past the audio end
+      if (delaySeconds < inputDuration) {
+        delays.push(delaySeconds * 1000); // Convert to milliseconds
+      }
     }
     
-    console.log(`[Watermark] Adding ${numWatermarks} watermarks at ${WATERMARK_INTERVAL_SECONDS}s intervals`);
+    console.log(`[Watermark] Adding ${delays.length} watermarks at positions: ${delays.map(d => d/1000 + 's').join(', ')}`);
     
-    return await overlayMultipleWatermarks(inputFile, watermarkFile, outputFile, delays, inputDuration);
-  } finally {
-    // Clean up input file (keep watermark file cached)
-    try {
-      await unlink(inputFile);
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    return await overlayMultipleWatermarks(inputFile, watermarkFile, outputFile, delays);
+  } catch (err) {
+    // Clean up on error
+    try { await unlink(inputFile); } catch (e) { /* ignore */ }
+    throw err;
   }
-}
-
-/**
- * Overlay watermark once at a specific position
- */
-function overlayWatermarkOnce(
-  inputFile: string,
-  watermarkFile: string,
-  outputFile: string,
-  delayMs: number
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    ffmpeg()
-      .input(inputFile)
-      .input(watermarkFile)
-      .complexFilter([
-        `[1:a]adelay=${delayMs}|${delayMs},volume=${WATERMARK_VOLUME}[wm]`,
-        `[0:a][wm]amix=inputs=2:duration=first:dropout_transition=0[out]`
-      ])
-      .outputOptions(['-map', '[out]'])
-      .audioCodec('libmp3lame')
-      .audioBitrate('192k')
-      .save(outputFile)
-      .on('end', () => {
-        console.log('[Watermark] Single watermark applied successfully');
-        resolve(outputFile);
-      })
-      .on('error', (err) => {
-        console.error('[Watermark] FFmpeg error:', err.message);
-        reject(err);
-      });
-  });
 }
 
 /**
@@ -191,25 +167,50 @@ function overlayMultipleWatermarks(
   inputFile: string,
   watermarkFile: string,
   outputFile: string,
-  delaysMs: number[],
-  inputDuration: number
+  delaysMs: number[]
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    // Create delayed copies of the watermark and mix them together
-    const filterParts: string[] = [];
-    const mixInputs: string[] = [];
+    if (delaysMs.length === 1) {
+      // Simple case: single watermark at the beginning
+      ffmpeg()
+        .input(inputFile)
+        .input(watermarkFile)
+        .complexFilter([
+          `[1:a]adelay=${delaysMs[0]}|${delaysMs[0]},volume=${WATERMARK_VOLUME}[wm]`,
+          `[0:a][wm]amix=inputs=2:duration=first:dropout_transition=0[out]`
+        ])
+        .outputOptions(['-map', '[out]'])
+        .audioCodec('libmp3lame')
+        .audioBitrate('192k')
+        .save(outputFile)
+        .on('end', async () => {
+          console.log('[Watermark] Single watermark applied');
+          // Clean up input file
+          try { await unlink(inputFile); } catch (e) { /* ignore */ }
+          resolve(outputFile);
+        })
+        .on('error', async (err) => {
+          try { await unlink(inputFile); } catch (e) { /* ignore */ }
+          reject(err);
+        });
+      return;
+    }
     
-    // First, create delayed versions of the watermark for each interval
+    // Multiple watermarks: create delayed copies and mix them
+    const filterParts: string[] = [];
+    const mixInputLabels: string[] = [];
+    
+    // Create delayed versions of the watermark for each interval
     delaysMs.forEach((delay, index) => {
       filterParts.push(
         `[1:a]adelay=${delay}|${delay},volume=${WATERMARK_VOLUME}[wm${index}]`
       );
-      mixInputs.push(`[wm${index}]`);
+      mixInputLabels.push(`[wm${index}]`);
     });
     
-    // Mix all watermarks together
+    // Mix all watermarks together (use comma separator for proper FFmpeg syntax)
     filterParts.push(
-      `${mixInputs.join('')}amix=inputs=${delaysMs.length}:duration=longest:dropout_transition=0[allwm]`
+      `${mixInputLabels.join('')}amix=inputs=${delaysMs.length}:duration=longest:dropout_transition=0[allwm]`
     );
     
     // Mix the combined watermarks with the original audio
@@ -225,12 +226,15 @@ function overlayMultipleWatermarks(
       .audioCodec('libmp3lame')
       .audioBitrate('192k')
       .save(outputFile)
-      .on('end', () => {
+      .on('end', async () => {
         console.log(`[Watermark] ${delaysMs.length} watermarks applied successfully`);
+        // Clean up input file
+        try { await unlink(inputFile); } catch (e) { /* ignore */ }
         resolve(outputFile);
       })
-      .on('error', (err) => {
+      .on('error', async (err) => {
         console.error('[Watermark] FFmpeg error:', err.message);
+        try { await unlink(inputFile); } catch (e) { /* ignore */ }
         reject(err);
       });
   });
@@ -238,34 +242,20 @@ function overlayMultipleWatermarks(
 
 /**
  * Upload watermarked audio to object storage and return URL
+ * Uses the project's ObjectStorageService for proper Replit integration
  */
 export async function uploadWatermarkedAudio(localFilePath: string): Promise<string> {
-  const { Storage } = await import('@google-cloud/storage');
+  const objectStorageService = new ObjectStorageService();
   
-  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
-  if (!bucketId) {
-    throw new Error('Object storage not configured');
-  }
+  // Read the file buffer
+  const fileBuffer = await readFile(localFilePath);
   
-  const storage = new Storage();
-  const bucket = storage.bucket(bucketId);
-  
-  const fileName = `previews/watermarked_${Date.now()}.mp3`;
-  const file = bucket.file(fileName);
-  
-  const fileBuffer = fs.readFileSync(localFilePath);
-  
-  await file.save(fileBuffer, {
-    contentType: 'audio/mpeg',
-    metadata: {
-      cacheControl: 'public, max-age=3600', // Cache for 1 hour
-    },
-  });
-  
-  // Make the file publicly accessible
-  await file.makePublic();
-  
-  const publicUrl = `https://storage.googleapis.com/${bucketId}/${fileName}`;
+  // Use the existing uploadBuffer helper which handles proper Replit object storage integration
+  const objectPath = await objectStorageService.uploadBuffer(
+    fileBuffer,
+    'previews/watermarked',
+    'audio/mpeg'
+  );
   
   // Clean up local file
   try {
@@ -274,15 +264,15 @@ export async function uploadWatermarkedAudio(localFilePath: string): Promise<str
     // Ignore cleanup errors
   }
   
-  console.log(`[Watermark] Uploaded watermarked audio: ${publicUrl}`);
-  return publicUrl;
+  console.log(`[Watermark] Uploaded watermarked audio: ${objectPath}`);
+  return objectPath;
 }
 
 /**
  * Main function: Add watermark to audio URL and return new URL
  */
 export async function watermarkAudioFromUrl(audioUrl: string): Promise<string> {
-  console.log(`[Watermark] Processing audio from: ${audioUrl.substring(0, 50)}...`);
+  console.log(`[Watermark] Processing audio from URL...`);
   
   const watermarkedFile = await addWatermarkToAudio(audioUrl);
   const publicUrl = await uploadWatermarkedAudio(watermarkedFile);

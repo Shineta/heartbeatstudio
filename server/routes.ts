@@ -593,10 +593,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Try] Song audio generated successfully: ${songResult.audioUrl}`);
 
+      // Step 3: Add watermark to the audio ("Heartbeat Studio Preview" every 15 seconds)
+      let finalAudioUrl = songResult.audioUrl;
+      try {
+        const { watermarkAudioFromUrl } = await import('./audioWatermarkService');
+        console.log('[Try] Adding watermark to audio...');
+        finalAudioUrl = await watermarkAudioFromUrl(songResult.audioUrl);
+        console.log(`[Try] Watermarked audio ready: ${finalAudioUrl}`);
+      } catch (watermarkError: any) {
+        // If watermarking fails, use original audio (better than failing completely)
+        console.error('[Try] Watermarking failed, using original audio:', watermarkError.message);
+      }
+
       res.json({
         title: songResult.title,
         lyrics: songResult.lyrics,
-        audioUrl: songResult.audioUrl,
+        audioUrl: finalAudioUrl,
         isPreview: true, // Flag to indicate this is a preview (frontend limits playback)
       });
     } catch (error: any) {
