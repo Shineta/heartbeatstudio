@@ -542,7 +542,7 @@ async function boostMusicStyle(styleDescription: string): Promise<string> {
           Authorization: `Bearer ${SUNO_API_KEY}`,
           "Content-Type": "application/json",
         },
-        timeout: 30000, // 30 second timeout
+        timeout: 60000, // 60 second timeout
       }
     );
 
@@ -905,7 +905,7 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
 
 async function pollTaskStatus(
   taskId: string,
-  maxAttempts = 120, // Default 20 minutes (120 * 10s)
+  maxAttempts = 180, // Default 30 minutes (180 * 10s)
 ): Promise<SunoTaskResponse["data"]["response"]> {
   let lastStatus: string = "UNKNOWN";
   let lastError: string | undefined;
@@ -922,7 +922,7 @@ async function pollTaskStatus(
         headers: {
           Authorization: `Bearer ${SUNO_API_KEY}`,
         },
-        timeout: 30000, // 30 second timeout for poll requests
+        timeout: 90000, // 90 second timeout for poll requests
       },
     );
 
@@ -971,7 +971,7 @@ async function pollTaskStatus(
     }
   }
 
-  const timeoutMessage = `Song generation timed out after 20 minutes. Last status: ${lastStatus}${
+  const timeoutMessage = `Song generation timed out after 30 minutes. Last status: ${lastStatus}${
     lastError ? `. Error: ${lastError}` : ""
   }`;
   console.error(`[Suno] ${timeoutMessage}`);
