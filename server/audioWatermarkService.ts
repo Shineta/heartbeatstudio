@@ -20,10 +20,10 @@ const TEMP_DIR = '/tmp/watermarks';
 // Pre-generated watermark audio file path (generated once and cached)
 const WATERMARK_FILE = path.join(TEMP_DIR, 'heartbeat_preview_voice.mp3');
 
-// OpenAI client for TTS (using Replit AI Integrations)
+// OpenAI client for TTS (using direct OpenAI API - TTS not supported by Replit proxy)
 const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || 'https://api.openai.com/v1',
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: 'https://api.openai.com/v1',
 });
 
 /**
