@@ -34,6 +34,8 @@ import SungPrayerExperience from "@/pages/experiences/SungPrayerExperience";
 import CreateSungPrayer from "@/pages/experiences/CreateSungPrayer";
 import AdminPage from "@/pages/AdminPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
+import TrySongPage from "@/pages/TrySongPage";
+import TryCardPage from "@/pages/TryCardPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -41,7 +43,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/festive-transform-info', '/contact', '/privacy', '/terms'];
+    const publicPaths = ['/', '/auth', '/pricing', '/features', '/how-it-works', '/help', '/help/family-portrait', '/festive-transform-info', '/contact', '/privacy', '/terms', '/try/song', '/try/card', '/try/animation'];
     const isPublicPath = publicPaths.includes(location) || 
       location.startsWith('/auth/verify-magic-link') || 
       location.startsWith('/auth/reset-password') || 
@@ -80,6 +82,8 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/privacy" component={PrivacyPolicyPage} />
       <Route path="/terms" component={TermsOfServicePage} />
+      <Route path="/try/song" component={TrySongPage} />
+      <Route path="/try/card" component={TryCardPage} />
       <Route path="/experience/date-night" component={DateNightExperience} />
       <Route path="/experience/birthday-blast" component={BirthdayBlastExperience} />
       <Route path="/experience/gospel-greeting" component={GospelGreetingExperience} />

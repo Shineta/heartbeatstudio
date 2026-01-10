@@ -15,7 +15,11 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   const handleTryIt = (type: 'song' | 'card' | 'animation') => {
-    setLocation(`/create?type=${type}`);
+    if (type === 'animation') {
+      setLocation('/auth?returnTo=/create?type=animation');
+    } else {
+      setLocation(`/try/${type}`);
+    }
   };
 
   return (

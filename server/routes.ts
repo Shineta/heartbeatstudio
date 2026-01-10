@@ -47,6 +47,57 @@ function getBaseUrl(): string {
 
 const BASE_URL = getBaseUrl();
 
+// Simple in-memory rate limiter for unauthenticated try endpoints
+class RateLimiter {
+  private requests: Map<string, { count: number; resetTime: number }> = new Map();
+  private windowMs: number;
+  private maxRequests: number;
+
+  constructor(windowMs: number = 60000, maxRequests: number = 5) {
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+    
+    // Cleanup old entries every minute
+    setInterval(() => {
+      const now = Date.now();
+      const entries = Array.from(this.requests.entries());
+      for (const [key, value] of entries) {
+        if (now > value.resetTime) {
+          this.requests.delete(key);
+        }
+      }
+    }, 60000);
+  }
+
+  isAllowed(ip: string): boolean {
+    const now = Date.now();
+    const record = this.requests.get(ip);
+
+    if (!record || now > record.resetTime) {
+      this.requests.set(ip, { count: 1, resetTime: now + this.windowMs });
+      return true;
+    }
+
+    if (record.count < this.maxRequests) {
+      record.count++;
+      return true;
+    }
+
+    return false;
+  }
+
+  getRemainingRequests(ip: string): number {
+    const record = this.requests.get(ip);
+    if (!record || Date.now() > record.resetTime) {
+      return this.maxRequests;
+    }
+    return Math.max(0, this.maxRequests - record.count);
+  }
+}
+
+// Rate limiter: 5 requests per minute per IP for try endpoints
+const tryEndpointRateLimiter = new RateLimiter(60000, 5);
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   const objectStorageService = new ObjectStorageService();
@@ -474,6 +525,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid form data', errors: error.errors });
       }
       res.status(500).json({ message: 'Failed to send message. Please try again.' });
+    }
+  });
+
+  // ========== TRY (UNAUTHENTICATED DEMO) ROUTES ==========
+  // These endpoints allow users to preview the product without signing up
+  // Rate limited to prevent abuse (5 requests per minute per IP)
+  
+  // Validation schemas for try endpoints
+  const tryLyricsSchema = z.object({
+    recipientName: z.string().min(1).max(100),
+    relationship: z.string().min(1).max(50),
+    occasion: z.string().min(1).max(50),
+    tone: z.string().min(1).max(30),
+    genre: z.string().min(1).max(30),
+    songDetails: z.string().min(10).max(1000),
+  });
+
+  const tryCardSchema = z.object({
+    recipientName: z.string().min(1).max(100),
+    relationship: z.string().min(1).max(50),
+    occasion: z.string().min(1).max(50),
+    tone: z.string().min(1).max(30),
+  });
+
+  // Generate lyrics preview (no audio, no storage, no credits)
+  app.post('/api/try/generate-lyrics', async (req: Request, res: Response) => {
+    try {
+      // Get client IP for rate limiting
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Check rate limit
+      if (!tryEndpointRateLimiter.isAllowed(clientIp)) {
+        const remaining = tryEndpointRateLimiter.getRemainingRequests(clientIp);
+        return res.status(429).json({ 
+          message: 'Too many requests. Please try again in a minute.',
+          remainingRequests: remaining
+        });
+      }
+
+      // Validate input
+      const data = tryLyricsSchema.parse(req.body);
+      
+      console.log(`[Try] Generating lyrics preview for IP: ${clientIp.substring(0, 10)}...`);
+
+      // Generate lyrics only (no audio, no storage)
+      const result = await generateSongLyrics({
+        recipientName: data.recipientName,
+        relationship: data.relationship,
+        occasion: data.occasion,
+        tone: data.tone,
+        genre: data.genre,
+        interests: data.songDetails,
+      });
+
+      res.json({
+        title: result.title,
+        lyrics: result.lyrics,
+      });
+    } catch (error: any) {
+      console.error('[Try] Lyrics preview error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to generate preview. Please try again.' });
+    }
+  });
+
+  // Generate card message preview (no image, no storage, no credits)
+  app.post('/api/try/generate-card', async (req: Request, res: Response) => {
+    try {
+      // Get client IP for rate limiting
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Check rate limit
+      if (!tryEndpointRateLimiter.isAllowed(clientIp)) {
+        const remaining = tryEndpointRateLimiter.getRemainingRequests(clientIp);
+        return res.status(429).json({ 
+          message: 'Too many requests. Please try again in a minute.',
+          remainingRequests: remaining
+        });
+      }
+
+      // Validate input
+      const data = tryCardSchema.parse(req.body);
+      
+      console.log(`[Try] Generating card preview for IP: ${clientIp.substring(0, 10)}...`);
+
+      // Generate card content only (no image, no storage)
+      const result = await generateCardContent({
+        recipientName: data.recipientName,
+        relationship: data.relationship,
+        occasion: data.occasion,
+        tone: data.tone,
+      });
+
+      res.json({
+        title: result.title,
+        message: result.message,
+      });
+    } catch (error: any) {
+      console.error('[Try] Card preview error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to generate preview. Please try again.' });
     }
   });
 
