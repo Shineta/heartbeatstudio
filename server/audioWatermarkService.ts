@@ -4,19 +4,27 @@ import path from 'path';
 import { promisify } from 'util';
 import { ObjectStorageService } from './objectStorage';
 import { randomUUID } from 'crypto';
+import OpenAI from 'openai';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 const mkdir = promisify(fs.mkdir);
 const readFile = promisify(fs.readFile);
 
+const WATERMARK_TEXT = "Heartbeat Studio Preview";
 const WATERMARK_INTERVAL_SECONDS = 15;
-const WATERMARK_VOLUME = 0.6; // 60% volume for watermark (audible but not overwhelming)
+const WATERMARK_VOLUME = 0.8; // 80% volume for voice watermark (needs to be clearly audible)
 
 const TEMP_DIR = '/tmp/watermarks';
 
 // Pre-generated watermark audio file path (generated once and cached)
-const WATERMARK_FILE = path.join(TEMP_DIR, 'heartbeat_preview_watermark.mp3');
+const WATERMARK_FILE = path.join(TEMP_DIR, 'heartbeat_preview_voice.mp3');
+
+// OpenAI client for TTS (using Replit AI Integrations)
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || 'https://api.openai.com/v1',
+});
 
 /**
  * Ensure temp directory exists
@@ -30,51 +38,37 @@ async function ensureTempDir(): Promise<void> {
 }
 
 /**
- * Generate a simple tone watermark using FFmpeg's built-in synthesizer
- * This creates a distinctive "beep-beep" pattern that signals it's a preview
+ * Generate voice watermark using OpenAI TTS
+ * Says "Heartbeat Studio Preview" in a clear, professional voice
  */
-async function generateToneWatermark(): Promise<string> {
+async function generateVoiceWatermark(): Promise<string> {
   await ensureTempDir();
   
+  // Check if we already have a cached watermark file
   if (fs.existsSync(WATERMARK_FILE)) {
-    console.log('[Watermark] Using cached tone watermark');
+    console.log('[Watermark] Using cached voice watermark');
     return WATERMARK_FILE;
   }
   
-  console.log('[Watermark] Generating tone watermark...');
+  console.log('[Watermark] Generating voice watermark with TTS...');
   
-  return new Promise((resolve, reject) => {
-    // Generate a distinctive 3-beep pattern: beep-pause-beep-pause-beep
-    // Each beep is 150ms at 880Hz (high A note), with 100ms pauses
-    // Total duration ~1 second
-    ffmpeg()
-      .input('anullsrc=r=44100:cl=stereo')
-      .inputFormat('lavfi')
-      .complexFilter([
-        // Create three short beeps with the Heartbeat rhythm pattern
-        'sine=frequency=880:duration=0.15[b1]',
-        'sine=frequency=880:duration=0.15[b2]',
-        'sine=frequency=660:duration=0.2[b3]',
-        // Add silence between beeps
-        'aevalsrc=0:d=0.1[s1]',
-        'aevalsrc=0:d=0.1[s2]',
-        // Concatenate: beep, silence, beep, silence, lower beep
-        '[b1][s1][b2][s2][b3]concat=n=5:v=0:a=1[out]'
-      ])
-      .outputOptions(['-map', '[out]'])
-      .audioCodec('libmp3lame')
-      .audioBitrate('128k')
-      .duration(1) // Safety limit
-      .save(WATERMARK_FILE)
-      .on('end', () => {
-        console.log('[Watermark] Tone watermark generated');
-        resolve(WATERMARK_FILE);
-      })
-      .on('error', (err) => {
-        console.error('[Watermark] Tone generation error:', err.message);
-        reject(err);
-      });
-  });
+  try {
+    const response = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: 'nova', // Clear, professional female voice
+      input: WATERMARK_TEXT,
+      speed: 1.0,
+    });
+    
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await writeFile(WATERMARK_FILE, buffer);
+    
+    console.log(`[Watermark] Voice watermark generated: "${WATERMARK_TEXT}"`);
+    return WATERMARK_FILE;
+  } catch (error: any) {
+    console.error('[Watermark] TTS generation failed:', error.message);
+    throw new Error('Failed to generate voice watermark');
+  }
 }
 
 /**
@@ -120,8 +114,8 @@ export async function addWatermarkToAudio(audioUrl: string): Promise<string> {
   
   await ensureTempDir();
   
-  // Generate or get cached watermark audio
-  const watermarkFile = await generateToneWatermark();
+  // Generate or get cached watermark audio (voice saying "Heartbeat Studio Preview")
+  const watermarkFile = await generateVoiceWatermark();
   
   // Download the source audio
   const inputFile = await downloadAudio(audioUrl);
