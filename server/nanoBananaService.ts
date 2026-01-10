@@ -449,6 +449,7 @@ export async function generateFestiveTransform(params: {
     'baby-shower': 'a sweet baby shower scene with pastel colors, baby-themed decorations, balloons, gifts, soft and joyful atmosphere',
     'anniversary': 'a romantic anniversary celebration with elegant decorations, roses, candlelight, love and celebration, heart decorations',
     'retirement': 'a celebratory retirement scene with congratulatory decorations, balloons, achievement recognition, joyful atmosphere, gold and silver accents',
+    'get-well': 'a warm, comforting get well scene with cheerful flowers, sunshine through a window, uplifting atmosphere, soft pastel colors, healing and hopeful mood, gentle lighting',
     // Special Days
     'mothers-day': 'a beautiful Mother\'s Day scene with elegant flowers, spring garden, soft warm lighting, loving atmosphere',
     'fathers-day': 'a warm Father\'s Day scene with classic decorations, ties, tools, masculine touches, family celebration atmosphere',
@@ -495,6 +496,7 @@ export async function generateFestiveTransform(params: {
     'baby-shower': 'wearing soft, elegant pastel-colored party attire',
     'anniversary': 'wearing romantic elegant formal attire',
     'retirement': 'wearing celebratory formal attire',
+    'get-well': 'wearing comfortable, cozy casual clothing in soft, cheerful colors',
     'mothers-day': 'wearing elegant spring attire with floral touches',
     'fathers-day': 'wearing smart casual or classic formal attire',
     'winter-wonderland': 'wearing cozy winter clothing, warm sweater and scarf',
