@@ -309,6 +309,7 @@ export default function TrySongPage() {
                             <SelectItem value="anniversary">Anniversary</SelectItem>
                             <SelectItem value="graduation">Graduation</SelectItem>
                             <SelectItem value="wedding">Wedding</SelectItem>
+                            <SelectItem value="get-well">Get Well</SelectItem>
                             <SelectItem value="thank-you">Thank You</SelectItem>
                             <SelectItem value="just-because">Just Because</SelectItem>
                             <SelectItem value="holiday">Holiday</SelectItem>
