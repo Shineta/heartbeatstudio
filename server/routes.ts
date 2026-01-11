@@ -2102,15 +2102,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test Loudly generation directly (admin/testing only)
   app.post('/api/test/loudly-song', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { generateSongWithLoudly, isLoudlyConfigured } = await import('./loudlyService');
+      const { generateSongWithLoudly, isLoudlyConfigured, checkLoudlyCredits } = await import('./loudlyService');
       
       if (!isLoudlyConfigured()) {
         return res.status(400).json({ message: "Loudly API is not configured" });
       }
 
-      const { title, genre, tone } = req.body;
+      const { title, genre, tone, test } = req.body;
+      const useTestMode = test === true;
       
-      console.log("[TEST] Generating song with Loudly directly...");
+      console.log(`[TEST] Generating song with Loudly directly... (test mode: ${useTestMode})`);
+      
+      const credits = await checkLoudlyCredits();
+      if (credits) {
+        console.log(`[Loudly] Credits: ${credits.used}/${credits.limit} used`);
+      }
       
       const result = await generateSongWithLoudly({
         title: title || "Test Song",
@@ -2118,6 +2124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre: genre || "pop",
         tone: tone || "happy",
         duration: 60,
+        test: useTestMode,
       });
       
       console.log("[Song Service] Song created with: BACKUP SERVICE (Loudly) [TEST MODE]");
@@ -2128,6 +2135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: result.title,
         duration: result.duration,
         generatedBy: "loudly",
+        credits: credits,
       });
     } catch (error: any) {
       console.error("[TEST] Loudly generation error:", error);
