@@ -187,9 +187,10 @@ export async function generateSongWithUdio(params: {
 
   try {
     const requestBody: Record<string, any> = {
+      model: "chirp-v4-5",
       prompt: params.lyrics || params.prompt,
       title: params.title,
-      tags: style,
+      style: style,
       make_instrumental: false,
     };
 

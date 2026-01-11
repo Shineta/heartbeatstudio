@@ -1,0 +1,73 @@
+POST /v2/generate
+Generate music using AI. Supports both inspiration mode (text description) and custom mode (lyrics, style, title).
+
+POST
+https://udioapi.pro/api/v2/generate
+
+tips
+Two Generation Modes:
+
+Inspiration Mode: Use gpt_description_prompt to generate music from a text description
+Custom Mode: Use prompt, style, and title for detailed control
+Model Selection: Choose from chirp-v4-0, chirp-v4-5, or chirp-v4-5-plus, chirp-v5 for different quality levels.
+
+requestHeaders
+name	required	description
+Authorization	yes	Bearer token for authentication
+Content-Type	yes	application/json
+Request Body
+Request body supports two modes: Inspiration Mode or Custom Mode
+
+Inspiration Mode
+Generate music from a text description
+
+Parameter	Type	Required	Description	Example
+gpt_description_prompt	string	Yes	Text description of the music you want to generate. Max length: 400 chars for chirp-v3-5/chirp-v4-0	A upbeat pop song about summer vacation with catchy melody
+Custom Mode
+Generate music with custom lyrics, style, and title
+
+Parameter	Type	Required	Description	Example
+prompt	string	Yes	Custom lyrics or detailed prompt. Max length: 3000 chars (chirp-v3-5/chirp-v4-0) or 5000 chars (chirp-v4-5/chirp-v4-5-plus)	Verse 1: Walking down the street, feeling so free...
+style	string	No	Musical style/genre. Max length: 200 chars (chirp-v3-5/chirp-v4-0) or 1000 chars (chirp-v4-5/chirp-v4-5-plus/chirp-v5)	pop, upbeat, electronic, 120 bpm
+title	string	No	Song title. Max length: 80 characters	Summer Dreams
+tags	string	No	Negative tags to avoid in generation	sad, slow
+Common Parameters
+Parameter	Type	Required	Description	Example
+model	string	No	AI model to use. Options: 'chirp-v3-5' (default), 'chirp-v4-0', 'chirp-v4-5', 'chirp-v4-5-plus', 'chirp-v5'.	chirp-v5
+make_instrumental	boolean	No	Generate instrumental music without vocals	false
+gender	string	No	Vocal gender preference. Use 'male' or 'female'	female
+style_weight	number	No	Strength of adherence to style. Range 0–1, up to 2 decimals	0.65
+weirdness_constraint	number	No	Controls creative deviation. Range 0–1, up to 2 decimals	0.65
+audio_weight	number	No	Balance weight for audio features. Range 0–1, up to 2 decimals	0.65
+responses
+200 Generation task successfully
+400 Bad request
+401 Missing API key
+500 Internal server error
+{
+  "code": 200,
+  "message": "success",
+  "workId": "gen2abc123def456bksv",
+  "data": {
+    "task_id": "gen2abc123def456bksv"
+  }
+}
+codeExamples
+curl
+javascript
+javascript
+
+curl -X POST "https://udioapi.pro/api/v2/generate" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "chirp-v4-5",
+    "prompt": "Verse 1: Walking down the street, feeling so free\nChorus: Summer dreams are calling me",
+    "style": "pop, upbeat, electronic, 120 bpm",
+    "title": "Summer Dreams",
+    "make_instrumental": false,
+    "gender": "female",
+    "style_weight": 0.65,
+    "weirdness_constraint": 0.65,
+    "audio_weight": 0.65
+  }'
