@@ -87,21 +87,57 @@ async function pollUdioStatus(
 
       const { data } = response;
       
-      if (data.code !== 200) {
-        console.warn(`[Udio Poll ${i + 1}] API error: ${data.message || data.msg}`);
+      // Log the raw response structure on first poll to debug format
+      if (i === 0) {
+        console.log(`[Udio] Raw response structure:`, JSON.stringify(data, null, 2));
+      }
+      
+      // Handle different response formats
+      // Format 1: { code: 200, data: { status, songs } }
+      // Format 2: { status, songs/output } (direct)
+      // Format 3: { code: 200, data: [{ status, song_path }] } (array)
+      
+      let status: string | undefined;
+      let songs: any[] = [];
+      
+      if (data.code !== undefined && data.code !== 200) {
+        console.warn(`[Udio Poll ${i + 1}] API error code: ${data.code}, ${data.message || data.msg}`);
         continue;
       }
-
-      const status = data.data?.status?.toLowerCase();
+      
+      // Try different response structures
+      if (Array.isArray(data.data)) {
+        // data.data is an array of songs
+        const firstItem = data.data[0];
+        status = firstItem?.status?.toLowerCase();
+        if (firstItem?.song_path || firstItem?.audio_url) {
+          songs = data.data;
+        }
+      } else if (data.data && typeof data.data === 'object') {
+        status = data.data.status?.toLowerCase();
+        songs = data.data.songs || data.data.output?.songs || [];
+      } else if ((data as any).status) {
+        // Direct format without wrapper
+        status = (data as any).status?.toLowerCase();
+        songs = (data as any).songs || (data as any).output?.songs || [];
+      }
+      
       console.log(`[Udio Poll ${i + 1}/${maxAttempts}] Status: ${status}`);
 
-      if (status === "complete" || status === "success" || status === "completed") {
-        const songs = data.data?.songs || data.data?.output?.songs || [];
+      if (status === "complete" || status === "success" || status === "completed" || status === "done") {
+        // Use the songs array we already parsed above, or re-parse if needed
+        if (songs.length === 0) {
+          songs = data.data?.songs || data.data?.output?.songs || [];
+          if (Array.isArray(data.data)) {
+            songs = data.data;
+          }
+        }
+        
         if (songs.length > 0) {
           const song = songs[0];
-          const audioUrl = song.song_path || song.audio_url;
+          const audioUrl = song.song_path || song.audio_url || song.audio;
           if (audioUrl) {
-            console.log(`[Udio] Song generation completed!`);
+            console.log(`[Udio] Song generation completed! Audio URL: ${audioUrl.substring(0, 50)}...`);
             return {
               audioUrl,
               title: song.title,
@@ -109,7 +145,7 @@ async function pollUdioStatus(
             };
           }
         }
-        console.warn(`[Udio] Status complete but no audio URL found, continuing...`);
+        console.warn(`[Udio] Status complete but no audio URL found in songs:`, JSON.stringify(songs));
       }
 
       if (status === "failed" || status === "error") {
