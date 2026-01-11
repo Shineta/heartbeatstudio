@@ -909,65 +909,100 @@ async function pollTaskStatus(
 ): Promise<SunoTaskResponse["data"]["response"]> {
   let lastStatus: string = "UNKNOWN";
   let lastError: string | undefined;
+  let consecutiveErrors = 0;
+  const maxConsecutiveErrors = 10; // Allow up to 10 consecutive API errors before giving up
 
   for (let i = 0; i < maxAttempts; i++) {
     if (i > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      // Exponential backoff on errors, normal 10s wait otherwise
+      const waitTime = consecutiveErrors > 0 
+        ? Math.min(10000 * Math.pow(1.5, consecutiveErrors), 60000) // Max 60s wait
+        : 10000;
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
 
-    const response = await axios.get<SunoTaskResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/generate/record-info`,
-      {
-        params: { taskId },
-        headers: {
-          Authorization: `Bearer ${SUNO_API_KEY}`,
+    try {
+      const response = await axios.get<SunoTaskResponse>(
+        `${SUNO_API_BASE_URL}/api/v1/generate/record-info`,
+        {
+          params: { taskId },
+          headers: {
+            Authorization: `Bearer ${SUNO_API_KEY}`,
+          },
+          timeout: 90000, // 90 second timeout for poll requests
         },
-        timeout: 90000, // 90 second timeout for poll requests
-      },
-    );
-
-    if (response.data.code !== 200) {
-      throw new Error(response.data.msg || "Failed to query task status");
-    }
-
-    if (i === 0 || i === 8) {
-      console.log(
-        `[Suno Debug] Full response at poll ${i + 1}:`,
-        JSON.stringify(response.data, null, 2),
       );
-    }
 
-    const { status, response: taskResponse, errorMessage } = response.data.data;
-    lastStatus = status;
-    lastError = errorMessage;
+      // Reset error counter on successful response
+      consecutiveErrors = 0;
 
-    const dataCount = taskResponse?.sunoData?.length || 0;
-    const hasAudioUrl = taskResponse?.sunoData?.[0]?.audioUrl ? "YES" : "NO";
-    console.log(
-      `[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`,
-    );
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg || "Failed to query task status");
+      }
 
-    if (
-      status === "SUCCESS" &&
-      taskResponse?.sunoData &&
-      taskResponse.sunoData.length > 0
-    ) {
-      const firstTrack = taskResponse.sunoData[0];
-      if (firstTrack.audioUrl) {
+      if (i === 0 || i === 8) {
         console.log(
-          `[Suno] Song generation completed successfully with audio URL!`,
-        );
-        return taskResponse;
-      } else {
-        console.log(
-          `[Suno] Status is SUCCESS but audioUrl not ready yet, continuing to poll...`,
+          `[Suno Debug] Full response at poll ${i + 1}:`,
+          JSON.stringify(response.data, null, 2),
         );
       }
-    }
 
-    if (status === "FAILED" || status === "GENERATE_AUDIO_FAILED") {
-      console.error(`[Suno] Song generation failed: ${errorMessage}`);
-      throw new Error(errorMessage || "Song generation failed");
+      const { status, response: taskResponse, errorMessage } = response.data.data;
+      lastStatus = status;
+      lastError = errorMessage;
+
+      const dataCount = taskResponse?.sunoData?.length || 0;
+      const hasAudioUrl = taskResponse?.sunoData?.[0]?.audioUrl ? "YES" : "NO";
+      console.log(
+        `[Suno Poll ${i + 1}/${maxAttempts}] Status: ${status}, Data items: ${dataCount}, Audio URL: ${hasAudioUrl} for taskId: ${taskId}`,
+      );
+
+      if (
+        status === "SUCCESS" &&
+        taskResponse?.sunoData &&
+        taskResponse.sunoData.length > 0
+      ) {
+        const firstTrack = taskResponse.sunoData[0];
+        if (firstTrack.audioUrl) {
+          console.log(
+            `[Suno] Song generation completed successfully with audio URL!`,
+          );
+          return taskResponse;
+        } else {
+          console.log(
+            `[Suno] Status is SUCCESS but audioUrl not ready yet, continuing to poll...`,
+          );
+        }
+      }
+
+      if (status === "FAILED" || status === "GENERATE_AUDIO_FAILED") {
+        console.error(`[Suno] Song generation failed: ${errorMessage}`);
+        throw new Error(errorMessage || "Song generation failed");
+      }
+    } catch (error: any) {
+      // Check if it's a retryable error (5xx, network error, timeout)
+      const isRetryable = 
+        error.code === 'ECONNRESET' ||
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ECONNABORTED' ||
+        (error.response?.status >= 500 && error.response?.status < 600);
+
+      if (isRetryable) {
+        consecutiveErrors++;
+        console.warn(
+          `[Suno] Temporary API error (attempt ${consecutiveErrors}/${maxConsecutiveErrors}): ${error.message || error.response?.status}`
+        );
+
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          console.error(`[Suno] Too many consecutive API errors, giving up`);
+          throw new Error(`Music service temporarily unavailable. Please try again in a few minutes.`);
+        }
+        // Continue to next iteration to retry
+        continue;
+      }
+
+      // Non-retryable error, throw immediately
+      throw error;
     }
   }
 
