@@ -19,7 +19,9 @@ interface UdioQueryResponse {
   message?: string;
   msg?: string;
   data?: {
-    status: string;
+    type?: string; // udioapi.pro uses 'type' field: IN_PROGRESS, COMPLETE, etc.
+    status?: string;
+    response_data?: any; // Contains the songs when complete
     songs?: Array<{
       song_path?: string;
       audio_url?: string;
@@ -106,19 +108,25 @@ async function pollUdioStatus(
       }
       
       // Try different response structures
+      // The API uses data.type for status: "IN_PROGRESS", "COMPLETE", etc.
       if (Array.isArray(data.data)) {
         // data.data is an array of songs
         const firstItem = data.data[0];
-        status = firstItem?.status?.toLowerCase();
+        status = (firstItem?.type || firstItem?.status)?.toLowerCase();
         if (firstItem?.song_path || firstItem?.audio_url) {
           songs = data.data;
         }
       } else if (data.data && typeof data.data === 'object') {
-        status = data.data.status?.toLowerCase();
-        songs = data.data.songs || data.data.output?.songs || [];
-      } else if ((data as any).status) {
+        // Use 'type' field first (udioapi.pro format), fall back to 'status'
+        status = (data.data.type || data.data.status)?.toLowerCase();
+        songs = data.data.songs || data.data.output?.songs || data.data.response_data?.songs || [];
+        // Check if response_data contains the output
+        if (data.data.response_data && Array.isArray(data.data.response_data)) {
+          songs = data.data.response_data;
+        }
+      } else if ((data as any).type || (data as any).status) {
         // Direct format without wrapper
-        status = (data as any).status?.toLowerCase();
+        status = ((data as any).type || (data as any).status)?.toLowerCase();
         songs = (data as any).songs || (data as any).output?.songs || [];
       }
       
