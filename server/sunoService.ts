@@ -1341,9 +1341,48 @@ export async function generateSongWithLyrics(params: {
   } catch (error: any) {
     console.error("Suno API error:", error.response?.data || error.message);
 
+    // Try Loudly as a fallback for certain errors
+    const isRetryableError = 
+      error.response?.status >= 500 ||
+      error.message?.includes("temporarily unavailable") ||
+      error.message?.includes("timed out") ||
+      error.code === 'ECONNRESET' ||
+      error.code === 'ETIMEDOUT';
+
+    if (isRetryableError) {
+      console.log("[Suno] Primary service failed, attempting Loudly backup...");
+      
+      try {
+        const { generateSongWithLoudly, isLoudlyConfigured } = await import("./loudlyService");
+        
+        if (isLoudlyConfigured()) {
+          console.log("[Loudly] Attempting backup song generation...");
+          const loudlyResult = await generateSongWithLoudly({
+            title: params.title,
+            prompt: params.lyrics.substring(0, 500),
+            genre: params.genre,
+            tone: params.tone,
+            duration: params.duration === 'quick' ? 60 : 180,
+          });
+          
+          console.log("[Loudly] Backup generation successful!");
+          return {
+            audioUrl: loudlyResult.audioUrl,
+            lyrics: params.lyrics,
+            title: params.title,
+            coverImage: undefined,
+          };
+        } else {
+          console.log("[Loudly] Backup not configured, skipping fallback");
+        }
+      } catch (loudlyError: any) {
+        console.error("[Loudly] Backup also failed:", loudlyError.message);
+      }
+    }
+
     if (error.response?.status === 401) {
       throw new Error(
-        "Invalid Suno API key. Please check your SUNO_API_KEY environment variable.",
+        "Invalid API key. Please check your configuration.",
       );
     }
 
@@ -1354,7 +1393,7 @@ export async function generateSongWithLyrics(params: {
     throw new Error(
       error.response?.data?.msg ||
         error.message ||
-        "Failed to generate song with Suno API",
+        "Failed to generate song. Please try again.",
     );
   }
 }
