@@ -4,18 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Play, Music } from "lucide-react";
 
-interface LoudlyResult {
+interface BackupResult {
   success: boolean;
   audioUrl: string;
   title: string;
   duration: number;
   generatedBy: string;
-  credits?: { used: number; limit: number };
 }
 
 export default function TestLoudlyPage() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<LoudlyResult | null>(null);
+  const [result, setResult] = useState<BackupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [genre, setGenre] = useState("pop");
   const [tone, setTone] = useState("happy");
@@ -27,7 +26,7 @@ export default function TestLoudlyPage() {
     setResult(null);
     
     try {
-      const response = await fetch("/api/test/loudly-song", {
+      const response = await fetch("/api/test/backup-song", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -70,10 +69,10 @@ export default function TestLoudlyPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Music className="h-6 w-6" />
-              Test Backup Music Service
+              Test Backup Song Service
             </CardTitle>
             <CardDescription>
-              Generate a test song using the backup music service (Loudly)
+              Generate a test song using the backup service (songs with vocals)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -148,11 +147,6 @@ export default function TestLoudlyPage() {
                   <p className="text-sm text-muted-foreground">
                     Service: {result.generatedBy}
                   </p>
-                  {result.credits && (
-                    <p className="text-sm text-muted-foreground">
-                      Credits used: {result.credits.used}/{result.credits.limit}
-                    </p>
-                  )}
                 </div>
 
                 <Button onClick={playSong} variant="outline" className="w-full" data-testid="button-play">

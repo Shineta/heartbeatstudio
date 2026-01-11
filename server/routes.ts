@@ -2099,48 +2099,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test Loudly generation directly (admin/testing only)
-  app.post('/api/test/loudly-song', isAuthenticated, async (req: Request, res: Response) => {
+  // Test backup song generation directly (admin/testing only)
+  app.post('/api/test/backup-song', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { generateSongWithLoudly, isLoudlyConfigured, checkLoudlyCredits } = await import('./loudlyService');
+      const { generateSongWithUdio, isUdioConfigured } = await import('./udioService');
       
-      if (!isLoudlyConfigured()) {
-        return res.status(400).json({ message: "Loudly API is not configured" });
+      if (!isUdioConfigured()) {
+        return res.status(400).json({ message: "Backup song service is not configured" });
       }
 
-      const { title, genre, tone, test } = req.body;
-      const useTestMode = test === true;
+      const { title, genre, tone } = req.body;
       
-      console.log(`[TEST] Generating song with Loudly directly... (test mode: ${useTestMode})`);
+      console.log(`[TEST] Generating song with backup service directly...`);
       
-      const credits = await checkLoudlyCredits();
-      if (credits) {
-        console.log(`[Loudly] Credits: ${credits.used}/${credits.limit} used`);
-      }
-      
-      const result = await generateSongWithLoudly({
+      const result = await generateSongWithUdio({
         title: title || "Test Song",
-        prompt: "A cheerful celebration song with uplifting melody",
+        prompt: "A cheerful celebration song with uplifting melody and heartfelt vocals",
         genre: genre || "pop",
         tone: tone || "happy",
         duration: 60,
-        test: useTestMode,
       });
       
-      console.log("[Song Service] Song created with: BACKUP SERVICE (Loudly) [TEST MODE]");
+      console.log("[Song Service] Song created with: BACKUP SERVICE [TEST MODE]");
       
       res.json({
         success: true,
         audioUrl: result.audioUrl,
         title: result.title,
         duration: result.duration,
-        generatedBy: "loudly",
-        credits: credits,
+        generatedBy: "backup",
       });
     } catch (error: any) {
-      console.error("[TEST] Loudly generation error:", error);
+      console.error("[TEST] Backup service generation error:", error);
       res.status(500).json({ message: error.message });
     }
+  });
+
+  // Legacy route alias for backward compatibility
+  app.post('/api/test/loudly-song', isAuthenticated, async (req: Request, res: Response) => {
+    return res.redirect(307, '/api/test/backup-song');
   });
 
   // Get shareable creation (public)

@@ -1353,35 +1353,36 @@ export async function generateSongWithLyrics(params: {
       error.code === 'ETIMEDOUT';
 
     if (isRetryableError) {
-      console.log("[Suno] Primary service failed, attempting Loudly backup...");
+      console.log("[Song Service] Primary service failed, attempting backup...");
       
       try {
-        const { generateSongWithLoudly, isLoudlyConfigured } = await import("./loudlyService");
+        const { generateSongWithUdio, isUdioConfigured } = await import("./udioService");
         
-        if (isLoudlyConfigured()) {
-          console.log("[Loudly] Attempting backup song generation...");
-          const loudlyResult = await generateSongWithLoudly({
+        if (isUdioConfigured()) {
+          console.log("[Udio] Attempting backup song generation...");
+          const udioResult = await generateSongWithUdio({
             title: params.title,
             prompt: params.lyrics.substring(0, 500),
+            lyrics: params.lyrics,
             genre: params.genre,
             tone: params.tone,
             duration: params.duration === 'quick' ? 60 : 180,
           });
           
-          console.log("[Loudly] Backup generation successful!");
-          console.log(`[Song Service] Song created with: BACKUP SERVICE (Loudly)`);
+          console.log("[Udio] Backup generation successful!");
+          console.log(`[Song Service] Song created with: BACKUP SERVICE`);
           return {
-            audioUrl: loudlyResult.audioUrl,
+            audioUrl: udioResult.audioUrl,
             lyrics: params.lyrics,
             title: params.title,
             coverImage: undefined,
             generatedBy: "backup",
           };
         } else {
-          console.log("[Loudly] Backup not configured, skipping fallback");
+          console.log("[Udio] Backup not configured, skipping fallback");
         }
-      } catch (loudlyError: any) {
-        console.error("[Loudly] Backup also failed:", loudlyError.message);
+      } catch (udioError: any) {
+        console.error("[Udio] Backup also failed:", udioError.message);
       }
     }
 
