@@ -36,6 +36,7 @@ import AdminPage from "@/pages/AdminPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import TrySongPage from "@/pages/TrySongPage";
 import TryCardPage from "@/pages/TryCardPage";
+import TestLoudlyPage from "@/pages/TestLoudlyPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -111,6 +112,7 @@ function Router() {
       <Route path="/create" component={isAuthenticated ? CreatePage : AuthPage} />
       <Route path="/mixtape/:id/edit" component={isAuthenticated ? EditMixtapePage : AuthPage} />
       <Route path="/admin" component={isAuthenticated ? AdminPage : AuthPage} />
+      <Route path="/test/loudly" component={isAuthenticated ? TestLoudlyPage : AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
