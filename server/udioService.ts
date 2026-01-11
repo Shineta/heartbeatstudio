@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const UDIO_API_KEY = process.env.UDIO_API_KEY;
-const UDIO_API_BASE_URL = "https://udioapi.pro/api";
+const UDIO_API_BASE_URL = "https://udioapi.pro/api/v2";
 
 interface UdioGenerateResponse {
   code: number;
@@ -75,7 +75,7 @@ async function pollUdioStatus(
 
     try {
       const response = await axios.get<UdioQueryResponse>(
-        `${UDIO_API_BASE_URL}/query`,
+        `${UDIO_API_BASE_URL}/feed`,
         {
           params: { workId },
           headers: {
