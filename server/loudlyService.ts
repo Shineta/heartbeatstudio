@@ -1,24 +1,25 @@
 import axios from "axios";
 
 const LOUDLY_API_KEY = process.env.LOUDLY_API_KEY;
-const LOUDLY_API_BASE_URL = "https://api.loudly.com";
+const LOUDLY_API_BASE_URL = "https://soundtracks.loudly.com";
 
-interface LoudlyGenerateResponse {
-  songs?: Array<{
-    id: string;
-    url: string;
-    duration: number;
-    title?: string;
-  }>;
-  error?: string;
+interface LoudlySong {
+  id: string;
+  title: string;
+  duration: number;
+  music_file_path: string;
+  genres?: Array<{ id: number; name: string }>;
+  moods?: Array<{ id: number; name: string }>;
+  has_vocal?: boolean;
+  tempo_bpm?: number;
 }
 
-interface LoudlyTrackResponse {
-  id: string;
-  url: string;
-  duration: number;
-  title?: string;
-  status?: string;
+interface LoudlyCatalogResponse {
+  items: LoudlySong[];
+  pagination_data: {
+    current_page: number;
+    total_items: number;
+  };
 }
 
 export function isLoudlyConfigured(): boolean {
@@ -26,48 +27,47 @@ export function isLoudlyConfigured(): boolean {
 }
 
 /**
- * Map genre to Loudly-compatible style/genre parameters
+ * Map genre to Loudly-compatible genre filter
  */
-function mapGenreToLoudly(genre: string): { genre: string; mood: string } {
+function mapGenreToLoudly(genre: string): string {
   const genreLower = genre.toLowerCase();
   
   if (genreLower.includes("gospel") || genreLower.includes("worship")) {
-    return { genre: "gospel", mood: "uplifting" };
+    return "gospel";
   }
   if (genreLower.includes("r&b") || genreLower.includes("rnb") || genreLower.includes("soul")) {
-    return { genre: "r&b", mood: "romantic" };
+    return "r&b";
   }
   if (genreLower.includes("hip-hop") || genreLower.includes("hip hop") || genreLower.includes("rap")) {
-    return { genre: "hip-hop", mood: "energetic" };
+    return "hip-hop";
   }
   if (genreLower.includes("pop")) {
-    return { genre: "pop", mood: "happy" };
+    return "pop";
   }
   if (genreLower.includes("country")) {
-    return { genre: "country", mood: "nostalgic" };
+    return "country";
   }
   if (genreLower.includes("rock")) {
-    return { genre: "rock", mood: "powerful" };
+    return "rock";
   }
   if (genreLower.includes("jazz")) {
-    return { genre: "jazz", mood: "relaxed" };
+    return "jazz";
   }
   if (genreLower.includes("electronic") || genreLower.includes("edm")) {
-    return { genre: "electronic", mood: "energetic" };
+    return "electronic";
   }
   if (genreLower.includes("classical")) {
-    return { genre: "classical", mood: "peaceful" };
+    return "classical";
   }
   if (genreLower.includes("reggae")) {
-    return { genre: "reggae", mood: "relaxed" };
+    return "reggae";
   }
   
-  // Default to pop with happy mood
-  return { genre: "pop", mood: "happy" };
+  return "pop";
 }
 
 /**
- * Map tone/occasion to Loudly mood
+ * Map tone/occasion to Loudly mood filter
  */
 function mapToneToMood(tone: string): string {
   const toneLower = tone.toLowerCase();
@@ -85,20 +85,17 @@ function mapToneToMood(tone: string): string {
     return "energetic";
   }
   if (toneLower.includes("calm") || toneLower.includes("peaceful") || toneLower.includes("relaxing")) {
-    return "relaxed";
+    return "calm";
   }
   if (toneLower.includes("inspirational") || toneLower.includes("uplifting") || toneLower.includes("motivational")) {
     return "uplifting";
-  }
-  if (toneLower.includes("nostalgic") || toneLower.includes("sentimental")) {
-    return "nostalgic";
   }
   
   return "happy";
 }
 
 /**
- * Generate a song using Loudly API as a backup service
+ * Get a song from Loudly's catalog matching the requested genre/mood
  */
 export async function generateSongWithLoudly(params: {
   title: string;
@@ -115,152 +112,70 @@ export async function generateSongWithLoudly(params: {
     throw new Error("Loudly API key is not configured");
   }
 
-  const genreMapping = params.genre ? mapGenreToLoudly(params.genre) : { genre: "pop", mood: "happy" };
-  const mood = params.tone ? mapToneToMood(params.tone) : genreMapping.mood;
+  const genre = params.genre ? mapGenreToLoudly(params.genre) : "pop";
+  const mood = params.tone ? mapToneToMood(params.tone) : "happy";
   
-  // Build text prompt for Loudly
-  const textPrompt = `${mood} ${genreMapping.genre} song, ${params.prompt}`;
-  
-  console.log(`[Loudly] Generating song: "${params.title}" with prompt: ${textPrompt.substring(0, 100)}...`);
+  console.log(`[Loudly] Searching catalog for: genre="${genre}", mood="${mood}"`);
 
   try {
-    // Try text-to-music endpoint first
-    const response = await axios.post<LoudlyGenerateResponse>(
-      `${LOUDLY_API_BASE_URL}/v1/songs/generate`,
-      {
-        prompt: textPrompt,
-        duration: params.duration || 60,
-        genre: genreMapping.genre,
-        mood: mood,
-      },
+    const response = await axios.get<LoudlyCatalogResponse>(
+      `${LOUDLY_API_BASE_URL}/api/songs`,
       {
         headers: {
-          "Authorization": `Bearer ${LOUDLY_API_KEY}`,
-          "Content-Type": "application/json",
+          "API-KEY": LOUDLY_API_KEY,
+          "Accept": "application/json",
         },
-        timeout: 120000, // 2 minute timeout
+        params: {
+          genre: genre,
+          mood: mood,
+          limit: 10,
+          page: 1,
+        },
+        timeout: 30000,
       }
     );
 
-    if (response.data.error) {
-      throw new Error(response.data.error);
-    }
-
-    if (!response.data.songs || response.data.songs.length === 0) {
-      throw new Error("No songs returned from Loudly API");
-    }
-
-    const song = response.data.songs[0];
-    console.log(`[Loudly] Song generated successfully: ${song.url}`);
-
-    return {
-      audioUrl: song.url,
-      title: params.title,
-      duration: song.duration || params.duration || 60,
-    };
-  } catch (error: any) {
-    // Try alternative endpoint structure if first fails
-    if (error.response?.status === 404 || error.response?.status === 400) {
-      console.log(`[Loudly] Trying alternative API endpoint...`);
-      return await tryAlternativeLoudlyEndpoint(params, textPrompt, genreMapping, mood);
-    }
-    
-    console.error(`[Loudly] Error generating song: ${error.message}`);
-    throw new Error(`Loudly generation failed: ${error.message}`);
-  }
-}
-
-/**
- * Try alternative Loudly API endpoint structure
- */
-async function tryAlternativeLoudlyEndpoint(
-  params: { title: string; prompt: string; duration?: number },
-  textPrompt: string,
-  genreMapping: { genre: string; mood: string },
-  mood: string
-): Promise<{ audioUrl: string; title: string; duration: number }> {
-  
-  // Try the songs/create endpoint
-  const response = await axios.post(
-    `${LOUDLY_API_BASE_URL}/api/songs`,
-    {
-      text: textPrompt,
-      genre: genreMapping.genre,
-      energy: mood === "energetic" ? "high" : mood === "relaxed" ? "low" : "medium",
-      duration: params.duration || 60,
-    },
-    {
-      headers: {
-        "Authorization": `Bearer ${LOUDLY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      timeout: 120000,
-    }
-  );
-
-  const data = response.data;
-  
-  if (data.url) {
-    return {
-      audioUrl: data.url,
-      title: params.title,
-      duration: data.duration || params.duration || 60,
-    };
-  }
-  
-  // If we get a task/job ID, poll for completion
-  if (data.id || data.taskId || data.jobId) {
-    const trackId = data.id || data.taskId || data.jobId;
-    return await pollLoudlyTrack(trackId, params.title, params.duration || 60);
-  }
-
-  throw new Error("Unexpected response from Loudly API");
-}
-
-/**
- * Poll Loudly for track completion
- */
-async function pollLoudlyTrack(
-  trackId: string,
-  title: string,
-  expectedDuration: number
-): Promise<{ audioUrl: string; title: string; duration: number }> {
-  const maxAttempts = 60; // 5 minutes max (5s * 60)
-  
-  for (let i = 0; i < maxAttempts; i++) {
-    if (i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-    
-    try {
-      const response = await axios.get<LoudlyTrackResponse>(
-        `${LOUDLY_API_BASE_URL}/api/songs/${trackId}`,
+    if (!response.data.items || response.data.items.length === 0) {
+      console.log(`[Loudly] No songs found with genre="${genre}", mood="${mood}". Trying genre only...`);
+      
+      const genreOnlyResponse = await axios.get<LoudlyCatalogResponse>(
+        `${LOUDLY_API_BASE_URL}/api/songs`,
         {
           headers: {
-            "Authorization": `Bearer ${LOUDLY_API_KEY}`,
+            "API-KEY": LOUDLY_API_KEY,
+            "Accept": "application/json",
+          },
+          params: {
+            genre: genre,
+            limit: 10,
+            page: 1,
           },
           timeout: 30000,
         }
       );
-
-      const track = response.data;
       
-      if (track.url && track.status !== "processing") {
-        console.log(`[Loudly] Track ready: ${track.url}`);
-        return {
-          audioUrl: track.url,
-          title: title,
-          duration: track.duration || expectedDuration,
-        };
+      if (!genreOnlyResponse.data.items || genreOnlyResponse.data.items.length === 0) {
+        throw new Error("No matching songs found in Loudly catalog");
       }
       
-      console.log(`[Loudly Poll ${i + 1}/${maxAttempts}] Status: ${track.status || "processing"}`);
-    } catch (error: any) {
-      console.warn(`[Loudly] Poll error: ${error.message}`);
+      response.data = genreOnlyResponse.data;
     }
-  }
 
-  throw new Error("Loudly track generation timed out");
+    const songs = response.data.items;
+    const randomIndex = Math.floor(Math.random() * songs.length);
+    const song = songs[randomIndex];
+    
+    console.log(`[Loudly] Found song: "${song.title}" (${song.duration}ms, ${song.has_vocal ? 'with vocals' : 'instrumental'})`);
+
+    return {
+      audioUrl: song.music_file_path,
+      title: params.title || song.title,
+      duration: Math.round(song.duration / 1000),
+    };
+  } catch (error: any) {
+    console.error(`[Loudly] Error fetching from catalog:`, error.response?.data || error.message);
+    throw new Error(`Loudly catalog error: ${error.response?.data?.message || error.message}`);
+  }
 }
 
 /**
@@ -272,15 +187,18 @@ export async function checkLoudlyHealth(): Promise<boolean> {
   }
 
   try {
-    const response = await axios.get(`${LOUDLY_API_BASE_URL}/health`, {
+    const response = await axios.get(`${LOUDLY_API_BASE_URL}/api/songs`, {
       headers: {
-        "Authorization": `Bearer ${LOUDLY_API_KEY}`,
+        "API-KEY": LOUDLY_API_KEY,
+        "Accept": "application/json",
+      },
+      params: {
+        limit: 1,
       },
       timeout: 10000,
     });
-    return response.status === 200;
+    return response.status === 200 && response.data.items?.length > 0;
   } catch {
-    // Even if health check fails, we can still try to use the API
-    return true;
+    return false;
   }
 }
