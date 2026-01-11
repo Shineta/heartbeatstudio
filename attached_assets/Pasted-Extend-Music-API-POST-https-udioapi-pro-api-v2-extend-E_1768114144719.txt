@@ -1,0 +1,215 @@
+Extend Music API
+POST
+https://udioapi.pro/api/v2/extend
+
+Extend existing music tracks by adding new content to the end.
+
+Quick Start
+Core Parameters
+origin_task_id
+required
+The task ID from your original music generation request. This tells the system which completed generation task contains the audio you want to extend. You can find this ID in the response of your initial generation API call.
+
+extend_audio_index
+required
+Specifies which audio from the original generation to extend. Use 0 for the first audio or 1 for the second audio. Most generation requests return 2 audio variations, so you need to choose which one to extend.
+
+custom_mode
+optional
+Controls extension behavior. Set to false (or omit) to automatically inherit all original parameters (prompt, style, title, etc.) for seamless continuation. Set to true to override with custom parameters for creative transformation.
+
+1. Simple Extension (Inherit Original Style)
+{
+  "origin_task_id": "gen20e094aeaaxxxxxxxxxxxxx3bksv",
+  "extend_audio_index": 0,
+  "custom_mode": false
+}
+Automatically uses all parameters from the original task - no additional settings needed. Perfect for seamlessly continuing the same musical style.
+
+2. Custom Extension (New Style)
+{
+  "origin_task_id": "gen20e094aeaaxxxxxxxxxxxxx3bksv",
+  "extend_audio_index": 0,
+  "custom_mode": true,
+  "prompt": "Change the music style to be calm and lyrical.",
+  "style": "lyrical",
+  "title": "lyrical song",
+  "extensionStartTime": 150,
+  "tags": "war"
+}
+Override original parameters with new creative settings. Ideal for transforming the musical direction while extending the track.
+
+Response
+{
+  "code": 200,
+  "message": "success",
+  "workId": "ext2e31202d4f629447fa75f603ae2470565bksv"
+}
+Use the workId with the Feed API to check progress.
+
+Parameters
+Required Parameters
+origin_task_id
+required
+string
+The task_id from your original music generation request.
+
+extend_audio_index
+required
+number
+Which audio to extend: 0 for the first audio, 1 for the second audio.
+
+Optional Parameters
+custom_mode
+optional
+boolean
+false (inherit original parameters) or true (use custom parameters). Default: false
+
+callback_url
+optional
+string
+Webhook URL to receive real-time results. Must be publicly accessible.
+
+Custom Mode Parameters (when custom_mode: true)
+prompt
+required if custom_mode
+string
+New lyrics or description for the extension.
+
+style
+optional
+string
+Musical style/genre for the extension.
+
+title
+optional
+string
+Title for the extended track.
+
+extensionStartTime
+optional
+number
+Start time in seconds for the extension. Must be > 0 and < original audio duration.
+
+tags
+optional
+string
+Additional tags for the extension.
+
+Code Examples
+cURL
+Inherit Mode
+curl -X POST "https://udioapi.pro/api/v2/extend" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin_task_id": "gen20e094aeaadfe494ea33a5c80ee596083bksv",
+    "extend_audio_index": 0,
+    "custom_mode": false
+  }'
+Custom Mode
+curl -X POST "https://udioapi.pro/api/v2/extend" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin_task_id": "gen20e094aeaadfe494ea33a5c80ee596083bksv",
+    "extend_audio_index": 0,
+    "custom_mode": true,
+    "prompt": "Change the music style to be calm and lyrical.",
+    "style": "lyrical",
+    "title": "lyrical song",
+    "extensionStartTime": 150,
+    "tags": "war"
+  }'
+JavaScript
+Inherit Mode
+const response = await fetch('https://udioapi.pro/api/v2/extend', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    origin_task_id: 'gen20e094aeaadfe494ea33a5c80ee596083bksv',
+    extend_audio_index: 0,
+    custom_mode: false
+  })
+});
+
+const data = await response.json();
+console.log(data);
+Custom Mode
+const response = await fetch('https://udioapi.pro/api/v2/extend', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    origin_task_id: 'gen20e094aeaadfe494ea33a5c80ee596083bksv',
+    extend_audio_index: 0,
+    custom_mode: true,
+    prompt: 'Change the music style to be calm and lyrical.',
+    style: 'lyrical',
+    title: 'lyrical song',
+    extensionStartTime: 150,
+    tags: 'war'
+  })
+});
+
+const data = await response.json();
+console.log(data);
+Python
+Inherit Mode
+import requests
+
+url = "https://udioapi.pro/api/v2/extend"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+data = {
+    "origin_task_id": "gen20e094aeaadfe494ea33a5c80ee596083bksv",
+    "extend_audio_index": 0,
+    "custom_mode": False
+}
+
+response = requests.post(url, headers=headers, json=data)
+print(response.json())
+Custom Mode
+import requests
+
+url = "https://udioapi.pro/api/v2/extend"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+data = {
+    "origin_task_id": "gen20e094aeaadfe494ea33a5c80ee596083bksv",
+    "extend_audio_index": 0,
+    "custom_mode": True,
+    "prompt": "Change the music style to be calm and lyrical.",
+    "style": "lyrical",
+    "title": "lyrical song",
+    "extensionStartTime": 150,
+    "tags": "war"
+}
+
+response = requests.post(url, headers=headers, json=data)
+print(response.json())
+Error Responses
+400 Bad Request
+{
+  "code": 400,
+  "message": "Please specify which audio to extend. Add \"extend_audio_index\" to your request, using 0 for the first audio or 1 for the second."
+}
+400 Invalid Task
+{
+  "code": 400,
+  "message": "The provided \"origin_task_id\" is invalid or could not be found. Please ensure it corresponds to a successfully completed task associated with your API key."
+}
+400 Audio Not Ready
+{
+  "code": 400,
+  "message": "The requested audio is not yet completed. Please wait for the task to complete and try again."
+}
