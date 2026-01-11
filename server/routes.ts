@@ -2099,6 +2099,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Loudly generation directly (admin/testing only)
+  app.post('/api/test/loudly-song', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { generateSongWithLoudly, isLoudlyConfigured } = await import('./loudlyService');
+      
+      if (!isLoudlyConfigured()) {
+        return res.status(400).json({ message: "Loudly API is not configured" });
+      }
+
+      const { title, genre, tone } = req.body;
+      
+      console.log("[TEST] Generating song with Loudly directly...");
+      
+      const result = await generateSongWithLoudly({
+        title: title || "Test Song",
+        prompt: "A cheerful celebration song with uplifting melody",
+        genre: genre || "pop",
+        tone: tone || "happy",
+        duration: 60,
+      });
+      
+      console.log("[Song Service] Song created with: BACKUP SERVICE (Loudly) [TEST MODE]");
+      
+      res.json({
+        success: true,
+        audioUrl: result.audioUrl,
+        title: result.title,
+        duration: result.duration,
+        generatedBy: "loudly",
+      });
+    } catch (error: any) {
+      console.error("[TEST] Loudly generation error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Get shareable creation (public)
   app.get('/api/share/:link', async (req: Request, res: Response) => {
     try {
