@@ -2099,6 +2099,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test lyrics generation (for backup song testing)
+  app.post('/api/test/generate-lyrics', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { recipientName, occasion, genre, tone } = req.body;
+      
+      console.log(`[TEST] Generating lyrics for ${recipientName}, occasion: ${occasion}`);
+      
+      const openaiService = await import('./openaiService');
+      const result = await openaiService.generateSongLyrics({
+        recipientName: recipientName || 'Friend',
+        relationship: 'loved one',
+        occasion: occasion || 'celebration',
+        tone: tone || 'happy',
+        genre: genre || 'pop',
+        interests: '',
+      });
+      
+      console.log(`[TEST] Lyrics generated successfully: ${result.title}`);
+      
+      res.json({
+        success: true,
+        lyrics: result.lyrics,
+        title: result.title,
+      });
+    } catch (error: any) {
+      console.error("[TEST] Lyrics generation error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Test backup song generation directly (admin/testing only)
   app.post('/api/test/backup-song', isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -2108,13 +2138,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Backup song service is not configured" });
       }
 
-      const { title, genre, tone } = req.body;
+      const { title, genre, tone, lyrics } = req.body;
       
       console.log(`[TEST] Generating song with backup service directly...`);
+      console.log(`[TEST] Lyrics provided: ${lyrics ? 'yes (' + lyrics.length + ' chars)' : 'no'}`);
       
       const result = await generateSongWithUdio({
         title: title || "Test Song",
         prompt: "A cheerful celebration song with uplifting melody and heartfelt vocals",
+        lyrics: lyrics || undefined,
         genre: genre || "pop",
         tone: tone || "happy",
         duration: 60,

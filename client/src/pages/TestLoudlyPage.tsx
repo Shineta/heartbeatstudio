@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Play, Music } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Play, Music, Sparkles } from "lucide-react";
 
 interface BackupResult {
   success: boolean;
@@ -10,17 +12,58 @@ interface BackupResult {
   title: string;
   duration: number;
   generatedBy: string;
+  lyrics?: string;
 }
 
 export default function TestLoudlyPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
   const [result, setResult] = useState<BackupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [genre, setGenre] = useState("pop");
   const [tone, setTone] = useState("happy");
+  const [recipientName, setRecipientName] = useState("Sarah");
+  const [occasion, setOccasion] = useState("birthday");
+  const [lyrics, setLyrics] = useState("");
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
 
+  const generateLyrics = async () => {
+    setIsGeneratingLyrics(true);
+    setError(null);
+    
+    try {
+      const response = await fetch("/api/test/generate-lyrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          recipientName,
+          occasion,
+          genre,
+          tone,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate lyrics");
+      }
+      
+      setLyrics(data.lyrics);
+    } catch (err: any) {
+      setError(err.message || "Failed to generate lyrics");
+    } finally {
+      setIsGeneratingLyrics(false);
+    }
+  };
+
   const generateSong = async () => {
+    if (!lyrics.trim()) {
+      setError("Please generate or enter lyrics first");
+      return;
+    }
+    
     setIsGenerating(true);
     setError(null);
     setResult(null);
@@ -31,9 +74,10 @@ export default function TestLoudlyPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          title: "Test Song",
+          title: `${occasion} song for ${recipientName}`,
           genre,
           tone,
+          lyrics,
         }),
       });
       
@@ -43,7 +87,7 @@ export default function TestLoudlyPage() {
         throw new Error(data.message || "Failed to generate");
       }
       
-      setResult(data);
+      setResult({ ...data, lyrics });
       
       if (data.audioUrl) {
         const audio = new Audio(data.audioUrl);
@@ -76,6 +120,35 @@ export default function TestLoudlyPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Recipient Name</label>
+                <Input 
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="Enter name"
+                  data-testid="input-recipient"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">Occasion</label>
+                <Select value={occasion} onValueChange={setOccasion}>
+                  <SelectTrigger data-testid="select-occasion">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="birthday">Birthday</SelectItem>
+                    <SelectItem value="anniversary">Anniversary</SelectItem>
+                    <SelectItem value="love">Love Song</SelectItem>
+                    <SelectItem value="friendship">Friendship</SelectItem>
+                    <SelectItem value="celebration">Celebration</SelectItem>
+                    <SelectItem value="thank you">Thank You</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Genre</label>
@@ -112,16 +185,49 @@ export default function TestLoudlyPage() {
               </div>
             </div>
 
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-medium">Lyrics</label>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={generateLyrics}
+                  disabled={isGeneratingLyrics || !recipientName.trim()}
+                  data-testid="button-generate-lyrics"
+                >
+                  {isGeneratingLyrics ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-3 w-3" />
+                      Generate Lyrics
+                    </>
+                  )}
+                </Button>
+              </div>
+              <Textarea 
+                value={lyrics}
+                onChange={(e) => setLyrics(e.target.value)}
+                placeholder="Click 'Generate Lyrics' or write your own lyrics here..."
+                rows={8}
+                className="font-mono text-sm"
+                data-testid="textarea-lyrics"
+              />
+            </div>
+
             <Button 
               onClick={generateSong} 
-              disabled={isGenerating}
+              disabled={isGenerating || !lyrics.trim()}
               className="w-full"
               data-testid="button-generate"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating (this may take a minute)...
+                  Generating Song (this may take a few minutes)...
                 </>
               ) : (
                 "Generate Test Song"
