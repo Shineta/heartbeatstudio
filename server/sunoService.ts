@@ -1126,6 +1126,7 @@ export async function generateSongWithLyrics(params: {
   lyrics: string;
   title: string;
   coverImage?: string;
+  generatedBy?: 'primary' | 'backup';
 }> {
   if (!SUNO_API_KEY) {
     throw new Error(
@@ -1331,12 +1332,14 @@ export async function generateSongWithLyrics(params: {
     }
 
     console.log(`[Suno] Extended song generation completed! Final URL ready.`);
+    console.log(`[Song Service] Song created with: PRIMARY SERVICE`);
 
     return {
       audioUrl: finalAudioUrl,
       lyrics: params.lyrics,
       title: params.title,
       coverImage: initialTrack.imageUrl,
+      generatedBy: "primary",
     };
   } catch (error: any) {
     console.error("Suno API error:", error.response?.data || error.message);
@@ -1366,11 +1369,13 @@ export async function generateSongWithLyrics(params: {
           });
           
           console.log("[Loudly] Backup generation successful!");
+          console.log(`[Song Service] Song created with: BACKUP SERVICE (Loudly)`);
           return {
             audioUrl: loudlyResult.audioUrl,
             lyrics: params.lyrics,
             title: params.title,
             coverImage: undefined,
+            generatedBy: "backup",
           };
         } else {
           console.log("[Loudly] Backup not configured, skipping fallback");
