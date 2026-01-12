@@ -35,6 +35,8 @@ interface DemoSong {
   genre: string;
   tone: string;
   recipientName: string;
+  previewId?: string;
+  sessionToken?: string;
 }
 
 export default function TrySongPage() {
@@ -177,6 +179,8 @@ export default function TrySongPage() {
       genre: data.genre,
       tone: data.tone,
       recipientName: data.recipientName,
+      previewId: result.previewId,
+      sessionToken: result.sessionToken,
     };
   };
 
@@ -207,9 +211,12 @@ export default function TrySongPage() {
       setShowPreviewEnded(false);
       setCurrentTime(0);
       
+      // Save preview info to localStorage so it can be claimed after signup
       localStorage.setItem('heartbeat_try_song', JSON.stringify({
         formData: data,
         song: result,
+        previewId: result.previewId,
+        sessionToken: result.sessionToken,
         timestamp: Date.now(),
       }));
       

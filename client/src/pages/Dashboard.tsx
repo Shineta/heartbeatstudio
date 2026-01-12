@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,15 +7,70 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, Music } from "lucide-react";
 import avatar1 from '@assets/generated_images/Profile_avatar_example_1_4d7ee270.png';
 import avatar2 from '@assets/generated_images/Profile_avatar_example_2_7b495653.png';
-import type { Mixtape } from "@shared/schema";
+import type { Mixtape, SongPreview } from "@shared/schema";
 
 export default function Dashboard() {
+  const { toast } = useToast();
+  const [claimedPreview, setClaimedPreview] = useState<SongPreview | null>(null);
+  
   const { data: mixtapes = [], isLoading: mixtapesLoading } = useQuery<Mixtape[]>({
     queryKey: ['/api/mixtapes'],
   });
+  
+  // Fetch user's claimed previews
+  const { data: previews = [] } = useQuery<SongPreview[]>({
+    queryKey: ['/api/previews'],
+  });
+  
+  // Check for and claim any pending preview from Try Song page
+  useEffect(() => {
+    const claimPendingPreview = async () => {
+      const savedPreview = localStorage.getItem('heartbeat_try_song');
+      if (!savedPreview) return;
+      
+      try {
+        const parsed = JSON.parse(savedPreview);
+        const { previewId, sessionToken } = parsed;
+        
+        if (!previewId && !sessionToken) {
+          localStorage.removeItem('heartbeat_try_song');
+          return;
+        }
+        
+        console.log('[Dashboard] Claiming preview:', previewId || sessionToken);
+        
+        const response = await fetch('/api/previews/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ previewId, sessionToken }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          setClaimedPreview(result.preview);
+          localStorage.removeItem('heartbeat_try_song');
+          
+          toast({
+            title: "Your preview song is here!",
+            description: "The song you created before signing up is now saved to your account.",
+          });
+        } else {
+          // Failed to claim, clean up localStorage
+          localStorage.removeItem('heartbeat_try_song');
+        }
+      } catch (error) {
+        console.error('[Dashboard] Failed to claim preview:', error);
+        localStorage.removeItem('heartbeat_try_song');
+      }
+    };
+    
+    claimPendingPreview();
+  }, [toast]);
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50">
@@ -61,6 +117,44 @@ export default function Dashboard() {
             description="+8 from last month"
           />
         </div>
+
+        {/* Show claimed preview or any existing previews */}
+        {(claimedPreview || previews.length > 0) && (
+          <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Music className="w-5 h-5 text-primary" />
+                Your Song Previews
+              </CardTitle>
+              <CardDescription>
+                Songs you created before signing up are now saved here
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {(claimedPreview ? [claimedPreview, ...previews.filter(p => p.id !== claimedPreview.id)] : previews).map((preview) => (
+                  <div 
+                    key={preview.id} 
+                    className="flex items-center gap-4 p-4 bg-background rounded-lg border"
+                  >
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Music className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold truncate">{preview.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {preview.genre} song for {preview.recipientName}
+                      </p>
+                    </div>
+                    <audio controls className="h-8 max-w-[200px]" data-testid={`audio-preview-${preview.id}`}>
+                      <source src={preview.audioUrl} type="audio/mpeg" />
+                    </audio>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="loved-ones" className="w-full">
           <TabsList className="mb-6">
