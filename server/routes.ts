@@ -605,11 +605,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('[Try] Watermarking failed, using original audio:', watermarkError.message);
       }
 
+      // Step 4: Save preview to database with a session token for later claiming
+      const { randomUUID } = await import('crypto');
+      const sessionToken = randomUUID();
+      
+      const savedPreview = await storage.createSongPreview({
+        sessionToken,
+        title: songResult.title,
+        lyrics: songResult.lyrics,
+        audioUrl: finalAudioUrl,
+        genre: data.genre,
+        tone: data.tone,
+        recipientName: data.recipientName,
+        relationship: data.relationship,
+        occasion: data.occasion,
+        claimed: false,
+      });
+      
+      console.log(`[Try] Preview saved to database with ID: ${savedPreview.id}`);
+
       res.json({
         title: songResult.title,
         lyrics: songResult.lyrics,
         audioUrl: finalAudioUrl,
         isPreview: true, // Flag to indicate this is a preview (frontend limits playback)
+        previewId: savedPreview.id,
+        sessionToken, // Frontend stores this to claim the preview after signup
       });
     } catch (error: any) {
       console.error('[Try] Song generation error:', error);
@@ -617,6 +638,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid input', errors: error.errors });
       }
       res.status(500).json({ message: 'Failed to generate song preview. Please try again.' });
+    }
+  });
+
+  // Claim a preview song after user signs up/logs in
+  app.post('/api/previews/claim', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { previewId, sessionToken } = req.body;
+      
+      if (!previewId && !sessionToken) {
+        return res.status(400).json({ message: 'Preview ID or session token required' });
+      }
+      
+      let preview;
+      
+      if (previewId) {
+        preview = await storage.getSongPreviewById(previewId);
+      } else if (sessionToken) {
+        preview = await storage.getSongPreviewBySessionToken(sessionToken);
+      }
+      
+      if (!preview) {
+        return res.status(404).json({ message: 'Preview not found' });
+      }
+      
+      if (preview.claimed) {
+        // Already claimed - check if it belongs to this user
+        if (preview.userId === userId) {
+          return res.json({ 
+            message: 'Preview already claimed by you',
+            preview 
+          });
+        }
+        return res.status(400).json({ message: 'This preview has already been claimed' });
+      }
+      
+      // Claim the preview for this user
+      const claimedPreview = await storage.claimSongPreview(preview.id, userId);
+      
+      console.log(`[Preview] User ${userId} claimed preview ${preview.id}`);
+      
+      res.json({
+        message: 'Preview claimed successfully',
+        preview: claimedPreview,
+      });
+    } catch (error: any) {
+      console.error('[Preview] Claim error:', error);
+      res.status(500).json({ message: 'Failed to claim preview' });
+    }
+  });
+
+  // Get user's claimed previews
+  app.get('/api/previews', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const previews = await storage.getSongPreviewsByUserId(userId);
+      res.json(previews);
+    } catch (error: any) {
+      console.error('[Preview] Fetch error:', error);
+      res.status(500).json({ message: 'Failed to fetch previews' });
     }
   });
 
