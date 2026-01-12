@@ -701,6 +701,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unlock a preview - converts it to a full creation using 1 credit
+  app.post('/api/previews/:id/unlock', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const previewId = req.params.id;
+      
+      // Get the preview
+      const preview = await storage.getSongPreviewById(previewId);
+      if (!preview) {
+        return res.status(404).json({ message: 'Preview not found' });
+      }
+      
+      // Check ownership
+      if (preview.userId !== userId) {
+        return res.status(403).json({ message: 'You do not own this preview' });
+      }
+      
+      // Get user to check credits
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
+      // Check credits (allow if has credits, active subscription, or admin)
+      const hasActiveSubscription = user.subscriptionStatus === 'active';
+      const songsRemaining = user.songsRemaining ?? 0;
+      const isAdmin = user.isAdmin === true;
+      
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
+        return res.status(403).json({ 
+          message: 'No credits remaining. Please purchase a Credit Pack or subscribe to unlock this song.',
+          songsRemaining: 0,
+          requiresPayment: true 
+        });
+      }
+      
+      // Deduct credit (unless subscriber or admin)
+      if (!hasActiveSubscription && !isAdmin) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Unlock] User ${userId} credit deducted. Songs remaining: ${songsRemaining - 1}`);
+      }
+      
+      // Create a full creation from the preview
+      const creation = await storage.createCreation({
+        userId,
+        type: 'song',
+        title: preview.title,
+        lyrics: preview.lyrics,
+        mediaUrl: preview.originalAudioUrl, // Use original (non-watermarked) URL
+        coverImageUrl: null,
+        tone: preview.tone,
+        occasion: preview.occasion,
+        genre: preview.genre,
+        status: 'completed',
+        recipientName: preview.recipientName,
+      });
+      
+      // Delete the preview
+      await storage.deleteSongPreview(previewId);
+      
+      console.log(`[Unlock] Preview ${previewId} unlocked to creation ${creation.id} for user ${userId}`);
+      
+      res.json({
+        message: 'Song unlocked successfully',
+        creation,
+      });
+    } catch (error: any) {
+      console.error('[Unlock] Error:', error);
+      res.status(500).json({ message: 'Failed to unlock song' });
+    }
+  });
+
   // Generate card message preview (no image, no storage, no credits)
   app.post('/api/try/generate-card', async (req: Request, res: Response) => {
     try {

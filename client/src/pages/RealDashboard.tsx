@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +12,7 @@ import StatsCard from "@/components/StatsCard";
 import LovedOneCard from "@/components/LovedOneCard";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone, Trash2 } from "lucide-react";
+import { Calendar, Users, Sparkles, Plus, ListMusic, Play, Loader2, RefreshCw, Pencil, Share2, Check, Music, Download, Heart, Gift, Cake, Clock, X, Send, Mail, Phone, Trash2, Lock, Unlock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,6 +64,8 @@ export default function RealDashboard() {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingCreation, setSchedulingCreation] = useState<Creation | null>(null);
   const [claimedPreview, setClaimedPreview] = useState<SongPreview | null>(null);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [unlockingPreview, setUnlockingPreview] = useState<SongPreview | null>(null);
 
   const { data: lovedOnes = [], isLoading } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
@@ -411,6 +414,58 @@ export default function RealDashboard() {
     }
   };
 
+  // Unlock preview mutation - converts preview to full creation using 1 credit
+  const unlockPreviewMutation = useMutation({
+    mutationFn: async (previewId: string) => {
+      return await apiRequest("POST", `/api/previews/${previewId}/unlock`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/previews'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({ 
+        title: "Song Unlocked!", 
+        description: "Your full song is now available in My Creations." 
+      });
+      setUnlockDialogOpen(false);
+      setUnlockingPreview(null);
+      // Remove from claimed preview state if it was the one unlocked
+      if (claimedPreview && unlockingPreview && claimedPreview.id === unlockingPreview.id) {
+        setClaimedPreview(null);
+      }
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Cannot Unlock",
+        description: error.message || "Failed to unlock. You may need more credits.",
+        variant: "destructive",
+      });
+      setUnlockDialogOpen(false);
+    },
+  });
+
+  const handleUnlockClick = (preview: SongPreview) => {
+    setUnlockingPreview(preview);
+    setUnlockDialogOpen(true);
+  };
+
+  const confirmUnlock = () => {
+    if (unlockingPreview) {
+      unlockPreviewMutation.mutate(unlockingPreview.id);
+    }
+  };
+
   const toggleSongSelection = (songId: string) => {
     const creation = creations.find(c => c.id === songId);
     if (!creation || creation.type !== 'song') return;
@@ -653,6 +708,20 @@ export default function RealDashboard() {
                         {preview.genre} song for {preview.recipientName}
                       </p>
                     </div>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleUnlockClick(preview)}
+                      disabled={unlockPreviewMutation.isPending}
+                      className="flex-shrink-0"
+                      data-testid={`button-unlock-preview-${preview.id}`}
+                    >
+                      {unlockPreviewMutation.isPending && unlockingPreview?.id === preview.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Lock className="h-4 w-4" />
+                      )}
+                    </Button>
                     <audio controls className="h-8 max-w-[200px]" data-testid={`audio-preview-${preview.id}`}>
                       <source src={preview.audioUrl} type="audio/mpeg" />
                     </audio>
@@ -1458,6 +1527,47 @@ export default function RealDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Unlock Preview Confirmation Dialog */}
+      <AlertDialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Unlock className="h-5 w-5 text-primary" />
+              Unlock Full Song?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Unlocking <strong>"{unlockingPreview?.title}"</strong> will use <strong>1 credit</strong> from your account.
+              </p>
+              <p>
+                Once unlocked, you'll get the full song without the preview watermark and it will appear in your My Creations.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unlockPreviewMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmUnlock}
+              disabled={unlockPreviewMutation.isPending}
+            >
+              {unlockPreviewMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Unlocking...
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-4 w-4 mr-2" />
+                  Unlock (1 Credit)
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

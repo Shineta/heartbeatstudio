@@ -78,6 +78,7 @@ export interface IStorage {
   getSongPreviewBySessionToken(token: string): Promise<SongPreview | undefined>;
   getSongPreviewsByUserId(userId: string): Promise<SongPreview[]>;
   claimSongPreview(previewId: string, userId: string): Promise<SongPreview | undefined>;
+  deleteSongPreview(previewId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -350,6 +351,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songPreviews.id, previewId))
       .returning();
     return updated;
+  }
+
+  async deleteSongPreview(previewId: string): Promise<void> {
+    await db.delete(songPreviews).where(eq(songPreviews.id, previewId));
   }
 }
 
