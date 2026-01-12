@@ -165,3 +165,28 @@ export const insertScheduledDeliverySchema = createInsertSchema(scheduledDeliver
 
 export type InsertScheduledDelivery = z.infer<typeof insertScheduledDeliverySchema>;
 export type ScheduledDelivery = typeof scheduledDeliveries.$inferSelect;
+
+// Song previews for "Try it now" feature (guest users)
+export const songPreviews = pgTable("song_previews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }), // null for guest, set after login
+  sessionToken: varchar("session_token"), // temp identifier for guest to claim after signup
+  title: varchar("title").notNull(),
+  lyrics: text("lyrics"),
+  audioUrl: varchar("audio_url").notNull(),
+  genre: varchar("genre"),
+  tone: varchar("tone"),
+  recipientName: varchar("recipient_name"),
+  relationship: varchar("relationship"),
+  occasion: varchar("occasion"),
+  claimed: boolean("claimed").notNull().default(false), // true after user claims the preview
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSongPreviewSchema = createInsertSchema(songPreviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSongPreview = z.infer<typeof insertSongPreviewSchema>;
+export type SongPreview = typeof songPreviews.$inferSelect;

@@ -6,6 +6,7 @@ import {
   magicLinkTokens,
   mixtapes,
   scheduledDeliveries,
+  songPreviews,
   type User,
   type UpsertUser,
   type LovedOne,
@@ -18,6 +19,8 @@ import {
   type InsertMixtape,
   type ScheduledDelivery,
   type InsertScheduledDelivery,
+  type SongPreview,
+  type InsertSongPreview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, lte } from "drizzle-orm";
@@ -68,6 +71,13 @@ export interface IStorage {
   createScheduledDelivery(delivery: InsertScheduledDelivery): Promise<ScheduledDelivery>;
   updateScheduledDelivery(id: string, delivery: Partial<ScheduledDelivery>): Promise<ScheduledDelivery | undefined>;
   cancelScheduledDelivery(id: string): Promise<void>;
+  
+  // Song preview operations (Try it now feature)
+  createSongPreview(preview: InsertSongPreview): Promise<SongPreview>;
+  getSongPreviewById(id: string): Promise<SongPreview | undefined>;
+  getSongPreviewBySessionToken(token: string): Promise<SongPreview | undefined>;
+  getSongPreviewsByUserId(userId: string): Promise<SongPreview[]>;
+  claimSongPreview(previewId: string, userId: string): Promise<SongPreview | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -301,6 +311,45 @@ export class DatabaseStorage implements IStorage {
       .update(scheduledDeliveries)
       .set({ status: 'cancelled', updatedAt: new Date() })
       .where(eq(scheduledDeliveries.id, id));
+  }
+
+  // Song preview operations (Try it now feature)
+  async createSongPreview(preview: InsertSongPreview): Promise<SongPreview> {
+    const [created] = await db.insert(songPreviews).values(preview).returning();
+    return created;
+  }
+
+  async getSongPreviewById(id: string): Promise<SongPreview | undefined> {
+    const [preview] = await db.select().from(songPreviews).where(eq(songPreviews.id, id));
+    return preview;
+  }
+
+  async getSongPreviewBySessionToken(token: string): Promise<SongPreview | undefined> {
+    const [preview] = await db
+      .select()
+      .from(songPreviews)
+      .where(and(
+        eq(songPreviews.sessionToken, token),
+        eq(songPreviews.claimed, false)
+      ));
+    return preview;
+  }
+
+  async getSongPreviewsByUserId(userId: string): Promise<SongPreview[]> {
+    return await db
+      .select()
+      .from(songPreviews)
+      .where(eq(songPreviews.userId, userId))
+      .orderBy(desc(songPreviews.createdAt));
+  }
+
+  async claimSongPreview(previewId: string, userId: string): Promise<SongPreview | undefined> {
+    const [updated] = await db
+      .update(songPreviews)
+      .set({ userId, claimed: true })
+      .where(eq(songPreviews.id, previewId))
+      .returning();
+    return updated;
   }
 }
 
