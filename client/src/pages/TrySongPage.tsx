@@ -66,23 +66,48 @@ export default function TrySongPage() {
     },
   });
 
-  // Audio player effects
+  // Audio player effects - re-run when demoSong changes
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !demoSong) return;
 
     const handleLoadedMetadata = () => {
+      console.log('[Audio] Metadata loaded, duration:', audio.duration);
       setDuration(audio.duration);
       setPreviewLimit(audio.duration * 0.5); // 50% preview limit
     };
 
+    const handleDurationChange = () => {
+      // Backup event for duration
+      if (audio.duration && !isNaN(audio.duration) && audio.duration > 0) {
+        console.log('[Audio] Duration changed:', audio.duration);
+        setDuration(audio.duration);
+        setPreviewLimit(audio.duration * 0.5);
+      }
+    };
+
+    const handleCanPlay = () => {
+      // Another backup to get duration
+      if (audio.duration && !isNaN(audio.duration) && audio.duration > 0 && duration === 0) {
+        console.log('[Audio] CanPlay - duration:', audio.duration);
+        setDuration(audio.duration);
+        setPreviewLimit(audio.duration * 0.5);
+      }
+    };
+
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
+      
+      // Calculate 50% limit dynamically in case previewLimit wasn't set
+      const limit = audio.duration > 0 ? audio.duration * 0.5 : 0;
+      
       // Stop at 50% for preview
-      if (previewLimit > 0 && audio.currentTime >= previewLimit) {
+      if (limit > 0 && audio.currentTime >= limit) {
         audio.pause();
         setIsPlaying(false);
         setShowPreviewEnded(true);
+        // Prevent playing past the limit
+        audio.currentTime = limit;
       }
     };
 
@@ -91,15 +116,22 @@ export default function TrySongPage() {
     };
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
+    // Try to load the audio
+    audio.load();
+
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [previewLimit]);
+  }, [demoSong, duration]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -479,14 +511,19 @@ export default function TrySongPage() {
                     {/* Progress bar showing preview limit */}
                     <div className="relative">
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        {/* Calculate progress: current time as % of preview limit (50% of total) */}
                         <div 
                           className="h-full bg-primary transition-all duration-100"
-                          style={{ width: `${previewLimit > 0 ? (currentTime / previewLimit) * 100 : 0}%` }}
+                          style={{ 
+                            width: duration > 0 
+                              ? `${Math.min((currentTime / (duration * 0.5)) * 100, 100)}%` 
+                              : '0%' 
+                          }}
                         />
                       </div>
-                      {/* Show where preview ends */}
+                      {/* Visual indicator showing the grayed-out locked portion */}
                       <div 
-                        className="absolute top-0 h-2 bg-muted-foreground/20 rounded-r-full"
+                        className="absolute top-0 h-2 bg-muted-foreground/30 rounded-r-full"
                         style={{ 
                           left: '50%',
                           width: '50%'
@@ -496,7 +533,11 @@ export default function TrySongPage() {
                     
                     <div className="flex justify-between mt-1 text-xs text-muted-foreground">
                       <span>{formatTime(currentTime)}</span>
-                      <span>Preview: {formatTime(previewLimit)} / Full: {formatTime(duration)}</span>
+                      <span>
+                        {duration > 0 
+                          ? `Preview: ${formatTime(duration * 0.5)} / Full: ${formatTime(duration)}`
+                          : 'Loading...'}
+                      </span>
                     </div>
                   </div>
                 </div>
