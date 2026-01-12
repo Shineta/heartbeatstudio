@@ -14,6 +14,7 @@ import avatar2 from '@assets/generated_images/Profile_avatar_example_2_7b495653.
 import type { Mixtape, SongPreview } from "@shared/schema";
 
 export default function Dashboard() {
+  console.log('[Dashboard] Component mounting...');
   const { toast } = useToast();
   const [claimedPreview, setClaimedPreview] = useState<SongPreview | null>(null);
   
@@ -22,16 +23,20 @@ export default function Dashboard() {
   });
   
   // Fetch user's claimed previews
-  const { data: previews = [] } = useQuery<SongPreview[]>({
+  const { data: previews = [], isLoading: previewsLoading, error: previewsError } = useQuery<SongPreview[]>({
     queryKey: ['/api/previews'],
   });
   
+  console.log('[Dashboard] Previews query:', { previews, previewsLoading, previewsError });
+  
   // Check for and claim any pending preview from Try Song page
   useEffect(() => {
+    console.log('[Dashboard] useEffect running - checking for pending preview...');
+    
     const claimPendingPreview = async () => {
       console.log('[Dashboard] Checking for pending preview to claim...');
       const savedPreview = localStorage.getItem('heartbeat_try_song');
-      console.log('[Dashboard] localStorage data:', savedPreview);
+      console.log('[Dashboard] localStorage data:', savedPreview ? savedPreview.substring(0, 200) + '...' : 'null');
       
       if (!savedPreview) {
         console.log('[Dashboard] No pending preview found in localStorage');
@@ -40,8 +45,11 @@ export default function Dashboard() {
       
       try {
         const parsed = JSON.parse(savedPreview);
-        console.log('[Dashboard] Parsed preview data:', parsed);
+        console.log('[Dashboard] Parsed preview data keys:', Object.keys(parsed));
         const { previewId, sessionToken } = parsed;
+        
+        console.log('[Dashboard] Extracted previewId:', previewId);
+        console.log('[Dashboard] Extracted sessionToken:', sessionToken);
         
         if (!previewId && !sessionToken) {
           console.log('[Dashboard] No previewId or sessionToken in saved data, cleaning up');
@@ -83,7 +91,7 @@ export default function Dashboard() {
     };
     
     claimPendingPreview();
-  }, [toast]);
+  }, []); // Run once on mount
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50">

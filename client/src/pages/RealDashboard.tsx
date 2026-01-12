@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { LovedOne, Creation, Mixtape, ScheduledDelivery } from "@shared/schema";
+import type { LovedOne, Creation, Mixtape, ScheduledDelivery, SongPreview } from "@shared/schema";
 
 const lovedOneFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -62,10 +62,62 @@ export default function RealDashboard() {
   const [selectedLovedOne, setSelectedLovedOne] = useState<LovedOne | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingCreation, setSchedulingCreation] = useState<Creation | null>(null);
+  const [claimedPreview, setClaimedPreview] = useState<SongPreview | null>(null);
 
   const { data: lovedOnes = [], isLoading } = useQuery<LovedOne[]>({
     queryKey: ['/api/loved-ones'],
   });
+  
+  // Fetch user's claimed previews
+  const { data: previews = [] } = useQuery<SongPreview[]>({
+    queryKey: ['/api/previews'],
+  });
+  
+  // Check for and claim any pending preview from Try Song page
+  useEffect(() => {
+    const claimPendingPreview = async () => {
+      const savedPreview = localStorage.getItem('heartbeat_try_song');
+      if (!savedPreview) return;
+      
+      try {
+        const parsed = JSON.parse(savedPreview);
+        const { previewId, sessionToken } = parsed;
+        
+        if (!previewId && !sessionToken) {
+          localStorage.removeItem('heartbeat_try_song');
+          return;
+        }
+        
+        console.log('[RealDashboard] Claiming preview:', previewId || sessionToken);
+        
+        const response = await fetch('/api/previews/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ previewId, sessionToken }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          setClaimedPreview(result.preview);
+          localStorage.removeItem('heartbeat_try_song');
+          queryClient.invalidateQueries({ queryKey: ['/api/previews'] });
+          
+          toast({
+            title: "Your preview song is here!",
+            description: "The song you created before signing up is now saved to your account.",
+          });
+        } else {
+          localStorage.removeItem('heartbeat_try_song');
+        }
+      } catch (error) {
+        console.error('[RealDashboard] Failed to claim preview:', error);
+        localStorage.removeItem('heartbeat_try_song');
+      }
+    };
+    
+    claimPendingPreview();
+  }, [toast]);
 
   const { data: creations = [], isLoading: creationsLoading } = useQuery<Creation[]>({
     queryKey: ['/api/creations'],
@@ -571,6 +623,45 @@ export default function RealDashboard() {
             description="Songs and cards created"
           />
         </div>
+
+        {/* Show claimed preview or any existing previews */}
+        {(claimedPreview || previews.length > 0) && (
+          <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Music className="w-5 h-5 text-primary" />
+                Your Song Previews
+              </CardTitle>
+              <CardDescription>
+                Songs you created before signing up are now saved here. Sign up for a plan to unlock the full version!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {(claimedPreview ? [claimedPreview, ...previews.filter(p => p.id !== claimedPreview.id)] : previews).map((preview) => (
+                  <div 
+                    key={preview.id} 
+                    className="flex items-center gap-4 p-4 bg-background rounded-lg border"
+                    data-testid={`preview-item-${preview.id}`}
+                  >
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Music className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold truncate">{preview.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {preview.genre} song for {preview.recipientName}
+                      </p>
+                    </div>
+                    <audio controls className="h-8 max-w-[200px]" data-testid={`audio-preview-${preview.id}`}>
+                      <source src={preview.audioUrl} type="audio/mpeg" />
+                    </audio>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="creations" className="w-full">
           <TabsList className="mb-6">
