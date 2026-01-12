@@ -29,19 +29,27 @@ export default function Dashboard() {
   // Check for and claim any pending preview from Try Song page
   useEffect(() => {
     const claimPendingPreview = async () => {
+      console.log('[Dashboard] Checking for pending preview to claim...');
       const savedPreview = localStorage.getItem('heartbeat_try_song');
-      if (!savedPreview) return;
+      console.log('[Dashboard] localStorage data:', savedPreview);
+      
+      if (!savedPreview) {
+        console.log('[Dashboard] No pending preview found in localStorage');
+        return;
+      }
       
       try {
         const parsed = JSON.parse(savedPreview);
+        console.log('[Dashboard] Parsed preview data:', parsed);
         const { previewId, sessionToken } = parsed;
         
         if (!previewId && !sessionToken) {
+          console.log('[Dashboard] No previewId or sessionToken in saved data, cleaning up');
           localStorage.removeItem('heartbeat_try_song');
           return;
         }
         
-        console.log('[Dashboard] Claiming preview:', previewId || sessionToken);
+        console.log('[Dashboard] Claiming preview with:', { previewId, sessionToken });
         
         const response = await fetch('/api/previews/claim', {
           method: 'POST',
@@ -50,8 +58,11 @@ export default function Dashboard() {
           body: JSON.stringify({ previewId, sessionToken }),
         });
         
+        console.log('[Dashboard] Claim response status:', response.status);
+        
         if (response.ok) {
           const result = await response.json();
+          console.log('[Dashboard] Claim successful:', result);
           setClaimedPreview(result.preview);
           localStorage.removeItem('heartbeat_try_song');
           
@@ -60,6 +71,8 @@ export default function Dashboard() {
             description: "The song you created before signing up is now saved to your account.",
           });
         } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.log('[Dashboard] Claim failed:', response.status, errorData);
           // Failed to claim, clean up localStorage
           localStorage.removeItem('heartbeat_try_song');
         }

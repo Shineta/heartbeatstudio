@@ -206,19 +206,25 @@ export default function TrySongPage() {
       }, 10000);
 
       const result = await generateDemoSong(data);
+      console.log('[TrySong] Generated song result:', result);
+      console.log('[TrySong] PreviewId:', result.previewId, 'SessionToken:', result.sessionToken);
+      
       setDemoSong(result);
       setProgress(100);
       setShowPreviewEnded(false);
       setCurrentTime(0);
       
       // Save preview info to localStorage so it can be claimed after signup
-      localStorage.setItem('heartbeat_try_song', JSON.stringify({
+      const storageData = {
         formData: data,
         song: result,
         previewId: result.previewId,
         sessionToken: result.sessionToken,
         timestamp: Date.now(),
-      }));
+      };
+      console.log('[TrySong] Saving to localStorage:', storageData);
+      localStorage.setItem('heartbeat_try_song', JSON.stringify(storageData));
+      console.log('[TrySong] Saved to localStorage successfully');
       
       toast({
         title: "Your Song is Ready!",
