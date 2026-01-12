@@ -173,7 +173,8 @@ export const songPreviews = pgTable("song_previews", {
   sessionToken: varchar("session_token"), // temp identifier for guest to claim after signup
   title: varchar("title").notNull(),
   lyrics: text("lyrics"),
-  audioUrl: varchar("audio_url").notNull(),
+  audioUrl: varchar("audio_url").notNull(), // watermarked preview audio
+  originalAudioUrl: varchar("original_audio_url"), // original non-watermarked audio for unlocking
   genre: varchar("genre"),
   tone: varchar("tone"),
   recipientName: varchar("recipient_name"),

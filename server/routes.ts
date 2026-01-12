@@ -614,6 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: songResult.title,
         lyrics: songResult.lyrics,
         audioUrl: finalAudioUrl,
+        originalAudioUrl: songResult.audioUrl, // Store original for unlocking
         genre: data.genre,
         tone: data.tone,
         recipientName: data.recipientName,
@@ -744,18 +745,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create a full creation from the preview
+      // Use original audio URL if available, otherwise fall back to watermarked audio
+      const audioUrl = preview.originalAudioUrl || preview.audioUrl;
+      
       const creation = await storage.createCreation({
         userId,
         type: 'song',
         title: preview.title,
-        lyrics: preview.lyrics,
-        mediaUrl: preview.originalAudioUrl, // Use original (non-watermarked) URL
-        coverImageUrl: null,
+        content: preview.lyrics,
+        mediaUrl: audioUrl,
         tone: preview.tone,
-        occasion: preview.occasion,
         genre: preview.genre,
-        status: 'completed',
-        recipientName: preview.recipientName,
+        status: 'ready',
       });
       
       // Delete the preview
