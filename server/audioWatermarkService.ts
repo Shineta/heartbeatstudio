@@ -13,7 +13,7 @@ const readFile = promisify(fs.readFile);
 
 const WATERMARK_TEXT = "Heartbeat Studio Preview";
 const WATERMARK_INTERVAL_SECONDS = 15;
-const WATERMARK_VOLUME = 0.8; // 80% volume for voice watermark (needs to be clearly audible)
+const WATERMARK_VOLUME = 2.5; // Boost volume significantly so watermark is clearly audible over music
 
 const TEMP_DIR = '/tmp/watermarks';
 
@@ -166,12 +166,14 @@ function overlayMultipleWatermarks(
   return new Promise((resolve, reject) => {
     if (delaysMs.length === 1) {
       // Simple case: single watermark at the beginning
+      // Lower original audio volume slightly during watermark to make voice clearer
       ffmpeg()
         .input(inputFile)
         .input(watermarkFile)
         .complexFilter([
           `[1:a]adelay=${delaysMs[0]}|${delaysMs[0]},volume=${WATERMARK_VOLUME}[wm]`,
-          `[0:a][wm]amix=inputs=2:duration=first:dropout_transition=0[out]`
+          `[0:a]volume=0.7[orig]`,
+          `[orig][wm]amix=inputs=2:duration=first:dropout_transition=0:weights=1 1.5[out]`
         ])
         .outputOptions(['-map', '[out]'])
         .audioCodec('libmp3lame')
@@ -207,9 +209,12 @@ function overlayMultipleWatermarks(
       `${mixInputLabels.join('')}amix=inputs=${delaysMs.length}:duration=longest:dropout_transition=0[allwm]`
     );
     
-    // Mix the combined watermarks with the original audio
+    // Lower original audio slightly and mix with the combined watermarks
     filterParts.push(
-      `[0:a][allwm]amix=inputs=2:duration=first:dropout_transition=0[out]`
+      `[0:a]volume=0.7[orig]`
+    );
+    filterParts.push(
+      `[orig][allwm]amix=inputs=2:duration=first:dropout_transition=0:weights=1 1.5[out]`
     );
     
     ffmpeg()
