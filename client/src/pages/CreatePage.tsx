@@ -2706,51 +2706,36 @@ export default function CreatePage() {
           </TabsContent>
 
           <TabsContent value="animation">
-            {createdAnimation ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{createdAnimation.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Video Player for Animation */}
-                    {createdAnimation.mediaUrl && (
-                      <video
-                        controls
-                        className="w-full rounded-md"
-                        data-testid="video-animation-preview"
-                      >
-                        <source src={createdAnimation.mediaUrl} type="video/mp4" />
-                        Your browser does not support the video element.
-                      </video>
-                    )}
-                    {/* Fallback to image if no video */}
-                    {!createdAnimation.mediaUrl && createdAnimation.imageUrl && (
-                      <img
-                        src={createdAnimation.imageUrl}
-                        alt={createdAnimation.title || "Animation"}
-                        className="w-full rounded-md"
-                      />
-                    )}
-                    <p className="whitespace-pre-wrap">{createdAnimation.content}</p>
-                  </CardContent>
-                  <CardFooter className="flex gap-3">
-                    <Button onClick={() => setCreatedAnimation(null)} variant="outline" data-testid="button-create-another-animation">
-                      Create Another
-                    </Button>
-                    <Button onClick={() => {
-                      const shareLink = createdAnimation.shareableLink?.startsWith('/share/')
-                        ? createdAnimation.shareableLink
-                        : `/share/${createdAnimation.shareableLink}`;
-                      navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                      toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                    }} data-testid="button-share-animation">
-                      Share
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            ) : (
+            <Card>
+              <CardHeader className="text-center pb-2">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Animation Creator</CardTitle>
+                <CardDescription className="text-base">
+                  Coming Soon
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-4 pb-8">
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  We're working on bringing you personalized celebration animations powered by AI. 
+                  Create magical moments with custom animated greetings for your loved ones.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Birthday Animations</span>
+                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Holiday Greetings</span>
+                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Custom Messages</span>
+                </div>
+                <p className="text-sm text-muted-foreground pt-4">
+                  In the meantime, try creating a personalized song or greeting card!
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Hidden animation form for future use */}
+          <div className="hidden">
+            {false && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2930,7 +2915,7 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+          </div>
 
           <TabsContent value="song">
             {createdSong ? (
