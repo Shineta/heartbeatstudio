@@ -11,6 +11,12 @@ interface AttachedSong {
   mediaUrl: string;
 }
 
+interface AttachedAnimation {
+  id: string;
+  title: string;
+  mediaUrl: string;
+}
+
 interface Creation {
   id: string;
   type: 'song' | 'card' | 'animation';
@@ -21,7 +27,9 @@ interface Creation {
   imageUrl?: string;
   mediaUrl?: string;
   songIds?: string[];
+  animationId?: string;
   attachedSongs?: AttachedSong[];
+  attachedAnimation?: AttachedAnimation;
   shareableLink?: string;
   createdAt: string;
 }
@@ -32,14 +40,17 @@ export default function SharePage() {
   const shareLink = params?.link;
   const [creation, setCreation] = useState<Creation | null>(null);
   const [attachedSong, setAttachedSong] = useState<AttachedSong | null>(null);
+  const [attachedAnimation, setAttachedAnimation] = useState<AttachedAnimation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [songStarted, setSongStarted] = useState(false);
   const [cardSongStarted, setCardSongStarted] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
+  const [cardVideoStarted, setCardVideoStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const cardAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardVideoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
   const handleComingSoon = () => {
@@ -67,6 +78,13 @@ export default function SharePage() {
     if (videoRef.current) {
       videoRef.current.play();
       setVideoStarted(true);
+    }
+  };
+  
+  const handlePlayCardVideo = () => {
+    if (cardVideoRef.current) {
+      cardVideoRef.current.play();
+      setCardVideoStarted(true);
     }
   };
 
@@ -100,6 +118,11 @@ export default function SharePage() {
           if (firstSong.mediaUrl) {
             setAttachedSong(firstSong);
           }
+        }
+        
+        // If this is a card with an attached animation, set it
+        if (data.type === 'card' && data.attachedAnimation && data.attachedAnimation.mediaUrl) {
+          setAttachedAnimation(data.attachedAnimation);
         }
       } catch (err) {
         setError('Failed to load creation');
@@ -289,6 +312,39 @@ export default function SharePage() {
                     <source src={attachedSong.mediaUrl} type="audio/mpeg" />
                     Your browser does not support the audio element.
                   </audio>
+                </div>
+              )}
+
+              {/* Attached Animation Player for Cards */}
+              {creation.type === 'card' && attachedAnimation && (
+                <div className="space-y-4 bg-gradient-to-r from-purple-500/10 to-pink-500/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Video className="w-5 h-5 text-purple-500" />
+                    <h3 className="font-semibold text-lg">An Animation For You</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{attachedAnimation.title}</p>
+                  {!cardVideoStarted && (
+                    <div className="flex justify-center py-4">
+                      <Button 
+                        size="lg" 
+                        onClick={handlePlayCardVideo}
+                        className="h-16 px-10 text-lg gap-3 animate-pulse bg-purple-500 hover:bg-purple-600"
+                        data-testid="button-play-card-video"
+                      >
+                        <Video className="w-6 h-6" />
+                        Play Animation
+                      </Button>
+                    </div>
+                  )}
+                  <video 
+                    ref={cardVideoRef}
+                    controls 
+                    className="w-full rounded-lg"
+                    data-testid="card-video-player"
+                  >
+                    <source src={attachedAnimation.mediaUrl} type="video/mp4" />
+                    Your browser does not support the video element.
+                  </video>
                 </div>
               )}
 

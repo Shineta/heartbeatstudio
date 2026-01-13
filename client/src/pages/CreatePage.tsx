@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -235,11 +235,22 @@ export default function CreatePage() {
     queryKey: ['/api/creations'],
     select: (data) => data.filter(c => c.type === 'song' && c.status === 'ready'),
   });
+  
+  // Fetch user's completed animations for attaching to cards
+  const { data: userAnimations = [] } = useQuery<Creation[]>({
+    queryKey: ['/api/creations'],
+    select: (data) => data.filter(c => c.type === 'animation' && c.status === 'ready'),
+  });
 
   // State for attaching a song to a card
   const [attachedSongId, setAttachedSongId] = useState<string | null>(null);
   const [songSearchOpen, setSongSearchOpen] = useState(false);
   const [songSearchQuery, setSongSearchQuery] = useState("");
+  
+  // State for attaching an animation to a card
+  const [attachedAnimationId, setAttachedAnimationId] = useState<string | null>(null);
+  const [animationSearchOpen, setAnimationSearchOpen] = useState(false);
+  const [animationSearchQuery, setAnimationSearchQuery] = useState("");
 
   // State for editing card message
   const [isEditingCardMessage, setIsEditingCardMessage] = useState(false);
@@ -1203,6 +1214,8 @@ export default function CreatePage() {
       coverImageSource,
       // Include attached song if selected
       ...(attachedSongId && { songIds: [attachedSongId] }),
+      // Include attached animation if selected
+      ...(attachedAnimationId && { animationId: attachedAnimationId }),
       // Include portrait data when family portrait is selected
       ...(coverImageSource === 'portrait' && {
         portraitData: {
@@ -2681,6 +2694,93 @@ export default function CreatePage() {
                         {userSongs.length === 0 && (
                           <p className="text-xs text-muted-foreground italic">
                             No songs available. Create a song first to attach it to your card!
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Attach an Animation */}
+                      <div className="space-y-3">
+                        <Label className="flex items-center gap-2">
+                          <Video className="w-4 h-4" />
+                          Attach an Animation (Optional)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Add an animation to play when the card is viewed
+                        </p>
+                        <Popover open={animationSearchOpen} onOpenChange={setAnimationSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={animationSearchOpen}
+                              className="w-full justify-between"
+                              data-testid="select-attached-animation"
+                            >
+                              {attachedAnimationId
+                                ? userAnimations.find((anim) => anim.id === attachedAnimationId)?.title || "Untitled Animation"
+                                : "No animation attached"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <CommandInput 
+                                placeholder="Search animations..." 
+                                value={animationSearchQuery}
+                                onValueChange={setAnimationSearchQuery}
+                                data-testid="input-animation-search"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No animations found.</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandItem
+                                    value="none"
+                                    onSelect={() => {
+                                      setAttachedAnimationId(null);
+                                      setAnimationSearchOpen(false);
+                                      setAnimationSearchQuery("");
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        attachedAnimationId === null ? "opacity-100" : "opacity-0"
+                                      }`}
+                                    />
+                                    No animation attached
+                                  </CommandItem>
+                                  {userAnimations
+                                    .filter((anim) => 
+                                      (anim.title || "Untitled Animation")
+                                        .toLowerCase()
+                                        .includes(animationSearchQuery.toLowerCase())
+                                    )
+                                    .map((anim) => (
+                                      <CommandItem
+                                        key={anim.id}
+                                        value={anim.title || "Untitled Animation"}
+                                        onSelect={() => {
+                                          setAttachedAnimationId(anim.id);
+                                          setAnimationSearchOpen(false);
+                                          setAnimationSearchQuery("");
+                                        }}
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            attachedAnimationId === anim.id ? "opacity-100" : "opacity-0"
+                                          }`}
+                                        />
+                                        <Video className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {anim.title || "Untitled Animation"}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {userAnimations.length === 0 && (
+                          <p className="text-xs text-muted-foreground italic">
+                            No animations available. Create an animation first to attach it to your card!
                           </p>
                         )}
                       </div>

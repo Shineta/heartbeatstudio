@@ -98,6 +98,7 @@ export const creations = pgTable("creations", {
   imageUrl: varchar("image_url"), // card image or song cover
   mediaUrl: varchar("media_url"), // for future audio/video
   songIds: text("song_ids").array(), // attached song IDs for cards
+  animationId: varchar("animation_id"), // attached animation ID for cards
   shareableLink: varchar("shareable_link").unique(),
   status: varchar("status").default('ready'), // 'generating', 'ready', 'failed'
   createdAt: timestamp("created_at").defaultNow(),

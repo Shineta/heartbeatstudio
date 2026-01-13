@@ -1323,8 +1323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Extract songIds from request (for attached songs)
-      const { songIds } = req.body;
+      // Extract songIds and animationId from request (for attached media)
+      const { songIds, animationId } = req.body;
       
       const creation = await storage.createCreation({
         userId,
@@ -1335,6 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: cardContent.message,
         imageUrl,
         songIds: songIds && Array.isArray(songIds) ? songIds : null,
+        animationId: animationId && typeof animationId === 'string' ? animationId : null,
       });
       
       const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -2437,9 +2438,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       }
       
+      // If this is a card with an attached animation, include the animation data
+      let attachedAnimation: any = null;
+      if (creation.type === 'card' && creation.animationId) {
+        const animation = await storage.getCreationById(creation.animationId);
+        if (animation) {
+          attachedAnimation = {
+            id: animation.id,
+            title: animation.title,
+            mediaUrl: animation.mediaUrl,
+          };
+        }
+      }
+      
       res.json({
         ...creation,
         attachedSongs,
+        attachedAnimation,
       });
     } catch (error) {
       console.error("Error fetching shared creation:", error);
