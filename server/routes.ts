@@ -1703,14 +1703,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Animation using Kling
+  // Generate AI Animation using Runway
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { isKlingConfigured, generateAnimationVideo } = await import('./klingService');
+      const { isConfigured, generateAnimation } = await import('./runwayService');
       
-      if (!isKlingConfigured()) {
+      if (!isConfigured()) {
         return res.status(503).json({ 
-          message: "Animation generation is not configured. Please set up Kling API credentials.",
+          message: "Animation generation is not configured. Please set up API credentials.",
           comingSoon: true
         });
       }
@@ -1736,13 +1736,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      console.log(`[Animation] Starting Kling video generation for ${recipientName}, occasion: ${parsed.occasion}`);
+      console.log(`[Animation] Starting video generation for ${recipientName}, occasion: ${parsed.occasion}`);
 
-      const videoBuffer = await generateAnimationVideo({
+      const { videoBuffer } = await generateAnimation({
         recipientName,
         occasion: parsed.occasion,
-        tone: parsed.tone,
-        style: parsed.style,
+        tone: parsed.tone || 'celebratory',
+        style: parsed.style || 'cartoon',
         description: parsed.description,
       });
 
