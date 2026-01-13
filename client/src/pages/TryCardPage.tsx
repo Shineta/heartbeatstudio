@@ -289,50 +289,107 @@ export default function TryCardPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="w-5 h-5 text-primary" />
-                    {demoCard.title}
-                  </CardTitle>
-                  <CardDescription>
-                    A {demoCard.tone} card for {demoCard.recipientName} • {demoCard.occasion}
-                  </CardDescription>
-                </div>
-                <div className="bg-primary/10 px-3 py-1 rounded-full">
-                  <span className="text-sm font-medium text-primary">Preview</span>
-                </div>
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Preview Badge */}
+            <div className="flex justify-center">
+              <div className="bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+                <span className="text-sm font-medium text-primary flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Card Preview
+                </span>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg p-8 mb-6 border border-primary/10">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                    {demoCard.title}
-                  </h3>
-                  <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                    {demoCard.message}
-                  </p>
-                </div>
-              </div>
+            </div>
 
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 border border-primary/20">
-                <div className="flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-primary mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-sm">Want the full experience?</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Sign up to add beautiful illustrations, schedule delivery, and share with your loved one. 
-                      Your first 3 credits are free!
-                    </p>
+            {/* The Card Preview - Greeting Card Style */}
+            <div className="relative">
+              {/* Decorative background pattern */}
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-100/50 via-rose-50/30 to-amber-50/50 dark:from-pink-950/30 dark:via-rose-950/20 dark:to-amber-950/30 rounded-2xl" />
+              
+              {/* Card container with shadow */}
+              <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-primary/10 overflow-hidden">
+                {/* Top decorative border */}
+                <div className="h-2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-400" />
+                
+                {/* Image placeholder area */}
+                <div className="relative bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 p-8">
+                  <div className="flex flex-col items-center justify-center py-8">
+                    {/* Decorative hearts */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Heart className="w-5 h-5 text-primary/40" />
+                      <Heart className="w-8 h-8 text-primary fill-primary/20" />
+                      <Heart className="w-5 h-5 text-primary/40" />
+                    </div>
+                    <div className="text-center bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-lg px-6 py-3 border border-dashed border-primary/30">
+                      <Lock className="w-5 h-5 text-primary/60 mx-auto mb-1" />
+                      <p className="text-sm text-muted-foreground">
+                        Custom illustration unlocked with full card
+                      </p>
+                    </div>
                   </div>
                 </div>
+                
+                {/* Card content area */}
+                <div className="p-8 text-center space-y-6">
+                  {/* Title with decorative elements */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary/30" />
+                      <Heart className="w-4 h-4 text-primary" />
+                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary/30" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                      {demoCard.title}
+                    </h2>
+                  </div>
+                  
+                  {/* Message */}
+                  <div className="max-w-md mx-auto">
+                    <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap" style={{ fontFamily: 'Georgia, serif' }}>
+                      {demoCard.message}
+                    </p>
+                  </div>
+                  
+                  {/* Occasion tag */}
+                  <div className="flex justify-center pt-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-sm text-primary">
+                      <Mail className="w-3.5 h-3.5" />
+                      {demoCard.occasion.replace('-', ' ')}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Bottom decorative border */}
+                <div className="h-2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-400" />
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-3">
+            </div>
+
+            {/* Upgrade prompt */}
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg mb-1">Unlock the Full Card Experience</h4>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Sign up to add beautiful AI-generated illustrations, attach songs, schedule delivery, and share with your loved one. Your first 3 credits are free!
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Custom Illustrations</span>
+                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Attach Songs</span>
+                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Schedule Delivery</span>
+                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Shareable Link</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action buttons */}
+            <div className="flex flex-col gap-3">
               <Button 
+                size="lg"
                 className="w-full" 
                 onClick={handleSaveOrSend}
                 data-testid="button-save-card"
@@ -348,8 +405,8 @@ export default function TryCardPage() {
               >
                 Try Another Card
               </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
         )}
 
         <Dialog open={showSignupModal} onOpenChange={setShowSignupModal}>
