@@ -1325,6 +1325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract songIds and animationId from request (for attached media)
       const { songIds, animationId } = req.body;
+      console.log('[Card] Attached media - songIds:', songIds, 'animationId:', animationId);
       
       const creation = await storage.createCreation({
         userId,
