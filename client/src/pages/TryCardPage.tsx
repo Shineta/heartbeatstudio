@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Mail, ArrowLeft, Loader2, Lock, UserPlus, LogIn, Heart } from "lucide-react";
+import { Sparkles, Mail, ArrowLeft, Loader2, Lock, UserPlus, LogIn, Heart, Image, Music, Calendar, Share2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -310,20 +310,52 @@ export default function TryCardPage() {
                 {/* Top decorative border */}
                 <div className="h-2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-400" />
                 
-                {/* Image placeholder area */}
-                <div className="relative bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 p-8">
-                  <div className="flex flex-col items-center justify-center py-8">
-                    {/* Decorative hearts */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <Heart className="w-5 h-5 text-primary/40" />
-                      <Heart className="w-8 h-8 text-primary fill-primary/20" />
-                      <Heart className="w-5 h-5 text-primary/40" />
+                {/* Features showcase area */}
+                <div className="relative bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 p-6">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    {/* "Sign up to unlock" header */}
+                    <div className="flex items-center gap-2 mb-5">
+                      <Lock className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-primary">Sign up to unlock these features</span>
                     </div>
-                    <div className="text-center bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-lg px-6 py-3 border border-dashed border-primary/30">
-                      <Lock className="w-5 h-5 text-primary/60 mx-auto mb-1" />
-                      <p className="text-sm text-muted-foreground">
-                        Custom illustration unlocked with full card
-                      </p>
+                    
+                    {/* Feature grid */}
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+                      {/* Custom Illustration */}
+                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 mx-auto mb-2 flex items-center justify-center">
+                          <Image className="w-5 h-5 text-white" />
+                        </div>
+                        <p className="text-xs font-medium">Custom Illustration</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">AI-generated art</p>
+                      </div>
+                      
+                      {/* Attach Songs */}
+                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 mx-auto mb-2 flex items-center justify-center">
+                          <Music className="w-5 h-5 text-white" />
+                        </div>
+                        <p className="text-xs font-medium">Attach Songs</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Add personal music</p>
+                      </div>
+                      
+                      {/* Schedule Delivery */}
+                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mx-auto mb-2 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-white" />
+                        </div>
+                        <p className="text-xs font-medium">Schedule Delivery</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Send at perfect time</p>
+                      </div>
+                      
+                      {/* Share Instantly */}
+                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 mx-auto mb-2 flex items-center justify-center">
+                          <Share2 className="w-5 h-5 text-white" />
+                        </div>
+                        <p className="text-xs font-medium">Share Instantly</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Via link or email</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -363,28 +395,16 @@ export default function TryCardPage() {
               </div>
             </div>
 
-            {/* Upgrade prompt */}
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg mb-1">Unlock the Full Card Experience</h4>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Sign up to add beautiful AI-generated illustrations, attach songs, schedule delivery, and share with your loved one. Your first 3 credits are free!
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Custom Illustrations</span>
-                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Attach Songs</span>
-                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Schedule Delivery</span>
-                      <span className="px-2 py-1 bg-white dark:bg-zinc-800 rounded text-xs border">Shareable Link</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Free credits prompt */}
+            <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-4 border border-primary/20">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-primary">Start with 3 Free Credits</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Sign up now and create your first cards and songs at no cost!
+              </p>
+            </div>
 
             {/* Action buttons */}
             <div className="flex flex-col gap-3">
