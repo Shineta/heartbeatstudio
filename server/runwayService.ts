@@ -58,7 +58,7 @@ export async function generateAnimation(options: {
       'X-Runway-Version': '2024-11-06'
     },
     body: JSON.stringify({
-      model: 'gen4_turbo',
+      model: 'gen3a_turbo',
       promptText,
       ratio: '1280:720',
       duration: 5
