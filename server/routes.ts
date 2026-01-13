@@ -1786,6 +1786,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      if (error.message?.includes('credits') || error.message?.includes('not enough')) {
+        return res.status(402).json({ 
+          message: "Animation generation requires credits. Please contact support to enable this feature." 
+        });
+      }
+
       res.status(500).json({ 
         message: error.message || "Failed to generate animation. Please try again." 
       });
