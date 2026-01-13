@@ -1,21 +1,10 @@
 const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 
-interface RunwayJobRequest {
-  task: 'text-to-video';
-  prompt: string;
-  avoid?: string;
-  aspect_ratio?: '16:9' | '9:16' | '1:1';
-  duration?: number;
-}
-
-interface RunwayJobResponse {
+interface RunwayTaskResponse {
   id: string;
-  status: 'pending' | 'running' | 'succeeded' | 'failed';
-  outputs?: {
-    video?: string;
-  }[];
+  status: 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+  output?: string[];
   error?: {
-    type: string;
     message: string;
   };
 }
@@ -57,34 +46,35 @@ export async function generateAnimation(options: {
   const styleDesc = styleModifiers[options.style] || 'animated celebration';
   const toneDesc = toneModifiers[options.tone] || 'warm and celebratory';
 
-  const prompt = `Create a beautiful ${options.occasion} celebration animation for ${options.recipientName}. ${styleDesc}, ${toneDesc}. ${options.description || 'Festive elements like confetti, balloons, sparkles, and celebratory decorations.'}`;
+  const promptText = `Create a beautiful ${options.occasion} celebration animation for ${options.recipientName}. ${styleDesc}, ${toneDesc}. ${options.description || 'Festive elements like confetti, balloons, sparkles, and celebratory decorations.'}`;
 
-  console.log('[Runway] Creating animation with prompt:', prompt);
+  console.log('[Runway] Creating animation with prompt:', promptText);
 
-  const createResponse = await fetch(`${RUNWAY_API_BASE}/jobs`, {
+  const createResponse = await fetch(`${RUNWAY_API_BASE}/text_to_video`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Runway-Version': '2024-11-06'
     },
     body: JSON.stringify({
-      task: 'text-to-video',
-      prompt,
-      aspect_ratio: '16:9',
-      duration: 4
-    } as RunwayJobRequest)
+      model: 'gen4_turbo',
+      promptText,
+      ratio: '1280:720',
+      duration: 5
+    })
   });
 
   if (!createResponse.ok) {
     const errorText = await createResponse.text();
-    console.error('[Runway] Job creation failed:', errorText);
+    console.error('[Runway] Task creation failed:', errorText);
     throw new Error(`Failed to create animation job: ${createResponse.status} ${errorText}`);
   }
 
-  const jobData = await createResponse.json() as RunwayJobResponse;
-  console.log('[Runway] Job created:', jobData.id);
+  const taskData = await createResponse.json() as RunwayTaskResponse;
+  console.log('[Runway] Task created:', taskData.id);
 
-  const videoUrl = await pollForCompletion(jobData.id, apiKey);
+  const videoUrl = await pollForCompletion(taskData.id, apiKey);
 
   console.log('[Runway] Downloading video from:', videoUrl);
   const videoResponse = await fetch(videoUrl);
@@ -96,19 +86,20 @@ export async function generateAnimation(options: {
   return { videoUrl, videoBuffer };
 }
 
-async function pollForCompletion(jobId: string, apiKey: string): Promise<string> {
+async function pollForCompletion(taskId: string, apiKey: string): Promise<string> {
   const maxAttempts = 60;
   let delay = 5000;
   const maxDelay = 60000;
   
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    console.log(`[Runway] Polling job ${jobId}, attempt ${attempt + 1}/${maxAttempts}`);
+    console.log(`[Runway] Polling task ${taskId}, attempt ${attempt + 1}/${maxAttempts}`);
     
     await new Promise(resolve => setTimeout(resolve, delay));
     
-    const statusResponse = await fetch(`${RUNWAY_API_BASE}/jobs/${jobId}`, {
+    const statusResponse = await fetch(`${RUNWAY_API_BASE}/tasks/${taskId}`, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}`,
+        'X-Runway-Version': '2024-11-06'
       }
     });
 
@@ -117,17 +108,17 @@ async function pollForCompletion(jobId: string, apiKey: string): Promise<string>
       continue;
     }
 
-    const status = await statusResponse.json() as RunwayJobResponse;
-    console.log(`[Runway] Job status: ${status.status}`);
+    const status = await statusResponse.json() as RunwayTaskResponse;
+    console.log(`[Runway] Task status: ${status.status}`);
 
-    if (status.status === 'succeeded') {
-      if (status.outputs && status.outputs[0]?.video) {
-        return status.outputs[0].video;
+    if (status.status === 'SUCCEEDED') {
+      if (status.output && status.output[0]) {
+        return status.output[0];
       }
-      throw new Error('Job succeeded but no video output found');
+      throw new Error('Task succeeded but no video output found');
     }
 
-    if (status.status === 'failed') {
+    if (status.status === 'FAILED') {
       throw new Error(`Animation generation failed: ${status.error?.message || 'Unknown error'}`);
     }
 
