@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Mail, ArrowLeft, Loader2, Lock, UserPlus, LogIn, Heart, Image, Music, Calendar, Share2 } from "lucide-react";
+import { Sparkles, Mail, ArrowLeft, Loader2, Lock, UserPlus, LogIn, Heart, Image, Music, Calendar, Share2, Play, Pause, Volume2 } from "lucide-react";
+import sampleCardImage from "@assets/stock_images/woman_smiling_warm_p_3e16e3ca.jpg";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -290,142 +291,165 @@ export default function TryCardPage() {
           </Card>
         ) : (
           <div className="max-w-2xl mx-auto space-y-6">
-            {/* Preview Badge */}
-            <div className="flex justify-center">
-              <div className="bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
-                <span className="text-sm font-medium text-primary flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Card Preview
-                </span>
-              </div>
-            </div>
-
-            {/* The Card Preview - Greeting Card Style */}
-            <div className="relative">
-              {/* Decorative background pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-100/50 via-rose-50/30 to-amber-50/50 dark:from-pink-950/30 dark:via-rose-950/20 dark:to-amber-950/30 rounded-2xl" />
-              
-              {/* Card container with shadow */}
-              <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-primary/10 overflow-hidden">
-                {/* Top decorative border */}
-                <div className="h-2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-400" />
-                
-                {/* Features showcase area */}
-                <div className="relative bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 p-6">
-                  <div className="flex flex-col items-center justify-center py-4">
-                    {/* "Sign up to unlock" header */}
-                    <div className="flex items-center gap-2 mb-5">
-                      <Lock className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-primary">Sign up to unlock these features</span>
-                    </div>
-                    
-                    {/* Feature grid */}
-                    <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-                      {/* Custom Illustration */}
-                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 mx-auto mb-2 flex items-center justify-center">
-                          <Image className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-xs font-medium">Custom Illustration</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">AI-generated art</p>
-                      </div>
-                      
-                      {/* Attach Songs */}
-                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 mx-auto mb-2 flex items-center justify-center">
-                          <Music className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-xs font-medium">Attach Songs</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Add personal music</p>
-                      </div>
-                      
-                      {/* Schedule Delivery */}
-                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mx-auto mb-2 flex items-center justify-center">
-                          <Calendar className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-xs font-medium">Schedule Delivery</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Send at perfect time</p>
-                      </div>
-                      
-                      {/* Share Instantly */}
-                      <div className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20 text-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 mx-auto mb-2 flex items-center justify-center">
-                          <Share2 className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-xs font-medium">Share Instantly</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Via link or email</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Card content area */}
-                <div className="p-8 text-center space-y-6">
-                  {/* Title with decorative elements */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary/30" />
-                      <Heart className="w-4 h-4 text-primary" />
-                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary/30" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Fredoka, sans-serif' }}>
-                      {demoCard.title}
-                    </h2>
-                  </div>
-                  
-                  {/* Message */}
-                  <div className="max-w-md mx-auto">
-                    <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap" style={{ fontFamily: 'Georgia, serif' }}>
-                      {demoCard.message}
-                    </p>
-                  </div>
-                  
-                  {/* Occasion tag */}
-                  <div className="flex justify-center pt-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-sm text-primary">
-                      <Mail className="w-3.5 h-3.5" />
-                      {demoCard.occasion.replace('-', ' ')}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Bottom decorative border */}
-                <div className="h-2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-400" />
-              </div>
-            </div>
-
-            {/* Free credits prompt */}
-            <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-4 border border-primary/20">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <span className="font-semibold text-primary">Start with 3 Free Credits</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Sign up now and create your first cards and songs at no cost!
+            {/* Hero Message */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                Here's What Your Card Could Look Like!
+              </h2>
+              <p className="text-muted-foreground">
+                A personalized card created just for {demoCard.recipientName}
               </p>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-3">
-              <Button 
-                size="lg"
-                className="w-full" 
-                onClick={handleSaveOrSend}
-                data-testid="button-save-card"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Sign Up to Create Full Card
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setDemoCard(null)}
-                data-testid="button-try-again"
-              >
-                Try Another Card
-              </Button>
-            </div>
+            {/* Full Card Preview - Like SharePage */}
+            <Card className="overflow-hidden shadow-xl">
+              {/* Sample Image */}
+              <div className="w-full relative">
+                <img 
+                  src={sampleCardImage} 
+                  alt="Sample card illustration"
+                  className="w-full h-auto"
+                />
+                {/* Personalization overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
+                  <div className="p-4 w-full">
+                    <div className="flex items-center gap-2 text-white/90">
+                      <Image className="w-4 h-4" />
+                      <span className="text-sm font-medium">Sample Image - Sign up to personalize!</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl mb-1" data-testid="text-card-title">
+                      {demoCard.title}
+                    </CardTitle>
+                    <CardDescription className="capitalize">
+                      {demoCard.tone}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-5">
+                {/* Sample Song Section */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Play className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-lg">A Song For You</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">Sample: "Shine Through Every Mile"</p>
+                  
+                  {/* Fake audio player UI */}
+                  <div className="bg-white dark:bg-zinc-800 rounded-lg p-3 border">
+                    <div className="flex items-center gap-3">
+                      <button className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                        <Play className="w-5 h-5 ml-0.5" />
+                      </button>
+                      <div className="flex-1">
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full w-1/3 bg-primary rounded-full" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>0:00</span>
+                          <span>3:45</span>
+                        </div>
+                      </div>
+                      <Volume2 className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    {/* Personalize overlay */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t text-primary">
+                      <Music className="w-4 h-4" />
+                      <span className="text-sm font-medium">Sign up to add your own personalized song!</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <h3 className="font-semibold mb-3 text-lg">Message</h3>
+                  <div 
+                    className="bg-muted/30 rounded-lg p-4 whitespace-pre-wrap"
+                    data-testid="text-message"
+                  >
+                    {demoCard.message}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Personalization CTA */}
+            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+              <CardContent className="p-6">
+                <div className="text-center space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 mx-auto flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">Make It Truly Personal</h3>
+                    <p className="text-muted-foreground">
+                      Sign up to customize your card with personalized AI-generated images and songs that match your message perfectly.
+                    </p>
+                  </div>
+                  
+                  {/* Features list */}
+                  <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                        <Image className="w-4 h-4 text-pink-600" />
+                      </div>
+                      <span className="text-sm">Custom Images</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                        <Music className="w-4 h-4 text-violet-600" />
+                      </div>
+                      <span className="text-sm">Personal Songs</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                        <Calendar className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <span className="text-sm">Schedule Delivery</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <Share2 className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <span className="text-sm">Easy Sharing</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2">
+                    <p className="text-sm text-primary font-medium mb-4">
+                      Start with 3 free credits!
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <Button 
+                        size="lg"
+                        className="w-full" 
+                        onClick={handleSaveOrSend}
+                        data-testid="button-save-card"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Sign Up to Personalize Your Card
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setDemoCard(null)}
+                        data-testid="button-try-again"
+                      >
+                        Try Another Card
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
