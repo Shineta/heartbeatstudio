@@ -499,8 +499,8 @@ export default function RealDashboard() {
   const handleDownload = async (creation: Creation) => {
     if (!creation.mediaUrl) {
       toast({
-        title: "No audio available",
-        description: "This song doesn't have audio yet.",
+        title: "No media available",
+        description: creation.type === 'animation' ? "This animation doesn't have video yet." : "This song doesn't have audio yet.",
         variant: "destructive",
       });
       return;
@@ -512,17 +512,19 @@ export default function RealDashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${creation.title || 'song'}.mp3`;
+      const extension = creation.type === 'animation' ? 'mp4' : 'mp3';
+      const defaultName = creation.type === 'animation' ? 'animation' : 'song';
+      a.download = `${creation.title || defaultName}.${extension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast({ title: "Success", description: "Song downloaded!" });
+      toast({ title: "Success", description: `${creation.type === 'animation' ? 'Animation' : 'Song'} downloaded!` });
     } catch (error) {
       console.error('Download error:', error);
       toast({
         title: "Download failed",
-        description: "Unable to download the song. Please try again.",
+        description: `Unable to download the ${creation.type === 'animation' ? 'animation' : 'song'}. Please try again.`,
         variant: "destructive",
       });
     }
@@ -864,7 +866,7 @@ export default function RealDashboard() {
                       <div className="p-4">
                         <h3 className="font-semibold mb-2">{creation.title}</h3>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {creation.type === 'song' ? 'Song' : 'Card'} • {creation.tone}
+                          {creation.type === 'song' ? 'Song' : creation.type === 'animation' ? 'Animation' : 'Card'} • {creation.tone}
                         </p>
                         <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
                         
@@ -879,6 +881,20 @@ export default function RealDashboard() {
                               <source src={`/api/audio/${creation.id}`} type="audio/mpeg" />
                               Your browser does not support the audio element.
                             </audio>
+                          </div>
+                        )}
+                        
+                        {creation.type === 'animation' && creation.mediaUrl && (
+                          <div className="mb-4">
+                            <video 
+                              controls 
+                              preload="metadata"
+                              className="w-full rounded-lg mb-2"
+                              data-testid={`video-player-${creation.id}`}
+                            >
+                              <source src={creation.mediaUrl} type="video/mp4" />
+                              Your browser does not support the video element.
+                            </video>
                           </div>
                         )}
                         
@@ -945,7 +961,7 @@ export default function RealDashboard() {
                               <Clock className="w-4 h-4" />
                               <span className="ml-1">Schedule</span>
                             </Button>
-                            {creation.type === 'song' && creation.mediaUrl && (
+                            {(creation.type === 'song' || creation.type === 'animation') && creation.mediaUrl && (
                               <Button
                                 size="sm"
                                 variant="outline"

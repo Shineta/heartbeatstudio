@@ -1752,6 +1752,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Animation] Video saved: ${videoPath}`);
 
+      const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      
       const creation = await storage.createCreation({
         userId,
         type: 'animation',
@@ -1759,6 +1761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: parsed.description || `A personalized ${parsed.occasion} animation`,
         tone: parsed.tone,
         mediaUrl: videoPath,
+        shareableLink,
         status: 'ready',
       });
 
