@@ -1703,13 +1703,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI Animation - Coming Soon (Sora API not publicly available yet)
+  // Generate AI Animation using Kling
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
-    // Animation generation is temporarily disabled as the Sora video API is not yet publicly available
-    return res.status(503).json({ 
-      message: "AI Animation generation is coming soon! This feature will be available when video generation APIs become publicly accessible.",
-      comingSoon: true
-    });
+    try {
+      const { isKlingConfigured, generateAnimationVideo } = await import('./klingService');
+      
+      if (!isKlingConfigured()) {
+        return res.status(503).json({ 
+          message: "Animation generation is not configured. Please set up Kling API credentials.",
+          comingSoon: true
+        });
+      }
+
+      const userId = (req.user as any).id;
+
+      const schema = z.object({
+        lovedOneId: z.string().optional(),
+        recipientName: z.string().min(1),
+        occasion: z.string().min(1),
+        tone: z.string().optional(),
+        style: z.string().optional(),
+        description: z.string().optional(),
+      });
+
+      const parsed = schema.parse(req.body);
+
+      let recipientName = parsed.recipientName;
+      if (parsed.lovedOneId) {
+        const lovedOne = await storage.getLovedOneById(parsed.lovedOneId);
+        if (lovedOne) {
+          recipientName = lovedOne.name;
+        }
+      }
+
+      console.log(`[Animation] Starting Kling video generation for ${recipientName}, occasion: ${parsed.occasion}`);
+
+      const videoBuffer = await generateAnimationVideo({
+        recipientName,
+        occasion: parsed.occasion,
+        tone: parsed.tone,
+        style: parsed.style,
+        description: parsed.description,
+      });
+
+      const filename = `animations/animation_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`;
+
+      const videoPath = await objectStorageService.uploadBuffer(videoBuffer, filename, 'video/mp4');
+
+      console.log(`[Animation] Video saved: ${videoPath}`);
+
+      const creation = await storage.createCreation({
+        userId,
+        type: 'animation',
+        title: `${parsed.occasion} Animation for ${recipientName}`,
+        content: parsed.description || `A personalized ${parsed.occasion} animation`,
+        tone: parsed.tone,
+        mediaUrl: videoPath,
+        status: 'ready',
+      });
+
+      res.json(creation);
+    } catch (error: any) {
+      console.error('[Animation] Error generating animation:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: 'Invalid request data', 
+          errors: error.errors 
+        });
+      }
+
+      if (error.message?.includes('not configured')) {
+        return res.status(503).json({ 
+          message: "Animation generation is not configured. Please contact support.",
+          comingSoon: true
+        });
+      }
+
+      if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
+        return res.status(504).json({ 
+          message: "Animation generation timed out. Please try again with a simpler description." 
+        });
+      }
+
+      res.status(500).json({ 
+        message: error.message || "Failed to generate animation. Please try again." 
+      });
+    }
   });
 
   // Generate dynamic prayer suggestions based on prayer intention

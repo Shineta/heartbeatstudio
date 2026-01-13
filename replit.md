@@ -128,6 +128,13 @@ Preferred communication style: Simple, everyday language.
   - Base URL and API key provided by Replit's managed service
   - Models: GPT-5 (chat completions), GPT-Image-1 (image generation)
   - Used for generating card messages and visual assets
+- **Kling AI**: Video/animation generation
+  - Endpoint: `https://api.klingai.com/v1`
+  - Requires KLING_ACCESS_KEY and KLING_SECRET_KEY environment variables
+  - Uses JWT authentication with HS256 algorithm
+  - Generates 5-10 second celebration animations
+  - Supports text-to-video with multiple styles (cartoon, anime, 3D, watercolor, realistic)
+  - Service file: `server/klingService.ts`
 - **Suno API**: AI song generation with vocals and music
   - Endpoint: `https://api.sunoapi.org/suno-api/generate-music`
   - Requires SUNO_API_KEY environment variable

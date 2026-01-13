@@ -2706,36 +2706,44 @@ export default function CreatePage() {
           </TabsContent>
 
           <TabsContent value="animation">
-            <Card>
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-primary" />
-                </div>
-                <CardTitle className="text-2xl">Animation Creator</CardTitle>
-                <CardDescription className="text-base">
-                  Coming Soon
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center space-y-4 pb-8">
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  We're working on bringing you personalized celebration animations powered by AI. 
-                  Create magical moments with custom animated greetings for your loved ones.
-                </p>
-                <div className="flex flex-wrap justify-center gap-2 pt-2">
-                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Birthday Animations</span>
-                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Holiday Greetings</span>
-                  <span className="px-3 py-1 bg-secondary rounded-full text-sm">Custom Messages</span>
-                </div>
-                <p className="text-sm text-muted-foreground pt-4">
-                  In the meantime, try creating a personalized song or greeting card!
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Hidden animation form for future use */}
-          <div className="hidden">
-            {false && (
+            {createdAnimation ? (
+              <Card>
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                    Your Animation is Ready!
+                  </CardTitle>
+                  <CardDescription>
+                    {createdAnimation.title}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {createdAnimation.mediaUrl && (
+                    <div className="rounded-lg overflow-hidden">
+                      <video 
+                        src={createdAnimation.mediaUrl} 
+                        controls 
+                        className="w-full"
+                        data-testid="video-animation-result"
+                      />
+                    </div>
+                  )}
+                  <div className="flex gap-2 justify-center">
+                    {createdAnimation.mediaUrl && (
+                      <a href={createdAnimation.mediaUrl} download>
+                        <Button variant="outline" data-testid="button-download-animation">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </a>
+                    )}
+                    <Button onClick={() => setCreatedAnimation(null)} data-testid="button-create-another-animation">
+                      Create Another
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2915,7 +2923,7 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </TabsContent>
 
           <TabsContent value="song">
             {createdSong ? (
