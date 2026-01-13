@@ -1,4 +1,4 @@
-const RUNWAY_API_BASE = 'https://api.runwayml.com/v1';
+const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 
 interface RunwayJobRequest {
   task: 'text-to-video';
