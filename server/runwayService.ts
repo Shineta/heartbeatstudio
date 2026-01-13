@@ -58,10 +58,11 @@ export async function generateAnimation(options: {
       'X-Runway-Version': '2024-11-06'
     },
     body: JSON.stringify({
-      model: 'gen3a_turbo',
+      model: 'veo3.1_fast',
       promptText,
       ratio: '1280:720',
-      duration: 5
+      duration: 6,
+      audio: false
     })
   });
 
