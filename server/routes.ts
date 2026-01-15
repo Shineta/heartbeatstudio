@@ -1764,6 +1764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         style: z.string().optional(),
         description: z.string().optional(),
         loop: z.boolean().optional().default(false),
+        songIds: z.array(z.string()).optional(),
       });
 
       const parsed = schema.parse(req.body);
@@ -1804,6 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shareableLink,
         status: 'ready',
         loop: parsed.loop,
+        songIds: parsed.songIds,
       });
 
       res.json(creation);
@@ -2480,9 +2482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Creation not found" });
       }
       
-      // If this is a card with attached songs, include the song data
+      // If this is a card or animation with attached songs, include the song data
       let attachedSongs: any[] = [];
-      if (creation.type === 'card' && creation.songIds && creation.songIds.length > 0) {
+      if ((creation.type === 'card' || creation.type === 'animation') && creation.songIds && creation.songIds.length > 0) {
         const songs = await Promise.all(
           creation.songIds.map(id => storage.getCreationById(id))
         );

@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -252,6 +252,11 @@ export default function CreatePage() {
   const [attachedAnimationId, setAttachedAnimationId] = useState<string | null>(null);
   const [animationSearchOpen, setAnimationSearchOpen] = useState(false);
   const [animationSearchQuery, setAnimationSearchQuery] = useState("");
+  
+  // State for attaching a song to an animation
+  const [animationAttachedSongId, setAnimationAttachedSongId] = useState<string | null>(null);
+  const [animationSongSearchOpen, setAnimationSongSearchOpen] = useState(false);
+  const [animationSongSearchQuery, setAnimationSongSearchQuery] = useState("");
 
   // State for editing card message
   const [isEditingCardMessage, setIsEditingCardMessage] = useState(false);
@@ -844,7 +849,7 @@ export default function CreatePage() {
   ];
 
   const animationMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof animationFormSchema>) => {
+    mutationFn: async (data: z.infer<typeof animationFormSchema> & { songIds?: string[] }) => {
       const res = await apiRequest("POST", "/api/generate/animation", data);
       return await res.json() as Creation;
     },
@@ -1242,7 +1247,10 @@ export default function CreatePage() {
   };
 
   const onAnimationSubmit = (data: z.infer<typeof animationFormSchema>) => {
-    animationMutation.mutate(data);
+    animationMutation.mutate({
+      ...data,
+      ...(animationAttachedSongId && { songIds: [animationAttachedSongId] }),
+    });
   };
 
   const onMixtapeSubmit = (data: z.infer<typeof mixtapeFormSchema>) => {
@@ -2825,12 +2833,18 @@ export default function CreatePage() {
                       <video 
                         src={createdAnimation.mediaUrl} 
                         controls 
+                        loop={createdAnimation.loop ?? false}
                         className="w-full"
                         data-testid="video-animation-result"
                       />
                     </div>
                   )}
-                  <div className="flex gap-2 justify-center">
+                  {createdAnimation.loop && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      This animation will loop continuously
+                    </p>
+                  )}
+                  <div className="flex gap-2 justify-center flex-wrap">
                     {createdAnimation.mediaUrl && (
                       <a href={createdAnimation.mediaUrl} download>
                         <Button variant="outline" data-testid="button-download-animation">
@@ -2838,6 +2852,22 @@ export default function CreatePage() {
                           Download
                         </Button>
                       </a>
+                    )}
+                    {createdAnimation.shareableLink && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          const shareLink = createdAnimation.shareableLink?.startsWith('/share/') 
+                            ? createdAnimation.shareableLink 
+                            : `/share/${createdAnimation.shareableLink}`;
+                          navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                          toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                        }}
+                        data-testid="button-share-animation"
+                      >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share
+                      </Button>
                     )}
                     <Button onClick={() => setCreatedAnimation(null)} data-testid="button-create-another-animation">
                       Create Another
@@ -3006,6 +3036,86 @@ export default function CreatePage() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Attach a Song to Animation */}
+                      <div className="space-y-3">
+                        <Label className="flex items-center gap-2">
+                          <Music className="w-4 h-4" />
+                          Attach a Song (Optional)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Add a song to play with your animation
+                        </p>
+                        <Popover open={animationSongSearchOpen} onOpenChange={setAnimationSongSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                              data-testid="select-animation-attached-song"
+                            >
+                              {animationAttachedSongId
+                                ? userSongs.find((song) => song.id === animationAttachedSongId)?.title || "Untitled Song"
+                                : "No song attached"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search songs..."
+                                value={animationSongSearchQuery}
+                                onValueChange={setAnimationSongSearchQuery}
+                              />
+                              <CommandList>
+                                <CommandEmpty>No songs found.</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandItem
+                                    onSelect={() => {
+                                      setAnimationAttachedSongId(null);
+                                      setAnimationSongSearchOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        animationAttachedSongId === null ? "opacity-100" : "opacity-0"
+                                      }`}
+                                    />
+                                    No song attached
+                                  </CommandItem>
+                                  {userSongs
+                                    .filter(song => 
+                                      !animationSongSearchQuery || 
+                                      song.title?.toLowerCase().includes(animationSongSearchQuery.toLowerCase())
+                                    )
+                                    .map((song) => (
+                                      <CommandItem
+                                        key={song.id}
+                                        onSelect={() => {
+                                          setAnimationAttachedSongId(song.id);
+                                          setAnimationSongSearchOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            animationAttachedSongId === song.id ? "opacity-100" : "opacity-0"
+                                          }`}
+                                        />
+                                        <Music className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {song.title || "Untitled Song"}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {userSongs.length === 0 && (
+                          <p className="text-xs text-muted-foreground italic">
+                            You don't have any songs yet. Create a song first to attach it to your animation.
+                          </p>
+                        )}
+                      </div>
 
                       <FormField
                         control={animationForm.control}

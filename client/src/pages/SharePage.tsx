@@ -114,8 +114,8 @@ export default function SharePage() {
         const data = await response.json();
         setCreation(data);
         
-        // If this is a card with attached songs, use the first one
-        if (data.type === 'card' && data.attachedSongs && data.attachedSongs.length > 0) {
+        // If this is a card or animation with attached songs, use the first one
+        if ((data.type === 'card' || data.type === 'animation') && data.attachedSongs && data.attachedSongs.length > 0) {
           const firstSong = data.attachedSongs[0];
           if (firstSong.mediaUrl) {
             setAttachedSong(firstSong);
@@ -287,6 +287,39 @@ export default function SharePage() {
                       This animation will loop continuously
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Attached Song Player for Animations */}
+              {creation.type === 'animation' && attachedSong && (
+                <div className="space-y-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Play className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-lg">A Song For You</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{attachedSong.title}</p>
+                  {!cardSongStarted && (
+                    <div className="flex justify-center py-4">
+                      <Button 
+                        size="lg" 
+                        onClick={handlePlayCardSong}
+                        className="h-16 px-10 text-lg gap-3 animate-pulse"
+                        data-testid="button-play-animation-song"
+                      >
+                        <Play className="w-6 h-6" />
+                        Play Song
+                      </Button>
+                    </div>
+                  )}
+                  <audio 
+                    ref={cardAudioRef}
+                    controls 
+                    className="w-full"
+                    data-testid="animation-audio-player"
+                  >
+                    <source src={attachedSong.mediaUrl} type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
               )}
 
