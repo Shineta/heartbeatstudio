@@ -1808,12 +1808,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('[Animation] Failed to generate personalized message:', msgError.message);
       }
 
+      // Create user-friendly title based on occasion
+      const occasionTitles: Record<string, string> = {
+        birthday: 'Happy Birthday',
+        anniversary: 'Happy Anniversary',
+        just_because: 'Just Because I Love You',
+        congratulations: 'Congratulations',
+        thank_you: 'Thank You',
+        get_well: 'Get Well Soon',
+        holiday: 'Happy Holidays',
+        valentine: 'Happy Valentine\'s Day',
+        mother_day: 'Happy Mother\'s Day',
+        father_day: 'Happy Father\'s Day',
+        graduation: 'Congratulations Graduate',
+        new_baby: 'Welcome Little One',
+        wedding: 'Congratulations on Your Wedding',
+        missing_you: 'Missing You',
+        encouragement: 'You\'ve Got This',
+        apology: 'I\'m Sorry',
+      };
+      const friendlyTitle = occasionTitles[parsed.occasion] || parsed.occasion.replace(/_/g, ' ');
+      const animationTitle = `${friendlyTitle}, ${recipientName}!`;
+
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       
       const creation = await storage.createCreation({
         userId,
         type: 'animation',
-        title: `${parsed.occasion} Animation for ${recipientName}`,
+        title: animationTitle,
         content: personalizedMessage,
         tone: parsed.tone,
         mediaUrl: videoPath,
