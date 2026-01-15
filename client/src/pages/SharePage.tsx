@@ -396,7 +396,7 @@ export default function SharePage() {
               )}
 
               {/* Lyrics / Content */}
-              {creation.content && (
+              {creation.content && creation.type !== 'animation' && (
                 <div>
                   <h3 className="font-semibold mb-3 text-lg">
                     {creation.type === 'song' ? 'Lyrics' : 'Message'}
@@ -407,6 +407,15 @@ export default function SharePage() {
                   >
                     {creation.content}
                   </div>
+                </div>
+              )}
+              
+              {/* Sweet message for animations */}
+              {creation.type === 'animation' && (
+                <div className="text-center py-4">
+                  <p className="text-lg text-muted-foreground italic">
+                    This animation was created just for you with love
+                  </p>
                 </div>
               )}
 
