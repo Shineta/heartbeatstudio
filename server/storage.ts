@@ -205,7 +205,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCreationByShareableLink(link: string): Promise<Creation | undefined> {
-    const [creation] = await db.select().from(creations).where(eq(creations.shareableLink, link));
+    // Handle both formats: just the ID (e.g., "mrwcien9zfp") and full path (e.g., "/share/mrwcien9zfp")
+    const fullPath = link.startsWith('/share/') ? link : `/share/${link}`;
+    const shortId = link.startsWith('/share/') ? link.replace('/share/', '') : link;
+    
+    // Try full path first (how it's stored in DB)
+    let [creation] = await db.select().from(creations).where(eq(creations.shareableLink, fullPath));
+    if (creation) return creation;
+    
+    // Fall back to short ID in case of legacy data
+    [creation] = await db.select().from(creations).where(eq(creations.shareableLink, shortId));
     return creation;
   }
 
