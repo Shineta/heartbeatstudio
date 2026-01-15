@@ -205,17 +205,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCreationByShareableLink(link: string): Promise<Creation | undefined> {
-    // Handle both formats: just the ID (e.g., "mrwcien9zfp") and full path (e.g., "/share/mrwcien9zfp")
-    const fullPath = link.startsWith('/share/') ? link : `/share/${link}`;
-    const shortId = link.startsWith('/share/') ? link.replace('/share/', '') : link;
+    // Normalize the link - extract just the token ID
+    let shortId = link;
+    
+    // Strip any URL components
+    if (shortId.includes('://')) {
+      try {
+        const url = new URL(shortId);
+        shortId = url.pathname;
+      } catch {
+        // Not a valid URL, continue with what we have
+      }
+    }
+    
+    // Remove /share/ prefix variations
+    shortId = shortId.replace(/^\/share\//, '').replace(/^share\//, '').replace(/^\//, '');
+    
+    // Also handle animation- prefix links stored directly
+    const fullPath = `/share/${shortId}`;
+    
+    console.log(`[Storage] Looking up shareable link: original="${link}", shortId="${shortId}", fullPath="${fullPath}"`);
     
     // Try full path first (how it's stored in DB)
     let [creation] = await db.select().from(creations).where(eq(creations.shareableLink, fullPath));
-    if (creation) return creation;
+    if (creation) {
+      console.log(`[Storage] Found by fullPath: ${creation.id}`);
+      return creation;
+    }
     
     // Fall back to short ID in case of legacy data
     [creation] = await db.select().from(creations).where(eq(creations.shareableLink, shortId));
-    return creation;
+    if (creation) {
+      console.log(`[Storage] Found by shortId: ${creation.id}`);
+      return creation;
+    }
+    
+    // Also try with animation- prefix for animation links
+    if (shortId.startsWith('animation-')) {
+      [creation] = await db.select().from(creations).where(eq(creations.shareableLink, shortId));
+      if (creation) return creation;
+      
+      [creation] = await db.select().from(creations).where(eq(creations.shareableLink, fullPath));
+      if (creation) return creation;
+    }
+    
+    console.log(`[Storage] No creation found for link: ${link}`);
+    return undefined;
   }
 
   async createCreation(creation: InsertCreation): Promise<Creation> {

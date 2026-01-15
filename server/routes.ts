@@ -2513,7 +2513,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get shareable creation (public)
   app.get('/api/share/:link', async (req: Request, res: Response) => {
     try {
-      const creation = await storage.getCreationByShareableLink(req.params.link);
+      // Normalize the share link - strip any prefixes like /share/, share/, or full URLs
+      let shareLink = decodeURIComponent(req.params.link);
+      
+      // Remove domain if present (e.g., heartbeatstudio.org/share/xxx)
+      if (shareLink.includes('/share/')) {
+        shareLink = shareLink.split('/share/').pop() || shareLink;
+      }
+      // Remove leading share/ if present
+      if (shareLink.startsWith('share/')) {
+        shareLink = shareLink.replace('share/', '');
+      }
+      // Remove leading /share/ if present  
+      if (shareLink.startsWith('/share/')) {
+        shareLink = shareLink.replace('/share/', '');
+      }
+      // Remove leading slash if present
+      if (shareLink.startsWith('/')) {
+        shareLink = shareLink.substring(1);
+      }
+      
+      console.log(`[Share] Looking up link: "${req.params.link}" -> normalized: "${shareLink}"`);
+      
+      const creation = await storage.getCreationByShareableLink(shareLink);
       
       if (!creation) {
         return res.status(404).json({ message: "Creation not found" });
