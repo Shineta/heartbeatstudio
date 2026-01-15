@@ -80,6 +80,11 @@ export default function SharePage() {
     if (videoRef.current) {
       videoRef.current.play();
       setVideoStarted(true);
+      // Also play attached song if there is one
+      if (cardAudioRef.current && attachedSong) {
+        cardAudioRef.current.play();
+        setCardSongStarted(true);
+      }
     }
   };
   
