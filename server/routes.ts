@@ -1149,17 +1149,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has credits available (cards cost 1 credit)
       const user = await storage.getUser(userId);
       const songsRemaining = user?.songsRemaining ?? 0;
+      const hasActiveSubscription = user?.subscriptionStatus === 'active';
+      const isAdmin = user?.isAdmin === true;
       
-      if (songsRemaining <= 0) {
+      // Check credits (admins and subscribers are exempt from credit requirements)
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
         return res.status(403).json({ 
           message: "No credits remaining. Please purchase a Credit Pack or subscribe for more credits.",
-          creditRequired: true 
+          creditRequired: true,
+          songsRemaining: 0,
+          requiresPayment: true
         });
       }
       
-      // Deduct credit upfront
-      await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
-      console.log(`[Card] User ${userId} credit deducted. Credits remaining: ${songsRemaining - 1}`);
+      // Deduct credit upfront (admins and subscribers are exempt)
+      if (!hasActiveSubscription && !isAdmin) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Card] User ${userId} credit deducted. Credits remaining: ${songsRemaining - 1}`);
+      } else {
+        console.log(`[Card] User ${userId} is ${isAdmin ? 'admin' : 'subscriber'} - no credit deducted`);
+      }
       
       // Validate coverImageSource if provided
       const validCoverSources = ['ai', 'portrait', 'upload', 'festive', 'none'];
@@ -1718,6 +1727,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = (req.user as any).id;
+      
+      // Check if user has credits available (animations cost 1 credit)
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      const songsRemaining = user.songsRemaining ?? 0;
+      const hasActiveSubscription = user.subscriptionStatus === 'active';
+      const isAdmin = user.isAdmin === true;
+      
+      // Check credits (admins and subscribers are exempt from credit requirements)
+      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
+        return res.status(403).json({ 
+          message: "No credits remaining. Please purchase a Credit Pack or subscribe for more credits.",
+          creditRequired: true,
+          songsRemaining: 0,
+          requiresPayment: true
+        });
+      }
+      
+      // Deduct credit upfront (admins and subscribers are exempt)
+      if (!hasActiveSubscription && !isAdmin) {
+        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
+        console.log(`[Animation] User ${userId} credit deducted. Credits remaining: ${songsRemaining - 1}`);
+      } else {
+        console.log(`[Animation] User ${userId} is ${isAdmin ? 'admin' : 'subscriber'} - no credit deducted`);
+      }
 
       const schema = z.object({
         lovedOneId: z.string().optional(),
@@ -1772,6 +1809,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(creation);
     } catch (error: any) {
       console.error('[Animation] Error generating animation:', error);
+      
+      // Refund credit on failure (for non-subscribers and non-admins)
+      const userId = (req.user as any)?.id;
+      if (userId) {
+        try {
+          const currentUser = await storage.getUser(userId);
+          if (currentUser && currentUser.subscriptionStatus !== 'active' && !currentUser.isAdmin) {
+            const refundedCredits = (currentUser.songsRemaining ?? 0) + 1;
+            await storage.updateUser(userId, { songsRemaining: refundedCredits });
+            console.log(`[Animation] Credit refunded for user ${userId}. Credits restored to: ${refundedCredits}`);
+          }
+        } catch (refundError) {
+          console.error('[Animation] Failed to refund credit:', refundError);
+        }
+      }
       
       if (error.name === 'ZodError') {
         return res.status(400).json({ 
