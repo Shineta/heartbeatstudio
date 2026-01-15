@@ -32,7 +32,17 @@ export async function generateAnimation(options: {
     '3d': '3D rendered animation, cinematic lighting',
     watercolor: 'soft watercolor animation style, gentle and artistic',
     pixar: 'Pixar-style 3D animation, warm and emotive',
-    realistic: 'photorealistic animation, high quality cinematic'
+    realistic: 'photorealistic animation, high quality cinematic',
+    ghibli: 'Studio Ghibli inspired animation, soft dreamy Japanese animation style with gentle colors and whimsical atmosphere',
+    claymation: 'claymation stop-motion style, handcrafted clay figures with visible texture and charming imperfections',
+    retro80s: 'retro 1980s VHS aesthetic, neon colors, synthwave vibes, scan lines and nostalgic glow',
+    oilpainting: 'classical oil painting style animation, rich brushstrokes and fine art museum quality',
+    minimalist: 'minimalist animation style, clean geometric shapes, simple colors, elegant and modern',
+    vintage: 'vintage film aesthetic, sepia tones, film grain, classic golden age cinema look',
+    popart: 'pop art style animation, bold primary colors, comic book dots, Andy Warhol inspired',
+    pencilsketch: 'hand-drawn pencil sketch animation, graphite textures, artistic sketchbook style',
+    surreal: 'surreal dreamlike animation, abstract flowing visuals, ethereal and fantastical atmosphere',
+    lowpoly: 'low-poly 3D animation style, geometric faceted shapes, modern video game aesthetic'
   };
 
   const toneModifiers: Record<string, string> = {

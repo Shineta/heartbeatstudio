@@ -3013,6 +3013,16 @@ export default function CreatePage() {
                                   <SelectItem value="watercolor">Watercolor</SelectItem>
                                   <SelectItem value="pixar">Pixar Style</SelectItem>
                                   <SelectItem value="realistic">Realistic</SelectItem>
+                                  <SelectItem value="ghibli">Studio Ghibli</SelectItem>
+                                  <SelectItem value="claymation">Claymation</SelectItem>
+                                  <SelectItem value="retro80s">Retro 80s</SelectItem>
+                                  <SelectItem value="oilpainting">Oil Painting</SelectItem>
+                                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                                  <SelectItem value="vintage">Vintage Film</SelectItem>
+                                  <SelectItem value="popart">Pop Art</SelectItem>
+                                  <SelectItem value="pencilsketch">Pencil Sketch</SelectItem>
+                                  <SelectItem value="surreal">Dreamlike/Surreal</SelectItem>
+                                  <SelectItem value="lowpoly">Low-Poly 3D</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
