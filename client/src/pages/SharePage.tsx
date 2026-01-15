@@ -416,10 +416,10 @@ export default function SharePage() {
               )}
               
               {/* Sweet message for animations */}
-              {creation.type === 'animation' && (
+              {creation.type === 'animation' && creation.content && (
                 <div className="text-center py-4">
                   <p className="text-lg text-muted-foreground italic">
-                    This animation was created just for you with love
+                    "{creation.content}"
                   </p>
                 </div>
               )}

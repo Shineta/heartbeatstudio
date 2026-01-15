@@ -1793,13 +1793,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Animation] Video saved: ${videoPath}`);
 
+      // Generate a personalized AI message for the animation
+      let personalizedMessage = "This was made with love, just for you.";
+      try {
+        const { generateAnimationMessage } = await import('./openaiService');
+        personalizedMessage = await generateAnimationMessage({
+          recipientName,
+          occasion: parsed.occasion,
+          tone: parsed.tone,
+          description: parsed.description,
+        });
+        console.log(`[Animation] Generated personalized message: ${personalizedMessage}`);
+      } catch (msgError: any) {
+        console.error('[Animation] Failed to generate personalized message:', msgError.message);
+      }
+
       const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       
       const creation = await storage.createCreation({
         userId,
         type: 'animation',
         title: `${parsed.occasion} Animation for ${recipientName}`,
-        content: parsed.description || `A personalized ${parsed.occasion} animation`,
+        content: personalizedMessage,
         tone: parsed.tone,
         mediaUrl: videoPath,
         shareableLink,

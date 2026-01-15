@@ -558,6 +558,51 @@ Return as JSON with 'message' and 'title' fields.`;
   return content;
 }
 
+// Generate personalized animation message
+export async function generateAnimationMessage(params: {
+  recipientName: string;
+  occasion: string;
+  tone?: string;
+  description?: string;
+}): Promise<string> {
+  const occasionLabels: Record<string, string> = {
+    birthday: 'birthday',
+    anniversary: 'anniversary',
+    just_because: 'thinking of you',
+    congratulations: 'congratulations',
+    thank_you: 'thank you',
+    get_well: 'get well',
+    holiday: 'holiday',
+    valentine: "Valentine's Day",
+    mother_day: "Mother's Day",
+    father_day: "Father's Day",
+    graduation: 'graduation',
+    new_baby: 'new baby',
+    wedding: 'wedding',
+    missing_you: 'missing you',
+    encouragement: 'encouragement',
+    apology: 'apology',
+  };
+
+  const occasionText = occasionLabels[params.occasion] || params.occasion.replace(/_/g, ' ');
+  
+  const prompt = `Write a short, heartfelt message (1-2 sentences) to accompany a ${occasionText} animation created for ${params.recipientName}.
+Tone: ${params.tone || 'sweet and loving'}
+${params.description ? `The animation shows: ${params.description}` : ''}
+
+Create a warm, personal message that the recipient would love to read. Do not include any greeting like "Dear" or signature. Just the heartfelt message itself.
+Return as JSON with a 'message' field.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+
+  const content = JSON.parse(response.choices[0]?.message?.content || '{"message": "This was made with love, just for you."}');
+  return content.message || "This was made with love, just for you.";
+}
+
 // Generate card image (returns base64)
 export async function generateCardImage(params: {
   recipientName: string;
