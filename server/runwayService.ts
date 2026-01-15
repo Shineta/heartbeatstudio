@@ -61,7 +61,7 @@ export async function generateAnimation(options: {
       model: 'veo3.1_fast',
       promptText,
       ratio: '1280:720',
-      duration: 6,
+      duration: 10,
       audio: false
     })
   });

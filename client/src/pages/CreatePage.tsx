@@ -61,6 +61,7 @@ const animationFormSchema = z.object({
   tone: z.string().min(1, "Tone is required"),
   style: z.string().optional(),
   description: z.string().optional(),
+  loop: z.boolean().optional().default(false),
 });
 
 const mixtapeFormSchema = z.object({
@@ -425,6 +426,7 @@ export default function CreatePage() {
       tone: "sweet",
       style: "",
       description: "",
+      loop: false,
     },
   });
 
@@ -3001,6 +3003,30 @@ export default function CreatePage() {
                                 data-testid="input-animation-description"
                               />
                             </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={animationForm.control}
+                        name="loop"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                data-testid="checkbox-animation-loop"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                Loop Animation
+                              </FormLabel>
+                              <p className="text-xs text-muted-foreground">
+                                When enabled, the animation will play continuously on repeat
+                              </p>
+                            </div>
                           </FormItem>
                         )}
                       />

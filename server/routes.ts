@@ -1726,6 +1726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tone: z.string().optional(),
         style: z.string().optional(),
         description: z.string().optional(),
+        loop: z.boolean().optional().default(false),
       });
 
       const parsed = schema.parse(req.body);
@@ -1765,6 +1766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediaUrl: videoPath,
         shareableLink,
         status: 'ready',
+        loop: parsed.loop,
       });
 
       res.json(creation);
@@ -2448,6 +2450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: animation.id,
             title: animation.title,
             mediaUrl: animation.mediaUrl,
+            loop: animation.loop,
           };
         }
       }

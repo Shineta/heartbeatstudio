@@ -15,6 +15,7 @@ interface AttachedAnimation {
   id: string;
   title: string;
   mediaUrl: string;
+  loop?: boolean;
 }
 
 interface Creation {
@@ -28,6 +29,7 @@ interface Creation {
   mediaUrl?: string;
   songIds?: string[];
   animationId?: string;
+  loop?: boolean;
   attachedSongs?: AttachedSong[];
   attachedAnimation?: AttachedAnimation;
   shareableLink?: string;
@@ -273,12 +275,18 @@ export default function SharePage() {
                   <video 
                     ref={videoRef}
                     controls 
+                    loop={creation.loop ?? false}
                     className="w-full rounded-lg"
                     data-testid="video-player"
                   >
                     <source src={creation.mediaUrl} type="video/mp4" />
                     Your browser does not support the video element.
                   </video>
+                  {creation.loop && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      This animation will loop continuously
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -339,12 +347,18 @@ export default function SharePage() {
                   <video 
                     ref={cardVideoRef}
                     controls 
+                    loop={attachedAnimation.loop ?? false}
                     className="w-full rounded-lg"
                     data-testid="card-video-player"
                   >
                     <source src={attachedAnimation.mediaUrl} type="video/mp4" />
                     Your browser does not support the video element.
                   </video>
+                  {attachedAnimation.loop && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      This animation will loop continuously
+                    </p>
+                  )}
                 </div>
               )}
 
