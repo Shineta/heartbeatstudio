@@ -1348,7 +1348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         animationId: animationId && typeof animationId === 'string' ? animationId : null,
       });
       
-      const shareableLink = `card-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const shareableLink = `/share/${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const updatedCreation = await storage.updateCreation(creation.id, { shareableLink });
 
       // Include all portrait variations in response if available
@@ -1830,7 +1830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const friendlyTitle = occasionTitles[parsed.occasion] || parsed.occasion.replace(/_/g, ' ');
       const animationTitle = `${friendlyTitle}, ${recipientName}!`;
 
-      const shareableLink = `animation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const shareableLink = `/share/${Date.now()}-${Math.random().toString(36).substring(7)}`;
       
       const creation = await storage.createCreation({
         userId,

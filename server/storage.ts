@@ -254,7 +254,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCreation(creation: InsertCreation): Promise<Creation> {
-    const shareableLink = `/share/${Math.random().toString(36).substring(2, 15)}`;
+    // Use the provided shareableLink if present, otherwise generate one
+    const shareableLink = creation.shareableLink || `/share/${Math.random().toString(36).substring(2, 15)}`;
     const [created] = await db
       .insert(creations)
       .values({ ...creation, shareableLink })
