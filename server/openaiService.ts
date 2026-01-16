@@ -153,6 +153,7 @@ export interface GenerateSongLyricsParams {
   insideJokes?: string;
   additionalNotes?: string;
   customMessage?: string;
+  language?: string;
 }
 
 export interface GeneratedSongLyrics {
@@ -243,6 +244,7 @@ function buildBasePrompt(
     interests,
     insideJokes,
     additionalNotes,
+    language,
   } = params;
 
   const occasionText = occasion
@@ -261,6 +263,10 @@ function buildBasePrompt(
     ? `IMPORTANT SPECIAL INSTRUCTIONS FROM USER (must incorporate these): ${additionalNotes}`
     : "";
 
+  const languageText = language && language !== 'english'
+    ? `LANGUAGE: Write all lyrics in ${language}. The entire song MUST be in ${language} language.`
+    : "";
+
   return `
 Recipient: ${recipientName}
 Relationship to sender: ${relationship}
@@ -270,6 +276,7 @@ ${occasionText}
 ${interestsText}
 ${jokesText}
 ${notesText}
+${languageText}
 `.trim();
 }
 

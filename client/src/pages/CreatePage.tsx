@@ -51,6 +51,7 @@ const songFormSchema = z.object({
   subGenre: z.string().optional(),
   voice: z.string().optional(),
   duration: z.string().optional(),
+  language: z.string().optional(),
   songDetails: z.string().min(10, "Please share some details about the song (at least 10 characters)"),
 });
 
@@ -419,6 +420,7 @@ export default function CreatePage() {
       subGenre: "",
       voice: "",
       duration: "extended",
+      language: "english",
       songDetails: "",
     },
   });
@@ -3798,6 +3800,49 @@ export default function CreatePage() {
                             </FormControl>
                             <p className="text-xs text-muted-foreground">
                               Quick songs generate in about 1 minute. Extended songs take 3-5 minutes but are longer.
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={songForm.control}
+                        name="language"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Language</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger data-testid="select-song-language">
+                                  <SelectValue placeholder="Select language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="english">English</SelectItem>
+                                  <SelectItem value="mandarin">Mandarin Chinese</SelectItem>
+                                  <SelectItem value="spanish">Spanish</SelectItem>
+                                  <SelectItem value="french">French</SelectItem>
+                                  <SelectItem value="german">German</SelectItem>
+                                  <SelectItem value="italian">Italian</SelectItem>
+                                  <SelectItem value="portuguese">Portuguese</SelectItem>
+                                  <SelectItem value="japanese">Japanese</SelectItem>
+                                  <SelectItem value="korean">Korean</SelectItem>
+                                  <SelectItem value="arabic">Arabic</SelectItem>
+                                  <SelectItem value="hindi">Hindi</SelectItem>
+                                  <SelectItem value="russian">Russian</SelectItem>
+                                  <SelectItem value="tagalog">Tagalog (Filipino)</SelectItem>
+                                  <SelectItem value="vietnamese">Vietnamese</SelectItem>
+                                  <SelectItem value="thai">Thai</SelectItem>
+                                  <SelectItem value="indonesian">Indonesian</SelectItem>
+                                  <SelectItem value="swahili">Swahili</SelectItem>
+                                  <SelectItem value="yoruba">Yoruba</SelectItem>
+                                  <SelectItem value="igbo">Igbo</SelectItem>
+                                  <SelectItem value="hausa">Hausa</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Choose the language for the song lyrics
                             </p>
                             <FormMessage />
                           </FormItem>

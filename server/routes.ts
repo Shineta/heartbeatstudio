@@ -1958,7 +1958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate Lyrics Preview Only (fast, no song creation)
   app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { lovedOneId, tone, genre, occasion, recipientName, relationship, songDetails, additionalNotes } = req.body;
+      const { lovedOneId, tone, genre, occasion, recipientName, relationship, songDetails, additionalNotes, language } = req.body;
       // Support both songDetails (new) and additionalNotes (legacy)
       const details = songDetails || additionalNotes;
       
@@ -1976,6 +1976,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interests: lovedOne?.interests || undefined,
         insideJokes: lovedOne?.insideJokes || undefined,
         additionalNotes: details || undefined,
+        language: language || "english",
       });
 
       res.json(lyrics);
@@ -2262,40 +2263,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate Lyrics Preview Only (Fast - no audio generation)
-  app.post('/api/generate/lyrics-preview', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const { lovedOneId, tone, genre, additionalNotes } = req.body;
-      
-      let lovedOne;
-      if (lovedOneId) {
-        lovedOne = await storage.getLovedOneById(lovedOneId);
-      }
-
-      const recipientName = lovedOne?.name || req.body.recipientName || "someone special";
-
-      const songLyrics = await generateSongLyrics({
-        recipientName,
-        relationship: lovedOne?.relationship || req.body.relationship || "friend",
-        occasion: req.body.occasion,
-        tone: tone || "sweet",
-        genre: genre || "pop",
-        interests: lovedOne?.interests || undefined,
-        insideJokes: lovedOne?.insideJokes || undefined,
-        additionalNotes,
-      });
-
-      res.json({
-        title: songLyrics.title,
-        lyrics: songLyrics.lyrics,
-        genre: genre || "pop",
-        tone: tone || "sweet",
-      });
-    } catch (error: any) {
-      console.error("Error generating lyrics preview:", error);
-      res.status(500).json({ message: error.message || "Failed to generate lyrics" });
-    }
-  });
 
   // Generate Song with Pre-written/Edited Lyrics
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
