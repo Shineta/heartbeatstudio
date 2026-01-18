@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2 } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { LovedOne, Creation, Mixtape } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
@@ -94,11 +95,16 @@ const mixtapeFormSchema = z.object({
 
 export default function CreatePage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
   const defaultTab = searchParams.get('type') || 'card';
   const [activeTab, setActiveTab] = useState(defaultTab);
+  
+  // Check if user has active subscription (for subscription-only features like animation)
+  const hasActiveSubscription = user?.subscriptionStatus === 'active';
+  const isAdmin = user?.isAdmin === true;
   const [createdCard, setCreatedCard] = useState<Creation | null>(null);
   const [portraitVariations, setPortraitVariations] = useState<string[]>([]);
   const [selectedVariationIndex, setSelectedVariationIndex] = useState(0);
@@ -2818,7 +2824,39 @@ export default function CreatePage() {
           </TabsContent>
 
           <TabsContent value="animation">
-            {createdAnimation ? (
+            {/* Subscription-only feature check */}
+            {!hasActiveSubscription && !isAdmin ? (
+              <Card>
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <Lock className="w-8 h-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl">
+                    Subscription Required
+                  </CardTitle>
+                  <CardDescription className="text-base mt-2">
+                    Animation generation is an exclusive feature available only to subscribers.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <p className="text-muted-foreground">
+                    Unlock unlimited animations and more with a monthly subscription for just $10/month.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link href="/pricing">
+                      <Button size="lg" data-testid="button-subscribe-animation">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Subscribe Now
+                      </Button>
+                    </Link>
+                    <Button variant="outline" size="lg" onClick={() => setActiveTab('song')} data-testid="button-create-song-instead">
+                      <Music className="w-4 h-4 mr-2" />
+                      Create a Song Instead
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : createdAnimation ? (
               <Card>
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl flex items-center justify-center gap-2">
