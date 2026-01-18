@@ -1734,27 +1734,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
       
-      const songsRemaining = user.songsRemaining ?? 0;
       const hasActiveSubscription = user.subscriptionStatus === 'active';
       const isAdmin = user.isAdmin === true;
       
-      // Check credits (admins and subscribers are exempt from credit requirements)
-      if (songsRemaining <= 0 && !hasActiveSubscription && !isAdmin) {
+      // Animation is a subscription-only feature (admins are also allowed)
+      if (!hasActiveSubscription && !isAdmin) {
         return res.status(403).json({ 
-          message: "No credits remaining. Please purchase a Credit Pack or subscribe for more credits.",
-          creditRequired: true,
-          songsRemaining: 0,
+          message: "Animation generation is a subscription-only feature. Please subscribe to access animations.",
+          subscriptionRequired: true,
           requiresPayment: true
         });
       }
       
-      // Deduct credit upfront (admins and subscribers are exempt)
-      if (!hasActiveSubscription && !isAdmin) {
-        await storage.updateUser(userId, { songsRemaining: songsRemaining - 1 });
-        console.log(`[Animation] User ${userId} credit deducted. Credits remaining: ${songsRemaining - 1}`);
-      } else {
-        console.log(`[Animation] User ${userId} is ${isAdmin ? 'admin' : 'subscriber'} - no credit deducted`);
-      }
+      console.log(`[Animation] User ${userId} is ${isAdmin ? 'admin' : 'subscriber'} - generating animation`);
 
       const schema = z.object({
         lovedOneId: z.string().optional(),
