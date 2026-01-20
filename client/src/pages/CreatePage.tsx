@@ -2216,9 +2216,9 @@ export default function CreatePage() {
                                         value={festiveInstructions}
                                         onChange={(e) => setFestiveInstructions(e.target.value)}
                                         placeholder="e.g., no alcohol, include a dog, warm lighting, make the background more colorful..."
-                                        maxLength={300}
-                                        rows={3}
-                                        className="resize-none"
+                                        maxLength={1000}
+                                        rows={5}
+                                        className="resize-y"
                                         data-testid="input-festive-instructions"
                                       />
                                       <p className="text-xs text-muted-foreground mt-1">

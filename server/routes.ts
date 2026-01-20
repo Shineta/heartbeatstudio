@@ -1633,7 +1633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: z.string().url('Please provide a valid image URL'),
         scene: z.string().optional().default('christmas'),
         style: z.string().optional().default('festive-photo'),
-        instructions: z.string().max(300).optional(),
+        instructions: z.string().max(1000).optional(),
         changeOutfit: z.boolean().optional().default(true),
         removeGlasses: z.boolean().optional().default(false),
         removeBraces: z.boolean().optional().default(false),
