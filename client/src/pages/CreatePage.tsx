@@ -2212,11 +2212,13 @@ export default function CreatePage() {
                                     </div>
                                     <div>
                                       <Label className="text-xs mb-1 block">Custom Instructions (optional)</Label>
-                                      <Input
+                                      <Textarea
                                         value={festiveInstructions}
                                         onChange={(e) => setFestiveInstructions(e.target.value)}
-                                        placeholder="e.g., no alcohol, include a dog, warm lighting"
-                                        maxLength={100}
+                                        placeholder="e.g., no alcohol, include a dog, warm lighting, make the background more colorful..."
+                                        maxLength={300}
+                                        rows={3}
+                                        className="resize-none"
                                         data-testid="input-festive-instructions"
                                       />
                                       <p className="text-xs text-muted-foreground mt-1">
