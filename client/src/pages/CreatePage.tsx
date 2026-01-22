@@ -3707,6 +3707,32 @@ export default function CreatePage() {
                                   <SelectItem value="blues">Blues</SelectItem>
                                   <SelectItem value="funk">Funk</SelectItem>
                                   <SelectItem value="reggae">Reggae</SelectItem>
+                                  <SelectItem value="pop">Pop</SelectItem>
+                                  <SelectItem value="rock">Rock</SelectItem>
+                                  <SelectItem value="country">Country</SelectItem>
+                                  <SelectItem value="alternative">Alternative</SelectItem>
+                                  <SelectItem value="electronic">Electronic/EDM</SelectItem>
+                                  <SelectItem value="metal">Metal</SelectItem>
+                                  <SelectItem value="indie">Indie</SelectItem>
+                                  <SelectItem value="punk">Punk</SelectItem>
+                                  <SelectItem value="folk">Folk</SelectItem>
+                                  <SelectItem value="classical">Classical</SelectItem>
+                                  <SelectItem value="latin">Latin</SelectItem>
+                                  <SelectItem value="kpop">K-Pop</SelectItem>
+                                  <SelectItem value="christian">Christian/Contemporary Christian</SelectItem>
+                                  <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                                  <SelectItem value="world">World Music</SelectItem>
+                                  <SelectItem value="ambient">Ambient</SelectItem>
+                                  <SelectItem value="experimental">Experimental</SelectItem>
+                                  <SelectItem value="dance">Dance</SelectItem>
+                                  <SelectItem value="house">House</SelectItem>
+                                  <SelectItem value="techno">Techno</SelectItem>
+                                  <SelectItem value="trance">Trance</SelectItem>
+                                  <SelectItem value="ska">Ska</SelectItem>
+                                  <SelectItem value="grunge">Grunge</SelectItem>
+                                  <SelectItem value="emo">Emo</SelectItem>
+                                  <SelectItem value="bluegrass">Bluegrass</SelectItem>
+                                  <SelectItem value="americana">Americana</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -4438,6 +4464,32 @@ export default function CreatePage() {
                                         <SelectItem value="blues">Blues</SelectItem>
                                         <SelectItem value="funk">Funk</SelectItem>
                                         <SelectItem value="reggae">Reggae</SelectItem>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="alternative">Alternative</SelectItem>
+                                        <SelectItem value="electronic">Electronic/EDM</SelectItem>
+                                        <SelectItem value="metal">Metal</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="punk">Punk</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="latin">Latin</SelectItem>
+                                        <SelectItem value="kpop">K-Pop</SelectItem>
+                                        <SelectItem value="christian">Christian/Contemporary Christian</SelectItem>
+                                        <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                                        <SelectItem value="world">World Music</SelectItem>
+                                        <SelectItem value="ambient">Ambient</SelectItem>
+                                        <SelectItem value="experimental">Experimental</SelectItem>
+                                        <SelectItem value="dance">Dance</SelectItem>
+                                        <SelectItem value="house">House</SelectItem>
+                                        <SelectItem value="techno">Techno</SelectItem>
+                                        <SelectItem value="trance">Trance</SelectItem>
+                                        <SelectItem value="ska">Ska</SelectItem>
+                                        <SelectItem value="grunge">Grunge</SelectItem>
+                                        <SelectItem value="emo">Emo</SelectItem>
+                                        <SelectItem value="bluegrass">Bluegrass</SelectItem>
+                                        <SelectItem value="americana">Americana</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
@@ -4606,6 +4658,32 @@ export default function CreatePage() {
                                         <SelectItem value="blues">Blues</SelectItem>
                                         <SelectItem value="funk">Funk</SelectItem>
                                         <SelectItem value="reggae">Reggae</SelectItem>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="alternative">Alternative</SelectItem>
+                                        <SelectItem value="electronic">Electronic/EDM</SelectItem>
+                                        <SelectItem value="metal">Metal</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="punk">Punk</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="latin">Latin</SelectItem>
+                                        <SelectItem value="kpop">K-Pop</SelectItem>
+                                        <SelectItem value="christian">Christian/Contemporary Christian</SelectItem>
+                                        <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                                        <SelectItem value="world">World Music</SelectItem>
+                                        <SelectItem value="ambient">Ambient</SelectItem>
+                                        <SelectItem value="experimental">Experimental</SelectItem>
+                                        <SelectItem value="dance">Dance</SelectItem>
+                                        <SelectItem value="house">House</SelectItem>
+                                        <SelectItem value="techno">Techno</SelectItem>
+                                        <SelectItem value="trance">Trance</SelectItem>
+                                        <SelectItem value="ska">Ska</SelectItem>
+                                        <SelectItem value="grunge">Grunge</SelectItem>
+                                        <SelectItem value="emo">Emo</SelectItem>
+                                        <SelectItem value="bluegrass">Bluegrass</SelectItem>
+                                        <SelectItem value="americana">Americana</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
@@ -4774,6 +4852,32 @@ export default function CreatePage() {
                                         <SelectItem value="blues">Blues</SelectItem>
                                         <SelectItem value="funk">Funk</SelectItem>
                                         <SelectItem value="reggae">Reggae</SelectItem>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="rock">Rock</SelectItem>
+                                        <SelectItem value="country">Country</SelectItem>
+                                        <SelectItem value="alternative">Alternative</SelectItem>
+                                        <SelectItem value="electronic">Electronic/EDM</SelectItem>
+                                        <SelectItem value="metal">Metal</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="punk">Punk</SelectItem>
+                                        <SelectItem value="folk">Folk</SelectItem>
+                                        <SelectItem value="classical">Classical</SelectItem>
+                                        <SelectItem value="latin">Latin</SelectItem>
+                                        <SelectItem value="kpop">K-Pop</SelectItem>
+                                        <SelectItem value="christian">Christian/Contemporary Christian</SelectItem>
+                                        <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                                        <SelectItem value="world">World Music</SelectItem>
+                                        <SelectItem value="ambient">Ambient</SelectItem>
+                                        <SelectItem value="experimental">Experimental</SelectItem>
+                                        <SelectItem value="dance">Dance</SelectItem>
+                                        <SelectItem value="house">House</SelectItem>
+                                        <SelectItem value="techno">Techno</SelectItem>
+                                        <SelectItem value="trance">Trance</SelectItem>
+                                        <SelectItem value="ska">Ska</SelectItem>
+                                        <SelectItem value="grunge">Grunge</SelectItem>
+                                        <SelectItem value="emo">Emo</SelectItem>
+                                        <SelectItem value="bluegrass">Bluegrass</SelectItem>
+                                        <SelectItem value="americana">Americana</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>

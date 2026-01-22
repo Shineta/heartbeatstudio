@@ -872,6 +872,20 @@ function getDetailedStyle(rawGenre: string | undefined, tone: string, voice?: st
     punk: "BLACK PUNK, Bad Brains style, fast, raw energy",
     classical: "BLACK CLASSICAL, orchestral soul, elegant strings",
     afrobeat: "AFROBEAT, polyrhythmic drums, horns, funky guitar",
+
+    // New genres - added per user request
+    kpop: "K-POP, polished production, catchy hooks, dance beat",
+    christian: "CONTEMPORARY CHRISTIAN, uplifting, worship band, inspiring",
+    world: "WORLD MUSIC, global rhythms, ethnic instruments, fusion",
+    ambient: "AMBIENT, atmospheric pads, ethereal textures, dreamy",
+    experimental: "EXPERIMENTAL, avant-garde, unconventional, eclectic",
+    dance: "DANCE MUSIC, club beat, energetic, synth-driven",
+    techno: "TECHNO, Detroit style, driving beat, 4/4 kick, synths",
+    trance: "TRANCE, uplifting synths, arpeggios, euphoric builds",
+    ska: "SKA, upbeat offbeat, brass section, punk energy",
+    grunge: "GRUNGE, Seattle sound, distorted guitar, raw angst",
+    emo: "EMO, emotional lyrics, dynamic guitar, passionate vocals",
+    americana: "AMERICANA, roots rock, storytelling, folk-country blend",
   };
 
   // For gospel of any kind, force Black gospel style
