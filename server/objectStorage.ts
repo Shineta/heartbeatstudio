@@ -141,25 +141,41 @@ export class ObjectStorageService {
   }
 
   async uploadAudioFromUrl(audioUrl: string, prefix: string = 'song'): Promise<string> {
+    console.log(`[ObjectStorage] uploadAudioFromUrl called with prefix: ${prefix}`);
+    console.log(`[ObjectStorage] Audio source URL: ${audioUrl.substring(0, 80)}...`);
+    
     try {
-      console.log(`[ObjectStorage] Downloading audio from: ${audioUrl.substring(0, 50)}...`);
-      
+      // Step 1: Download the audio
+      console.log(`[ObjectStorage] Step 1: Downloading audio...`);
       const response = await fetch(audioUrl);
       if (!response.ok) {
         throw new Error(`Failed to download audio: ${response.status} ${response.statusText}`);
       }
+      console.log(`[ObjectStorage] Download successful, status: ${response.status}`);
       
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+      console.log(`[ObjectStorage] Audio buffer size: ${buffer.length} bytes`);
       
+      if (buffer.length < 1000) {
+        throw new Error(`Audio file too small (${buffer.length} bytes) - likely invalid`);
+      }
+      
+      // Step 2: Prepare upload path
       const contentType = response.headers.get('content-type') || 'audio/mpeg';
       const objectId = randomUUID();
       const filename = `audio/${prefix}-${objectId}.mp3`;
       
+      console.log(`[ObjectStorage] Step 2: Getting private object dir...`);
       const privateObjectDir = this.getPrivateObjectDir();
+      console.log(`[ObjectStorage] Private dir: ${privateObjectDir}`);
+      
       const fullPath = `${privateObjectDir}/${filename}`;
       const { bucketName, objectName } = parseObjectPath(fullPath);
+      console.log(`[ObjectStorage] Bucket: ${bucketName}, Object: ${objectName}`);
       
+      // Step 3: Upload to storage
+      console.log(`[ObjectStorage] Step 3: Uploading to bucket...`);
       const bucket = objectStorageClient.bucket(bucketName);
       const file = bucket.file(objectName);
       
@@ -170,10 +186,12 @@ export class ObjectStorageService {
         },
       });
       
-      console.log(`[ObjectStorage] Audio uploaded successfully: /public-objects/${objectName}`);
-      return `/public-objects/${objectName}`;
+      const publicUrl = `/public-objects/${objectName}`;
+      console.log(`[ObjectStorage] SUCCESS! Audio uploaded: ${publicUrl}`);
+      return publicUrl;
     } catch (error: any) {
-      console.error(`[ObjectStorage] Failed to upload audio from URL: ${error.message}`);
+      console.error(`[ObjectStorage] FAILED to upload audio: ${error.message}`);
+      console.error(`[ObjectStorage] Error stack: ${error.stack}`);
       throw error;
     }
   }
