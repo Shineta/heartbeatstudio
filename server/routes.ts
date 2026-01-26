@@ -593,15 +593,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Try] Song audio generated successfully: ${songResult.audioUrl}`);
 
+      // Persist original audio to object storage (for unlocking later)
+      let persistedOriginalAudioUrl = songResult.audioUrl;
+      try {
+        persistedOriginalAudioUrl = await objectStorageService.uploadAudioFromUrl(
+          songResult.audioUrl,
+          'preview-original'
+        );
+        console.log('[Try] Original audio persisted to storage:', persistedOriginalAudioUrl);
+      } catch (persistError: any) {
+        console.error('[Try] Failed to persist original audio:', persistError.message);
+      }
+
       // Step 3: Add watermark to the audio ("Heartbeat Studio Preview" every 15 seconds)
-      let finalAudioUrl = songResult.audioUrl;
+      let finalAudioUrl = persistedOriginalAudioUrl;
       try {
         const { watermarkAudioFromUrl } = await import('./audioWatermarkService');
         console.log('[Try] Adding watermark to audio...');
-        finalAudioUrl = await watermarkAudioFromUrl(songResult.audioUrl);
+        finalAudioUrl = await watermarkAudioFromUrl(persistedOriginalAudioUrl);
         console.log(`[Try] Watermarked audio ready: ${finalAudioUrl}`);
       } catch (watermarkError: any) {
-        // If watermarking fails, use original audio (better than failing completely)
+        // If watermarking fails, use persisted original audio (better than failing completely)
         console.error('[Try] Watermarking failed, using original audio:', watermarkError.message);
       }
 
@@ -614,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: songResult.title,
         lyrics: songResult.lyrics,
         audioUrl: finalAudioUrl,
-        originalAudioUrl: songResult.audioUrl, // Store original for unlocking
+        originalAudioUrl: persistedOriginalAudioUrl, // Store persisted original for unlocking
         genre: data.genre,
         tone: data.tone,
         recipientName: data.recipientName,
