@@ -140,6 +140,44 @@ export class ObjectStorageService {
     return `/public-objects/${objectName}`;
   }
 
+  async uploadAudioFromUrl(audioUrl: string, prefix: string = 'song'): Promise<string> {
+    try {
+      console.log(`[ObjectStorage] Downloading audio from: ${audioUrl.substring(0, 50)}...`);
+      
+      const response = await fetch(audioUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download audio: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      const objectId = randomUUID();
+      const filename = `audio/${prefix}-${objectId}.mp3`;
+      
+      const privateObjectDir = this.getPrivateObjectDir();
+      const fullPath = `${privateObjectDir}/${filename}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      
+      await file.save(buffer, {
+        contentType,
+        metadata: {
+          cacheControl: 'public, max-age=31536000',
+        },
+      });
+      
+      console.log(`[ObjectStorage] Audio uploaded successfully: /public-objects/${objectName}`);
+      return `/public-objects/${objectName}`;
+    } catch (error: any) {
+      console.error(`[ObjectStorage] Failed to upload audio from URL: ${error.message}`);
+      throw error;
+    }
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/public-objects/")) {
       throw new ObjectNotFoundError();

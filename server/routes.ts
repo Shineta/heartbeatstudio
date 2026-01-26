@@ -1055,12 +1055,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Creations] Cover generation failed:', coverError.message);
           }
 
+          // Persist audio to object storage to prevent URL expiration
+          let persistedAudioUrl = songResult.audioUrl;
+          try {
+            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+              songResult.audioUrl,
+              `song-${creation.id.substring(0, 8)}`
+            );
+            console.log('[Creations] Audio persisted to storage:', persistedAudioUrl);
+          } catch (persistError: any) {
+            console.error('[Creations] Failed to persist audio, using temp URL:', persistError.message);
+          }
+
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
             title: songResult.title,
             content: songResult.lyrics,
             imageUrl: coverImageUrl,
-            mediaUrl: songResult.audioUrl,
+            mediaUrl: persistedAudioUrl,
             shareableLink,
             status: 'ready',
           });
@@ -2086,12 +2098,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
           }
 
+          // Persist audio to object storage to prevent URL expiration
+          let persistedAudioUrl = songResult.audioUrl;
+          try {
+            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+              songResult.audioUrl,
+              `song-${creation.id.substring(0, 8)}`
+            );
+            console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
+          } catch (persistError: any) {
+            console.error('[Song] Failed to persist audio, using temp URL:', persistError.message);
+          }
+
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
             title: songResult.title,
             content: songResult.lyrics,
             imageUrl: coverImageUrl,
-            mediaUrl: songResult.audioUrl,
+            mediaUrl: persistedAudioUrl,
             shareableLink,
             status: 'ready',
           });
@@ -2222,12 +2246,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
           }
 
+          // Persist audio to object storage to prevent URL expiration
+          let persistedAudioUrl = songResult.audioUrl;
+          try {
+            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+              songResult.audioUrl,
+              `song-${creation.id.substring(0, 8)}`
+            );
+            console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
+          } catch (persistError: any) {
+            console.error('[Song] Failed to persist audio, using temp URL:', persistError.message);
+          }
+
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
             title: songResult.title,
             content: songResult.lyrics,
             imageUrl: coverImageUrl,
-            mediaUrl: songResult.audioUrl,
+            mediaUrl: persistedAudioUrl,
             shareableLink,
             status: 'ready',
           });
@@ -2298,6 +2334,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Persist audio to object storage to prevent URL expiration
+      let persistedAudioUrl = songResult.audioUrl;
+      try {
+        persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+          songResult.audioUrl,
+          'song'
+        );
+        console.log('[Song Lyrics] Audio persisted to storage:', persistedAudioUrl);
+      } catch (persistError: any) {
+        console.error('[Song Lyrics] Failed to persist audio, using temp URL:', persistError.message);
+      }
+
       // Use the user's edited title and lyrics (not Suno's return which might differ)
       const creation = await storage.createCreation({
         userId,
@@ -2308,7 +2356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: title,  // Use user's edited title
         content: lyrics,  // Use user's edited lyrics
         imageUrl: coverImageUrl || null,
-        mediaUrl: songResult.audioUrl,
+        mediaUrl: persistedAudioUrl,
       });
       
       const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -2936,6 +2984,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
+              // Persist audio to object storage to prevent URL expiration
+              let persistedAudioUrl = songResult.audioUrl;
+              try {
+                persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+                  songResult.audioUrl,
+                  `mixtape-song`
+                );
+                console.log(`[Mixtape ${mixtape.id}] Audio persisted to storage`);
+              } catch (persistError: any) {
+                console.error(`[Mixtape ${mixtape.id}] Failed to persist audio, using temp URL:`, persistError.message);
+              }
+
               const creation = await storage.createCreation({
                 userId,
                 lovedOneId: lovedOneId || null,
@@ -2945,7 +3005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 title: songResult.title,
                 content: songResult.lyrics,
                 imageUrl: coverImageUrl || null,
-                mediaUrl: songResult.audioUrl,
+                mediaUrl: persistedAudioUrl,
               });
 
               const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
