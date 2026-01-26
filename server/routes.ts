@@ -593,17 +593,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[Try] Song audio generated successfully: ${songResult.audioUrl}`);
 
-      // Persist original audio to object storage (for unlocking later)
-      let persistedOriginalAudioUrl = songResult.audioUrl;
-      try {
-        persistedOriginalAudioUrl = await objectStorageService.uploadAudioFromUrl(
-          songResult.audioUrl,
-          'preview-original'
-        );
-        console.log('[Try] Original audio persisted to storage:', persistedOriginalAudioUrl);
-      } catch (persistError: any) {
-        console.error('[Try] Failed to persist original audio:', persistError.message);
-      }
+      // Persist original audio to object storage (for unlocking later) - MANDATORY
+      console.log('[Try] Persisting original audio to permanent storage...');
+      const persistedOriginalAudioUrl = await objectStorageService.uploadAudioFromUrl(
+        songResult.audioUrl,
+        'preview-original'
+      );
+      console.log('[Try] Original audio persisted to storage:', persistedOriginalAudioUrl);
 
       // Step 3: Add watermark to the audio ("Heartbeat Studio Preview" every 15 seconds)
       let finalAudioUrl = persistedOriginalAudioUrl;
@@ -1067,17 +1063,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Creations] Cover generation failed:', coverError.message);
           }
 
-          // Persist audio to object storage to prevent URL expiration
-          let persistedAudioUrl = songResult.audioUrl;
-          try {
-            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
-              songResult.audioUrl,
-              `song-${creation.id.substring(0, 8)}`
-            );
-            console.log('[Creations] Audio persisted to storage:', persistedAudioUrl);
-          } catch (persistError: any) {
-            console.error('[Creations] Failed to persist audio, using temp URL:', persistError.message);
-          }
+          // Persist audio to object storage to prevent URL expiration (MANDATORY)
+          console.log('[Creations] Persisting audio to permanent storage...');
+          const persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+            songResult.audioUrl,
+            `song-${creation.id.substring(0, 8)}`
+          );
+          console.log('[Creations] Audio persisted to storage:', persistedAudioUrl);
 
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
@@ -2110,17 +2102,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
           }
 
-          // Persist audio to object storage to prevent URL expiration
-          let persistedAudioUrl = songResult.audioUrl;
-          try {
-            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
-              songResult.audioUrl,
-              `song-${creation.id.substring(0, 8)}`
-            );
-            console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
-          } catch (persistError: any) {
-            console.error('[Song] Failed to persist audio, using temp URL:', persistError.message);
-          }
+          // Persist audio to object storage to prevent URL expiration (MANDATORY)
+          console.log('[Song] Persisting audio to permanent storage...');
+          const persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+            songResult.audioUrl,
+            `song-${creation.id.substring(0, 8)}`
+          );
+          console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
 
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
@@ -2258,17 +2246,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[Song] Failed to generate AI cassette cover:', coverError.message);
           }
 
-          // Persist audio to object storage to prevent URL expiration
-          let persistedAudioUrl = songResult.audioUrl;
-          try {
-            persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
-              songResult.audioUrl,
-              `song-${creation.id.substring(0, 8)}`
-            );
-            console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
-          } catch (persistError: any) {
-            console.error('[Song] Failed to persist audio, using temp URL:', persistError.message);
-          }
+          // Persist audio to object storage to prevent URL expiration (MANDATORY)
+          console.log('[Song] Persisting audio to permanent storage...');
+          const persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+            songResult.audioUrl,
+            `song-${creation.id.substring(0, 8)}`
+          );
+          console.log('[Song] Audio persisted to storage:', persistedAudioUrl);
 
           const shareableLink = `song-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           await storage.updateCreation(creation.id, {
@@ -2346,17 +2330,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      // Persist audio to object storage to prevent URL expiration
-      let persistedAudioUrl = songResult.audioUrl;
-      try {
-        persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
-          songResult.audioUrl,
-          'song'
-        );
-        console.log('[Song Lyrics] Audio persisted to storage:', persistedAudioUrl);
-      } catch (persistError: any) {
-        console.error('[Song Lyrics] Failed to persist audio, using temp URL:', persistError.message);
-      }
+      // Persist audio to object storage to prevent URL expiration (MANDATORY)
+      console.log('[Song Lyrics] Persisting audio to permanent storage...');
+      const persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+        songResult.audioUrl,
+        'song'
+      );
+      console.log('[Song Lyrics] Audio persisted to storage:', persistedAudioUrl);
 
       // Use the user's edited title and lyrics (not Suno's return which might differ)
       const creation = await storage.createCreation({
@@ -2996,17 +2976,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
-              // Persist audio to object storage to prevent URL expiration
-              let persistedAudioUrl = songResult.audioUrl;
-              try {
-                persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
-                  songResult.audioUrl,
-                  `mixtape-song`
-                );
-                console.log(`[Mixtape ${mixtape.id}] Audio persisted to storage`);
-              } catch (persistError: any) {
-                console.error(`[Mixtape ${mixtape.id}] Failed to persist audio, using temp URL:`, persistError.message);
-              }
+              // Persist audio to object storage to prevent URL expiration (MANDATORY)
+              console.log(`[Mixtape ${mixtape.id}] Persisting audio to permanent storage...`);
+              const persistedAudioUrl = await objectStorageService.uploadAudioFromUrl(
+                songResult.audioUrl,
+                `mixtape-song`
+              );
+              console.log(`[Mixtape ${mixtape.id}] Audio persisted to storage`);
 
               const creation = await storage.createCreation({
                 userId,
