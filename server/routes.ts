@@ -110,6 +110,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[Config] SUNO_API_KEY is configured');
   }
 
+  // Debug endpoint to test object storage
+  app.get('/api/debug/test-storage', async (req: Request, res: Response) => {
+    try {
+      console.log('[Debug] Testing object storage...');
+      console.log('[Debug] PRIVATE_OBJECT_DIR:', process.env.PRIVATE_OBJECT_DIR);
+      console.log('[Debug] PUBLIC_OBJECT_SEARCH_PATHS:', process.env.PUBLIC_OBJECT_SEARCH_PATHS);
+      
+      // Test with a small audio file from a known working source
+      const testAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      console.log('[Debug] Attempting to upload test audio from:', testAudioUrl);
+      
+      const persistedUrl = await objectStorageService.uploadAudioFromUrl(testAudioUrl, 'test');
+      console.log('[Debug] SUCCESS! Persisted URL:', persistedUrl);
+      
+      res.json({ 
+        success: true, 
+        persistedUrl,
+        privateDir: process.env.PRIVATE_OBJECT_DIR,
+        publicPaths: process.env.PUBLIC_OBJECT_SEARCH_PATHS
+      });
+    } catch (error: any) {
+      console.error('[Debug] Storage test FAILED:', error.message);
+      console.error('[Debug] Stack:', error.stack);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        stack: error.stack,
+        privateDir: process.env.PRIVATE_OBJECT_DIR,
+        publicPaths: process.env.PUBLIC_OBJECT_SEARCH_PATHS
+      });
+    }
+  });
+
   // ========== AUTHENTICATION ROUTES ==========
   
   // Register with email/password
