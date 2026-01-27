@@ -3633,7 +3633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audio proxy endpoint for reliable audio streaming
-  // Downloads full file then serves it to ensure complete delivery
+  // Serves from object storage or downloads from external URL
   app.get('/api/audio/:creationId', async (req: Request, res: Response) => {
     try {
       const { creationId } = req.params;
@@ -3643,9 +3643,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Audio not found' });
       }
       
-      console.log(`[Audio Proxy] Fetching audio for creation ${creationId}`);
+      console.log(`[Audio Proxy] Serving audio for creation ${creationId}, URL: ${creation.mediaUrl.substring(0, 50)}...`);
       
-      // Fetch the entire audio file as a buffer
+      // Check if audio is stored in object storage (relative path)
+      if (creation.mediaUrl.startsWith('/public-objects/')) {
+        console.log(`[Audio Proxy] Serving from object storage`);
+        try {
+          // Stream directly from object storage
+          await objectStorageService.streamObject(creation.mediaUrl, res);
+          return;
+        } catch (storageError: any) {
+          console.error(`[Audio Proxy] Object storage error:`, storageError.message);
+          return res.status(404).json({ message: 'Audio file not found in storage' });
+        }
+      }
+      
+      // External URL - fetch and proxy
+      console.log(`[Audio Proxy] Fetching from external URL`);
       const response = await fetch(creation.mediaUrl);
       
       if (!response.ok) {

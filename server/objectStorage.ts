@@ -211,6 +211,56 @@ export class ObjectStorageService {
     }
     return objectFile;
   }
+
+  async streamObject(objectPath: string, res: Response): Promise<void> {
+    console.log(`[ObjectStorage] Streaming object: ${objectPath}`);
+    
+    if (!objectPath.startsWith("/public-objects/")) {
+      throw new ObjectNotFoundError();
+    }
+    
+    const objectName = objectPath.slice("/public-objects/".length);
+    const privateObjectDir = this.getPrivateObjectDir();
+    const { bucketName } = parseObjectPath(privateObjectDir);
+    const bucket = objectStorageClient.bucket(bucketName);
+    const objectFile = bucket.file(objectName);
+    
+    const [exists] = await objectFile.exists();
+    if (!exists) {
+      console.error(`[ObjectStorage] Object not found: ${objectName}`);
+      throw new ObjectNotFoundError();
+    }
+    
+    // Get metadata for content-type and size
+    const [metadata] = await objectFile.getMetadata();
+    const contentType = metadata.contentType || 'audio/mpeg';
+    const contentLength = metadata.size;
+    
+    console.log(`[ObjectStorage] Streaming ${contentLength} bytes, type: ${contentType}`);
+    
+    // Set response headers
+    res.setHeader('Content-Type', contentType);
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    
+    // Stream the file to response
+    const readStream = objectFile.createReadStream();
+    readStream.pipe(res);
+    
+    return new Promise((resolve, reject) => {
+      readStream.on('end', () => {
+        console.log(`[ObjectStorage] Stream completed for: ${objectName}`);
+        resolve();
+      });
+      readStream.on('error', (err) => {
+        console.error(`[ObjectStorage] Stream error:`, err);
+        reject(err);
+      });
+    });
+  }
 }
 
 function parseObjectPath(path: string): {
