@@ -160,7 +160,7 @@ export async function generateImageStandard(params: {
   }
 }
 
-async function pollTaskStatus(taskId: string, maxAttempts: number = 60): Promise<string[]> {
+async function pollTaskStatus(taskId: string, maxAttempts: number = 120): Promise<string[]> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
