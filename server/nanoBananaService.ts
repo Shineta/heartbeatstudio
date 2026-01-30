@@ -469,7 +469,14 @@ export async function generateFestiveTransform(params: {
     'oil-painting': 'classical oil painting style, rich textures, dramatic lighting, fine art aesthetic',
     'digital-art': 'modern digital art style, crisp lines, vibrant colors, contemporary illustration',
     'vintage': 'vintage photography style, warm sepia tones, soft vignette, nostalgic film grain aesthetic',
-    'blast-from-past': 'retro 1970s-1980s photography style, faded colors, warm sepia and amber tones, soft focus, vintage film grain, old family photo album aesthetic, slightly yellowed edges',
+    // Blast from the Past era-specific styles
+    'retro-70s': '1970s groovy photography style, warm orange and brown tones, soft focus, film grain, disco era aesthetic, earth tones, wood paneling vibes',
+    'retro-80s': '1980s neon photography style, vibrant pink and blue tones, VHS aesthetic, synth wave colors, bright contrasts, Miami Vice vibes',
+    'retro-90s': '1990s throwback style, slightly desaturated colors, disposable camera look, grunge aesthetic, casual snapshot feel',
+    'polaroid': 'classic Polaroid instant photo style, white border frame, slightly washed out colors, soft vintage tones, iconic square format',
+    'sepia-classic': 'deep sepia tone photography, antique photo aesthetic, rich brown tones, classic portrait feel, timeless elegance',
+    'faded-film': 'faded film photography style, washed out colors, light leaks, expired film aesthetic, nostalgic and dreamy',
+    'vintage-portrait': 'classic vintage portrait photography, soft focus, muted colors, old family photo album feel, gentle vignette',
   };
   
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];

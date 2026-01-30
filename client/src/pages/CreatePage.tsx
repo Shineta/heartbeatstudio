@@ -783,7 +783,17 @@ export default function CreatePage() {
     { value: 'oil-painting', label: 'Oil Painting' },
     { value: 'digital-art', label: 'Digital Art' },
     { value: 'vintage', label: 'Vintage' },
-    { value: 'blast-from-past', label: 'Blast from the Past' },
+  ];
+
+  // Special "Blast from the Past" style options - shown when blast-from-past scene is selected
+  const blastFromPastStyleOptions = [
+    { value: 'retro-70s', label: '1970s Groovy' },
+    { value: 'retro-80s', label: '1980s Neon' },
+    { value: 'retro-90s', label: '1990s Throwback' },
+    { value: 'polaroid', label: 'Polaroid Snapshot' },
+    { value: 'sepia-classic', label: 'Sepia Classic' },
+    { value: 'faded-film', label: 'Faded Film' },
+    { value: 'vintage-portrait', label: 'Vintage Portrait' },
   ];
 
   // "Same People, New Scene" - Generate a variant card with saved family set
@@ -2188,7 +2198,18 @@ export default function CreatePage() {
                                     <div className="grid grid-cols-2 gap-3">
                                       <div>
                                         <Label className="text-xs mb-1 block">Scene</Label>
-                                        <Select value={festiveScene} onValueChange={setFestiveScene}>
+                                        <Select 
+                                          value={festiveScene} 
+                                          onValueChange={(value) => {
+                                            setFestiveScene(value);
+                                            // Reset style when switching to/from Blast from the Past
+                                            if (value === 'blast-from-past') {
+                                              setFestiveStyle('retro-70s');
+                                            } else if (festiveScene === 'blast-from-past') {
+                                              setFestiveStyle('festive-photo');
+                                            }
+                                          }}
+                                        >
                                           <SelectTrigger data-testid="select-festive-scene">
                                             <SelectValue />
                                           </SelectTrigger>
@@ -2201,16 +2222,32 @@ export default function CreatePage() {
                                       </div>
                                       <div>
                                         <Label className="text-xs mb-1 block">Style</Label>
-                                        <Select value={festiveStyle} onValueChange={setFestiveStyle}>
-                                          <SelectTrigger data-testid="select-festive-style">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {festiveStyleOptions.map(opt => (
-                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                        {festiveScene === 'blast-from-past' ? (
+                                          <Select 
+                                            value={festiveStyle} 
+                                            onValueChange={setFestiveStyle}
+                                          >
+                                            <SelectTrigger data-testid="select-festive-style-blast">
+                                              <SelectValue placeholder="Select era..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {blastFromPastStyleOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : (
+                                          <Select value={festiveStyle} onValueChange={setFestiveStyle}>
+                                            <SelectTrigger data-testid="select-festive-style">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {festiveStyleOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        )}
                                       </div>
                                     </div>
                                     <div>
@@ -2526,7 +2563,18 @@ export default function CreatePage() {
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-1">
                                     <Label className="text-xs">Scene</Label>
-                                    <Select value={portraitScene} onValueChange={setPortraitScene}>
+                                    <Select 
+                                      value={portraitScene} 
+                                      onValueChange={(value) => {
+                                        setPortraitScene(value);
+                                        // Reset style when switching to/from Blast from the Past
+                                        if (value === 'blast-from-past') {
+                                          setPortraitStyle('retro-70s');
+                                        } else if (portraitScene === 'blast-from-past') {
+                                          setPortraitStyle('studio-photo');
+                                        }
+                                      }}
+                                    >
                                       <SelectTrigger data-testid="select-portrait-scene">
                                         <SelectValue />
                                       </SelectTrigger>
@@ -2569,20 +2617,32 @@ export default function CreatePage() {
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">Art Style</Label>
-                                    <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                      <SelectTrigger data-testid="select-portrait-style">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="studio-photo">Studio Photo</SelectItem>
-                                        <SelectItem value="watercolor">Watercolor</SelectItem>
-                                        <SelectItem value="cartoon">Cartoon</SelectItem>
-                                        <SelectItem value="oil-painting">Oil Painting</SelectItem>
-                                        <SelectItem value="digital-art">Digital Art</SelectItem>
-                                        <SelectItem value="vintage">Vintage</SelectItem>
-                                        <SelectItem value="blast-from-past">Blast from the Past</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    {portraitScene === 'blast-from-past' ? (
+                                      <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                        <SelectTrigger data-testid="select-portrait-style-blast">
+                                          <SelectValue placeholder="Select era..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {blastFromPastStyleOptions.map(opt => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    ) : (
+                                      <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                        <SelectTrigger data-testid="select-portrait-style">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="studio-photo">Studio Photo</SelectItem>
+                                          <SelectItem value="watercolor">Watercolor</SelectItem>
+                                          <SelectItem value="cartoon">Cartoon</SelectItem>
+                                          <SelectItem value="oil-painting">Oil Painting</SelectItem>
+                                          <SelectItem value="digital-art">Digital Art</SelectItem>
+                                          <SelectItem value="vintage">Vintage</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    )}
                                   </div>
                                 </div>
 
