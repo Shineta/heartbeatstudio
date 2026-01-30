@@ -495,7 +495,44 @@ export async function generateFestiveTransform(params: {
     'mall-photo-booth': '80s-90s mall photo booth style, fun colorful backdrop, silly props available, nostalgic mall memories, Glamour Shots aesthetic',
   };
   
-  const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
+  // For "Blast from the Past" scene, the style IS the scene (TV shows, music themes, etc.)
+  // These styles define both the background AND the visual style
+  const blastFromPastSceneOverrides: Record<string, string> = {
+    // TV Show Sets - these become the actual scene/background
+    'tv-sitcom-living-room': 'a classic 1980s-90s TV sitcom living room set with studio lighting, plush couch, coffee table, family photos on wall, warm sitcom atmosphere',
+    'tv-fresh-prince': 'the Fresh Prince of Bel-Air mansion living room with grand staircase, luxurious colorful 90s decor, pool table, bright vibrant colors, wealthy Bel-Air aesthetic',
+    'tv-family-matters': 'the Family Matters Winslow family living room in Chicago, cozy 90s suburban home with plaid couch, warm wood tones, family photos, welcoming atmosphere',
+    'tv-cosby-show': 'the Cosby Show brownstone living room with elegant 80s decor, earth tones, artwork on walls, sophisticated Brooklyn family home aesthetic',
+    'tv-good-times': 'the Good Times apartment in the Chicago projects, 1970s urban apartment with modest furnishings, African art on walls, warm community feeling, vintage 70s decor',
+    'tv-martin': 'Martin Lawrence show 90s Detroit apartment with funky colorful decor, bachelor pad vibes, bright walls, urban 90s style, fun energetic atmosphere',
+    // Era styles
+    'retro-70s': 'a groovy 1970s living room with orange shag carpet, wood paneling, lava lamps, beaded curtains, earth tones, disco era aesthetic',
+    'retro-80s': 'a vibrant 1980s room with neon colors, geometric patterns, MTV posters, VHS tapes, synth wave aesthetic, Miami Vice vibes',
+    'retro-90s': 'a 1990s room with grunge posters, bean bag chairs, CD player, desaturated colors, casual 90s aesthetic',
+    // Music & Hip Hop
+    'hip-hop-crew': 'an urban street scene with graffiti-covered brick wall, boombox on ground, city skyline in background, classic 80s-90s hip hop photo shoot location',
+    'album-cover-90s': 'a professional 90s R&B/Hip Hop album cover photo studio with dramatic lighting, smoke effects, sleek urban backdrop',
+    'rap-group-pose': 'an iconic urban cityscape with skyscrapers, rooftop setting, golden hour lighting, legendary hip hop photo location',
+    'soul-train': 'the Soul Train dance floor and stage with disco ball, colorful lights, 70s-80s dance show set, funky backdrop with Soul Train logo style',
+    'music-video-set': 'a 90s music video set with dramatic lighting, smoke machines, stylish urban warehouse backdrop, MTV era production aesthetic',
+    // Photo styles
+    'polaroid': 'a nostalgic scene captured in classic Polaroid instant photo style with white border',
+    'sepia-classic': 'a timeless antique setting with warm sepia tones',
+    'faded-film': 'a dreamy vintage scene with faded colors and light leaks',
+    'vintage-portrait': 'a classic family portrait studio from the 1970s-80s with soft backdrop',
+    'school-photo-day': 'a classic school photo day studio with blue or gray gradient backdrop, professional portrait lighting',
+    'mall-photo-booth': 'a fun 80s-90s mall photo booth or Glamour Shots studio with colorful props and backdrops',
+  };
+  
+  // Determine the actual scene description
+  let sceneDesc: string;
+  if (scene === 'blast-from-past' && blastFromPastSceneOverrides[style]) {
+    // For blast-from-past, the style defines the scene
+    sceneDesc = blastFromPastSceneOverrides[style];
+  } else {
+    sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
+  }
+  
   const styleInstr = styleInstructions[style] || styleInstructions['festive-photo'];
   
   // Scene-appropriate outfits when changeOutfit is enabled
