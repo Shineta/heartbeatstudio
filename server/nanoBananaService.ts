@@ -4,7 +4,7 @@ const NANO_BANANA_API_KEY = process.env.NANO_BANANA_API_KEY;
 const NANO_BANANA_BASE_URL = 'https://api.nanobananaapi.ai/api/v1/nanobanana';
 
 // Use Pro endpoint for higher quality images
-const USE_PRO_MODEL = true;
+const USE_PRO_MODEL = false; // Using standard model for faster generation
 
 interface NanoBananaGenerateResponse {
   code: number;
