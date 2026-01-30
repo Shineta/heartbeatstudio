@@ -473,10 +473,26 @@ export async function generateFestiveTransform(params: {
     'retro-70s': '1970s groovy photography style, warm orange and brown tones, soft focus, film grain, disco era aesthetic, earth tones, wood paneling vibes',
     'retro-80s': '1980s neon photography style, vibrant pink and blue tones, VHS aesthetic, synth wave colors, bright contrasts, Miami Vice vibes',
     'retro-90s': '1990s throwback style, slightly desaturated colors, disposable camera look, grunge aesthetic, casual snapshot feel',
+    // TV Show Sets
+    'tv-sitcom-living-room': 'classic 80s-90s TV sitcom living room set, warm studio lighting, cozy couch, family photos on wall, sitcom aesthetic, TV show production quality',
+    'tv-fresh-prince': 'Fresh Prince of Bel-Air style mansion living room, luxurious colorful 90s decor, grand staircase, bright vibrant colors, hip 90s aesthetic',
+    'tv-family-matters': 'Family Matters style cozy Chicago home living room, warm family atmosphere, 90s suburban decor, welcoming home feeling',
+    'tv-cosby-show': 'Cosby Show style elegant brownstone living room, refined 80s decor, warm earth tones, sophisticated family home aesthetic',
+    'tv-good-times': 'Good Times style Chicago apartment, 70s urban decor, warm community feeling, classic 70s furniture and colors',
+    'tv-martin': 'Martin style 90s Detroit apartment, funky 90s decor, urban bachelor pad vibes, colorful and fun atmosphere',
+    // Music & Hip Hop
+    'hip-hop-crew': 'classic hip hop crew photo style, urban backdrop, graffiti wall, boombox, gold chains, Adidas tracksuits, confident poses, 80s-90s hip hop aesthetic',
+    'album-cover-90s': '90s R&B/Hip Hop album cover style, dramatic studio lighting, cool confident poses, sleek urban aesthetic, record label quality',
+    'rap-group-pose': 'iconic rap group photo pose, arms crossed, matching outfits, urban cityscape background, confident expressions, legendary hip hop photo vibes',
+    'soul-train': 'Soul Train stage and dance floor, disco lights, 70s-80s dance show aesthetic, funky colorful backdrop, groove and style',
+    'music-video-set': '90s music video set aesthetic, dramatic lighting, smoke effects, stylish urban backdrop, MTV era production quality',
+    // Photo styles
     'polaroid': 'classic Polaroid instant photo style, white border frame, slightly washed out colors, soft vintage tones, iconic square format',
     'sepia-classic': 'deep sepia tone photography, antique photo aesthetic, rich brown tones, classic portrait feel, timeless elegance',
     'faded-film': 'faded film photography style, washed out colors, light leaks, expired film aesthetic, nostalgic and dreamy',
     'vintage-portrait': 'classic vintage portrait photography, soft focus, muted colors, old family photo album feel, gentle vignette',
+    'school-photo-day': 'classic school photo day backdrop, blue or gray gradient background, studio portrait lighting, yearbook photo aesthetic, posed smile',
+    'mall-photo-booth': '80s-90s mall photo booth style, fun colorful backdrop, silly props available, nostalgic mall memories, Glamour Shots aesthetic',
   };
   
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
@@ -513,10 +529,37 @@ export async function generateFestiveTransform(params: {
     'autumn-harvest': 'wearing cozy autumn clothing in warm earth tones',
     'blast-from-past': 'wearing classic retro 1970s-1980s fashion, vintage clothing style like polyester shirts, bell bottoms, or classic sweaters',
   };
+
+  // Style-specific outfit overrides for Blast from the Past styles
+  const blastFromPastOutfits: Record<string, string> = {
+    'retro-70s': 'wearing groovy 1970s fashion, bell bottoms, platform shoes, earth tones, disco era style',
+    'retro-80s': 'wearing bold 1980s fashion, bright neon colors, shoulder pads, Members Only jacket, leg warmers',
+    'retro-90s': 'wearing 1990s hip hop fashion, baggy jeans, Jordans, oversized t-shirt, snapback cap',
+    'tv-sitcom-living-room': 'wearing casual 90s family sitcom attire, cozy sweaters, comfortable family-friendly clothing',
+    'tv-fresh-prince': 'wearing Fresh Prince style 90s fashion, colorful bold patterns, high-top sneakers, funky urban style',
+    'tv-family-matters': 'wearing wholesome 90s family attire, colorful sweaters, clean-cut suburban style',
+    'tv-cosby-show': 'wearing stylish 80s professional casual attire, colorful sweaters, refined family fashion',
+    'tv-good-times': 'wearing 1970s urban fashion, bell bottoms, dashikis, Afrocentric style, colorful 70s patterns',
+    'tv-martin': 'wearing 90s hip casual style, colorful button-up shirts, fresh urban fashion, Detroit style',
+    'hip-hop-crew': 'wearing classic hip hop fashion, Adidas tracksuit, gold chain, Kangol hat, fresh Jordans, B-boy style',
+    'album-cover-90s': 'wearing sleek 90s R&B fashion, leather jacket, stylish urban wear, album cover ready',
+    'rap-group-pose': 'wearing matching hip hop crew outfits, coordinated colors, gold chains, iconic streetwear',
+    'soul-train': 'wearing funky Soul Train fashion, bell bottoms, platform shoes, disco glam, 70s dance show style',
+    'music-video-set': 'wearing 90s music video fashion, stylish urban wear, leather, bold accessories, MTV ready',
+    'school-photo-day': 'wearing classic school photo attire, neat collared shirt, school-appropriate formal wear',
+    'mall-photo-booth': 'wearing 80s-90s mall fashion, denim jacket, colorful patterns, Glamour Shots ready style',
+  };
   
-  // Build outfit instruction
+  // Build outfit instruction - use style-specific outfit for Blast from the Past scene
+  const getOutfitDescription = () => {
+    if (scene === 'blast-from-past' && blastFromPastOutfits[style]) {
+      return blastFromPastOutfits[style];
+    }
+    return sceneOutfits[scene] || 'wearing festive clothing appropriate for the occasion';
+  };
+  
   const outfitInstr = changeOutfit 
-    ? `\nIMPORTANT: The person must be ${sceneOutfits[scene] || 'wearing festive clothing appropriate for the occasion'}. Replace their original clothing completely with scene-appropriate attire.`
+    ? `\nIMPORTANT: The person must be ${getOutfitDescription()}. Replace their original clothing completely with scene-appropriate attire.`
     : '';
   
   // Build glasses/braces removal instructions

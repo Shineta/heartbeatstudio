@@ -787,13 +787,30 @@ export default function CreatePage() {
 
   // Special "Blast from the Past" style options - shown when blast-from-past scene is selected
   const blastFromPastStyleOptions = [
+    // Era styles
     { value: 'retro-70s', label: '1970s Groovy' },
     { value: 'retro-80s', label: '1980s Neon' },
     { value: 'retro-90s', label: '1990s Throwback' },
+    // TV Show Sets
+    { value: 'tv-sitcom-living-room', label: 'Classic Sitcom Living Room' },
+    { value: 'tv-fresh-prince', label: 'Fresh Prince Style' },
+    { value: 'tv-family-matters', label: 'Family Matters Style' },
+    { value: 'tv-cosby-show', label: 'Cosby Show Style' },
+    { value: 'tv-good-times', label: 'Good Times Style' },
+    { value: 'tv-martin', label: 'Martin Style' },
+    // Music & Hip Hop
+    { value: 'hip-hop-crew', label: 'Hip Hop Crew Photo' },
+    { value: 'album-cover-90s', label: '90s Album Cover' },
+    { value: 'rap-group-pose', label: 'Rap Group Pose' },
+    { value: 'soul-train', label: 'Soul Train Stage' },
+    { value: 'music-video-set', label: 'Music Video Set' },
+    // Photo styles
     { value: 'polaroid', label: 'Polaroid Snapshot' },
     { value: 'sepia-classic', label: 'Sepia Classic' },
     { value: 'faded-film', label: 'Faded Film' },
     { value: 'vintage-portrait', label: 'Vintage Portrait' },
+    { value: 'school-photo-day', label: 'School Photo Day' },
+    { value: 'mall-photo-booth', label: 'Mall Photo Booth' },
   ];
 
   // "Same People, New Scene" - Generate a variant card with saved family set
