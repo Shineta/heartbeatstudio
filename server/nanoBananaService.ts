@@ -421,8 +421,9 @@ export async function generateFestiveTransform(params: {
   changeOutfit?: boolean;
   removeGlasses?: boolean;
   removeBraces?: boolean;
+  includeCharacters?: boolean;
 }): Promise<string> {
-  const { imageUrl, scene, style, instructions, changeOutfit = true, removeGlasses = false, removeBraces = false } = params;
+  const { imageUrl, scene, style, instructions, changeOutfit = true, removeGlasses = false, removeBraces = false, includeCharacters = false } = params;
   
   // Scene-specific descriptions - expanded to match all frontend options
   const sceneDescriptions: Record<string, string> = {
@@ -611,6 +612,21 @@ export async function generateFestiveTransform(params: {
     ? `\nIMPORTANT MODIFICATIONS: ${removalInstructions.join('. ')}.`
     : '';
   
+  // TV Show character descriptions - only used when includeCharacters is true
+  const tvShowCharacters: Record<string, string> = {
+    'tv-fresh-prince': 'Include the Banks family characters from Fresh Prince of Bel-Air: Carlton Banks (short, preppy, energetic), Uncle Phil (large, distinguished man in suit), Aunt Vivian (elegant Black woman), Hillary (fashionable young woman), Ashley (teenage girl), and Geoffrey the butler (British, formal attire). They should be interacting naturally with the person in the scene.',
+    'tv-family-matters': 'Include the Winslow family characters from Family Matters: Carl Winslow (large friendly police officer), Harriette Winslow (warm mother figure), Eddie (teenage son), Laura (teenage daughter), and most importantly Steve Urkel (nerdy neighbor with suspenders, large glasses, and high-pitched personality). They should be interacting naturally with the person in the scene.',
+    'tv-cosby-show': 'Include the Huxtable family characters from The Cosby Show: Cliff Huxtable (father in colorful sweater), Claire Huxtable (elegant mother, lawyer), Denise, Theo, Vanessa, Rudy, and Sondra as family members. They should be interacting naturally with the person in the scene.',
+    'tv-good-times': 'Include the Evans family characters from Good Times: Florida Evans (strong mother figure), James Evans Sr (hardworking father), J.J. Evans (tall, artistic son known for "Dy-no-mite!"), Thelma (smart daughter), Michael (youngest, politically aware). They should be interacting naturally with the person in the scene.',
+    'tv-martin': 'Include characters from Martin: Martin Payne (energetic host), Gina Waters (beautiful girlfriend), Tommy (laid-back friend), Cole (simple friend), Pam (Gina\'s sassy friend). They should be interacting naturally with the person in the scene.',
+    'tv-sitcom-living-room': 'Include a friendly diverse 90s sitcom family - parents, kids, and maybe a quirky neighbor - all in casual 90s attire, interacting naturally with the person in the scene.',
+  };
+  
+  // Build character instruction if requested
+  const characterInstr = includeCharacters && tvShowCharacters[style]
+    ? `\nINCLUDE CHARACTERS: ${tvShowCharacters[style]}`
+    : '';
+  
   // Build custom instructions part - make prohibitions more prominent
   let customInstr = '';
   if (instructions) {
@@ -625,9 +641,9 @@ export async function generateFestiveTransform(params: {
   
   const prompt = `Transform this person's photo into ${sceneDesc}. 
 Keep the person as the main focus, clearly recognizable with their face prominently featured.
-Place them naturally within the festive scene.${outfitInstr}${removalInstr}${customInstr}
+Place them naturally within the scene.${outfitInstr}${removalInstr}${characterInstr}${customInstr}
 ${styleInstr}.
-The person should look happy and celebrating.
+The person should look happy and engaged.
 High quality, visually appealing result suitable for a greeting card cover.`;
 
   console.log(`[NanoBanana] Generating festive transform: ${scene} in ${style} style`);

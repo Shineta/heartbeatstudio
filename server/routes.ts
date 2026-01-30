@@ -1686,10 +1686,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         changeOutfit: z.boolean().optional().default(true),
         removeGlasses: z.boolean().optional().default(false),
         removeBraces: z.boolean().optional().default(false),
+        includeCharacters: z.boolean().optional().default(false),
       });
       
       const validatedData = schema.parse(req.body);
-      const { imageUrl, scene, style, instructions, changeOutfit, removeGlasses, removeBraces } = validatedData;
+      const { imageUrl, scene, style, instructions, changeOutfit, removeGlasses, removeBraces, includeCharacters } = validatedData;
       
       // Verify image URL is publicly accessible
       if (imageUrl.includes('localhost') && !process.env.APP_URL) {
@@ -1699,7 +1700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`[FestiveTransform] Transforming photo to ${scene} scene in ${style} style${instructions ? ` with instructions: ${instructions}` : ''}${changeOutfit ? ' (changing outfit)' : ''}${removeGlasses ? ' (removing glasses)' : ''}${removeBraces ? ' (removing braces)' : ''}`);
+      console.log(`[FestiveTransform] Transforming photo to ${scene} scene in ${style} style${instructions ? ` with instructions: ${instructions}` : ''}${changeOutfit ? ' (changing outfit)' : ''}${removeGlasses ? ' (removing glasses)' : ''}${removeBraces ? ' (removing braces)' : ''}${includeCharacters ? ' (including characters)' : ''}`);
       
       const { generateFestiveTransform } = await import('./nanoBananaService');
       
@@ -1711,6 +1712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         changeOutfit,
         removeGlasses,
         removeBraces,
+        includeCharacters,
       });
       
       if (!generatedUrl) {

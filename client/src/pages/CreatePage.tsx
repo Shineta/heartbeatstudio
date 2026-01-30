@@ -169,6 +169,11 @@ export default function CreatePage() {
   const [festiveChangeOutfit, setFestiveChangeOutfit] = useState(true);
   const [festiveRemoveGlasses, setFestiveRemoveGlasses] = useState(false);
   const [festiveRemoveBraces, setFestiveRemoveBraces] = useState(false);
+  const [festiveIncludeCharacters, setFestiveIncludeCharacters] = useState(false);
+  
+  // TV show styles that can include characters
+  const tvShowStyles = ['tv-fresh-prince', 'tv-family-matters', 'tv-cosby-show', 'tv-good-times', 'tv-martin', 'tv-sitcom-living-room'];
+  const isTvShowStyle = tvShowStyles.includes(festiveStyle);
   
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
@@ -725,6 +730,7 @@ export default function CreatePage() {
         changeOutfit: festiveChangeOutfit,
         removeGlasses: festiveRemoveGlasses,
         removeBraces: festiveRemoveBraces,
+        includeCharacters: isTvShowStyle ? festiveIncludeCharacters : undefined,
       });
       
       if (!res.ok) throw new Error('Failed to generate festive image');
@@ -2267,6 +2273,22 @@ export default function CreatePage() {
                                         )}
                                       </div>
                                     </div>
+                                    
+                                    {/* Include TV Show Characters option - only for TV show styles */}
+                                    {isTvShowStyle && (
+                                      <div className="flex items-center gap-2 p-3 bg-accent/30 rounded-lg">
+                                        <Checkbox
+                                          id="festive-include-characters"
+                                          checked={festiveIncludeCharacters}
+                                          onCheckedChange={(checked) => setFestiveIncludeCharacters(checked === true)}
+                                          data-testid="checkbox-festive-include-characters"
+                                        />
+                                        <Label htmlFor="festive-include-characters" className="text-sm cursor-pointer">
+                                          Include characters from the show in the scene
+                                        </Label>
+                                      </div>
+                                    )}
+                                    
                                     <div>
                                       <Label className="text-xs mb-1 block">Custom Instructions (optional)</Label>
                                       <Textarea
