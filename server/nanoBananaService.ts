@@ -456,7 +456,9 @@ export async function generateFestiveTransform(params: {
     'winter-wonderland': 'a magical winter wonderland with sparkling snow, frosted trees, soft winter light, cozy atmosphere',
     'spring-garden': 'a beautiful spring garden with blooming flowers, butterflies, soft sunlight, fresh green leaves',
     'summer-beach': 'a sunny summer beach scene with ocean waves, palm trees, seashells, warm golden light',
-    'autumn-harvest': 'a cozy autumn harvest scene with pumpkins, fall leaves, warm colors, rustic decorations',
+    'autumn-harvest': 'a cozy autumn harvest scene with pumpkins, hay bales, fall foliage, warm amber lighting, rustic farm atmosphere',
+    // Nostalgic
+    'blast-from-past': 'a nostalgic retro scene from the 1970s-1980s era, vintage living room with wood paneling, shag carpet, old TV set, rotary phone, classic decor, warm nostalgic sepia-toned atmosphere, old family photo vibe',
   };
   
   // Style-specific instructions
@@ -467,6 +469,7 @@ export async function generateFestiveTransform(params: {
     'oil-painting': 'classical oil painting style, rich textures, dramatic lighting, fine art aesthetic',
     'digital-art': 'modern digital art style, crisp lines, vibrant colors, contemporary illustration',
     'vintage': 'vintage photography style, warm sepia tones, soft vignette, nostalgic film grain aesthetic',
+    'blast-from-past': 'retro 1970s-1980s photography style, faded colors, warm sepia and amber tones, soft focus, vintage film grain, old family photo album aesthetic, slightly yellowed edges',
   };
   
   const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
@@ -501,6 +504,7 @@ export async function generateFestiveTransform(params: {
     'spring-garden': 'wearing light floral spring dress or casual spring attire',
     'summer-beach': 'wearing casual summer beach attire, tropical shirt or sundress',
     'autumn-harvest': 'wearing cozy autumn clothing in warm earth tones',
+    'blast-from-past': 'wearing classic retro 1970s-1980s fashion, vintage clothing style like polyester shirts, bell bottoms, or classic sweaters',
   };
   
   // Build outfit instruction

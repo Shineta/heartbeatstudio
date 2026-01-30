@@ -772,6 +772,8 @@ export default function CreatePage() {
     { value: 'spring-garden', label: 'Spring Garden' },
     { value: 'summer-beach', label: 'Summer Beach' },
     { value: 'autumn-harvest', label: 'Autumn Harvest' },
+    // Nostalgic
+    { value: 'blast-from-past', label: 'Blast from the Past' },
   ];
   
   const festiveStyleOptions = [
@@ -781,6 +783,7 @@ export default function CreatePage() {
     { value: 'oil-painting', label: 'Oil Painting' },
     { value: 'digital-art', label: 'Digital Art' },
     { value: 'vintage', label: 'Vintage' },
+    { value: 'blast-from-past', label: 'Blast from the Past' },
   ];
 
   // "Same People, New Scene" - Generate a variant card with saved family set
@@ -2559,6 +2562,8 @@ export default function CreatePage() {
                                         <SelectItem value="diwali">Diwali</SelectItem>
                                         <SelectItem value="eid">Eid</SelectItem>
                                         <SelectItem value="lunar-new-year">Lunar New Year</SelectItem>
+                                        {/* Nostalgic */}
+                                        <SelectItem value="blast-from-past">Blast from the Past</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
@@ -2575,6 +2580,7 @@ export default function CreatePage() {
                                         <SelectItem value="oil-painting">Oil Painting</SelectItem>
                                         <SelectItem value="digital-art">Digital Art</SelectItem>
                                         <SelectItem value="vintage">Vintage</SelectItem>
+                                        <SelectItem value="blast-from-past">Blast from the Past</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
