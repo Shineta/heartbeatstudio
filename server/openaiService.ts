@@ -1122,14 +1122,17 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
 
   // Determine the actual scene description
   let sceneDesc: string;
+  let styleDesc: string;
+  
   if (scene === 'blast-from-past' && blastFromPastSceneOverrides[style]) {
     // For blast-from-past, the style defines the scene
     sceneDesc = blastFromPastSceneOverrides[style];
+    // Use a photo-realistic style for blast-from-past scenes to preserve faces
+    styleDesc = 'photorealistic family portrait with natural lighting, authentic faces exactly matching the reference photos';
   } else {
     sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
+    styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
   }
-  
-  const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
 
   // Build the subjects section based on what's selected
   let subjectsSection = '';
