@@ -188,8 +188,8 @@ export default function CreatePage() {
   const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
   const [selectedFaceIds, setSelectedFaceIds] = useState<string[]>([]);
   const [removeBracesIds, setRemoveBracesIds] = useState<string[]>([]); // IDs of people to remove braces from
-  const [portraitScene, setPortraitScene] = useState('studio');
-  const [portraitStyle, setPortraitStyle] = useState('studio-photo');
+  const [portraitScene, setPortraitScene] = useState('holidays'); // Category: holidays, life-events, seasons, professional, blast-from-past
+  const [portraitStyle, setPortraitStyle] = useState('christmas'); // Actual scene within category
   const [keepOutfits, setKeepOutfits] = useState(true);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isAnalyzingPhotos, setIsAnalyzingPhotos] = useState(false);
@@ -606,11 +606,16 @@ export default function CreatePage() {
     try {
       const selectedFaces = detectedFaces.filter(f => selectedFaceIds.includes(f.id));
       
+      // For category scenes (holidays, life-events, seasons, professional), the "style" is actually the scene
+      // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
+      const actualScene = portraitScene === 'blast-from-past' ? 'blast-from-past' : portraitStyle;
+      const actualStyle = portraitScene === 'blast-from-past' ? portraitStyle : 'studio-photo';
+      
       const res = await apiRequest('POST', '/api/family-portrait/generate', {
         imageUrls: uploadedPhotoUrls,
         selectedFaces,
-        scene: portraitScene,
-        style: portraitStyle,
+        scene: actualScene,
+        style: actualStyle,
         keepOutfits,
         removeBracesIds,
       });
@@ -923,12 +928,12 @@ export default function CreatePage() {
 
   // Quick scene presets for "Same People, New Scene"
   const scenePresets = [
-    { scene: 'holiday', style: 'studio-photo', label: 'Christmas Card', icon: 'TreePine' },
-    { scene: 'outdoors', style: 'studio-photo', label: 'Vacation Postcard', icon: 'Sun' },
-    { scene: 'studio', style: 'studio-photo', label: 'Studio Portrait', icon: 'Camera' },
+    { scene: 'christmas', style: 'studio-photo', label: 'Christmas Card', icon: 'TreePine' },
+    { scene: 'summer-beach', style: 'studio-photo', label: 'Vacation Postcard', icon: 'Sun' },
+    { scene: 'corporate-headshot', style: 'studio-photo', label: 'Professional Portrait', icon: 'Camera' },
     { scene: 'birthday', style: 'cartoon', label: 'Birthday Cartoon', icon: 'PartyPopper' },
-    { scene: 'studio', style: 'watercolor', label: 'Watercolor Art', icon: 'Palette' },
-    { scene: 'living-room', style: 'oil-painting', label: 'Classic Painting', icon: 'Frame' },
+    { scene: 'spring-garden', style: 'watercolor', label: 'Watercolor Art', icon: 'Palette' },
+    { scene: 'retro-70s', style: 'retro-70s', label: 'Retro 70s', icon: 'Frame' },
   ];
 
   const animationMutation = useMutation({
@@ -2648,7 +2653,7 @@ export default function CreatePage() {
                                   </p>
                                 </div>
 
-                                {/* Scene & Style */}
+                                {/* Scene & Style - Category-based like Festive Transform */}
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-1">
                                     <Label className="text-xs">Scene</Label>
@@ -2656,82 +2661,60 @@ export default function CreatePage() {
                                       value={portraitScene} 
                                       onValueChange={(value) => {
                                         setPortraitScene(value);
-                                        // Reset style when switching to/from Blast from the Past
-                                        if (value === 'blast-from-past') {
+                                        // Reset style to first option of the new category
+                                        if (value === 'holidays') {
+                                          setPortraitStyle('christmas');
+                                        } else if (value === 'life-events') {
+                                          setPortraitStyle('birthday');
+                                        } else if (value === 'seasons') {
+                                          setPortraitStyle('winter-wonderland');
+                                        } else if (value === 'professional') {
+                                          setPortraitStyle('corporate-headshot');
+                                        } else if (value === 'blast-from-past') {
                                           setPortraitStyle('retro-70s');
-                                        } else if (portraitScene === 'blast-from-past') {
-                                          setPortraitStyle('studio-photo');
                                         }
                                       }}
                                     >
                                       <SelectTrigger data-testid="select-portrait-scene">
                                         <SelectValue />
                                       </SelectTrigger>
-                                      <SelectContent className="max-h-[300px]">
-                                        {/* Classic Scenes */}
-                                        <SelectItem value="studio">Studio</SelectItem>
-                                        <SelectItem value="living-room">Living Room</SelectItem>
-                                        <SelectItem value="outdoors">Outdoors</SelectItem>
-                                        <SelectItem value="beach">Beach</SelectItem>
-                                        <SelectItem value="garden">Garden</SelectItem>
-                                        {/* Life Events */}
-                                        <SelectItem value="birthday">Birthday</SelectItem>
-                                        <SelectItem value="graduation">Graduation</SelectItem>
-                                        <SelectItem value="wedding">Wedding</SelectItem>
-                                        <SelectItem value="baby-shower">Baby Shower</SelectItem>
-                                        <SelectItem value="anniversary">Anniversary</SelectItem>
-                                        <SelectItem value="retirement">Retirement</SelectItem>
-                                        {/* Major Holidays */}
-                                        <SelectItem value="christmas">Christmas</SelectItem>
-                                        <SelectItem value="hanukkah">Hanukkah</SelectItem>
-                                        <SelectItem value="kwanzaa">Kwanzaa</SelectItem>
-                                        <SelectItem value="new-years">New Year's</SelectItem>
-                                        <SelectItem value="thanksgiving">Thanksgiving</SelectItem>
-                                        <SelectItem value="easter">Easter</SelectItem>
-                                        <SelectItem value="passover">Passover</SelectItem>
-                                        <SelectItem value="halloween">Halloween</SelectItem>
-                                        <SelectItem value="fourth-of-july">Fourth of July</SelectItem>
-                                        <SelectItem value="valentines">Valentine's Day</SelectItem>
-                                        <SelectItem value="mothers-day">Mother's Day</SelectItem>
-                                        <SelectItem value="fathers-day">Father's Day</SelectItem>
-                                        <SelectItem value="st-patricks">St. Patrick's Day</SelectItem>
-                                        <SelectItem value="cinco-de-mayo">Cinco de Mayo</SelectItem>
-                                        <SelectItem value="diwali">Diwali</SelectItem>
-                                        <SelectItem value="eid">Eid</SelectItem>
-                                        <SelectItem value="lunar-new-year">Lunar New Year</SelectItem>
-                                        {/* Nostalgic */}
-                                        <SelectItem value="blast-from-past">Blast from the Past</SelectItem>
+                                      <SelectContent>
+                                        {festiveSceneOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
                                       </SelectContent>
                                     </Select>
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-xs">Art Style</Label>
-                                    {portraitScene === 'blast-from-past' ? (
-                                      <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                        <SelectTrigger data-testid="select-portrait-style-blast">
-                                          <SelectValue placeholder="Select era..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {blastFromPastStyleOptions.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    ) : (
-                                      <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                        <SelectTrigger data-testid="select-portrait-style">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="studio-photo">Studio Photo</SelectItem>
-                                          <SelectItem value="watercolor">Watercolor</SelectItem>
-                                          <SelectItem value="cartoon">Cartoon</SelectItem>
-                                          <SelectItem value="oil-painting">Oil Painting</SelectItem>
-                                          <SelectItem value="digital-art">Digital Art</SelectItem>
-                                          <SelectItem value="vintage">Vintage</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    )}
+                                    <Label className="text-xs">
+                                      {portraitScene === 'holidays' ? 'Holiday' : 
+                                       portraitScene === 'life-events' ? 'Event' :
+                                       portraitScene === 'seasons' ? 'Season' :
+                                       portraitScene === 'professional' ? 'Type' :
+                                       portraitScene === 'blast-from-past' ? 'Style' : 'Style'}
+                                    </Label>
+                                    <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                      <SelectTrigger data-testid="select-portrait-style">
+                                        <SelectValue placeholder="Select..." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {portraitScene === 'holidays' && holidayStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                        {portraitScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                        {portraitScene === 'seasons' && seasonsStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                        {portraitScene === 'professional' && professionalStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                        {portraitScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                 </div>
 
