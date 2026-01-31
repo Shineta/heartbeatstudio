@@ -508,6 +508,7 @@ export async function generateFestiveTransform(params: {
     'vintage-portrait': 'classic vintage portrait photography, soft focus, muted colors, old family photo album feel, gentle vignette',
     'school-photo-day': 'classic school photo day backdrop, blue or gray gradient background, studio portrait lighting, yearbook photo aesthetic, posed smile',
     'mall-photo-booth': '80s-90s mall photo booth style, fun colorful backdrop, silly props available, nostalgic mall memories, Glamour Shots aesthetic',
+    'awkward-portrait': 'classic 1980s-90s department store portrait studio style, cheesy laser beam or gradient backdrop in blue purple and pink, soft diffused lighting, slightly awkward stiff poses, JCPenney Sears portrait aesthetic, vintage mall photography studio feel',
   };
   
   // For "Blast from the Past" scene, the style IS the scene (TV shows, music themes, etc.)
@@ -538,6 +539,7 @@ export async function generateFestiveTransform(params: {
     'vintage-portrait': 'a classic family portrait studio from the 1970s-80s with soft backdrop',
     'school-photo-day': 'a classic school photo day studio with blue or gray gradient backdrop, professional portrait lighting',
     'mall-photo-booth': 'a fun 80s-90s mall photo booth or Glamour Shots studio with colorful props and backdrops',
+    'awkward-portrait': 'a classic 1980s-90s department store portrait studio with cheesy laser beam or gradient backdrop in blue purple and pink colors, soft diffused studio lighting, fake nature props or abstract geometric shapes, JCPenney Sears portrait studio aesthetic',
   };
   
   // Determine the actual scene description
@@ -615,6 +617,7 @@ export async function generateFestiveTransform(params: {
     'music-video-set': 'wearing 90s music video fashion, stylish urban wear, leather, bold accessories, MTV ready',
     'school-photo-day': 'wearing classic school photo attire, neat collared shirt, school-appropriate formal wear',
     'mall-photo-booth': 'wearing 80s-90s mall fashion, denim jacket, colorful patterns, Glamour Shots ready style',
+    'awkward-portrait': 'wearing awkward matching family outfits from the 1980s-90s, turtleneck sweaters or denim shirts, matching color-coordinated outfits, puffy sleeves, permed hair styles, classic department store portrait fashion',
   };
   
   // Build outfit instruction - use style-specific outfit for Blast from the Past scene
