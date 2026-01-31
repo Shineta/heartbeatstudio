@@ -756,6 +756,7 @@ export default function CreatePage() {
     { value: 'holidays', label: 'Holidays' },
     { value: 'life-events', label: 'Life Events' },
     { value: 'seasons', label: 'Seasons' },
+    { value: 'professional', label: 'Professional' },
     { value: 'blast-from-past', label: 'Blast from the Past' },
   ];
   
@@ -801,6 +802,22 @@ export default function CreatePage() {
     { value: 'spring-garden', label: 'Spring Garden' },
     { value: 'summer-beach', label: 'Summer Beach' },
     { value: 'autumn-harvest', label: 'Autumn Harvest' },
+  ];
+  
+  // Professional options - headshots, corporate, LinkedIn, etc.
+  const professionalStyleOptions = [
+    { value: 'corporate-headshot', label: 'Corporate Headshot' },
+    { value: 'linkedin-profile', label: 'LinkedIn Profile' },
+    { value: 'business-casual', label: 'Business Casual' },
+    { value: 'executive-portrait', label: 'Executive Portrait' },
+    { value: 'realtor-photo', label: 'Realtor Photo' },
+    { value: 'author-photo', label: 'Author Photo' },
+    { value: 'speaker-portrait', label: 'Speaker Portrait' },
+    { value: 'medical-professional', label: 'Medical Professional' },
+    { value: 'legal-professional', label: 'Legal Professional' },
+    { value: 'creative-professional', label: 'Creative Professional' },
+    { value: 'tech-startup', label: 'Tech Startup' },
+    { value: 'academic-portrait', label: 'Academic Portrait' },
   ];
   
   const festiveStyleOptions = [
@@ -2253,6 +2270,8 @@ export default function CreatePage() {
                                               setFestiveStyle('birthday');
                                             } else if (value === 'seasons') {
                                               setFestiveStyle('winter-wonderland');
+                                            } else if (value === 'professional') {
+                                              setFestiveStyle('corporate-headshot');
                                             } else if (value === 'blast-from-past') {
                                               setFestiveStyle('retro-70s');
                                             }
@@ -2273,6 +2292,7 @@ export default function CreatePage() {
                                           {festiveScene === 'holidays' ? 'Holiday' : 
                                            festiveScene === 'life-events' ? 'Event' :
                                            festiveScene === 'seasons' ? 'Season' :
+                                           festiveScene === 'professional' ? 'Type' :
                                            festiveScene === 'blast-from-past' ? 'Style' : 'Style'}
                                         </Label>
                                         <Select 
@@ -2290,6 +2310,9 @@ export default function CreatePage() {
                                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                             ))}
                                             {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                            {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
                                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                             ))}
                                             {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (

@@ -458,6 +458,19 @@ export async function generateFestiveTransform(params: {
     'spring-garden': 'a beautiful spring garden with blooming flowers, butterflies, soft sunlight, fresh green leaves',
     'summer-beach': 'a sunny summer beach scene with ocean waves, palm trees, seashells, warm golden light',
     'autumn-harvest': 'a cozy autumn harvest scene with pumpkins, hay bales, fall foliage, warm amber lighting, rustic farm atmosphere',
+    // Professional headshots and portraits
+    'corporate-headshot': 'a professional corporate photography studio with clean neutral gray backdrop, perfect studio lighting, executive portrait setting, high-end business photo aesthetic',
+    'linkedin-profile': 'a professional headshot studio with soft natural lighting, clean modern office or neutral backdrop, approachable business portrait setting',
+    'business-casual': 'a modern professional setting with contemporary office background, glass windows, natural light, relaxed professional atmosphere',
+    'executive-portrait': 'an elegant executive portrait studio with dark sophisticated backdrop, dramatic professional lighting, luxury business aesthetic, corner office feel',
+    'realtor-photo': 'a professional real estate agent photo setting with beautiful home exterior or elegant interior backdrop, warm welcoming atmosphere, trustworthy professional look',
+    'author-photo': 'an artistic author portrait setting with bookshelf backdrop, warm library lighting, intellectual atmosphere, creative professional aesthetic',
+    'speaker-portrait': 'a professional speaker and presenter photo setting with stage or conference backdrop, dynamic lighting, confident leadership presence',
+    'medical-professional': 'a clean professional medical setting with clinic or hospital backdrop, white coat atmosphere, trustworthy healthcare professional environment',
+    'legal-professional': 'an elegant legal professional setting with law library or office backdrop, prestigious wood paneling, sophisticated attorney portrait atmosphere',
+    'creative-professional': 'an artistic creative professional studio with colorful modern design backdrop, creative workspace elements, innovative and dynamic atmosphere',
+    'tech-startup': 'a modern tech startup environment with contemporary open office backdrop, casual innovation culture, Silicon Valley aesthetic, dynamic and fresh',
+    'academic-portrait': 'a distinguished academic setting with university library or campus backdrop, scholarly atmosphere, intellectual and professional environment',
     // Nostalgic
     'blast-from-past': 'a nostalgic retro scene from the 1970s-1980s era, vintage living room with wood paneling, shag carpet, old TV set, rotary phone, classic decor, warm nostalgic sepia-toned atmosphere, old family photo vibe',
   };
@@ -565,6 +578,19 @@ export async function generateFestiveTransform(params: {
     'spring-garden': 'wearing light floral spring dress or casual spring attire',
     'summer-beach': 'wearing casual summer beach attire, tropical shirt or sundress',
     'autumn-harvest': 'wearing cozy autumn clothing in warm earth tones',
+    // Professional attire
+    'corporate-headshot': 'wearing professional business attire, tailored suit or blazer, crisp shirt, polished executive look',
+    'linkedin-profile': 'wearing smart professional attire, blazer or dress shirt, approachable business casual look',
+    'business-casual': 'wearing business casual attire, neat button-up shirt or blouse, professional yet relaxed look',
+    'executive-portrait': 'wearing high-end executive attire, premium tailored suit, luxury tie or accessories, powerful professional presence',
+    'realtor-photo': 'wearing polished real estate professional attire, smart blazer, welcoming and trustworthy appearance',
+    'author-photo': 'wearing intellectual casual attire, thoughtful sweater or blazer, creative professional look',
+    'speaker-portrait': 'wearing confident speaker attire, professional suit or blazer, dynamic presence',
+    'medical-professional': 'wearing clean white medical coat over professional attire, stethoscope, healthcare professional appearance',
+    'legal-professional': 'wearing distinguished legal attire, dark professional suit, prestigious attorney appearance',
+    'creative-professional': 'wearing modern creative professional attire, stylish and contemporary look, artistic flair',
+    'tech-startup': 'wearing casual tech professional attire, smart casual hoodie or button-up, modern startup culture look',
+    'academic-portrait': 'wearing scholarly professional attire, tweed jacket or academic robes, intellectual appearance',
     'blast-from-past': 'wearing classic retro 1970s-1980s fashion, vintage clothing style like polyester shirts, bell bottoms, or classic sweaters',
   };
 
