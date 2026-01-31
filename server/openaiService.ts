@@ -996,14 +996,23 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'lunar-new-year': 'wearing a red and gold festive bandana or traditional-style pet costume',
     // Legacy fallback
     'holiday': 'wearing festive holiday accessories (bow tie, bandana, or festive collar)',
+    // Blast from the Past - no special accessories, just natural pet appearance
+    'blast-from-past': '',
   };
   
-  const petAccessory = petAccessories[scene] || 'wearing a cute festive accessory';
+  // For blast-from-past scenes, don't add festive accessories - pets should look natural
+  let petAccessory = '';
+  if (scene === 'blast-from-past') {
+    petAccessory = ''; // No accessory for retro/TV scenes
+  } else {
+    petAccessory = petAccessories[scene] || 'wearing a cute festive accessory';
+  }
   
-  // Build pet descriptions with festive accessories
-  const petDetails = pets.map((f, i) => 
-    `Pet ${i + 1}: ${f.description} - MUST reproduce this pet EXACTLY as they appear in the reference photo (breed, coloring, size, markings), ${petAccessory}`
-  ).join('\n');
+  // Build pet descriptions with optional festive accessories
+  const petDetails = pets.map((f, i) => {
+    const accessoryText = petAccessory ? `, ${petAccessory}` : '';
+    return `Pet ${i + 1}: ${f.description} - MUST reproduce this pet EXACTLY as they appear in the reference photo (breed, coloring, size, markings)${accessoryText}`;
+  }).join('\n');
   
   const sceneDescriptions: Record<string, string> = {
     // Classic Scenes
@@ -1229,11 +1238,13 @@ ${pets.length > 0 ? `- Position pets naturally with the family (sitting, standin
     prompt += `
 
 OUTFIT CHANGE REQUIRED:
-- YOU MUST change everyone's clothing to new, coordinated outfits
+- YOU MUST change everyone's clothing to new, coordinated COMPLETE outfits
 - DO NOT keep their original outfits from the photos
 - Dress everyone in: ${suggestedOutfit}
+- CRITICAL: Every person MUST wear COMPLETE outfits including both top AND bottom (pants, jeans, skirt, dress, etc.) - NO ONE should appear without pants or a bottom garment
 - All family members should wear matching or coordinated clothing
 - Outfits should look cohesive as a family group
+- Show people in full-body or at least waist-up framing to ensure complete outfits are visible
 - Still preserve their faces, hair, skin tones, and body types exactly as in the reference photos`;
   }
 
