@@ -1039,6 +1039,76 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'lunar-new-year': 'festive Lunar New Year celebration with red lanterns, paper decorations, zodiac elements, and traditional decor',
     // Legacy fallback
     'holiday': 'festive holiday setting with decorations, twinkling lights, and celebratory atmosphere',
+    // Seasons
+    'winter-wonderland': 'magical winter wonderland with snow-covered trees, soft snowfall, cozy cabin setting, warm lighting through frosted windows',
+    'spring-garden': 'beautiful spring garden with blooming cherry blossoms, tulips, fresh green grass, and soft morning sunlight',
+    'summer-beach': 'sunny summer beach scene with palm trees, ocean waves, golden sand, and bright tropical atmosphere',
+    'autumn-harvest': 'warm autumn harvest setting with colorful fall leaves, pumpkins, hay bales, and golden hour lighting',
+    // Professional
+    'corporate-headshot': 'professional corporate headshot studio with clean neutral background, perfect studio lighting, executive portrait setting',
+    'linkedin-profile': 'professional LinkedIn photo studio with soft gray or blue gradient background, approachable business atmosphere',
+    'business-casual': 'modern office environment with contemporary decor, natural lighting, professional yet relaxed atmosphere',
+    'executive-portrait': 'premium executive portrait studio with elegant backdrop, dramatic lighting, powerful and distinguished setting',
+    'realtor-photo': 'professional realtor headshot setting with warm welcoming atmosphere, clean modern background',
+    'author-photo': 'thoughtful author portrait setting with subtle bookshelf or textured background, intellectual atmosphere',
+    'speaker-portrait': 'dynamic speaker portrait setting with conference or stage backdrop, confident and engaging atmosphere',
+    'medical-professional': 'clean medical professional portrait setting with subtle healthcare environment, trustworthy atmosphere',
+    'legal-professional': 'distinguished legal professional portrait setting with elegant law office backdrop, prestigious atmosphere',
+    'creative-professional': 'modern creative professional portrait setting with artistic backdrop, contemporary and stylish atmosphere',
+    'tech-startup': 'casual tech startup portrait setting with modern office or workspace backdrop, innovative and approachable atmosphere',
+    'academic-portrait': 'scholarly academic portrait setting with library or campus backdrop, intellectual and distinguished atmosphere',
+  };
+
+  // Blast from the Past scene overrides - when style IS the scene
+  const blastFromPastSceneOverrides: Record<string, string> = {
+    // TV Show Sets
+    'tv-sitcom-living-room': 'classic 1980s-90s TV sitcom living room set with studio lighting, plush couch, coffee table, family photos on wall, warm sitcom atmosphere',
+    'tv-fresh-prince': 'Fresh Prince of Bel-Air style mansion living room with grand staircase, luxurious colorful 90s decor, pool table, bright vibrant colors, wealthy Bel-Air aesthetic',
+    'tv-family-matters': 'Family Matters style Winslow family living room in Chicago, cozy 90s suburban home with plaid couch, warm wood tones, family photos, welcoming atmosphere',
+    'tv-cosby-show': 'Cosby Show style elegant brownstone living room with 80s decor, earth tones, artwork on walls, sophisticated Brooklyn family home aesthetic',
+    'tv-good-times': 'Good Times style Chicago apartment, 1970s urban apartment with modest furnishings, African art on walls, warm community feeling, vintage 70s decor',
+    'tv-martin': 'Martin style 90s Detroit apartment with funky colorful decor, bachelor pad vibes, bright walls, urban 90s style, fun energetic atmosphere',
+    'tv-old-western': 'dusty Old West frontier town main street with wooden saloon building, swinging doors, hitching posts with horses, desert mountains in background, 1800s Wild West atmosphere',
+    // Era styles
+    'retro-70s': 'groovy 1970s living room with orange shag carpet, wood paneling, lava lamps, beaded curtains, earth tones, disco era aesthetic',
+    'retro-80s': 'vibrant 1980s room with neon colors, geometric patterns, MTV posters, VHS tapes, synth wave aesthetic, Miami Vice vibes',
+    'retro-90s': '1990s room with grunge posters, bean bag chairs, CD player, desaturated colors, casual 90s aesthetic',
+    // Music & Hip Hop
+    'hip-hop-crew': 'urban street scene with graffiti-covered brick wall, boombox on ground, city skyline in background, classic 80s-90s hip hop photo shoot location',
+    'album-cover-90s': 'professional 90s R&B/Hip Hop album cover photo studio with dramatic lighting, smoke effects, sleek urban backdrop',
+    'rap-group-pose': 'iconic urban cityscape with skyscrapers, rooftop setting, golden hour lighting, legendary hip hop photo location',
+    'soul-train': 'Soul Train dance floor and stage with disco ball, colorful lights, 70s-80s dance show set, funky backdrop',
+    'music-video-set': '90s music video set with dramatic lighting, smoke machines, stylish urban warehouse backdrop, MTV era production aesthetic',
+    // Photo styles
+    'polaroid': 'nostalgic scene captured in classic Polaroid instant photo style with white border',
+    'sepia-classic': 'timeless antique setting with warm sepia tones',
+    'faded-film': 'dreamy vintage scene with faded colors and light leaks',
+    'vintage-portrait': 'classic family portrait studio from the 1970s-80s with soft backdrop',
+    'school-photo-day': 'classic school photo day studio with blue or gray gradient backdrop, professional portrait lighting',
+    'mall-photo-booth': 'fun 80s-90s mall photo booth or Glamour Shots studio with colorful props and backdrops',
+    'awkward-portrait': 'classic 1980s-90s department store portrait studio with cheesy laser beam or gradient backdrop in blue purple and pink colors, soft diffused studio lighting, fake nature props or abstract geometric shapes, JCPenney Sears portrait studio aesthetic',
+  };
+
+  // Blast from the Past style-specific outfit overrides
+  const blastFromPastOutfits: Record<string, string> = {
+    'retro-70s': 'groovy 1970s fashion, bell bottoms, platform shoes, earth tones, disco era style',
+    'retro-80s': 'bold 1980s fashion, bright neon colors, shoulder pads, Members Only jacket, leg warmers',
+    'retro-90s': '1990s hip hop fashion, baggy jeans, Jordans, oversized t-shirt, snapback cap',
+    'tv-sitcom-living-room': 'casual 90s family sitcom attire, cozy sweaters, comfortable family-friendly clothing',
+    'tv-fresh-prince': 'Fresh Prince style 90s fashion, colorful bold patterns, high-top sneakers, funky urban style',
+    'tv-family-matters': 'wholesome 90s family attire, colorful sweaters, clean-cut suburban style',
+    'tv-cosby-show': 'stylish 80s professional casual attire, colorful sweaters, refined family fashion',
+    'tv-good-times': '1970s urban fashion, bell bottoms, dashikis, Afrocentric style, colorful 70s patterns',
+    'tv-martin': '90s hip casual style, colorful button-up shirts, fresh urban fashion, Detroit style',
+    'tv-old-western': 'authentic Old West frontier clothing, cowboy hat, leather vest, bandana, boots with spurs, rugged pioneer attire',
+    'hip-hop-crew': 'classic hip hop fashion, Adidas tracksuit, gold chain, Kangol hat, fresh Jordans, B-boy style',
+    'album-cover-90s': 'sleek 90s R&B fashion, leather jacket, stylish urban wear, album cover ready',
+    'rap-group-pose': 'matching hip hop crew outfits, coordinated colors, gold chains, iconic streetwear',
+    'soul-train': 'funky Soul Train fashion, bell bottoms, platform shoes, disco glam, 70s dance show style',
+    'music-video-set': '90s music video fashion, stylish urban wear, leather, bold accessories, MTV ready',
+    'school-photo-day': 'classic school photo attire, neat collared shirt, school-appropriate formal wear',
+    'mall-photo-booth': '80s-90s mall fashion, denim jacket, colorful patterns, Glamour Shots ready style',
+    'awkward-portrait': 'awkward matching family outfits from the 1980s-90s, turtleneck sweaters or denim shirts, matching color-coordinated outfits, puffy sleeves, permed hair styles, classic department store portrait fashion',
   };
 
   const styleDescriptions: Record<string, string> = {
@@ -1050,7 +1120,15 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'vintage': 'nostalgic vintage photograph style with warm sepia tones',
   };
 
-  const sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
+  // Determine the actual scene description
+  let sceneDesc: string;
+  if (scene === 'blast-from-past' && blastFromPastSceneOverrides[style]) {
+    // For blast-from-past, the style defines the scene
+    sceneDesc = blastFromPastSceneOverrides[style];
+  } else {
+    sceneDesc = sceneDescriptions[scene] || sceneDescriptions['studio'];
+  }
+  
   const styleDesc = styleDescriptions[style] || styleDescriptions['studio-photo'];
 
   // Build the subjects section based on what's selected
@@ -1136,7 +1214,14 @@ ${pets.length > 0 ? `- Position pets naturally with the family (sitting, standin
       // Legacy fallback
       'holiday': 'festive holiday outfits (matching sweaters, coordinated holiday colors)',
     };
-    const suggestedOutfit = outfitSuggestions[scene] || 'coordinated matching outfits appropriate for the scene';
+    
+    // Use Blast from the Past specific outfit if applicable
+    let suggestedOutfit: string;
+    if (scene === 'blast-from-past' && blastFromPastOutfits[style]) {
+      suggestedOutfit = blastFromPastOutfits[style];
+    } else {
+      suggestedOutfit = outfitSuggestions[scene] || 'coordinated matching outfits appropriate for the scene';
+    }
     
     prompt += `
 
