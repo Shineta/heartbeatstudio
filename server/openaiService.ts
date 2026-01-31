@@ -1146,34 +1146,44 @@ ${petDetails}`;
   // Check if any braces removal is needed
   const peopleNeedingBracesRemoval = people.filter(p => removeBracesIds.includes(p.id));
   const bracesRemovalCritical = peopleNeedingBracesRemoval.length > 0
-    ? `\n- MANDATORY BRACES REMOVAL: Remove all dental braces/orthodontic hardware from teeth - show natural, healthy teeth WITHOUT any metal brackets or wires`
+    ? `\n- MANDATORY: Remove dental braces from teeth - show natural brace-free teeth`
     : '';
 
-  let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each ${people.length > 0 ? 'person' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pet' : ''} from the reference photos.
+  // Build face identifiers for each person - critical for face preservation
+  const faceIdentifiers = people.map((f, i) => {
+    const parts = f.description.split(',').map(s => s.trim());
+    return `- Face ${i + 1}: ${parts.join(', ')}`;
+  }).join('\n');
 
-CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
-- Reproduce each subject EXACTLY as they appear in the reference photos
-- DO NOT change, modify, or reinterpret anyone's appearance, gender presentation, body type, or facial features
-- Preserve exact hairstyles, hair textures (locs, braids, curls, etc.), skin tones, facial structures
-- Each person must look like THEMSELVES from the photos, not a different person
-- DO NOT substitute or swap any features - copy faithfully from the source images${bracesRemovalCritical}
-${pets.length > 0 ? `- For pets: preserve exact breed appearance, coloring, markings, fur pattern, and size
-- Each pet must look like the SAME animal from the reference photo` : ''}
+  // Use face swap/preservation approach with explicit instructions
+  let prompt = `FACE SWAP AND PORTRAIT COMPOSITION TASK:
 
-${subjectsSection}
+Take the faces from the ${people.length} reference photo(s) provided and place them into a new scene while PRESERVING their exact facial identity.
 
-Scene: ${sceneDesc}
+CRITICAL FACE PRESERVATION INSTRUCTIONS:
+- EXTRACT and TRANSFER the exact face from each reference image
+- PRESERVE: exact facial bone structure, nose shape, lip shape, eye shape and color
+- PRESERVE: exact skin tone, skin texture, complexion, any moles or beauty marks
+- PRESERVE: exact hairstyle, hair texture (locs, braids, curls, coils), hair color
+- PRESERVE: any glasses, earrings, or facial accessories from the reference
+- MAINTAIN: the identity of each person - they must be RECOGNIZABLE as themselves
+- DO NOT generate new faces - COPY the faces from the uploaded images${bracesRemovalCritical}
 
-Art style: ${styleDesc}
+KEY FACE IDENTIFIERS TO PRESERVE EXACTLY:
+${faceIdentifiers}
 
-Additional Requirements:
-- All ${people.length > 0 ? 'people' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pets' : ''} should be posed together naturally as a family group
-- Maintain consistent lighting and color grading across all subjects
-- Make it look like everyone was photographed together at the same moment
-- Professional quality suitable for printing and framing
-- PRESERVE each subject's authentic appearance exactly as shown in their reference photo
-${pets.length > 0 ? `- Position pets naturally with the family (sitting, standing nearby, being held, etc.)
-- IMPORTANT: Add festive accessories to pets to make them look celebratory and part of the occasion - ${petAccessory}` : ''}`;
+${pets.length > 0 ? `PETS TO INCLUDE (preserve exact appearance):
+${petDetails}` : ''}
+
+NEW SCENE SETTING: ${sceneDesc}
+
+COMPOSITION STYLE: ${styleDesc}
+
+SCENE REQUIREMENTS:
+- Position all ${people.length} ${people.length > 0 && pets.length > 0 ? 'people and pets' : people.length > 0 ? 'people' : 'pets'} together naturally as a family group
+- Match lighting of scene to look natural and cohesive
+- High quality, print-ready portrait composition
+${pets.length > 0 ? `- Include pets with festive accessories: ${petAccessory}` : ''}`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
