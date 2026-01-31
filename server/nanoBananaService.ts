@@ -60,7 +60,9 @@ export async function generateImage(params: {
 
   if (USE_PRO_MODEL) {
     // Pro model uses 'resolution' instead of 'image_size' and 'type'
-    requestBody.resolution = '4K'; // Options: 1K, 2K, 4K - using 4K for best quality
+    // Using 2K for better balance between face preservation and background/scene quality
+    // 4K focuses too heavily on faces, degrading backgrounds and props
+    requestBody.resolution = '2K'; // Options: 1K, 2K, 4K
     // Pro model also supports image-to-image with reference images
     if (imageUrls && imageUrls.length > 0) {
       requestBody.imageUrls = imageUrls;
