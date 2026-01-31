@@ -612,13 +612,13 @@ export async function generateFestiveTransform(params: {
     ? `\nIMPORTANT MODIFICATIONS: ${removalInstructions.join('. ')}.`
     : '';
   
-  // TV Show character descriptions - only used when includeCharacters is true
+  // TV Show character descriptions - generic archetypes that fit each show's vibe
   const tvShowCharacters: Record<string, string> = {
-    'tv-fresh-prince': 'Include the Banks family characters from Fresh Prince of Bel-Air: Carlton Banks (short, preppy, energetic), Uncle Phil (large, distinguished man in suit), Aunt Vivian (elegant Black woman), Hillary (fashionable young woman), Ashley (teenage girl), and Geoffrey the butler (British, formal attire). They should be interacting naturally with the person in the scene.',
-    'tv-family-matters': 'Include the Winslow family characters from Family Matters: Carl Winslow (large friendly police officer), Harriette Winslow (warm mother figure), Eddie (teenage son), Laura (teenage daughter), and most importantly Steve Urkel (nerdy neighbor with suspenders, large glasses, and high-pitched personality). They should be interacting naturally with the person in the scene.',
-    'tv-cosby-show': 'Include the Huxtable family characters from The Cosby Show: Cliff Huxtable (father in colorful sweater), Claire Huxtable (elegant mother, lawyer), Denise, Theo, Vanessa, Rudy, and Sondra as family members. They should be interacting naturally with the person in the scene.',
-    'tv-good-times': 'Include the Evans family characters from Good Times: Florida Evans (strong mother figure), James Evans Sr (hardworking father), J.J. Evans (tall, artistic son known for "Dy-no-mite!"), Thelma (smart daughter), Michael (youngest, politically aware). They should be interacting naturally with the person in the scene.',
-    'tv-martin': 'Include characters from Martin: Martin Payne (energetic host), Gina Waters (beautiful girlfriend), Tommy (laid-back friend), Cole (simple friend), Pam (Gina\'s sassy friend). They should be interacting naturally with the person in the scene.',
+    'tv-fresh-prince': 'Include a wealthy 90s Black family: a distinguished large father figure in a suit, an elegant mother, a short preppy young man doing a silly dance, a fashionable older daughter, a younger teenage girl, and a formal British butler. They are welcoming and interacting naturally with the person in the scene, warm family gathering vibe.',
+    'tv-family-matters': 'Include a warm 90s Black suburban family: a large friendly father in a police uniform, a loving mother, teenage son and daughter, and a nerdy neighbor character with suspenders, large glasses, high-waisted pants and a goofy smile. They are all interacting naturally with the person, cozy family sitcom vibe.',
+    'tv-cosby-show': 'Include an upscale 80s Black family: a father wearing a colorful patterned sweater, an elegant professional mother, and several children of various ages. Warm, sophisticated brownstone family atmosphere. They are interacting naturally with the person in the scene.',
+    'tv-good-times': 'Include a 1970s Black working-class family: a strong mother figure, a hardworking father, a tall artistic young man with a big smile, a smart teenage daughter, and a younger politically-aware son. Modest apartment setting with warm community feeling. They are interacting naturally with the person.',
+    'tv-martin': 'Include a group of 90s friends: an energetic short man who is the center of attention, his beautiful girlfriend, a tall laid-back friend, a goofy friend, and a sassy woman friend. Urban Detroit apartment vibe, fun and lively atmosphere. They are interacting naturally with the person.',
     'tv-sitcom-living-room': 'Include a friendly diverse 90s sitcom family - parents, kids, and maybe a quirky neighbor - all in casual 90s attire, interacting naturally with the person in the scene.',
   };
   
