@@ -1149,41 +1149,40 @@ ${petDetails}`;
     ? `\n- MANDATORY: Remove dental braces from teeth - show natural brace-free teeth`
     : '';
 
-  // Build face identifiers for each person - critical for face preservation
-  const faceIdentifiers = people.map((f, i) => {
-    const parts = f.description.split(',').map(s => s.trim());
-    return `- Face ${i + 1}: ${parts.join(', ')}`;
+  // Build explicit image references for each person - CRITICAL for face swap
+  const imageReferences = people.map((f, i) => {
+    const ordinal = i === 0 ? 'first' : i === 1 ? 'second' : i === 2 ? 'third' : i === 3 ? 'fourth' : `${i + 1}th`;
+    return `- Person ${i + 1}: Use the face from the ${ordinal} uploaded image exactly as it appears`;
   }).join('\n');
 
-  // Use face swap/preservation approach with explicit instructions
-  let prompt = `FACE SWAP AND PORTRAIT COMPOSITION TASK:
+  // Use explicit face swap approach referencing the actual uploaded images
+  let prompt = `FACE SWAP TASK:
 
-Take the faces from the ${people.length} reference photo(s) provided and place them into a new scene while PRESERVING their exact facial identity.
+Use the ${people.length} uploaded reference images to create a family portrait. Take the EXACT FACE from each uploaded image and place it into the new scene.
 
-CRITICAL FACE PRESERVATION INSTRUCTIONS:
-- EXTRACT and TRANSFER the exact face from each reference image
-- PRESERVE: exact facial bone structure, nose shape, lip shape, eye shape and color
-- PRESERVE: exact skin tone, skin texture, complexion, any moles or beauty marks
-- PRESERVE: exact hairstyle, hair texture (locs, braids, curls, coils), hair color
-- PRESERVE: any glasses, earrings, or facial accessories from the reference
-- MAINTAIN: the identity of each person - they must be RECOGNIZABLE as themselves
-- DO NOT generate new faces - COPY the faces from the uploaded images${bracesRemovalCritical}
+IMAGE MAPPING - CRITICAL:
+${imageReferences}
 
-KEY FACE IDENTIFIERS TO PRESERVE EXACTLY:
-${faceIdentifiers}
+FACE SWAP INSTRUCTIONS:
+- Extract the face from the first uploaded image and use it for Person 1 in the scene
+${people.length >= 2 ? '- Extract the face from the second uploaded image and use it for Person 2 in the scene' : ''}
+${people.length >= 3 ? '- Extract the face from the third uploaded image and use it for Person 3 in the scene' : ''}
+- COPY each face exactly - same facial structure, skin tone, expression, glasses, hair
+- The faces must be IDENTICAL to the uploaded photos
+- DO NOT generate new faces - USE the faces from the uploaded images${bracesRemovalCritical}
 
-${pets.length > 0 ? `PETS TO INCLUDE (preserve exact appearance):
+${pets.length > 0 ? `PETS (preserve exact appearance):
 ${petDetails}` : ''}
 
-NEW SCENE SETTING: ${sceneDesc}
+SCENE: ${sceneDesc}
 
-COMPOSITION STYLE: ${styleDesc}
+STYLE: ${styleDesc}
 
-SCENE REQUIREMENTS:
-- Position all ${people.length} ${people.length > 0 && pets.length > 0 ? 'people and pets' : people.length > 0 ? 'people' : 'pets'} together naturally as a family group
-- Match lighting of scene to look natural and cohesive
-- High quality, print-ready portrait composition
-${pets.length > 0 ? `- Include pets with festive accessories: ${petAccessory}` : ''}`;
+COMPOSITION:
+- Position everyone together naturally as a family group
+- Match scene lighting to look cohesive
+- High quality portrait
+${pets.length > 0 ? `- Add festive pet accessories: ${petAccessory}` : ''}`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
