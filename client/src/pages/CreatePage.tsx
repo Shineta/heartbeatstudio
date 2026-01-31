@@ -160,8 +160,8 @@ export default function CreatePage() {
   // Festive Transform state (single person photo transformation)
   const [festivePhoto, setFestivePhoto] = useState<File | null>(null);
   const [festivePhotoUrl, setFestivePhotoUrl] = useState<string | null>(null);
-  const [festiveScene, setFestiveScene] = useState('christmas');
-  const [festiveStyle, setFestiveStyle] = useState('festive-photo');
+  const [festiveScene, setFestiveScene] = useState('holidays');
+  const [festiveStyle, setFestiveStyle] = useState('christmas'); // Default to Christmas for holidays
   const [isUploadingFestivePhoto, setIsUploadingFestivePhoto] = useState(false);
   const [isGeneratingFestive, setIsGeneratingFestive] = useState(false);
   const [generatedFestiveUrl, setGeneratedFestiveUrl] = useState<string | null>(null);
@@ -722,10 +722,15 @@ export default function CreatePage() {
     
     setIsGeneratingFestive(true);
     try {
+      // For category scenes (holidays, life-events, seasons), the "style" is actually the scene
+      // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
+      const actualScene = festiveScene === 'blast-from-past' ? 'blast-from-past' : festiveStyle;
+      const actualStyle = festiveScene === 'blast-from-past' ? festiveStyle : 'festive-photo';
+      
       const res = await apiRequest("POST", "/api/generate/festive-transform", {
         imageUrl: festivePhotoUrl,
-        scene: festiveScene,
-        style: festiveStyle,
+        scene: actualScene,
+        style: actualStyle,
         instructions: festiveInstructions.trim() || undefined,
         changeOutfit: festiveChangeOutfit,
         removeGlasses: festiveRemoveGlasses,
@@ -746,40 +751,56 @@ export default function CreatePage() {
   };
   
   // Festive scene options - expanded to match family portrait scenes
+  // Simplified Scene categories
   const festiveSceneOptions = [
-    // Major Holidays
+    { value: 'holidays', label: 'Holidays' },
+    { value: 'life-events', label: 'Life Events' },
+    { value: 'seasons', label: 'Seasons' },
+    { value: 'blast-from-past', label: 'Blast from the Past' },
+  ];
+  
+  // Holiday options - shown when "Holidays" scene is selected
+  const holidayStyleOptions = [
+    // Winter Holidays
     { value: 'christmas', label: 'Christmas' },
     { value: 'hanukkah', label: 'Hanukkah' },
     { value: 'kwanzaa', label: 'Kwanzaa' },
     { value: 'new-years', label: 'New Year\'s' },
-    { value: 'thanksgiving', label: 'Thanksgiving' },
+    // Spring Holidays
     { value: 'easter', label: 'Easter' },
     { value: 'passover', label: 'Passover' },
-    { value: 'halloween', label: 'Halloween' },
-    { value: 'valentines', label: 'Valentine\'s Day' },
-    { value: 'fourth-of-july', label: 'Fourth of July' },
     { value: 'st-patricks', label: 'St. Patrick\'s Day' },
+    { value: 'mothers-day', label: 'Mother\'s Day' },
     { value: 'cinco-de-mayo', label: 'Cinco de Mayo' },
+    // Summer Holidays
+    { value: 'fathers-day', label: 'Father\'s Day' },
+    { value: 'fourth-of-july', label: 'Fourth of July' },
+    // Fall Holidays
+    { value: 'halloween', label: 'Halloween' },
+    { value: 'thanksgiving', label: 'Thanksgiving' },
     { value: 'diwali', label: 'Diwali' },
+    // Cultural/Religious
     { value: 'eid', label: 'Eid' },
     { value: 'lunar-new-year', label: 'Lunar New Year' },
-    // Life Events
+    { value: 'valentines', label: 'Valentine\'s Day' },
+  ];
+  
+  // Life Events options - shown when "Life Events" scene is selected
+  const lifeEventsStyleOptions = [
     { value: 'birthday', label: 'Birthday Party' },
     { value: 'graduation', label: 'Graduation' },
     { value: 'wedding', label: 'Wedding' },
     { value: 'baby-shower', label: 'Baby Shower' },
     { value: 'anniversary', label: 'Anniversary' },
     { value: 'retirement', label: 'Retirement' },
-    // Special Days
-    { value: 'mothers-day', label: 'Mother\'s Day' },
-    { value: 'fathers-day', label: 'Father\'s Day' },
-    // Classic Scenes
+  ];
+  
+  // Seasons options - shown when "Seasons" scene is selected
+  const seasonsStyleOptions = [
     { value: 'winter-wonderland', label: 'Winter Wonderland' },
     { value: 'spring-garden', label: 'Spring Garden' },
     { value: 'summer-beach', label: 'Summer Beach' },
     { value: 'autumn-harvest', label: 'Autumn Harvest' },
-    // Nostalgic
-    { value: 'blast-from-past', label: 'Blast from the Past' },
   ];
   
   const festiveStyleOptions = [
@@ -2225,11 +2246,15 @@ export default function CreatePage() {
                                           value={festiveScene} 
                                           onValueChange={(value) => {
                                             setFestiveScene(value);
-                                            // Reset style when switching to/from Blast from the Past
-                                            if (value === 'blast-from-past') {
+                                            // Reset style to first option of the new category
+                                            if (value === 'holidays') {
+                                              setFestiveStyle('christmas');
+                                            } else if (value === 'life-events') {
+                                              setFestiveStyle('birthday');
+                                            } else if (value === 'seasons') {
+                                              setFestiveStyle('winter-wonderland');
+                                            } else if (value === 'blast-from-past') {
                                               setFestiveStyle('retro-70s');
-                                            } else if (festiveScene === 'blast-from-past') {
-                                              setFestiveStyle('festive-photo');
                                             }
                                           }}
                                         >
@@ -2244,33 +2269,34 @@ export default function CreatePage() {
                                         </Select>
                                       </div>
                                       <div>
-                                        <Label className="text-xs mb-1 block">Style</Label>
-                                        {festiveScene === 'blast-from-past' ? (
-                                          <Select 
-                                            value={festiveStyle} 
-                                            onValueChange={setFestiveStyle}
-                                          >
-                                            <SelectTrigger data-testid="select-festive-style-blast">
-                                              <SelectValue placeholder="Select era..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {blastFromPastStyleOptions.map(opt => (
-                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        ) : (
-                                          <Select value={festiveStyle} onValueChange={setFestiveStyle}>
-                                            <SelectTrigger data-testid="select-festive-style">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {festiveStyleOptions.map(opt => (
-                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        )}
+                                        <Label className="text-xs mb-1 block">
+                                          {festiveScene === 'holidays' ? 'Holiday' : 
+                                           festiveScene === 'life-events' ? 'Event' :
+                                           festiveScene === 'seasons' ? 'Season' :
+                                           festiveScene === 'blast-from-past' ? 'Style' : 'Style'}
+                                        </Label>
+                                        <Select 
+                                          value={festiveStyle} 
+                                          onValueChange={setFestiveStyle}
+                                        >
+                                          <SelectTrigger data-testid="select-festive-style">
+                                            <SelectValue placeholder="Select..." />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {festiveScene === 'holidays' && holidayStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                            {festiveScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                            {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                            {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
                                       </div>
                                     </div>
                                     
