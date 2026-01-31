@@ -172,7 +172,7 @@ export default function CreatePage() {
   const [festiveIncludeCharacters, setFestiveIncludeCharacters] = useState(false);
   
   // TV show styles that can include characters
-  const tvShowStyles = ['tv-fresh-prince', 'tv-family-matters', 'tv-cosby-show', 'tv-good-times', 'tv-martin', 'tv-sitcom-living-room'];
+  const tvShowStyles = ['tv-fresh-prince', 'tv-family-matters', 'tv-cosby-show', 'tv-good-times', 'tv-martin', 'tv-sitcom-living-room', 'tv-old-western'];
   const isTvShowStyle = tvShowStyles.includes(festiveStyle);
   
   // Family Portrait Composer state (for card covers)
@@ -842,6 +842,7 @@ export default function CreatePage() {
     { value: 'tv-cosby-show', label: 'Cosby Show Style' },
     { value: 'tv-good-times', label: 'Good Times Style' },
     { value: 'tv-martin', label: 'Martin Style' },
+    { value: 'tv-old-western', label: 'Old Western' },
     // Music & Hip Hop
     { value: 'hip-hop-crew', label: 'Hip Hop Crew Photo' },
     { value: 'album-cover-90s', label: '90s Album Cover' },

@@ -494,6 +494,7 @@ export async function generateFestiveTransform(params: {
     'tv-cosby-show': 'Cosby Show style elegant brownstone living room, refined 80s decor, warm earth tones, sophisticated family home aesthetic',
     'tv-good-times': 'Good Times style Chicago apartment, 70s urban decor, warm community feeling, classic 70s furniture and colors',
     'tv-martin': 'Martin style 90s Detroit apartment, funky 90s decor, urban bachelor pad vibes, colorful and fun atmosphere',
+    'tv-old-western': 'classic Old West frontier town scene, wooden saloon, dusty main street, horses tied to hitching posts, desert landscape, 1800s Wild West aesthetic, sepia-toned vintage western photography',
     // Music & Hip Hop
     'hip-hop-crew': 'classic hip hop crew photo style, urban backdrop, graffiti wall, boombox, gold chains, Adidas tracksuits, confident poses, 80s-90s hip hop aesthetic',
     'album-cover-90s': '90s R&B/Hip Hop album cover style, dramatic studio lighting, cool confident poses, sleek urban aesthetic, record label quality',
@@ -519,6 +520,7 @@ export async function generateFestiveTransform(params: {
     'tv-cosby-show': 'the Cosby Show brownstone living room with elegant 80s decor, earth tones, artwork on walls, sophisticated Brooklyn family home aesthetic',
     'tv-good-times': 'the Good Times apartment in the Chicago projects, 1970s urban apartment with modest furnishings, African art on walls, warm community feeling, vintage 70s decor',
     'tv-martin': 'Martin Lawrence show 90s Detroit apartment with funky colorful decor, bachelor pad vibes, bright walls, urban 90s style, fun energetic atmosphere',
+    'tv-old-western': 'a dusty Old West frontier town main street with wooden saloon building, swinging doors, hitching posts with horses, water trough, sheriff office, desert mountains in background, 1800s Wild West atmosphere',
     // Era styles
     'retro-70s': 'a groovy 1970s living room with orange shag carpet, wood paneling, lava lamps, beaded curtains, earth tones, disco era aesthetic',
     'retro-80s': 'a vibrant 1980s room with neon colors, geometric patterns, MTV posters, VHS tapes, synth wave aesthetic, Miami Vice vibes',
@@ -605,6 +607,7 @@ export async function generateFestiveTransform(params: {
     'tv-cosby-show': 'wearing stylish 80s professional casual attire, colorful sweaters, refined family fashion',
     'tv-good-times': 'wearing 1970s urban fashion, bell bottoms, dashikis, Afrocentric style, colorful 70s patterns',
     'tv-martin': 'wearing 90s hip casual style, colorful button-up shirts, fresh urban fashion, Detroit style',
+    'tv-old-western': 'wearing authentic Old West frontier clothing, cowboy hat, leather vest, bandana, boots with spurs, gun belt, rugged pioneer attire',
     'hip-hop-crew': 'wearing classic hip hop fashion, Adidas tracksuit, gold chain, Kangol hat, fresh Jordans, B-boy style',
     'album-cover-90s': 'wearing sleek 90s R&B fashion, leather jacket, stylish urban wear, album cover ready',
     'rap-group-pose': 'wearing matching hip hop crew outfits, coordinated colors, gold chains, iconic streetwear',
