@@ -861,7 +861,7 @@ export default function CreatePage() {
     { value: 'vintage-portrait', label: 'Vintage Portrait' },
     { value: 'school-photo-day', label: 'School Photo Day' },
     { value: 'mall-photo-booth', label: 'Mall Photo Booth' },
-    { value: 'awkward-portrait', label: 'Awkward Family Portrait' },
+    { value: 'awkward-portrait', label: 'awkward family portrait' },
   ];
 
   // "Same People, New Scene" - Generate a variant card with saved family set
