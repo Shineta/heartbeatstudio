@@ -1149,40 +1149,31 @@ ${petDetails}`;
     ? `\n- MANDATORY: Remove dental braces from teeth - show natural brace-free teeth`
     : '';
 
-  // Build explicit image references for each person - CRITICAL for face swap
-  const imageReferences = people.map((f, i) => {
-    const ordinal = i === 0 ? 'first' : i === 1 ? 'second' : i === 2 ? 'third' : i === 3 ? 'fourth' : `${i + 1}th`;
-    return `- Person ${i + 1}: Use the face from the ${ordinal} uploaded image exactly as it appears`;
-  }).join('\n');
+  let prompt = `Create a family portrait that FAITHFULLY reproduces the EXACT appearance of each ${people.length > 0 ? 'person' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pet' : ''} from the reference photos.
 
-  // Use explicit face swap approach referencing the actual uploaded images
-  let prompt = `FACE SWAP TASK:
+CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE:
+- Reproduce each subject EXACTLY as they appear in the reference photos
+- DO NOT change, modify, or reinterpret anyone's appearance, gender presentation, body type, or facial features
+- Preserve exact hairstyles, hair textures (locs, braids, curls, etc.), skin tones, facial structures
+- Each person must look like THEMSELVES from the photos, not a different person
+- DO NOT substitute or swap any features - copy faithfully from the source images${bracesRemovalCritical}
+${pets.length > 0 ? `- For pets: preserve exact breed appearance, coloring, markings, fur pattern, and size
+- Each pet must look like the SAME animal from the reference photo` : ''}
 
-Use the ${people.length} uploaded reference images to create a family portrait. Take the EXACT FACE from each uploaded image and place it into the new scene.
+${subjectsSection}
 
-IMAGE MAPPING - CRITICAL:
-${imageReferences}
+Scene: ${sceneDesc}
 
-FACE SWAP INSTRUCTIONS:
-- Extract the face from the first uploaded image and use it for Person 1 in the scene
-${people.length >= 2 ? '- Extract the face from the second uploaded image and use it for Person 2 in the scene' : ''}
-${people.length >= 3 ? '- Extract the face from the third uploaded image and use it for Person 3 in the scene' : ''}
-- COPY each face exactly - same facial structure, skin tone, expression, glasses, hair
-- The faces must be IDENTICAL to the uploaded photos
-- DO NOT generate new faces - USE the faces from the uploaded images${bracesRemovalCritical}
+Art style: ${styleDesc}
 
-${pets.length > 0 ? `PETS (preserve exact appearance):
-${petDetails}` : ''}
-
-SCENE: ${sceneDesc}
-
-STYLE: ${styleDesc}
-
-COMPOSITION:
-- Position everyone together naturally as a family group
-- Match scene lighting to look cohesive
-- High quality portrait
-${pets.length > 0 ? `- Add festive pet accessories: ${petAccessory}` : ''}`;
+Additional Requirements:
+- All ${people.length > 0 ? 'people' : ''}${people.length > 0 && pets.length > 0 ? ' and ' : ''}${pets.length > 0 ? 'pets' : ''} should be posed together naturally as a family group
+- Maintain consistent lighting and color grading across all subjects
+- Make it look like everyone was photographed together at the same moment
+- Professional quality suitable for printing and framing
+- PRESERVE each subject's authentic appearance exactly as shown in their reference photo
+${pets.length > 0 ? `- Position pets naturally with the family (sitting, standing nearby, being held, etc.)
+- IMPORTANT: Add festive accessories to pets to make them look celebratory and part of the occasion - ${petAccessory}` : ''}`;
 
   if (keepOutfits) {
     prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
