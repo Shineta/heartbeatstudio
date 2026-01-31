@@ -1072,7 +1072,7 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
   const blastFromPastSceneOverrides: Record<string, string> = {
     // TV Show Sets
     'tv-sitcom-living-room': 'classic 1980s-90s TV sitcom living room set with studio lighting, plush couch, coffee table, family photos on wall, warm sitcom atmosphere',
-    'tv-fresh-prince': 'Fresh Prince of Bel-Air style mansion living room with grand staircase, luxurious colorful 90s decor, pool table, bright vibrant colors, wealthy Bel-Air aesthetic',
+    'tv-fresh-prince': 'HYPER-DETAILED Fresh Prince of Bel-Air mansion interior: massive grand curved staircase with ornate colorful geometric patterned carpet runner, two-story open foyer with cream marble columns, vibrant pop art paintings on walls in gold frames, lush green tropical plants in large pots, professional pool table with green felt, luxurious teal velvet couch, ornate Persian area rug with intricate patterns, warm golden lighting, wealthy Bel-Air mansion aesthetic, 90s sitcom TV set quality production design',
     'tv-family-matters': 'Family Matters style Winslow family living room in Chicago, cozy 90s suburban home with plaid couch, warm wood tones, family photos, welcoming atmosphere',
     'tv-cosby-show': 'Cosby Show style elegant brownstone living room with 80s decor, earth tones, artwork on walls, sophisticated Brooklyn family home aesthetic',
     'tv-good-times': 'Good Times style Chicago apartment, 1970s urban apartment with modest furnishings, African art on walls, warm community feeling, vintage 70s decor',
@@ -1173,6 +1173,12 @@ ${pets.length > 0 ? `- For pets: preserve exact breed appearance, coloring, mark
 - Each pet must look like the SAME animal from the reference photo` : ''}
 
 ${subjectsSection}
+
+BACKGROUND QUALITY - EXTREMELY IMPORTANT:
+- Create a HYPER-DETAILED, PRODUCTION-QUALITY background like a professional TV or movie set
+- Include rich textures, realistic lighting, detailed props and furniture
+- The background should look like a real photograph of an actual location, not a simplified illustration
+- Every element in the scene should have depth, texture, and realistic detail
 
 Scene: ${sceneDesc}
 
