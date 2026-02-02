@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeatureCard from "@/components/FeatureCard";
 import HowItWorks from "@/components/HowItWorks";
+import CustomerReviews from "@/components/CustomerReviews";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -71,6 +72,10 @@ export default function LandingPage() {
       
       <div id="how-it-works">
         <HowItWorks />
+      </div>
+
+      <div id="reviews">
+        <CustomerReviews />
       </div>
       
       <div id="pricing">
