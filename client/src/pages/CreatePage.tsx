@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,6 +102,10 @@ export default function CreatePage() {
   const defaultTab = searchParams.get('type') || 'card';
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [categoryTab, setCategoryTab] = useState("loved-ones");
+  
+  // Business/Education mode state
+  const [businessQuickStart, setBusinessQuickStart] = useState<string | null>(null);
+  const [educationQuickStart, setEducationQuickStart] = useState<string | null>(null);
   
   // Check if user has active subscription (for subscription-only features like animation)
   const hasActiveSubscription = user?.subscriptionStatus === 'active';
@@ -5223,85 +5227,437 @@ export default function CreatePage() {
           </TabsContent>
 
           <TabsContent value="business">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5" />
-                  Business Celebrations
-                </CardTitle>
-                <CardDescription>
-                  Create professional celebration content for your team and clients
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Employee Recognition</h4>
-                    <p className="text-sm text-muted-foreground">Celebrate work anniversaries, promotions, and achievements with personalized songs and cards.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Client Appreciation</h4>
-                    <p className="text-sm text-muted-foreground">Send thoughtful thank-you cards and celebratory content to valued clients and partners.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Team Events</h4>
-                    <p className="text-sm text-muted-foreground">Create custom content for company milestones, holiday parties, and team celebrations.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Onboarding Welcome</h4>
-                    <p className="text-sm text-muted-foreground">Welcome new team members with personalized songs that introduce them to your company culture.</p>
-                  </div>
+            {!businessQuickStart ? (
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                    Business Celebrations
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Create professional, on-brand celebration content for teams, clients, and partners.
+                  </p>
                 </div>
-                <div className="text-center py-6 bg-muted/30 rounded-lg">
-                  <p className="text-muted-foreground mb-4">Business features coming soon!</p>
-                  <Button variant="outline" disabled>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Coming Soon
-                  </Button>
+
+                <div className="flex items-center gap-2 justify-center mb-6 text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  <span>Workplace-appropriate language</span>
+                  <span className="mx-2">|</span>
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <span>AI content moderation</span>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setBusinessQuickStart('employee-recognition')}
+                    data-testid="business-card-employee-recognition"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Award className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Employee Recognition</h4>
+                      <p className="text-sm text-muted-foreground">Celebrate work anniversaries, promotions, and achievements.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setBusinessQuickStart('client-appreciation')}
+                    data-testid="business-card-client-appreciation"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Handshake className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Client Appreciation</h4>
+                      <p className="text-sm text-muted-foreground">Send thoughtful thank-you content to valued clients and partners.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setBusinessQuickStart('team-milestones')}
+                    data-testid="business-card-team-milestones"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Team Milestones</h4>
+                      <p className="text-sm text-muted-foreground">Celebrate company milestones, launches, and team achievements.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setBusinessQuickStart('onboarding-welcome')}
+                    data-testid="business-card-onboarding"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <UserPlus className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Onboarding Welcome</h4>
+                      <p className="text-sm text-muted-foreground">Welcome new team members with personalized content.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setBusinessQuickStart('company-events')}
+                    data-testid="business-card-company-events"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Company Events</h4>
+                      <p className="text-sm text-muted-foreground">Create content for holiday parties, retreats, and celebrations.</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setBusinessQuickStart(null)}
+                  className="mb-4"
+                  data-testid="button-back-business"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Business Options
+                </Button>
+
+                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  <span>Workplace-appropriate content enabled</span>
+                </div>
+
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 mb-8">
+                    <TabsTrigger value="card" data-testid="tab-business-card">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Card
+                    </TabsTrigger>
+                    <TabsTrigger value="animation" data-testid="tab-business-animation">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Animation
+                    </TabsTrigger>
+                    <TabsTrigger value="song" data-testid="tab-business-song">
+                      <Music className="w-4 h-4 mr-2" />
+                      Song
+                    </TabsTrigger>
+                    <TabsTrigger value="mixtape" data-testid="tab-business-mixtape">
+                      <ListMusic className="w-4 h-4 mr-2" />
+                      Team Tribute
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="card">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mail className="w-5 h-5" />
+                          Business Card Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Create professional greeting cards with polished messaging
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Business Card Creator</p>
+                          <p className="text-sm">Professional cards with company branding coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="animation">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5" />
+                          Business Animation Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Kinetic typography and motion graphics for professional celebrations
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Business Animation Creator</p>
+                          <p className="text-sm">Professional animations with logo reveals coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="song">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="w-5 h-5" />
+                          Business Song Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Professional, light-background music for internal sharing and events
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Business Song Creator</p>
+                          <p className="text-sm">Corporate-friendly songs with professional genres coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="mixtape">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <ListMusic className="w-5 h-5" />
+                          Team Tribute Mixtape
+                        </CardTitle>
+                        <CardDescription>
+                          Perfect for company events, retreats, and internal celebrations
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <ListMusic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Team Tribute Mixtape</p>
+                          <p className="text-sm">Multi-song collections for teams coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="education">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Education Celebrations
-                </CardTitle>
-                <CardDescription>
-                  Celebrate academic achievements and inspire students with AI-powered content
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Graduation Songs</h4>
-                    <p className="text-sm text-muted-foreground">Create memorable graduation songs for students completing their academic journey.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Classroom Cheers</h4>
-                    <p className="text-sm text-muted-foreground">Motivate students with custom songs celebrating their class, achievements, or school spirit.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Teacher Appreciation</h4>
-                    <p className="text-sm text-muted-foreground">Honor educators with personalized thank-you songs and cards from students and parents.</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-2">Academic Awards</h4>
-                    <p className="text-sm text-muted-foreground">Celebrate honor roll, spelling bee winners, science fair champions, and more.</p>
-                  </div>
+            {!educationQuickStart ? (
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+                    Education Celebrations
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Celebrate learning milestones and inspire students with AI-powered content.
+                  </p>
                 </div>
-                <div className="text-center py-6 bg-muted/30 rounded-lg">
-                  <p className="text-muted-foreground mb-4">Education features coming soon!</p>
-                  <Button variant="outline" disabled>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Coming Soon
-                  </Button>
+
+                <div className="flex items-center gap-2 justify-center mb-6 text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  <span>School-safe content</span>
+                  <span className="mx-2">|</span>
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <span>Age-appropriate language</span>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('graduation')}
+                    data-testid="education-card-graduation"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <GraduationCap className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Graduation</h4>
+                      <p className="text-sm text-muted-foreground">Celebrate students completing their academic journey.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('classroom-cheers')}
+                    data-testid="education-card-classroom-cheers"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Megaphone className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Classroom Cheers</h4>
+                      <p className="text-sm text-muted-foreground">Motivate students with custom class celebration songs.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('teacher-appreciation')}
+                    data-testid="education-card-teacher-appreciation"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Teacher Appreciation</h4>
+                      <p className="text-sm text-muted-foreground">Honor educators with personalized thank-you content.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('academic-awards')}
+                    data-testid="education-card-academic-awards"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Academic Awards</h4>
+                      <p className="text-sm text-muted-foreground">Celebrate honor roll, spelling bees, science fairs, and more.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('school-spirit')}
+                    data-testid="education-card-school-spirit"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <School className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">School Spirit</h4>
+                      <p className="text-sm text-muted-foreground">Create school anthems and spirit songs for your community.</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setEducationQuickStart(null)}
+                  className="mb-4"
+                  data-testid="button-back-education"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Education Options
+                </Button>
+
+                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  <span>School-safe, age-appropriate content enabled</span>
+                </div>
+
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 mb-8">
+                    <TabsTrigger value="card" data-testid="tab-education-card">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Card
+                    </TabsTrigger>
+                    <TabsTrigger value="animation" data-testid="tab-education-animation">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Animation
+                    </TabsTrigger>
+                    <TabsTrigger value="song" data-testid="tab-education-song">
+                      <Music className="w-4 h-4 mr-2" />
+                      Song
+                    </TabsTrigger>
+                    <TabsTrigger value="mixtape" data-testid="tab-education-mixtape">
+                      <ListMusic className="w-4 h-4 mr-2" />
+                      Class Mixtape
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="card">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mail className="w-5 h-5" />
+                          Education Card Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Create encouraging cards for students, teachers, and school events
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <School className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Education Card Creator</p>
+                          <p className="text-sm">Cards with school themes and mascots coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="animation">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5" />
+                          Education Animation Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Confetti celebrations and chalkboard-themed animations
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Education Animation Creator</p>
+                          <p className="text-sm">Fun, kid-friendly animations coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="song">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="w-5 h-5" />
+                          Education Song Creator
+                        </CardTitle>
+                        <CardDescription>
+                          Fun, uplifting songs for classrooms, assemblies, and celebrations
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Education Song Creator</p>
+                          <p className="text-sm">Kid-friendly pop and school anthems coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="mixtape">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <ListMusic className="w-5 h-5" />
+                          Class Celebration Mixtape
+                        </CardTitle>
+                        <CardDescription>
+                          Ideal for assemblies, slideshows, and family sharing
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <ListMusic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="mb-2">Class Celebration Mixtape</p>
+                          <p className="text-sm">Multi-song collections for classes coming soon!</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
