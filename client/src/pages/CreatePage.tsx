@@ -5363,15 +5363,151 @@ export default function CreatePage() {
                           Business Card Creator
                         </CardTitle>
                         <CardDescription>
-                          Create professional greeting cards with polished messaging
+                          Create professional greeting cards with polished messaging for teams and clients
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p className="mb-2">Business Card Creator</p>
-                          <p className="text-sm">Professional cards with company branding coming soon!</p>
-                        </div>
+                        <Form {...cardForm}>
+                          <form onSubmit={cardForm.handleSubmit(onCardSubmit)} className="space-y-6">
+                            <FormField
+                              control={cardForm.control}
+                              name="recipientName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Recipient Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="John Smith" {...field} data-testid="input-business-recipient" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="relationship"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Recipient Role</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-business-role">
+                                        <SelectValue placeholder="Select role" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Employee">Employee</SelectItem>
+                                        <SelectItem value="Team Member">Team Member</SelectItem>
+                                        <SelectItem value="Manager">Manager</SelectItem>
+                                        <SelectItem value="Executive">Executive</SelectItem>
+                                        <SelectItem value="Client">Client</SelectItem>
+                                        <SelectItem value="Partner">Partner</SelectItem>
+                                        <SelectItem value="Vendor">Vendor</SelectItem>
+                                        <SelectItem value="The Team">The Team</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="occasion"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Occasion</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-business-occasion">
+                                        <SelectValue placeholder="Select occasion" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="promotion">Promotion</SelectItem>
+                                        <SelectItem value="work-anniversary">Work Anniversary</SelectItem>
+                                        <SelectItem value="retirement">Retirement</SelectItem>
+                                        <SelectItem value="welcome">Welcome / Onboarding</SelectItem>
+                                        <SelectItem value="thank-you">Thank You</SelectItem>
+                                        <SelectItem value="project-launch">Project Launch</SelectItem>
+                                        <SelectItem value="company-milestone">Company Milestone</SelectItem>
+                                        <SelectItem value="holiday">Holiday Greeting</SelectItem>
+                                        <SelectItem value="birthday">Birthday</SelectItem>
+                                        <SelectItem value="congratulations">Congratulations</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="tone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tone</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-business-tone">
+                                        <SelectValue placeholder="Select tone" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="professional">Professional</SelectItem>
+                                        <SelectItem value="warm">Warm</SelectItem>
+                                        <SelectItem value="celebratory">Celebratory</SelectItem>
+                                        <SelectItem value="inspirational">Inspirational</SelectItem>
+                                        <SelectItem value="grateful">Grateful</SelectItem>
+                                        <SelectItem value="friendly">Friendly</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="style"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Card Style</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-business-style">
+                                        <SelectValue placeholder="Select style" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="minimalist">Minimalist</SelectItem>
+                                        <SelectItem value="modern">Modern</SelectItem>
+                                        <SelectItem value="elegant">Elegant</SelectItem>
+                                        <SelectItem value="corporate">Corporate</SelectItem>
+                                        <SelectItem value="clean">Clean & Simple</SelectItem>
+                                        <SelectItem value="professional">Professional</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <Button type="submit" className="w-full" disabled={cardMutation.isPending} data-testid="button-generate-business-card">
+                              {cardMutation.isPending ? (
+                                <>
+                                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                                  Creating Card...
+                                </>
+                              ) : (
+                                <>
+                                  <Briefcase className="w-4 h-4 mr-2" />
+                                  Generate Business Card
+                                </>
+                              )}
+                            </Button>
+                          </form>
+                        </Form>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -5584,11 +5720,148 @@ export default function CreatePage() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-center py-8 text-muted-foreground">
-                          <School className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p className="mb-2">Education Card Creator</p>
-                          <p className="text-sm">Cards with school themes and mascots coming soon!</p>
-                        </div>
+                        <Form {...cardForm}>
+                          <form onSubmit={cardForm.handleSubmit(onCardSubmit)} className="space-y-6">
+                            <FormField
+                              control={cardForm.control}
+                              name="recipientName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Recipient Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Mrs. Johnson's Class" {...field} data-testid="input-education-recipient" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="relationship"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Recipient Type</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-education-role">
+                                        <SelectValue placeholder="Select type" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Student">Student</SelectItem>
+                                        <SelectItem value="Teacher">Teacher</SelectItem>
+                                        <SelectItem value="Class">Class</SelectItem>
+                                        <SelectItem value="Club">Club</SelectItem>
+                                        <SelectItem value="Team">Team</SelectItem>
+                                        <SelectItem value="School Staff">School Staff</SelectItem>
+                                        <SelectItem value="Principal">Principal</SelectItem>
+                                        <SelectItem value="Coach">Coach</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="occasion"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Occasion</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-education-occasion">
+                                        <SelectValue placeholder="Select occasion" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="graduation">Graduation</SelectItem>
+                                        <SelectItem value="honor-roll">Honor Roll</SelectItem>
+                                        <SelectItem value="end-of-year">End of Year</SelectItem>
+                                        <SelectItem value="teacher-appreciation">Teacher Appreciation</SelectItem>
+                                        <SelectItem value="achievement">Achievement Award</SelectItem>
+                                        <SelectItem value="spelling-bee">Spelling Bee</SelectItem>
+                                        <SelectItem value="science-fair">Science Fair</SelectItem>
+                                        <SelectItem value="sports-win">Sports Victory</SelectItem>
+                                        <SelectItem value="welcome-back">Welcome Back</SelectItem>
+                                        <SelectItem value="birthday">Birthday</SelectItem>
+                                        <SelectItem value="thank-you">Thank You</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="tone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tone</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-education-tone">
+                                        <SelectValue placeholder="Select tone" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="encouraging">Encouraging</SelectItem>
+                                        <SelectItem value="fun">Fun</SelectItem>
+                                        <SelectItem value="proud">Proud</SelectItem>
+                                        <SelectItem value="inspirational">Inspirational</SelectItem>
+                                        <SelectItem value="celebratory">Celebratory</SelectItem>
+                                        <SelectItem value="grateful">Grateful</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={cardForm.control}
+                              name="style"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Card Style</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger data-testid="select-education-style">
+                                        <SelectValue placeholder="Select style" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="illustrated">Illustrated</SelectItem>
+                                        <SelectItem value="whimsical">Whimsical</SelectItem>
+                                        <SelectItem value="watercolor">Watercolor</SelectItem>
+                                        <SelectItem value="chalkboard">Chalkboard</SelectItem>
+                                        <SelectItem value="colorful">Colorful</SelectItem>
+                                        <SelectItem value="modern">Modern</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <Button type="submit" className="w-full" disabled={cardMutation.isPending} data-testid="button-generate-education-card">
+                              {cardMutation.isPending ? (
+                                <>
+                                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                                  Creating Card...
+                                </>
+                              ) : (
+                                <>
+                                  <GraduationCap className="w-4 h-4 mr-2" />
+                                  Generate Education Card
+                                </>
+                              )}
+                            </Button>
+                          </form>
+                        </Form>
                       </CardContent>
                     </Card>
                   </TabsContent>
