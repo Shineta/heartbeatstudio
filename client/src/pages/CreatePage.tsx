@@ -101,6 +101,7 @@ export default function CreatePage() {
   const searchParams = new URLSearchParams(searchString);
   const defaultTab = searchParams.get('type') || 'card';
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [categoryTab, setCategoryTab] = useState("loved-ones");
   
   // Check if user has active subscription (for subscription-only features like animation)
   const hasActiveSubscription = user?.subscriptionStatus === 'active';
@@ -1583,25 +1584,42 @@ export default function CreatePage() {
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="card" data-testid="tab-card">
-              <Mail className="w-4 h-4 mr-2" />
-              Card
+        <Tabs value={categoryTab} onValueChange={setCategoryTab} className="w-full mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="loved-ones" data-testid="tab-category-loved-ones">
+              <Heart className="w-4 h-4 mr-2" />
+              Loved Ones
             </TabsTrigger>
-            <TabsTrigger value="animation" data-testid="tab-animation">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Animation
+            <TabsTrigger value="business" data-testid="tab-category-business">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Business
             </TabsTrigger>
-            <TabsTrigger value="song" data-testid="tab-song">
-              <Music className="w-4 h-4 mr-2" />
-              Song
-            </TabsTrigger>
-            <TabsTrigger value="mixtape" data-testid="tab-mixtape">
-              <ListMusic className="w-4 h-4 mr-2" />
-              Mixtape
+            <TabsTrigger value="education" data-testid="tab-category-education">
+              <Users className="w-4 h-4 mr-2" />
+              Education
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="loved-ones">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-8">
+                <TabsTrigger value="card" data-testid="tab-card">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Card
+                </TabsTrigger>
+                <TabsTrigger value="animation" data-testid="tab-animation">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Animation
+                </TabsTrigger>
+                <TabsTrigger value="song" data-testid="tab-song">
+                  <Music className="w-4 h-4 mr-2" />
+                  Song
+                </TabsTrigger>
+                <TabsTrigger value="mixtape" data-testid="tab-mixtape">
+                  <ListMusic className="w-4 h-4 mr-2" />
+                  Mixtape
+                </TabsTrigger>
+              </TabsList>
 
           <TabsContent value="card">
             {createdCard ? (
@@ -5200,6 +5218,90 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
             )}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="business">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5" />
+                  Business Celebrations
+                </CardTitle>
+                <CardDescription>
+                  Create professional celebration content for your team and clients
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Employee Recognition</h4>
+                    <p className="text-sm text-muted-foreground">Celebrate work anniversaries, promotions, and achievements with personalized songs and cards.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Client Appreciation</h4>
+                    <p className="text-sm text-muted-foreground">Send thoughtful thank-you cards and celebratory content to valued clients and partners.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Team Events</h4>
+                    <p className="text-sm text-muted-foreground">Create custom content for company milestones, holiday parties, and team celebrations.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Onboarding Welcome</h4>
+                    <p className="text-sm text-muted-foreground">Welcome new team members with personalized songs that introduce them to your company culture.</p>
+                  </div>
+                </div>
+                <div className="text-center py-6 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground mb-4">Business features coming soon!</p>
+                  <Button variant="outline" disabled>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Coming Soon
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="education">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Education Celebrations
+                </CardTitle>
+                <CardDescription>
+                  Celebrate academic achievements and inspire students with AI-powered content
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Graduation Songs</h4>
+                    <p className="text-sm text-muted-foreground">Create memorable graduation songs for students completing their academic journey.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Classroom Cheers</h4>
+                    <p className="text-sm text-muted-foreground">Motivate students with custom songs celebrating their class, achievements, or school spirit.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Teacher Appreciation</h4>
+                    <p className="text-sm text-muted-foreground">Honor educators with personalized thank-you songs and cards from students and parents.</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Academic Awards</h4>
+                    <p className="text-sm text-muted-foreground">Celebrate honor roll, spelling bee winners, science fair champions, and more.</p>
+                  </div>
+                </div>
+                <div className="text-center py-6 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground mb-4">Education features coming soon!</p>
+                  <Button variant="outline" disabled>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Coming Soon
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
