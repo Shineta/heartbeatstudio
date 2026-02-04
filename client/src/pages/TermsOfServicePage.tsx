@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, FileText, Music, Image, Shield, Scale, AlertTriangle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileText, Music, Image, Shield, Scale, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 export default function TermsOfServicePage() {
@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-muted-foreground">
-            Last updated: February 4, 2026
+            Last updated: January 4, 2026
           </p>
         </div>
 
@@ -201,55 +201,8 @@ export default function TermsOfServicePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                7. SMS Communications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-              <h4>7.1 Consent to Receive SMS</h4>
-              <p>
-                By providing your phone number and checking the SMS consent box during registration, 
-                you expressly agree to receive SMS text messages from Heartbeat Studio by Horton's Tech Innovations 
-                for the following purposes:
-              </p>
-              <ul>
-                <li>Password reset links when you request to reset your password</li>
-                <li>Account verification codes to confirm your phone number</li>
-                <li>Important account security notifications</li>
-              </ul>
-
-              <h4>7.2 Message Frequency & Costs</h4>
-              <ul>
-                <li>Message frequency varies based on your account activity (typically 0-5 messages per month)</li>
-                <li>Standard message and data rates may apply depending on your mobile carrier</li>
-                <li>We do not charge for sending SMS messages, but your carrier may charge you to receive them</li>
-              </ul>
-
-              <h4>7.3 How to Opt Out</h4>
-              <p>
-                You can opt out of SMS messages at any time by:
-              </p>
-              <ul>
-                <li>Replying <strong>STOP</strong> to any SMS message you receive from us</li>
-                <li>Contacting us through our contact page to request removal</li>
-              </ul>
-              <p>
-                After opting out, you will receive one final confirmation message. Note that opting out of SMS 
-                will disable the ability to reset your password via SMS - you will need to use email instead.
-              </p>
-
-              <h4>7.4 Help</h4>
-              <p>
-                For help with SMS messaging, reply <strong>HELP</strong> to any message or contact our support team.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-primary" />
-                8. Disclaimers & Limitations
+                7. Disclaimers & Limitations
               </CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
@@ -276,7 +229,7 @@ export default function TermsOfServicePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>9. Privacy</CardTitle>
+              <CardTitle>8. Privacy</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
               <p>
@@ -295,7 +248,7 @@ export default function TermsOfServicePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>10. Changes to Terms</CardTitle>
+              <CardTitle>9. Changes to Terms</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
               <p>
@@ -308,7 +261,7 @@ export default function TermsOfServicePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>11. Contact Us</CardTitle>
+              <CardTitle>10. Contact Us</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
               <p>

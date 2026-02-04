@@ -12,7 +12,7 @@ import { generateSongWithLyrics } from "./sunoService";
 // Note: soraService is disabled as video generation APIs are not yet publicly available
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendContactFormEmail } from "./emailService";
 import { startScheduler } from "./schedulerService";
-import { sendPasswordResetSMS, isTwilioConfigured, sendSMSOptInRequest, sendSMSOptInConfirmation, sendSMSOptOutConfirmation, sendSMSHelpMessage, normalizePhoneNumber } from "./smsService";
+import { sendPasswordResetSMS, isTwilioConfigured } from "./smsService";
 import { compositePhotoIntoCassette, createCassetteCover } from "./imageCompositeService";
 import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shared/schema";
 
@@ -194,22 +194,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: 'Session regeneration failed' });
         }
         
-        req.login(user, async (err) => {
+        req.login(user, (err) => {
           if (err) {
             return res.status(500).json({ message: 'Login failed after registration' });
           }
-          
-          // Send SMS opt-in request if Twilio is configured and phone number is provided
-          if (isTwilioConfigured() && normalizedPhone) {
-            try {
-              await sendSMSOptInRequest(normalizedPhone);
-              console.log(`[Registration] SMS opt-in request sent to ${normalizedPhone}`);
-            } catch (smsError) {
-              console.error('[Registration] Failed to send SMS opt-in request:', smsError);
-              // Don't fail registration if SMS fails
-            }
-          }
-          
           res.json(user);
         });
       });
@@ -3757,62 +3745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       res.status(500).json({ message: 'Failed to fetch stats' });
-    }
-  });
-
-  // Twilio SMS webhook - handles incoming SMS replies (YES, STOP, HELP)
-  app.post('/api/sms/incoming', async (req: Request, res: Response) => {
-    try {
-      const { Body, From } = req.body;
-      
-      if (!Body || !From) {
-        console.log('[Twilio Webhook] Missing Body or From in request');
-        // Return empty TwiML response
-        res.set('Content-Type', 'text/xml');
-        return res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-      }
-      
-      const messageBody = Body.trim().toUpperCase();
-      const fromPhone = normalizePhoneNumber(From);
-      
-      console.log(`[Twilio Webhook] Received SMS from ${fromPhone}: ${messageBody}`);
-      
-      // Find user by phone number
-      const user = await storage.getUserByPhoneNumber(fromPhone);
-      
-      if (!user) {
-        console.log(`[Twilio Webhook] No user found for phone ${fromPhone}`);
-        // Return empty TwiML response for unknown numbers
-        res.set('Content-Type', 'text/xml');
-        return res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-      }
-      
-      // Handle different SMS commands
-      if (messageBody === 'YES' || messageBody === 'Y') {
-        // User is opting in
-        await storage.updateUser(user.id, { smsOptedIn: true });
-        await sendSMSOptInConfirmation(fromPhone);
-        console.log(`[Twilio Webhook] User ${user.id} opted in to SMS`);
-      } else if (messageBody === 'STOP' || messageBody === 'UNSUBSCRIBE' || messageBody === 'CANCEL' || messageBody === 'END' || messageBody === 'QUIT') {
-        // User is opting out
-        await storage.updateUser(user.id, { smsOptedIn: false });
-        await sendSMSOptOutConfirmation(fromPhone);
-        console.log(`[Twilio Webhook] User ${user.id} opted out of SMS`);
-      } else if (messageBody === 'HELP' || messageBody === 'INFO') {
-        // User needs help
-        await sendSMSHelpMessage(fromPhone);
-        console.log(`[Twilio Webhook] Sent help message to user ${user.id}`);
-      } else {
-        console.log(`[Twilio Webhook] Unrecognized command from ${fromPhone}: ${messageBody}`);
-      }
-      
-      // Return empty TwiML response (Twilio expects XML response)
-      res.set('Content-Type', 'text/xml');
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-    } catch (error: any) {
-      console.error('[Twilio Webhook] Error processing incoming SMS:', error);
-      res.set('Content-Type', 'text/xml');
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
     }
   });
 

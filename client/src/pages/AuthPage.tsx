@@ -67,7 +67,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false, termsAccepted: false },
+    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false },
   });
 
   const loginForm = useForm<LoginForm>({
