@@ -22,7 +22,6 @@ const registerSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   marketingConsent: z.boolean().optional().default(false),
-  smsConsent: z.boolean().refine((val) => val === true, { message: 'You must agree to receive SMS messages to use phone features' }),
   termsAccepted: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms of Service' }),
 });
 
@@ -68,7 +67,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false, smsConsent: false, termsAccepted: false },
+    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false, termsAccepted: false },
   });
 
   const loginForm = useForm<LoginForm>({
@@ -307,29 +306,6 @@ export default function AuthPage() {
                   )}
                 />
                 
-                <FormField
-                  control={registerForm.control}
-                  name="smsConsent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value === true}
-                          onCheckedChange={(checked) => field.onChange(checked ? true : false)}
-                          data-testid="checkbox-sms-consent"
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          I agree to receive SMS messages from Heartbeat Studio for password resets and account verification. 
-                          Message and data rates may apply. Reply STOP to opt out.
-                        </FormLabel>
-                        <FormMessage />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={registerForm.control}
                   name="termsAccepted"
