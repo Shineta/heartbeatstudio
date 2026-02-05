@@ -5389,6 +5389,120 @@ export default function CreatePage() {
                   </TabsList>
 
                   <TabsContent value="card">
+                    {createdCard ? (
+                      <div className="space-y-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>{createdCard.title || "Your Business Card"}</CardTitle>
+                            {portraitVariations.length > 1 && (
+                              <CardDescription>
+                                Choose your favorite from {portraitVariations.length} variations
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Portrait variations gallery */}
+                            {portraitVariations.length > 1 ? (
+                              <div className="space-y-3">
+                                <div className="relative">
+                                  <img
+                                    src={portraitVariations[selectedVariationIndex]}
+                                    alt={`Portrait variation ${selectedVariationIndex + 1}`}
+                                    className="w-full rounded-md"
+                                  />
+                                  {/* Navigation arrows */}
+                                  <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="icon"
+                                      className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                                      onClick={() => setSelectedVariationIndex(prev => 
+                                        prev === 0 ? portraitVariations.length - 1 : prev - 1
+                                      )}
+                                      data-testid="button-prev-business-variation"
+                                    >
+                                      <ArrowLeft className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                      variant="secondary"
+                                      size="icon"
+                                      className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                                      onClick={() => setSelectedVariationIndex(prev => 
+                                        prev === portraitVariations.length - 1 ? 0 : prev + 1
+                                      )}
+                                      data-testid="button-next-business-variation"
+                                    >
+                                      <ArrowLeft className="w-5 h-5 rotate-180" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {/* Variation indicator dots */}
+                                <div className="flex justify-center gap-2">
+                                  {portraitVariations.map((_, idx) => (
+                                    <button
+                                      key={idx}
+                                      className={`w-3 h-3 rounded-full transition-colors ${
+                                        idx === selectedVariationIndex 
+                                          ? 'bg-primary' 
+                                          : 'bg-muted hover:bg-muted-foreground/50'
+                                      }`}
+                                      onClick={() => setSelectedVariationIndex(idx)}
+                                      data-testid={`button-business-variation-${idx}`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="text-center text-sm text-muted-foreground">
+                                  Variation {selectedVariationIndex + 1} of {portraitVariations.length}
+                                </p>
+                              </div>
+                            ) : createdCard.imageUrl ? (
+                              <img
+                                src={createdCard.imageUrl}
+                                alt={createdCard.title || "Card"}
+                                className="w-full rounded-md"
+                              />
+                            ) : null}
+                            
+                            {/* Card Message */}
+                            {createdCard.content && (
+                              <div className="p-4 bg-muted/30 rounded-lg border">
+                                <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                              </div>
+                            )}
+                          </CardContent>
+                          <CardFooter className="flex flex-wrap gap-2">
+                            <Button onClick={() => {
+                              const shareLink = createdCard.shareableLink?.startsWith('/share/') 
+                                ? createdCard.shareableLink 
+                                : `/share/${createdCard.shareableLink}`;
+                              navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                              toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                            }} data-testid="button-share-business-card">
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </Button>
+                            {portraitVariations.length > 1 && (
+                              <Button variant="outline" onClick={async () => {
+                                const selectedUrl = portraitVariations[selectedVariationIndex];
+                                await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
+                                setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
+                              }} data-testid="button-save-business-variation">
+                                Save This Variation
+                              </Button>
+                            )}
+                            <Button variant="outline" onClick={() => {
+                              setCreatedCard(null);
+                              setPortraitVariations([]);
+                              setSelectedVariationIndex(0);
+                            }} data-testid="button-create-another-business">
+                              Create Another Card
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      </div>
+                    ) : (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -5833,60 +5947,9 @@ export default function CreatePage() {
                             </Button>
                           </form>
                         </Form>
-
-                        {/* Created Card Result */}
-                        {createdCard && (
-                          <div className="mt-6 space-y-4 p-4 border rounded-lg bg-muted/30">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-lg">{createdCard.title || "Your Business Card"}</h3>
-                              <Button variant="outline" size="sm" onClick={() => setCreatedCard(null)} data-testid="button-create-another-business">
-                                Create Another
-                              </Button>
-                            </div>
-                            {portraitVariations.length > 1 ? (
-                              <div className="space-y-4">
-                                <p className="text-sm text-muted-foreground">Choose your favorite from {portraitVariations.length} variations:</p>
-                                <div className="grid grid-cols-5 gap-2">
-                                  {portraitVariations.map((url, i) => (
-                                    <div key={i} className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${selectedVariationIndex === i ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-muted-foreground/30'}`} onClick={() => setSelectedVariationIndex(i)}>
-                                      <img src={url} alt={`Variation ${i + 1}`} className="w-full aspect-square object-cover" />
-                                    </div>
-                                  ))}
-                                </div>
-                                <img src={portraitVariations[selectedVariationIndex]} alt="Selected variation" className="w-full max-w-md mx-auto rounded-lg" />
-                              </div>
-                            ) : createdCard.imageUrl ? (
-                              <img src={createdCard.imageUrl} alt={createdCard.title || "Card"} className="w-full max-w-md mx-auto rounded-lg" />
-                            ) : null}
-                            {createdCard.content && (
-                              <div className="p-4 bg-background rounded-lg border">
-                                <p className="whitespace-pre-wrap">{createdCard.content}</p>
-                              </div>
-                            )}
-                            <div className="flex gap-2">
-                              <Button onClick={() => {
-                                const shareLink = createdCard.shareableLink?.startsWith('/share/') ? createdCard.shareableLink : `/share/${createdCard.shareableLink}`;
-                                navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                                toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                              }} data-testid="button-share-business-card">
-                                <Share2 className="w-4 h-4 mr-2" />Share
-                              </Button>
-                              {portraitVariations.length > 1 && (
-                                <Button variant="outline" onClick={async () => {
-                                  const selectedUrl = portraitVariations[selectedVariationIndex];
-                                  await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
-                                  setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-                                  toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
-                                }} data-testid="button-save-business-variation">
-                                  Save This Variation
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="animation">
@@ -6086,6 +6149,120 @@ export default function CreatePage() {
                   </TabsList>
 
                   <TabsContent value="card">
+                    {createdCard ? (
+                      <div className="space-y-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>{createdCard.title || "Your Education Card"}</CardTitle>
+                            {portraitVariations.length > 1 && (
+                              <CardDescription>
+                                Choose your favorite from {portraitVariations.length} variations
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Portrait variations gallery */}
+                            {portraitVariations.length > 1 ? (
+                              <div className="space-y-3">
+                                <div className="relative">
+                                  <img
+                                    src={portraitVariations[selectedVariationIndex]}
+                                    alt={`Portrait variation ${selectedVariationIndex + 1}`}
+                                    className="w-full rounded-md"
+                                  />
+                                  {/* Navigation arrows */}
+                                  <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="icon"
+                                      className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                                      onClick={() => setSelectedVariationIndex(prev => 
+                                        prev === 0 ? portraitVariations.length - 1 : prev - 1
+                                      )}
+                                      data-testid="button-prev-education-variation"
+                                    >
+                                      <ArrowLeft className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                      variant="secondary"
+                                      size="icon"
+                                      className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+                                      onClick={() => setSelectedVariationIndex(prev => 
+                                        prev === portraitVariations.length - 1 ? 0 : prev + 1
+                                      )}
+                                      data-testid="button-next-education-variation"
+                                    >
+                                      <ArrowLeft className="w-5 h-5 rotate-180" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {/* Variation indicator dots */}
+                                <div className="flex justify-center gap-2">
+                                  {portraitVariations.map((_, idx) => (
+                                    <button
+                                      key={idx}
+                                      className={`w-3 h-3 rounded-full transition-colors ${
+                                        idx === selectedVariationIndex 
+                                          ? 'bg-primary' 
+                                          : 'bg-muted hover:bg-muted-foreground/50'
+                                      }`}
+                                      onClick={() => setSelectedVariationIndex(idx)}
+                                      data-testid={`button-education-variation-${idx}`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="text-center text-sm text-muted-foreground">
+                                  Variation {selectedVariationIndex + 1} of {portraitVariations.length}
+                                </p>
+                              </div>
+                            ) : createdCard.imageUrl ? (
+                              <img
+                                src={createdCard.imageUrl}
+                                alt={createdCard.title || "Card"}
+                                className="w-full rounded-md"
+                              />
+                            ) : null}
+                            
+                            {/* Card Message */}
+                            {createdCard.content && (
+                              <div className="p-4 bg-muted/30 rounded-lg border">
+                                <p className="whitespace-pre-wrap">{createdCard.content}</p>
+                              </div>
+                            )}
+                          </CardContent>
+                          <CardFooter className="flex flex-wrap gap-2">
+                            <Button onClick={() => {
+                              const shareLink = createdCard.shareableLink?.startsWith('/share/') 
+                                ? createdCard.shareableLink 
+                                : `/share/${createdCard.shareableLink}`;
+                              navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                              toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                            }} data-testid="button-share-education-card">
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </Button>
+                            {portraitVariations.length > 1 && (
+                              <Button variant="outline" onClick={async () => {
+                                const selectedUrl = portraitVariations[selectedVariationIndex];
+                                await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
+                                setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
+                              }} data-testid="button-save-education-variation">
+                                Save This Variation
+                              </Button>
+                            )}
+                            <Button variant="outline" onClick={() => {
+                              setCreatedCard(null);
+                              setPortraitVariations([]);
+                              setSelectedVariationIndex(0);
+                            }} data-testid="button-create-another-education">
+                              Create Another Card
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      </div>
+                    ) : (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -6531,60 +6708,9 @@ export default function CreatePage() {
                             </Button>
                           </form>
                         </Form>
-
-                        {/* Created Card Result */}
-                        {createdCard && (
-                          <div className="mt-6 space-y-4 p-4 border rounded-lg bg-muted/30">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-lg">{createdCard.title || "Your Education Card"}</h3>
-                              <Button variant="outline" size="sm" onClick={() => setCreatedCard(null)} data-testid="button-create-another-education">
-                                Create Another
-                              </Button>
-                            </div>
-                            {portraitVariations.length > 1 ? (
-                              <div className="space-y-4">
-                                <p className="text-sm text-muted-foreground">Choose your favorite from {portraitVariations.length} variations:</p>
-                                <div className="grid grid-cols-5 gap-2">
-                                  {portraitVariations.map((url, i) => (
-                                    <div key={i} className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${selectedVariationIndex === i ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-muted-foreground/30'}`} onClick={() => setSelectedVariationIndex(i)}>
-                                      <img src={url} alt={`Variation ${i + 1}`} className="w-full aspect-square object-cover" />
-                                    </div>
-                                  ))}
-                                </div>
-                                <img src={portraitVariations[selectedVariationIndex]} alt="Selected variation" className="w-full max-w-md mx-auto rounded-lg" />
-                              </div>
-                            ) : createdCard.imageUrl ? (
-                              <img src={createdCard.imageUrl} alt={createdCard.title || "Card"} className="w-full max-w-md mx-auto rounded-lg" />
-                            ) : null}
-                            {createdCard.content && (
-                              <div className="p-4 bg-background rounded-lg border">
-                                <p className="whitespace-pre-wrap">{createdCard.content}</p>
-                              </div>
-                            )}
-                            <div className="flex gap-2">
-                              <Button onClick={() => {
-                                const shareLink = createdCard.shareableLink?.startsWith('/share/') ? createdCard.shareableLink : `/share/${createdCard.shareableLink}`;
-                                navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
-                                toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
-                              }} data-testid="button-share-education-card">
-                                <Share2 className="w-4 h-4 mr-2" />Share
-                              </Button>
-                              {portraitVariations.length > 1 && (
-                                <Button variant="outline" onClick={async () => {
-                                  const selectedUrl = portraitVariations[selectedVariationIndex];
-                                  await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
-                                  setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-                                  toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
-                                }} data-testid="button-save-education-variation">
-                                  Save This Variation
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="animation">
