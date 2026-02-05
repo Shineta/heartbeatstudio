@@ -6706,6 +6706,20 @@ export default function CreatePage() {
                       <p className="text-sm text-muted-foreground">Create school anthems and spirit songs for your community.</p>
                     </CardContent>
                   </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('yearbook')}
+                    data-testid="education-card-yearbook"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Book className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Yearbook</h4>
+                      <p className="text-sm text-muted-foreground">Create class portraits and memorable yearbook pages.</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             ) : (
