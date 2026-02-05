@@ -197,6 +197,7 @@ export default function CreatePage() {
   const [portraitStyle, setPortraitStyle] = useState('christmas'); // Actual scene within category
   const [keepOutfits, setKeepOutfits] = useState(true);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [isUploadingPortraitPhoto, setIsUploadingPortraitPhoto] = useState(false);
   const [isAnalyzingPhotos, setIsAnalyzingPhotos] = useState(false);
   const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
   const [createdPortrait, setCreatedPortrait] = useState<Creation | null>(null);
@@ -548,6 +549,19 @@ export default function CreatePage() {
 
   const removePortraitPhoto = (index: number) => {
     setPortraitPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePortraitPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploadingPortraitPhoto(true);
+    try {
+      setPortraitPhotos(prev => [...prev, file]);
+    } finally {
+      setIsUploadingPortraitPhoto(false);
+    }
+    e.target.value = '';
   };
 
   const uploadAndAnalyzePhotos = async () => {
