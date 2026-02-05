@@ -625,10 +625,20 @@ export default function CreatePage() {
     try {
       const selectedFaces = detectedFaces.filter(f => selectedFaceIds.includes(f.id));
       
-      // For category scenes (holidays, life-events, seasons, professional), the "style" is actually the scene
-      // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
-      const actualScene = portraitScene === 'blast-from-past' ? 'blast-from-past' : portraitStyle;
-      const actualStyle = portraitScene === 'blast-from-past' ? portraitStyle : 'studio-photo';
+      // Determine scene and style based on category
+      let actualScene: string;
+      let actualStyle: string;
+      
+      if (categoryTab === 'education') {
+        // Education uses direct scene/style values
+        actualScene = educationPortraitScene;
+        actualStyle = educationPortraitStyle;
+      } else {
+        // For category scenes (holidays, life-events, seasons, professional), the "style" is actually the scene
+        // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
+        actualScene = portraitScene === 'blast-from-past' ? 'blast-from-past' : portraitStyle;
+        actualStyle = portraitScene === 'blast-from-past' ? portraitStyle : 'studio-photo';
+      }
       
       const res = await apiRequest('POST', '/api/family-portrait/generate', {
         imageUrls: uploadedPhotoUrls,
