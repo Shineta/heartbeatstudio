@@ -749,13 +749,17 @@ export default function CreatePage() {
       let actualScene: string;
       let actualStyle: string;
       
-      // Business category tab uses business-specific festive scenes/styles
+      // Category-specific festive scenes/styles
       if (categoryTab === 'business') {
         // Business festive scenes are direct - scene is the scene, style is the style
         actualScene = businessFestiveScene;
         actualStyle = businessFestiveStyle;
+      } else if (categoryTab === 'education') {
+        // Education festive scenes - scene and style are education-specific
+        actualScene = educationFestiveScene;
+        actualStyle = educationFestiveStyle;
       } else {
-        // For category scenes (holidays, life-events, seasons), the "style" is actually the scene
+        // Loved Ones tab: For category scenes (holidays, life-events, seasons), the "style" is actually the scene
         // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
         actualScene = festiveScene === 'blast-from-past' ? 'blast-from-past' : festiveStyle;
         actualStyle = festiveScene === 'blast-from-past' ? festiveStyle : 'festive-photo';
@@ -1155,6 +1159,223 @@ export default function CreatePage() {
     const styles = businessFestiveStylesByScene[scene] || [];
     if (styles.length > 0) {
       setBusinessFestiveStyle(styles[0].value);
+    }
+  };
+
+  // ========== EDUCATION SCENE & STYLE SYSTEM ==========
+  // 10 scenes with 8 styles each, designed for educational settings
+
+  // Education Festive Scene Options
+  const educationFestiveSceneOptions = [
+    { value: 'student-celebration', label: '🎉 Student Celebration', description: 'Individual student recognition, encouragement' },
+    { value: 'academic-achievement', label: '🏆 Academic Achievement', description: 'Awards, report cards, ceremonies' },
+    { value: 'graduation', label: '🎓 Graduation', description: 'Graduations, completions, transitions' },
+    { value: 'teacher-appreciation', label: '🧑‍🏫 Teacher Appreciation', description: 'Teacher Appreciation Week, thank-yous' },
+    { value: 'classroom-celebration', label: '🏫 Classroom Celebration', description: 'Whole-class milestones, challenges' },
+    { value: 'school-spirit', label: '🎒 School Spirit', description: 'Assemblies, spirit weeks, events' },
+    { value: 'learning-journey', label: '📚 Learning Journey', description: 'Progress recognition, encouragement' },
+    { value: 'festive-school', label: '🎊 Festive School Celebration', description: 'Inclusive celebrations (non-religious)' },
+    { value: 'fun-encouraging', label: '🌈 Fun & Encouraging', description: 'Younger grades, motivation' },
+    { value: 'minimal-academic', label: '✨ Minimal Academic', description: 'Older students, formal schools' },
+  ];
+
+  // Styles for each Education Festive scene
+  const educationFestiveStylesByScene: Record<string, { value: string; label: string }[]> = {
+    'student-celebration': [
+      { value: 'you-did-it', label: 'You Did It!' },
+      { value: 'proud-moment', label: 'Proud Moment' },
+      { value: 'star-student', label: 'Star Student' },
+      { value: 'celebration-confetti', label: 'Celebration Confetti' },
+      { value: 'achievement-glow', label: 'Achievement Glow' },
+      { value: 'big-smile-energy', label: 'Big Smile Energy' },
+      { value: 'success-spark', label: 'Success Spark' },
+      { value: 'way-to-go', label: 'Way to Go!' },
+    ],
+    'academic-achievement': [
+      { value: 'honor-roll', label: 'Honor Roll' },
+      { value: 'perfect-attendance', label: 'Perfect Attendance' },
+      { value: 'academic-excellence', label: 'Academic Excellence' },
+      { value: 'achievement-badge', label: 'Achievement Badge' },
+      { value: 'gold-star', label: 'Gold Star' },
+      { value: 'top-performer', label: 'Top Performer' },
+      { value: 'certificate-style', label: 'Certificate Style' },
+      { value: 'scholar-spotlight', label: 'Scholar Spotlight' },
+    ],
+    'graduation': [
+      { value: 'class-of-year', label: 'Class of 20XX' },
+      { value: 'cap-and-gown', label: 'Cap & Gown' },
+      { value: 'graduation-glow', label: 'Graduation Glow' },
+      { value: 'next-chapter', label: 'Next Chapter' },
+      { value: 'proud-graduate', label: 'Proud Graduate' },
+      { value: 'milestone-moment', label: 'Milestone Moment' },
+      { value: 'future-forward', label: 'Future Forward' },
+      { value: 'diploma-day', label: 'Diploma Day' },
+    ],
+    'teacher-appreciation': [
+      { value: 'thank-you-teacher', label: 'Thank You, Teacher' },
+      { value: 'classroom-hero', label: 'Classroom Hero' },
+      { value: 'making-a-difference', label: 'Making a Difference' },
+      { value: 'educator-spotlight', label: 'Educator Spotlight' },
+      { value: 'heart-of-classroom', label: 'Heart of the Classroom' },
+      { value: 'appreciation-note', label: 'Appreciation Note' },
+      { value: 'inspiring-educator', label: 'Inspiring Educator' },
+      { value: 'gratitude-frame', label: 'Gratitude Frame' },
+    ],
+    'classroom-celebration': [
+      { value: 'class-success', label: 'Class Success' },
+      { value: 'we-did-it', label: 'We Did It!' },
+      { value: 'team-classroom', label: 'Team Classroom' },
+      { value: 'learning-together', label: 'Learning Together' },
+      { value: 'class-pride', label: 'Class Pride' },
+      { value: 'group-achievement', label: 'Group Achievement' },
+      { value: 'classroom-cheers', label: 'Classroom Cheers' },
+      { value: 'learning-wins', label: 'Learning Wins' },
+    ],
+    'school-spirit': [
+      { value: 'school-pride', label: 'School Pride' },
+      { value: 'mascot-energy', label: 'Mascot Energy' },
+      { value: 'school-colors', label: 'School Colors' },
+      { value: 'spirit-day', label: 'Spirit Day' },
+      { value: 'go-team', label: 'Go Team!' },
+      { value: 'unity-and-pride', label: 'Unity & Pride' },
+      { value: 'school-community', label: 'School Community' },
+      { value: 'pride-banner', label: 'Pride Banner' },
+    ],
+    'learning-journey': [
+      { value: 'growth-path', label: 'Growth Path' },
+      { value: 'learning-milestones', label: 'Learning Milestones' },
+      { value: 'progress-map', label: 'Progress Map' },
+      { value: 'step-by-step', label: 'Step by Step' },
+      { value: 'start-to-success', label: 'From Start to Success' },
+      { value: 'learning-in-motion', label: 'Learning in Motion' },
+      { value: 'skill-builder', label: 'Skill Builder' },
+      { value: 'progress-glow', label: 'Progress Glow' },
+    ],
+    'festive-school': [
+      { value: 'end-of-year', label: 'End of Year' },
+      { value: 'back-to-school', label: 'Back to School' },
+      { value: 'classroom-party', label: 'Classroom Party' },
+      { value: 'school-festive', label: 'School Festive' },
+      { value: 'celebration-day', label: 'Celebration Day' },
+      { value: 'seasonal-cheer', label: 'Seasonal Cheer' },
+      { value: 'learning-party', label: 'Learning Party' },
+      { value: 'fun-and-focused', label: 'Fun & Focused' },
+    ],
+    'fun-encouraging': [
+      { value: 'bright-and-happy', label: 'Bright & Happy' },
+      { value: 'color-pop', label: 'Color Pop' },
+      { value: 'smiles-all-around', label: 'Smiles All Around' },
+      { value: 'confetti-fun', label: 'Confetti Fun' },
+      { value: 'friendly-characters', label: 'Friendly Characters' },
+      { value: 'joyful-learning', label: 'Joyful Learning' },
+      { value: 'positive-vibes', label: 'Positive Vibes' },
+      { value: 'cheer-boost', label: 'Cheer Boost' },
+    ],
+    'minimal-academic': [
+      { value: 'clean-classroom', label: 'Clean Classroom' },
+      { value: 'soft-chalkboard', label: 'Soft Chalkboard' },
+      { value: 'minimal-achievement', label: 'Minimal Achievement' },
+      { value: 'calm-celebration', label: 'Calm Celebration' },
+      { value: 'simple-success', label: 'Simple Success' },
+      { value: 'academic-neutral', label: 'Academic Neutral' },
+      { value: 'focused-pride', label: 'Focused Pride' },
+      { value: 'quiet-win', label: 'Quiet Win' },
+    ],
+  };
+
+  // State for education festive scene and style
+  const [educationFestiveScene, setEducationFestiveScene] = useState('student-celebration');
+  const [educationFestiveStyle, setEducationFestiveStyle] = useState('you-did-it');
+
+  // Get available styles for the selected education festive scene
+  const currentEducationFestiveStyles = educationFestiveStylesByScene[educationFestiveScene] || educationFestiveStylesByScene['student-celebration'];
+
+  // Update style when education festive scene changes
+  const handleEducationFestiveSceneChange = (scene: string) => {
+    setEducationFestiveScene(scene);
+    const styles = educationFestiveStylesByScene[scene] || [];
+    if (styles.length > 0) {
+      setEducationFestiveStyle(styles[0].value);
+    }
+  };
+
+  // Education Portrait Scene Options (for Class Portrait feature)
+  const educationPortraitSceneOptions = [
+    { value: 'classroom', label: 'Classroom' },
+    { value: 'school-library', label: 'School Library' },
+    { value: 'playground', label: 'Playground' },
+    { value: 'graduation-stage', label: 'Graduation Stage' },
+    { value: 'science-lab', label: 'Science Lab' },
+    { value: 'art-studio', label: 'Art Studio' },
+    { value: 'sports-field', label: 'Sports Field' },
+    { value: 'auditorium', label: 'Auditorium' },
+  ];
+
+  // Education Portrait Styles
+  const educationPortraitStylesByScene: Record<string, { value: string; label: string }[]> = {
+    'classroom': [
+      { value: 'classic-school-photo', label: 'Classic School Photo' },
+      { value: 'learning-atmosphere', label: 'Learning Atmosphere' },
+      { value: 'bright-and-cheerful', label: 'Bright & Cheerful' },
+      { value: 'academic-warm', label: 'Academic Warm' },
+    ],
+    'school-library': [
+      { value: 'scholarly', label: 'Scholarly' },
+      { value: 'bookworm-charm', label: 'Bookworm Charm' },
+      { value: 'quiet-focus', label: 'Quiet Focus' },
+      { value: 'knowledge-glow', label: 'Knowledge Glow' },
+    ],
+    'playground': [
+      { value: 'playful-energy', label: 'Playful Energy' },
+      { value: 'outdoor-fun', label: 'Outdoor Fun' },
+      { value: 'friendship-vibes', label: 'Friendship Vibes' },
+      { value: 'active-joy', label: 'Active Joy' },
+    ],
+    'graduation-stage': [
+      { value: 'proud-moment', label: 'Proud Moment' },
+      { value: 'formal-celebration', label: 'Formal Celebration' },
+      { value: 'achievement-spotlight', label: 'Achievement Spotlight' },
+      { value: 'next-chapter', label: 'Next Chapter' },
+    ],
+    'science-lab': [
+      { value: 'curious-explorer', label: 'Curious Explorer' },
+      { value: 'stem-focus', label: 'STEM Focus' },
+      { value: 'discovery-mode', label: 'Discovery Mode' },
+      { value: 'experiment-ready', label: 'Experiment Ready' },
+    ],
+    'art-studio': [
+      { value: 'creative-spirit', label: 'Creative Spirit' },
+      { value: 'artistic-flair', label: 'Artistic Flair' },
+      { value: 'colorful-expression', label: 'Colorful Expression' },
+      { value: 'imagination-unleashed', label: 'Imagination Unleashed' },
+    ],
+    'sports-field': [
+      { value: 'team-champion', label: 'Team Champion' },
+      { value: 'athletic-pride', label: 'Athletic Pride' },
+      { value: 'victory-moment', label: 'Victory Moment' },
+      { value: 'sporty-energy', label: 'Sporty Energy' },
+    ],
+    'auditorium': [
+      { value: 'performance-ready', label: 'Performance Ready' },
+      { value: 'stage-presence', label: 'Stage Presence' },
+      { value: 'assembly-formal', label: 'Assembly Formal' },
+      { value: 'spotlight-moment', label: 'Spotlight Moment' },
+    ],
+  };
+
+  // State for education portrait scene and style
+  const [educationPortraitScene, setEducationPortraitScene] = useState('classroom');
+  const [educationPortraitStyle, setEducationPortraitStyle] = useState('classic-school-photo');
+
+  // Get available styles for the selected education portrait scene
+  const currentEducationPortraitStyles = educationPortraitStylesByScene[educationPortraitScene] || educationPortraitStylesByScene['classroom'];
+
+  // Update style when education portrait scene changes
+  const handleEducationPortraitSceneChange = (scene: string) => {
+    setEducationPortraitScene(scene);
+    const styles = educationPortraitStylesByScene[scene] || [];
+    if (styles.length > 0) {
+      setEducationPortraitStyle(styles[0].value);
     }
   };
 
@@ -6915,11 +7136,14 @@ export default function CreatePage() {
                                 </div>
                               )}
 
-                              {/* Festive Transform Options */}
+                              {/* Festive Transform Options - Education-specific scenes */}
                               {coverImageSource === 'festive' && (
                                 <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
                                   <p className="text-sm text-muted-foreground">
-                                    Upload a photo and transform it into a festive scene for your card cover.
+                                    Upload a photo and transform it into an educational celebration scene for your card cover.
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/80">
+                                    All styles are age-appropriate, school-safe, and designed for educational settings.
                                   </p>
                                   {!festivePhotoUrl ? (
                                     <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
@@ -6931,15 +7155,15 @@ export default function CreatePage() {
                                       ) : (
                                         <div className="flex flex-col items-center gap-2">
                                           <User className="w-8 h-8 text-muted-foreground" />
-                                          <span className="text-sm text-muted-foreground">Upload a photo of one person</span>
+                                          <span className="text-sm text-muted-foreground">Upload a photo of a student or teacher</span>
                                         </div>
                                       )}
-                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} />
+                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} data-testid="input-education-festive-upload" />
                                     </label>
                                   ) : (
                                     <div className="space-y-4">
                                       <div className="relative w-full max-w-xs mx-auto">
-                                        <img src={generatedFestiveUrl || festivePhotoUrl} alt="Festive photo" className="w-full rounded-lg border" />
+                                        <img src={generatedFestiveUrl || festivePhotoUrl} alt="Education festive photo" className="w-full rounded-lg border" />
                                         {!generatedFestiveUrl && (
                                           <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>
                                             <X className="w-3 h-3" />
@@ -6948,51 +7172,66 @@ export default function CreatePage() {
                                       </div>
                                       {!generatedFestiveUrl && (
                                         <div className="space-y-3">
-                                          <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                              <Label className="text-xs mb-1 block">Scene</Label>
-                                              <Select value={festiveScene} onValueChange={setFestiveScene}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                  {festiveSceneOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            </div>
-                                            <div>
-                                              <Label className="text-xs mb-1 block">Style</Label>
-                                              <Select value={festiveStyle} onValueChange={setFestiveStyle}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                  {festiveScene === 'holidays' && holidayStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            </div>
+                                          {/* Education Scene Selector */}
+                                          <div>
+                                            <Label className="text-xs mb-1 block">Scene Category</Label>
+                                            <Select value={educationFestiveScene} onValueChange={handleEducationFestiveSceneChange}>
+                                              <SelectTrigger data-testid="select-education-festive-scene">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {educationFestiveSceneOptions.map(opt => (
+                                                  <SelectItem key={opt.value} value={opt.value}>
+                                                    <div className="flex flex-col">
+                                                      <span>{opt.label}</span>
+                                                      <span className="text-xs text-muted-foreground">{opt.description}</span>
+                                                    </div>
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
                                           </div>
-                                          <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full">
-                                            {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><PartyPopper className="w-4 h-4 mr-2" />Generate Festive Image</>}
+                                          
+                                          {/* Education Style Selector */}
+                                          <div>
+                                            <Label className="text-xs mb-1 block">Style</Label>
+                                            <Select value={educationFestiveStyle} onValueChange={setEducationFestiveStyle}>
+                                              <SelectTrigger data-testid="select-education-festive-style">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {currentEducationFestiveStyles.map(opt => (
+                                                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          {/* Custom Instructions */}
+                                          <div>
+                                            <Label className="text-xs mb-1 block">Custom Instructions (Optional)</Label>
+                                            <Textarea
+                                              placeholder="e.g., Add 'Honor Roll 2024' banner, include school mascot..."
+                                              value={festiveInstructions}
+                                              onChange={(e) => setFestiveInstructions(e.target.value)}
+                                              className="min-h-[60px] text-sm"
+                                              maxLength={500}
+                                              data-testid="input-education-festive-instructions"
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                              Add specific details like banners, awards, or school elements
+                                            </p>
+                                          </div>
+
+                                          <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full" data-testid="button-education-generate-festive">
+                                            {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><GraduationCap className="w-4 h-4 mr-2" />Generate Education Scene</>}
                                           </Button>
                                         </div>
                                       )}
                                       {generatedFestiveUrl && (
                                         <div className="flex gap-2 justify-center">
-                                          <Button type="button" variant="outline" onClick={() => setGeneratedFestiveUrl(null)}>Try Different Scene</Button>
-                                          <Button type="button" variant="outline" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>New Photo</Button>
+                                          <Button type="button" variant="outline" onClick={() => setGeneratedFestiveUrl(null)} data-testid="button-education-try-different">Try Different Scene</Button>
+                                          <Button type="button" variant="outline" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }} data-testid="button-education-new-photo">New Photo</Button>
                                         </div>
                                       )}
                                     </div>

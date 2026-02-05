@@ -1,0 +1,253 @@
+🎓 EDUCATION TAB — SCENE → STYLE SYSTEM
+
+This works across Cards, Festive Transform, Animations, Songs, and Mixtapes.
+
+🎉 Scene: Student Celebration
+
+Styles
+
+You Did It!
+
+Proud Moment
+
+Star Student
+
+Celebration Confetti
+
+Achievement Glow
+
+Big Smile Energy
+
+Success Spark
+
+Way to Go!
+
+Best for: individual student recognition, encouragement
+
+🏆 Scene: Academic Achievement
+
+Styles
+
+Honor Roll
+
+Perfect Attendance
+
+Academic Excellence
+
+Achievement Badge
+
+Gold Star
+
+Top Performer
+
+Certificate Style
+
+Scholar Spotlight
+
+Best for: awards, report cards, ceremonies
+
+🎓 Scene: Graduation
+
+Styles
+
+Class of 20XX
+
+Cap & Gown
+
+Graduation Glow
+
+Next Chapter
+
+Proud Graduate
+
+Milestone Moment
+
+Future Forward
+
+Diploma Day
+
+Best for: graduations, completions, transitions
+
+🧑‍🏫 Scene: Teacher Appreciation
+
+Styles
+
+Thank You, Teacher
+
+Classroom Hero
+
+Making a Difference
+
+Educator Spotlight
+
+Heart of the Classroom
+
+Appreciation Note
+
+Inspiring Educator
+
+Gratitude Frame
+
+Best for: Teacher Appreciation Week, thank-yous
+
+🏫 Scene: Classroom Celebration
+
+Styles
+
+Class Success
+
+We Did It!
+
+Team Classroom
+
+Learning Together
+
+Class Pride
+
+Group Achievement
+
+Classroom Cheers
+
+Learning Wins
+
+Best for: whole-class milestones, challenges
+
+🎒 Scene: School Spirit
+
+Styles
+
+School Pride
+
+Mascot Energy
+
+School Colors
+
+Spirit Day
+
+Go Team!
+
+Unity & Pride
+
+School Community
+
+Pride Banner
+
+Best for: assemblies, spirit weeks, events
+
+📚 Scene: Learning Journey
+
+Styles
+
+Growth Path
+
+Learning Milestones
+
+Progress Map
+
+Step by Step
+
+From Start to Success
+
+Learning in Motion
+
+Skill Builder
+
+Progress Glow
+
+Best for: progress recognition, encouragement
+
+🎊 Scene: Festive School Celebration
+
+Styles
+
+End of Year
+
+Back to School
+
+Classroom Party
+
+School Festive
+
+Celebration Day
+
+Seasonal Cheer
+
+Learning Party
+
+Fun & Focused
+
+Best for: inclusive celebrations (non-religious default)
+
+🌈 Scene: Fun & Encouraging
+
+Styles
+
+Bright & Happy
+
+Color Pop
+
+Smiles All Around
+
+Confetti Fun
+
+Friendly Characters
+
+Joyful Learning
+
+Positive Vibes
+
+Cheer Boost
+
+Best for: younger grades, motivation, encouragement
+
+✨ Scene: Minimal Academic
+
+Styles
+
+Clean Classroom
+
+Soft Chalkboard
+
+Minimal Achievement
+
+Calm Celebration
+
+Simple Success
+
+Academic Neutral
+
+Focused Pride
+
+Quiet Win
+
+Best for: older students, formal schools, awards
+
+🔐 EDUCATION SAFETY GUARDRAILS (Strongly Recommended)
+
+UI helper text:
+
+“All styles are age-appropriate, school-safe, and designed for educational settings.”
+
+Automatic rules:
+
+🚫 No romantic language
+
+🚫 No adult themes
+
+🚫 No copyrighted characters
+
+✅ Encouraging, positive language only
+
+Optional toggle:
+
+✔ Classroom-safe visuals only
+
+🧠 UX SMART DEFAULTS
+
+If Recipient Role = Student → default Student Celebration
+
+If Occasion = Graduation → lock to Graduation
+
+If Recipient Role = Teacher → suggest Teacher Appreciation
+
+If Grade Level = Elementary → prioritize Fun & Encouraging
