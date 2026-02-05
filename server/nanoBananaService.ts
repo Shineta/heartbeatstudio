@@ -964,3 +964,71 @@ High quality, visually appealing result suitable for a greeting card cover.`;
 
   return images[0];
 }
+
+// Yearbook headshot generation - professional school portrait style
+export async function generateYearbookHeadshot(params: {
+  imageUrl: string;
+  backgroundColor: string;
+  style: string;
+  removeGlasses?: boolean;
+  removeBraces?: boolean;
+}): Promise<string> {
+  const { imageUrl, backgroundColor, style, removeGlasses = false, removeBraces = false } = params;
+  
+  // Background color descriptions for professional school portraits
+  const backgroundColors: Record<string, string> = {
+    'classic-blue': 'solid muted blue-gray background, classic yearbook portrait backdrop, soft gradient from darker corners to lighter center',
+    'navy-blue': 'solid deep navy blue background, traditional school portrait backdrop, subtle professional gradient',
+    'light-blue': 'solid light sky blue background, fresh modern school portrait backdrop, clean and bright',
+    'gray': 'solid neutral gray background, professional studio portrait backdrop, clean and timeless',
+    'charcoal': 'solid dark charcoal gray background, sophisticated portrait backdrop, professional and elegant',
+    'maroon': 'solid deep maroon burgundy background, traditional academic portrait backdrop, dignified and classic',
+    'forest-green': 'solid deep forest green background, classic academic portrait backdrop, distinguished and refined',
+    'white': 'solid clean white background, modern bright portrait backdrop, crisp and professional',
+    'cream': 'solid warm cream off-white background, soft elegant portrait backdrop, warm and inviting',
+    'teal': 'solid professional teal background, modern school portrait backdrop, fresh and contemporary',
+  };
+  
+  // Style descriptions for yearbook portraits
+  const styleDescriptions: Record<string, string> = {
+    'classic': 'traditional yearbook photo style, soft professional lighting, head and shoulders framing, timeless school portrait',
+    'modern': 'contemporary yearbook style, bright natural lighting, crisp clean look, modern professional portrait',
+    'formal': 'formal academic portrait style, dignified lighting, traditional pose, distinguished school photo',
+    'friendly': 'approachable warm yearbook style, soft flattering lighting, natural smile, inviting school portrait',
+    'dramatic': 'bold yearbook style, dramatic studio lighting, confident pose, standout school portrait',
+  };
+  
+  const bgDesc = backgroundColors[backgroundColor] || backgroundColors['classic-blue'];
+  const styleDesc = styleDescriptions[style] || styleDescriptions['classic'];
+  
+  // Build removal instructions
+  let removalInstr = '';
+  if (removeGlasses && removeBraces) {
+    removalInstr = ' Remove any eyeglasses and dental braces from the person, keeping their face natural and clear.';
+  } else if (removeGlasses) {
+    removalInstr = ' Remove any eyeglasses from the person, keeping their face natural.';
+  } else if (removeBraces) {
+    removalInstr = ' Remove any dental braces from the person, giving them a natural smile.';
+  }
+  
+  const prompt = `Transform this photo into a professional yearbook headshot portrait.
+${bgDesc}.
+${styleDesc}.
+Keep the exact same person with their exact face, features, and identity preserved.
+Frame as a head and shoulders portrait, centered in frame.
+Person should appear well-groomed and professionally presented.
+Clean, polished yearbook-ready appearance.${removalInstr}
+Professional school portrait photography quality, sharp focus on face.
+Photorealistic, high quality result suitable for a yearbook or school directory.`;
+
+  console.log(`[NanoBanana] Generating yearbook headshot: ${backgroundColor} background, ${style} style`);
+
+  const images = await generateImage({
+    prompt,
+    numImages: 1,
+    imageSize: '3:4', // Portrait aspect ratio for yearbook photos
+    imageUrls: [imageUrl]
+  });
+
+  return images[0];
+}

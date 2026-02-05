@@ -180,6 +180,17 @@ export default function CreatePage() {
   const tvShowStyles = ['tv-fresh-prince', 'tv-family-matters', 'tv-cosby-show', 'tv-good-times', 'tv-martin', 'tv-sitcom-living-room', 'tv-old-western'];
   const isTvShowStyle = tvShowStyles.includes(festiveStyle);
   
+  // Yearbook Headshot state (individual portrait photos)
+  const [yearbookPhoto, setYearbookPhoto] = useState<File | null>(null);
+  const [yearbookPhotoUrl, setYearbookPhotoUrl] = useState<string | null>(null);
+  const [isUploadingYearbookPhoto, setIsUploadingYearbookPhoto] = useState(false);
+  const [isGeneratingYearbookHeadshot, setIsGeneratingYearbookHeadshot] = useState(false);
+  const [generatedHeadshotUrl, setGeneratedHeadshotUrl] = useState<string | null>(null);
+  const [yearbookBackgroundColor, setYearbookBackgroundColor] = useState('classic-blue');
+  const [yearbookStyle, setYearbookStyle] = useState('classic');
+  const [yearbookRemoveGlasses, setYearbookRemoveGlasses] = useState(false);
+  const [yearbookRemoveBraces, setYearbookRemoveBraces] = useState(false);
+  
   // Family Portrait Composer state (for card covers)
   const [portraitPhotos, setPortraitPhotos] = useState<File[]>([]);
   const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState<string[]>([]);
@@ -299,11 +310,10 @@ export default function CreatePage() {
     }
   }, [currentSongIndex]);
 
-  // Handle Yearbook quick start - auto-select card tab and portrait cover source
+  // Handle Yearbook quick start - auto-select headshot tab
   useEffect(() => {
     if (educationQuickStart === 'yearbook') {
-      setActiveTab('card');
-      setCoverImageSource('portrait');
+      setActiveTab('headshot');
     }
   }, [educationQuickStart]);
 
@@ -806,6 +816,67 @@ export default function CreatePage() {
       toast({ title: "Error", description: error.message || "Failed to generate festive image", variant: "destructive" });
     } finally {
       setIsGeneratingFestive(false);
+    }
+  };
+
+  // Generate yearbook headshot
+  const generateYearbookHeadshot = async () => {
+    if (!yearbookPhotoUrl) {
+      toast({ title: "No photo", description: "Please upload a photo first", variant: "destructive" });
+      return;
+    }
+    
+    setIsGeneratingYearbookHeadshot(true);
+    try {
+      const res = await apiRequest("POST", "/api/generate/yearbook-headshot", {
+        imageUrl: yearbookPhotoUrl,
+        backgroundColor: yearbookBackgroundColor,
+        style: yearbookStyle,
+        removeGlasses: yearbookRemoveGlasses,
+        removeBraces: yearbookRemoveBraces,
+      });
+      
+      if (!res.ok) throw new Error('Failed to generate yearbook headshot');
+      
+      const data = await res.json();
+      setGeneratedHeadshotUrl(data.imageUrl);
+      toast({ title: "Yearbook photo created!", description: "Your professional headshot is ready" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to generate yearbook headshot", variant: "destructive" });
+    } finally {
+      setIsGeneratingYearbookHeadshot(false);
+    }
+  };
+
+  // Handle yearbook photo upload
+  const handleYearbookPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setYearbookPhoto(file);
+    setIsUploadingYearbookPhoto(true);
+    setGeneratedHeadshotUrl(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!res.ok) throw new Error('Failed to upload photo');
+      
+      const data = await res.json();
+      setYearbookPhotoUrl(data.url);
+      toast({ title: "Photo uploaded", description: "Ready to generate your yearbook headshot" });
+    } catch (error: any) {
+      toast({ title: "Upload failed", description: error.message || "Could not upload photo", variant: "destructive" });
+      setYearbookPhoto(null);
+    } finally {
+      setIsUploadingYearbookPhoto(false);
     }
   };
   
@@ -6748,24 +6819,254 @@ export default function CreatePage() {
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 mb-8">
-                    <TabsTrigger value="card" data-testid="tab-education-card">
-                      <Mail className="w-4 h-4 mr-2" />
-                      Card
-                    </TabsTrigger>
-                    <TabsTrigger value="animation" data-testid="tab-education-animation">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Animation
-                    </TabsTrigger>
-                    <TabsTrigger value="song" data-testid="tab-education-song">
-                      <Music className="w-4 h-4 mr-2" />
-                      Song
-                    </TabsTrigger>
-                    <TabsTrigger value="mixtape" data-testid="tab-education-mixtape">
-                      <ListMusic className="w-4 h-4 mr-2" />
-                      Class Mixtape
-                    </TabsTrigger>
+                  <TabsList className={`grid w-full mb-8 ${educationQuickStart === 'yearbook' ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                    {educationQuickStart === 'yearbook' ? (
+                      <>
+                        <TabsTrigger value="headshot" data-testid="tab-yearbook-headshot">
+                          <User className="w-4 h-4 mr-2" />
+                          Headshot
+                        </TabsTrigger>
+                        <TabsTrigger value="card" data-testid="tab-yearbook-card">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Class Portrait
+                        </TabsTrigger>
+                        <TabsTrigger value="song" data-testid="tab-yearbook-song">
+                          <Music className="w-4 h-4 mr-2" />
+                          Song
+                        </TabsTrigger>
+                      </>
+                    ) : (
+                      <>
+                        <TabsTrigger value="card" data-testid="tab-education-card">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Card
+                        </TabsTrigger>
+                        <TabsTrigger value="animation" data-testid="tab-education-animation">
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Animation
+                        </TabsTrigger>
+                        <TabsTrigger value="song" data-testid="tab-education-song">
+                          <Music className="w-4 h-4 mr-2" />
+                          Song
+                        </TabsTrigger>
+                        <TabsTrigger value="mixtape" data-testid="tab-education-mixtape">
+                          <ListMusic className="w-4 h-4 mr-2" />
+                          Class Mixtape
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
+
+                  {/* Yearbook Headshot Tab */}
+                  <TabsContent value="headshot">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <User className="w-5 h-5" />
+                          Create Yearbook Headshot
+                        </CardTitle>
+                        <CardDescription>
+                          Transform any photo into a professional school portrait with a classic yearbook background
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Photo Upload */}
+                        <div className="space-y-4">
+                          <Label>Upload Photo</Label>
+                          <div className="flex flex-col items-center gap-4">
+                            {yearbookPhotoUrl ? (
+                              <div className="relative w-48 h-64 rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/30">
+                                <img
+                                  src={yearbookPhotoUrl}
+                                  alt="Uploaded photo"
+                                  className="w-full h-full object-cover"
+                                />
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-2 right-2 h-6 w-6"
+                                  onClick={() => {
+                                    setYearbookPhoto(null);
+                                    setYearbookPhotoUrl(null);
+                                    setGeneratedHeadshotUrl(null);
+                                  }}
+                                  data-testid="button-remove-yearbook-photo"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <label className="cursor-pointer">
+                                <div className="w-48 h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-3 hover:bg-muted/50 transition-colors">
+                                  {isUploadingYearbookPhoto ? (
+                                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                                  ) : (
+                                    <>
+                                      <Upload className="w-8 h-8 text-muted-foreground" />
+                                      <span className="text-sm text-muted-foreground text-center px-4">
+                                        Upload a clear photo of the student
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleYearbookPhotoUpload}
+                                  disabled={isUploadingYearbookPhoto}
+                                  data-testid="input-yearbook-photo"
+                                />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Background Color Selection */}
+                        <div className="space-y-3">
+                          <Label>Background Color</Label>
+                          <div className="grid grid-cols-5 gap-2">
+                            {[
+                              { value: 'classic-blue', label: 'Classic Blue', color: 'bg-blue-400' },
+                              { value: 'navy-blue', label: 'Navy', color: 'bg-blue-800' },
+                              { value: 'light-blue', label: 'Light Blue', color: 'bg-sky-300' },
+                              { value: 'gray', label: 'Gray', color: 'bg-gray-400' },
+                              { value: 'charcoal', label: 'Charcoal', color: 'bg-gray-700' },
+                              { value: 'maroon', label: 'Maroon', color: 'bg-red-900' },
+                              { value: 'forest-green', label: 'Forest Green', color: 'bg-green-800' },
+                              { value: 'white', label: 'White', color: 'bg-white border' },
+                              { value: 'cream', label: 'Cream', color: 'bg-amber-50' },
+                              { value: 'teal', label: 'Teal', color: 'bg-teal-500' },
+                            ].map((bg) => (
+                              <button
+                                key={bg.value}
+                                onClick={() => setYearbookBackgroundColor(bg.value)}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                                  yearbookBackgroundColor === bg.value
+                                    ? 'ring-2 ring-primary bg-muted'
+                                    : 'hover:bg-muted/50'
+                                }`}
+                                data-testid={`button-yearbook-bg-${bg.value}`}
+                              >
+                                <div className={`w-8 h-8 rounded-full ${bg.color}`} />
+                                <span className="text-xs">{bg.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Style Selection */}
+                        <div className="space-y-3">
+                          <Label>Portrait Style</Label>
+                          <div className="grid grid-cols-5 gap-2">
+                            {[
+                              { value: 'classic', label: 'Classic', desc: 'Traditional yearbook' },
+                              { value: 'modern', label: 'Modern', desc: 'Contemporary look' },
+                              { value: 'formal', label: 'Formal', desc: 'Dignified pose' },
+                              { value: 'friendly', label: 'Friendly', desc: 'Warm & approachable' },
+                              { value: 'dramatic', label: 'Dramatic', desc: 'Bold & confident' },
+                            ].map((style) => (
+                              <button
+                                key={style.value}
+                                onClick={() => setYearbookStyle(style.value)}
+                                className={`p-3 rounded-lg text-center transition-all ${
+                                  yearbookStyle === style.value
+                                    ? 'ring-2 ring-primary bg-muted'
+                                    : 'hover:bg-muted/50 border'
+                                }`}
+                                data-testid={`button-yearbook-style-${style.value}`}
+                              >
+                                <span className="text-sm font-medium">{style.label}</span>
+                                <p className="text-xs text-muted-foreground">{style.desc}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Options */}
+                        <div className="flex flex-wrap gap-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="yearbook-remove-glasses"
+                              checked={yearbookRemoveGlasses}
+                              onCheckedChange={(checked) => setYearbookRemoveGlasses(checked === true)}
+                              data-testid="checkbox-yearbook-remove-glasses"
+                            />
+                            <Label htmlFor="yearbook-remove-glasses" className="text-sm">Remove glasses</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="yearbook-remove-braces"
+                              checked={yearbookRemoveBraces}
+                              onCheckedChange={(checked) => setYearbookRemoveBraces(checked === true)}
+                              data-testid="checkbox-yearbook-remove-braces"
+                            />
+                            <Label htmlFor="yearbook-remove-braces" className="text-sm">Remove braces</Label>
+                          </div>
+                        </div>
+
+                        {/* Generate Button */}
+                        <Button
+                          onClick={generateYearbookHeadshot}
+                          disabled={!yearbookPhotoUrl || isGeneratingYearbookHeadshot}
+                          className="w-full"
+                          data-testid="button-generate-yearbook-headshot"
+                        >
+                          {isGeneratingYearbookHeadshot ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Creating Yearbook Photo...
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-4 h-4 mr-2" />
+                              Generate Yearbook Headshot
+                            </>
+                          )}
+                        </Button>
+
+                        {/* Generated Result */}
+                        {generatedHeadshotUrl && (
+                          <div className="space-y-4">
+                            <Label>Your Yearbook Photo</Label>
+                            <div className="flex justify-center">
+                              <div className="relative w-64 rounded-lg overflow-hidden shadow-lg">
+                                <img
+                                  src={generatedHeadshotUrl}
+                                  alt="Generated yearbook headshot"
+                                  className="w-full"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-center gap-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = generatedHeadshotUrl;
+                                  link.download = 'yearbook-headshot.png';
+                                  link.click();
+                                }}
+                                data-testid="button-download-yearbook-headshot"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={generateYearbookHeadshot}
+                                disabled={isGeneratingYearbookHeadshot}
+                                data-testid="button-regenerate-yearbook-headshot"
+                              >
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Try Again
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
 
                   <TabsContent value="card">
                     {createdCard ? (

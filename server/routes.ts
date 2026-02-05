@@ -1777,6 +1777,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Yearbook Headshot - professional school portrait style
+  app.post('/api/generate/yearbook-headshot', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        imageUrl: z.string().url('Please provide a valid image URL'),
+        backgroundColor: z.string().optional().default('classic-blue'),
+        style: z.string().optional().default('classic'),
+        removeGlasses: z.boolean().optional().default(false),
+        removeBraces: z.boolean().optional().default(false),
+      });
+      
+      const validatedData = schema.parse(req.body);
+      const { imageUrl, backgroundColor, style, removeGlasses, removeBraces } = validatedData;
+      
+      console.log(`[YearbookHeadshot] Generating portrait with ${backgroundColor} background, ${style} style${removeGlasses ? ' (removing glasses)' : ''}${removeBraces ? ' (removing braces)' : ''}`);
+      
+      const { generateYearbookHeadshot } = await import('./nanoBananaService');
+      
+      const generatedUrl = await generateYearbookHeadshot({
+        imageUrl,
+        backgroundColor,
+        style,
+        removeGlasses,
+        removeBraces,
+      });
+      
+      if (!generatedUrl) {
+        throw new Error('No image generated from AI service');
+      }
+      
+      // Download and upload to our storage for persistence
+      const imageResponse = await fetch(generatedUrl);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download generated image');
+      }
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+      
+      const objectStorage = new ObjectStorageService();
+      const publicPath = await objectStorage.uploadBase64Image(imageBase64, 'yearbook-headshots', 'headshot');
+      
+      const baseUrl = getBaseUrl();
+      const publicUrl = `${baseUrl}${publicPath}`;
+      
+      console.log(`[YearbookHeadshot] Image saved: ${publicUrl}`);
+      
+      res.json({ imageUrl: publicUrl });
+    } catch (error: any) {
+      console.error('Error generating yearbook headshot:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: 'Invalid request data', 
+          errors: error.errors 
+        });
+      }
+      
+      let userMessage = 'Failed to generate yearbook headshot. Please try again.';
+      if (error.message?.includes('timeout') || error.message?.includes('TIMEOUT')) {
+        userMessage = 'The image generation timed out. Please try again with a clearer photo.';
+      } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        userMessage = 'Service is temporarily busy. Please wait a moment and try again.';
+      } else if (error.message?.includes('No image generated')) {
+        userMessage = 'Could not generate image. Try using a photo with a clear face visible.';
+      }
+      
+      res.status(500).json({ message: userMessage });
+    }
+  });
+
   // Generate AI Animation using Runway
   app.post('/api/generate/animation', isAuthenticated, async (req: Request, res: Response) => {
     try {
