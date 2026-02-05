@@ -193,6 +193,7 @@ export default function CreatePage() {
   const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
   const [selectedFaceIds, setSelectedFaceIds] = useState<string[]>([]);
   const [removeBracesIds, setRemoveBracesIds] = useState<string[]>([]); // IDs of people to remove braces from
+  const [portraitSpecialInstructions, setPortraitSpecialInstructions] = useState(''); // Special instructions for portrait
   const [portraitScene, setPortraitScene] = useState('holidays'); // Category: holidays, life-events, seasons, professional, blast-from-past
   const [portraitStyle, setPortraitStyle] = useState('christmas'); // Actual scene within category
   const [keepOutfits, setKeepOutfits] = useState(true);
@@ -647,6 +648,7 @@ export default function CreatePage() {
         style: actualStyle,
         keepOutfits,
         removeBracesIds,
+        specialInstructions: portraitSpecialInstructions.trim() || undefined,
       });
 
       const { creation } = await res.json();
@@ -7227,6 +7229,21 @@ export default function CreatePage() {
                                           </p>
                                         </div>
                                       )}
+
+                                      {/* Special Instructions */}
+                                      <div className="space-y-2">
+                                        <Label className="text-xs font-medium">Special Instructions (Optional)</Label>
+                                        <Textarea
+                                          placeholder="Add any special instructions for your portrait (e.g., 'Make sure the chalkboard says Welcome Class of 2026' or 'Add school mascot in corner')"
+                                          value={portraitSpecialInstructions}
+                                          onChange={(e) => setPortraitSpecialInstructions(e.target.value)}
+                                          className="min-h-[80px] text-sm"
+                                          data-testid="textarea-portrait-special-instructions"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                          Add custom details or requests for your class portrait
+                                        </p>
+                                      </div>
                                     </>
                                   )}
                                 </div>

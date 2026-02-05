@@ -942,10 +942,11 @@ export interface FamilyPortraitParams {
   style: string;
   keepOutfits: boolean;
   removeBracesIds?: string[]; // IDs of people whose dental braces should be removed
+  specialInstructions?: string; // Custom instructions for the portrait
 }
 
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
-  const { selectedFaces, scene, style, keepOutfits, removeBracesIds = [] } = params;
+  const { selectedFaces, scene, style, keepOutfits, removeBracesIds = [], specialInstructions } = params;
 
   // Separate people and pets
   const people = selectedFaces.filter(f => f.type !== 'pet');
@@ -1251,6 +1252,14 @@ DENTAL BRACES REMOVAL:
 - Their teeth should look natural and healthy without any orthodontic hardware
 - All other aspects of their appearance should remain exactly the same`;
     }
+  }
+
+  // Add special instructions if provided
+  if (specialInstructions && specialInstructions.trim()) {
+    prompt += `
+
+SPECIAL INSTRUCTIONS FROM USER:
+${specialInstructions.trim()}`;
   }
 
   return prompt;
