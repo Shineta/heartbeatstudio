@@ -1169,7 +1169,7 @@ export default function CreatePage() {
   const educationFestiveSceneOptions = [
     { value: 'student-celebration', label: '🎉 Student Celebration', description: 'Individual student recognition, encouragement' },
     { value: 'academic-achievement', label: '🏆 Academic Achievement', description: 'Awards, report cards, ceremonies' },
-    { value: 'graduation', label: '🎓 Graduation', description: 'Graduations, completions, transitions' },
+    { value: 'edu-graduation', label: '🎓 Graduation', description: 'Graduations, completions, transitions' },
     { value: 'teacher-appreciation', label: '🧑‍🏫 Teacher Appreciation', description: 'Teacher Appreciation Week, thank-yous' },
     { value: 'classroom-celebration', label: '🏫 Classroom Celebration', description: 'Whole-class milestones, challenges' },
     { value: 'school-spirit', label: '🎒 School Spirit', description: 'Assemblies, spirit weeks, events' },
@@ -1183,10 +1183,10 @@ export default function CreatePage() {
   const educationFestiveStylesByScene: Record<string, { value: string; label: string }[]> = {
     'student-celebration': [
       { value: 'you-did-it', label: 'You Did It!' },
-      { value: 'proud-moment', label: 'Proud Moment' },
+      { value: 'edu-proud-moment', label: 'Proud Moment' },
       { value: 'star-student', label: 'Star Student' },
       { value: 'celebration-confetti', label: 'Celebration Confetti' },
-      { value: 'achievement-glow', label: 'Achievement Glow' },
+      { value: 'edu-achievement-glow', label: 'Achievement Glow' },
       { value: 'big-smile-energy', label: 'Big Smile Energy' },
       { value: 'success-spark', label: 'Success Spark' },
       { value: 'way-to-go', label: 'Way to Go!' },
@@ -1201,13 +1201,13 @@ export default function CreatePage() {
       { value: 'certificate-style', label: 'Certificate Style' },
       { value: 'scholar-spotlight', label: 'Scholar Spotlight' },
     ],
-    'graduation': [
+    'edu-graduation': [
       { value: 'class-of-year', label: 'Class of 20XX' },
       { value: 'cap-and-gown', label: 'Cap & Gown' },
       { value: 'graduation-glow', label: 'Graduation Glow' },
-      { value: 'next-chapter', label: 'Next Chapter' },
+      { value: 'edu-next-chapter', label: 'Next Chapter' },
       { value: 'proud-graduate', label: 'Proud Graduate' },
-      { value: 'milestone-moment', label: 'Milestone Moment' },
+      { value: 'edu-milestone-moment', label: 'Milestone Moment' },
       { value: 'future-forward', label: 'Future Forward' },
       { value: 'diploma-day', label: 'Diploma Day' },
     ],
@@ -1217,7 +1217,7 @@ export default function CreatePage() {
       { value: 'making-a-difference', label: 'Making a Difference' },
       { value: 'educator-spotlight', label: 'Educator Spotlight' },
       { value: 'heart-of-classroom', label: 'Heart of the Classroom' },
-      { value: 'appreciation-note', label: 'Appreciation Note' },
+      { value: 'edu-appreciation-note', label: 'Appreciation Note' },
       { value: 'inspiring-educator', label: 'Inspiring Educator' },
       { value: 'gratitude-frame', label: 'Gratitude Frame' },
     ],
