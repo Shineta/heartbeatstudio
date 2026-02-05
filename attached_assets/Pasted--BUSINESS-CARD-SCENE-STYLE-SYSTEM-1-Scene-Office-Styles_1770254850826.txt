@@ -1,0 +1,235 @@
+🏢 BUSINESS CARD — SCENE → STYLE SYSTEM
+1️⃣ Scene: Office
+
+Styles
+
+Modern Corporate
+
+Startup Open Office
+
+Executive Suite
+
+Creative Agency
+
+Minimal Desk
+
+Remote Work Setup
+
+Glass Office Aesthetic
+
+Neutral Workspace
+
+Use for: everyday recognition, welcome cards, internal notes
+
+2️⃣ Scene: Conference Room
+
+Styles
+
+Boardroom Formal
+
+Strategy Session
+
+Team Brainstorm
+
+Presentation Mode
+
+Leadership Meeting
+
+Innovation Lab
+
+Planning Wall
+
+Quarterly Review
+
+Use for: leadership messages, promotions, planning milestones
+
+3️⃣ Scene: Celebration
+
+Styles
+
+Professional Confetti
+
+Milestone Moment
+
+Success Spotlight
+
+Subtle Sparkle
+
+Elegant Cheers
+
+Team Win
+
+Achievement Glow
+
+Corporate Festive
+
+Use for: promotions, wins, anniversaries
+(This mirrors “Celebration” in Loved Ones but toned down)
+
+4️⃣ Scene: Achievement Spotlight
+
+Styles
+
+Award Plaque
+
+Spotlight Stage
+
+Excellence Badge
+
+Performance Highlight
+
+Leadership Recognition
+
+Top Performer
+
+Certificate Style
+
+Honor Wall
+
+Use for: awards, recognition programs
+
+5️⃣ Scene: Team Success
+
+Styles
+
+Collaboration Flow
+
+Connected Network
+
+Together We Win
+
+Collective Impact
+
+Team Momentum
+
+Growth Arrows
+
+Unity Lines
+
+Abstract People
+
+Use for: team accomplishments, project completions
+
+6️⃣ Scene: Client Appreciation
+
+Styles
+
+Thank You Elegant
+
+Partnership Focus
+
+Trust & Value
+
+Professional Gratitude
+
+Long-Term Partner
+
+Premium Client
+
+Relationship First
+
+Appreciation Note
+
+Use for: client thank-yous, renewals
+
+7️⃣ Scene: Onboarding / Welcome
+
+Styles
+
+Welcome Aboard
+
+First Day Energy
+
+New Journey
+
+Intro to the Team
+
+Fresh Start
+
+Company Culture
+
+Warm Welcome
+
+Getting Started
+
+Use for: new hires, contractors, partners
+
+8️⃣ Scene: Brand / Company Colors
+
+Styles
+
+Logo Centered
+
+Brand Minimal
+
+Color Block
+
+Gradient Brand
+
+Identity Focus
+
+Typography Forward
+
+Corporate Signature
+
+Visual Identity
+
+Use for: branded messages, external sharing
+
+9️⃣ Scene: Product / Launch
+
+Styles
+
+Product Reveal
+
+Launch Day
+
+Innovation Spotlight
+
+Feature Highlight
+
+Market Ready
+
+Concept Preview
+
+Announcement Style
+
+Spotlight Frame
+
+Use for: launches, updates, announcements
+
+🔟 Scene: Holiday (Business-Safe)
+
+Styles
+
+Winter Neutral
+
+Year-End Appreciation
+
+Seasonal Minimal
+
+Festive Professional
+
+Holiday Warmth
+
+End of Year Wrap
+
+New Year Forward
+
+Seasonal Abstract
+
+Use for: inclusive, non-religious celebrations
+
+🔐 OPTIONAL BUSINESS GUARDRAILS (Highly Recommended)
+
+Toggle or helper text:
+
+“Styles are curated for professional and workplace-appropriate use.”
+
+You can also auto-filter styles if:
+
+Recipient role = Client
+
+Tone = Formal
+
+Brand mode = On

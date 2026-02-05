@@ -902,6 +902,140 @@ export default function CreatePage() {
     { value: 'vintage', label: 'Vintage' },
   ];
 
+  // Business-specific scene options with grouped styles
+  const businessSceneOptions = [
+    { value: 'office', label: 'Office' },
+    { value: 'conference-room', label: 'Conference Room' },
+    { value: 'celebration', label: 'Celebration' },
+    { value: 'achievement-spotlight', label: 'Achievement Spotlight' },
+    { value: 'team-success', label: 'Team Success' },
+    { value: 'client-appreciation', label: 'Client Appreciation' },
+    { value: 'onboarding-welcome', label: 'Onboarding / Welcome' },
+    { value: 'brand-company-colors', label: 'Brand / Company Colors' },
+    { value: 'product-launch', label: 'Product / Launch' },
+    { value: 'holiday-business-safe', label: 'Holiday (Business-Safe)' },
+  ];
+
+  // Business styles mapped by scene
+  const businessStylesByScene: Record<string, { value: string; label: string }[]> = {
+    'office': [
+      { value: 'modern-corporate', label: 'Modern Corporate' },
+      { value: 'startup-open-office', label: 'Startup Open Office' },
+      { value: 'executive-suite', label: 'Executive Suite' },
+      { value: 'creative-agency', label: 'Creative Agency' },
+      { value: 'minimal-desk', label: 'Minimal Desk' },
+      { value: 'remote-work-setup', label: 'Remote Work Setup' },
+      { value: 'glass-office-aesthetic', label: 'Glass Office Aesthetic' },
+      { value: 'neutral-workspace', label: 'Neutral Workspace' },
+    ],
+    'conference-room': [
+      { value: 'boardroom-formal', label: 'Boardroom Formal' },
+      { value: 'strategy-session', label: 'Strategy Session' },
+      { value: 'team-brainstorm', label: 'Team Brainstorm' },
+      { value: 'presentation-mode', label: 'Presentation Mode' },
+      { value: 'leadership-meeting', label: 'Leadership Meeting' },
+      { value: 'innovation-lab', label: 'Innovation Lab' },
+      { value: 'planning-wall', label: 'Planning Wall' },
+      { value: 'quarterly-review', label: 'Quarterly Review' },
+    ],
+    'celebration': [
+      { value: 'professional-confetti', label: 'Professional Confetti' },
+      { value: 'milestone-moment', label: 'Milestone Moment' },
+      { value: 'success-spotlight', label: 'Success Spotlight' },
+      { value: 'subtle-sparkle', label: 'Subtle Sparkle' },
+      { value: 'elegant-cheers', label: 'Elegant Cheers' },
+      { value: 'team-win', label: 'Team Win' },
+      { value: 'achievement-glow', label: 'Achievement Glow' },
+      { value: 'corporate-festive', label: 'Corporate Festive' },
+    ],
+    'achievement-spotlight': [
+      { value: 'award-plaque', label: 'Award Plaque' },
+      { value: 'spotlight-stage', label: 'Spotlight Stage' },
+      { value: 'excellence-badge', label: 'Excellence Badge' },
+      { value: 'performance-highlight', label: 'Performance Highlight' },
+      { value: 'leadership-recognition', label: 'Leadership Recognition' },
+      { value: 'top-performer', label: 'Top Performer' },
+      { value: 'certificate-style', label: 'Certificate Style' },
+      { value: 'honor-wall', label: 'Honor Wall' },
+    ],
+    'team-success': [
+      { value: 'collaboration-flow', label: 'Collaboration Flow' },
+      { value: 'connected-network', label: 'Connected Network' },
+      { value: 'together-we-win', label: 'Together We Win' },
+      { value: 'collective-impact', label: 'Collective Impact' },
+      { value: 'team-momentum', label: 'Team Momentum' },
+      { value: 'growth-arrows', label: 'Growth Arrows' },
+      { value: 'unity-lines', label: 'Unity Lines' },
+      { value: 'abstract-people', label: 'Abstract People' },
+    ],
+    'client-appreciation': [
+      { value: 'thank-you-elegant', label: 'Thank You Elegant' },
+      { value: 'partnership-focus', label: 'Partnership Focus' },
+      { value: 'trust-and-value', label: 'Trust & Value' },
+      { value: 'professional-gratitude', label: 'Professional Gratitude' },
+      { value: 'long-term-partner', label: 'Long-Term Partner' },
+      { value: 'premium-client', label: 'Premium Client' },
+      { value: 'relationship-first', label: 'Relationship First' },
+      { value: 'appreciation-note', label: 'Appreciation Note' },
+    ],
+    'onboarding-welcome': [
+      { value: 'welcome-aboard', label: 'Welcome Aboard' },
+      { value: 'first-day-energy', label: 'First Day Energy' },
+      { value: 'new-journey', label: 'New Journey' },
+      { value: 'intro-to-the-team', label: 'Intro to the Team' },
+      { value: 'fresh-start', label: 'Fresh Start' },
+      { value: 'company-culture', label: 'Company Culture' },
+      { value: 'warm-welcome', label: 'Warm Welcome' },
+      { value: 'getting-started', label: 'Getting Started' },
+    ],
+    'brand-company-colors': [
+      { value: 'logo-centered', label: 'Logo Centered' },
+      { value: 'brand-minimal', label: 'Brand Minimal' },
+      { value: 'color-block', label: 'Color Block' },
+      { value: 'gradient-brand', label: 'Gradient Brand' },
+      { value: 'identity-focus', label: 'Identity Focus' },
+      { value: 'typography-forward', label: 'Typography Forward' },
+      { value: 'corporate-signature', label: 'Corporate Signature' },
+      { value: 'visual-identity', label: 'Visual Identity' },
+    ],
+    'product-launch': [
+      { value: 'product-reveal', label: 'Product Reveal' },
+      { value: 'launch-day', label: 'Launch Day' },
+      { value: 'innovation-spotlight', label: 'Innovation Spotlight' },
+      { value: 'feature-highlight', label: 'Feature Highlight' },
+      { value: 'market-ready', label: 'Market Ready' },
+      { value: 'concept-preview', label: 'Concept Preview' },
+      { value: 'announcement-style', label: 'Announcement Style' },
+      { value: 'spotlight-frame', label: 'Spotlight Frame' },
+    ],
+    'holiday-business-safe': [
+      { value: 'winter-neutral', label: 'Winter Neutral' },
+      { value: 'year-end-appreciation', label: 'Year-End Appreciation' },
+      { value: 'seasonal-minimal', label: 'Seasonal Minimal' },
+      { value: 'festive-professional', label: 'Festive Professional' },
+      { value: 'holiday-warmth', label: 'Holiday Warmth' },
+      { value: 'end-of-year-wrap', label: 'End of Year Wrap' },
+      { value: 'new-year-forward', label: 'New Year Forward' },
+      { value: 'seasonal-abstract', label: 'Seasonal Abstract' },
+    ],
+  };
+
+  // State for business portrait scene and style
+  const [businessPortraitScene, setBusinessPortraitScene] = useState('office');
+  const [businessPortraitStyle, setBusinessPortraitStyle] = useState('modern-corporate');
+
+  // Get available styles for the selected business scene
+  const currentBusinessStyles = businessStylesByScene[businessPortraitScene] || businessStylesByScene['office'];
+
+  // Update style when scene changes (reset to first style of new scene)
+  const handleBusinessSceneChange = (scene: string) => {
+    setBusinessPortraitScene(scene);
+    const styles = businessStylesByScene[scene] || [];
+    if (styles.length > 0) {
+      setBusinessPortraitStyle(styles[0].value);
+    }
+  };
+
   // "Same People, New Scene" - Generate a variant card with saved family set
   const generateFamilyVariant = async (scene: string, style: string) => {
     if (!savedFamilySet) {
@@ -5776,10 +5910,10 @@ export default function CreatePage() {
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
                                           <Label className="text-xs mb-1 block">Scene</Label>
-                                          <Select value={portraitScene} onValueChange={setPortraitScene}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <Select value={businessPortraitScene} onValueChange={handleBusinessSceneChange}>
+                                            <SelectTrigger data-testid="select-business-scene"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              {portraitSceneOptions.map(opt => (
+                                              {businessSceneOptions.map(opt => (
                                                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                               ))}
                                             </SelectContent>
@@ -5787,25 +5921,28 @@ export default function CreatePage() {
                                         </div>
                                         <div>
                                           <Label className="text-xs mb-1 block">Style</Label>
-                                          <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <Select value={businessPortraitStyle} onValueChange={setBusinessPortraitStyle}>
+                                            <SelectTrigger data-testid="select-business-style"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              {portraitStyleOptions.map(opt => (
+                                              {currentBusinessStyles.map(opt => (
                                                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                               ))}
                                             </SelectContent>
                                           </Select>
                                         </div>
                                       </div>
+                                      <p className="text-xs text-muted-foreground">
+                                        Styles are curated for professional and workplace-appropriate use.
+                                      </p>
 
                                       <div className="flex items-center gap-2">
                                         <Switch
-                                          id="keep-outfits-tab"
+                                          id="keep-outfits-business"
                                           checked={keepOutfits}
                                           onCheckedChange={setKeepOutfits}
-                                          data-testid="switch-keep-outfits-tab"
+                                          data-testid="switch-keep-outfits-business"
                                         />
-                                        <Label htmlFor="keep-outfits-tab" className="text-sm">Keep original outfits</Label>
+                                        <Label htmlFor="keep-outfits-business" className="text-sm">Keep original outfits</Label>
                                       </div>
 
                                       {/* Remove braces option */}
@@ -5819,7 +5956,7 @@ export default function CreatePage() {
                                                 <div key={face.id} className="flex items-center gap-2">
                                                   <input
                                                     type="checkbox"
-                                                    id={`braces-tab-${face.id}`}
+                                                    id={`braces-business-${face.id}`}
                                                     checked={removeBracesIds.includes(face.id)}
                                                     onChange={(e) => {
                                                       if (e.target.checked) {
@@ -5829,9 +5966,9 @@ export default function CreatePage() {
                                                       }
                                                     }}
                                                     className="w-4 h-4 rounded border-muted-foreground"
-                                                    data-testid={`checkbox-braces-tab-${face.id}`}
+                                                    data-testid={`checkbox-braces-business-${face.id}`}
                                                   />
-                                                  <Label htmlFor={`braces-tab-${face.id}`} className="text-sm cursor-pointer">
+                                                  <Label htmlFor={`braces-business-${face.id}`} className="text-sm cursor-pointer">
                                                     {face.name}
                                                   </Label>
                                                 </div>
