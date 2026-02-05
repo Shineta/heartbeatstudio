@@ -1282,6 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (portraitData.specialInstructions) {
           console.log(`[Card] Family portrait special instructions: ${portraitData.specialInstructions}`);
         }
+        console.log(`[Card] Portrait category: ${portraitData.category || 'loved-ones'}`);
         
         const prompt = buildFamilyPortraitPrompt({
           imageUrls: portraitData.imageUrls,
@@ -1291,6 +1292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           keepOutfits: portraitData.keepOutfits ?? true,
           removeBracesIds: portraitData.removeBracesIds || [],
           specialInstructions: portraitData.specialInstructions || undefined,
+          category: portraitData.category || 'loved-ones',
         });
 
         console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);
@@ -1585,7 +1587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/family-portrait/generate', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { imageUrls, selectedFaces, scene, style, keepOutfits, removeBracesIds, recipientName, lovedOneId, specialInstructions } = req.body;
+      const { imageUrls, selectedFaces, scene, style, keepOutfits, removeBracesIds, recipientName, lovedOneId, specialInstructions, category } = req.body;
       
       if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length < 2) {
         return res.status(400).json({ message: 'Please provide at least 2 image URLs' });
@@ -1595,7 +1597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Please select at least one person to include' });
       }
 
-      console.log(`[FamilyPortrait] Generating portrait with ${selectedFaces.length} people in ${scene} scene, ${style} style`);
+      console.log(`[FamilyPortrait] Generating portrait with ${selectedFaces.length} people in ${scene} scene, ${style} style, category: ${category || 'loved-ones'}`);
       if (specialInstructions) {
         console.log(`[FamilyPortrait] Special instructions: ${specialInstructions}`);
       }
@@ -1612,6 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keepOutfits: keepOutfits ?? true,
         removeBracesIds: removeBracesIds || [],
         specialInstructions: specialInstructions || undefined,
+        category: category || 'loved-ones',
       });
 
       console.log(`[FamilyPortrait] Using Pro 4K model with prompt: ${prompt.substring(0, 200)}...`);

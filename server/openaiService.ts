@@ -943,10 +943,11 @@ export interface FamilyPortraitParams {
   keepOutfits: boolean;
   removeBracesIds?: string[]; // IDs of people whose dental braces should be removed
   specialInstructions?: string; // Custom instructions for the portrait
+  category?: 'loved-ones' | 'business' | 'education'; // Context for appropriate posing
 }
 
 export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string {
-  const { selectedFaces, scene, style, keepOutfits, removeBracesIds = [], specialInstructions } = params;
+  const { selectedFaces, scene, style, keepOutfits, removeBracesIds = [], specialInstructions, category = 'loved-ones' } = params;
 
   // Separate people and pets
   const people = selectedFaces.filter(f => f.type !== 'pet');
@@ -1179,10 +1180,30 @@ ${petDetails}`;
     pets.length > 0 ? `${pets.length} ${pets.length === 1 ? 'pet' : 'pets'}` : ''
   ].filter(Boolean).join(' and ');
 
-  let prompt = `Transform these ${subjectCount} reference photos into a beautiful family portrait in ${sceneDesc}.
+  // Context-appropriate language based on category
+  let portraitType: string;
+  let groupDescription: string;
+  let posingInstruction: string;
+  
+  if (category === 'education') {
+    portraitType = 'class portrait';
+    groupDescription = 'students and classmates';
+    posingInstruction = 'Place everyone as classmates standing or sitting naturally side by side with appropriate personal space between them, like a typical school class photo. They should look friendly but professional - no touching, holding hands, or romantic poses.';
+  } else if (category === 'business') {
+    portraitType = 'professional team portrait';
+    groupDescription = 'colleagues and team members';
+    posingInstruction = 'Place everyone as professional colleagues standing or sitting naturally side by side with appropriate personal space between them. They should look confident and professional - formal business poses without intimate contact.';
+  } else {
+    // loved-ones - family/romantic context is appropriate
+    portraitType = 'family portrait';
+    groupDescription = 'family members';
+    posingInstruction = 'Place everyone naturally together in the scene as a warm family group.';
+  }
+
+  let prompt = `Transform these ${subjectCount} reference photos into a beautiful ${portraitType} in ${sceneDesc}.
 
 Keep each person and pet as clearly recognizable with their faces prominently featured, exactly as they appear in their reference photos.
-Place everyone naturally together in the scene as a warm family group.${bracesRemovalCritical}
+${posingInstruction}${bracesRemovalCritical}
 ${pets.length > 0 && petAccessory ? `Pets should ${petAccessory}.` : ''}
 
 ${styleDesc}.

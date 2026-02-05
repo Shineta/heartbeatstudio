@@ -649,6 +649,7 @@ export default function CreatePage() {
         keepOutfits,
         removeBracesIds,
         specialInstructions: portraitSpecialInstructions.trim() || undefined,
+        category: categoryTab, // Pass category for context-appropriate posing
       });
 
       const { creation } = await res.json();
@@ -1463,6 +1464,7 @@ export default function CreatePage() {
           keepOutfits,
           removeBracesIds: savedFamilySet.removeBracesIds,
           specialInstructions: portraitSpecialInstructions.trim() || undefined,
+          category: categoryTab, // Pass category for context-appropriate posing
         }
       };
 
@@ -1903,6 +1905,7 @@ export default function CreatePage() {
           keepOutfits,
           removeBracesIds,
           specialInstructions: portraitSpecialInstructions.trim() || undefined,
+          category: categoryTab, // Pass category for context-appropriate posing
         }
       }),
       // Include uploaded cover URL when upload is selected
