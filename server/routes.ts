@@ -1279,6 +1279,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { buildFamilyPortraitPrompt } = await import('./openaiService');
         const { generateMultipleImages } = await import('./nanoBananaService');
         
+        if (portraitData.specialInstructions) {
+          console.log(`[Card] Family portrait special instructions: ${portraitData.specialInstructions}`);
+        }
+        
         const prompt = buildFamilyPortraitPrompt({
           imageUrls: portraitData.imageUrls,
           selectedFaces: portraitData.selectedFaces,
@@ -1286,6 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           style: portraitData.style || 'studio-photo',
           keepOutfits: portraitData.keepOutfits ?? true,
           removeBracesIds: portraitData.removeBracesIds || [],
+          specialInstructions: portraitData.specialInstructions || undefined,
         });
 
         console.log(`[Card] Family portrait prompt (using Pro 4K model): ${prompt.substring(0, 200)}...`);

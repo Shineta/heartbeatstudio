@@ -1462,6 +1462,7 @@ export default function CreatePage() {
           style,
           keepOutfits,
           removeBracesIds: savedFamilySet.removeBracesIds,
+          specialInstructions: portraitSpecialInstructions.trim() || undefined,
         }
       };
 
@@ -1901,6 +1902,7 @@ export default function CreatePage() {
           style: categoryTab === 'education' ? educationPortraitStyle : portraitStyle,
           keepOutfits,
           removeBracesIds,
+          specialInstructions: portraitSpecialInstructions.trim() || undefined,
         }
       }),
       // Include uploaded cover URL when upload is selected
