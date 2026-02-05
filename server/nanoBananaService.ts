@@ -494,6 +494,16 @@ export async function generateFestiveTransform(params: {
     'festive-school': 'a inclusive school celebration with seasonal decorations, classroom party atmosphere, end-of-year or back-to-school festive elements, colorful streamers, age-appropriate fun celebration',
     'fun-encouraging': 'a bright and joyful encouraging scene with rainbow colors, friendly cartoon elements, positive vibes decorations, smiling sun, happy clouds, playful celebration perfect for younger students',
     'minimal-academic': 'a refined minimal academic celebration with clean lines, subtle achievement elements, soft neutral colors, elegant simplicity, sophisticated educational recognition, mature student appropriate',
+    // Education Class Portrait Scenes (9 scenes)
+    'classroom-portrait': 'a traditional classroom setting with desks arranged in rows, green chalkboard with colorful chalk writing, educational posters on walls, soft fluorescent lighting, welcoming school atmosphere',
+    'formal-group': 'a professional studio portrait setting with clean neutral gray backdrop, balanced lighting, timeless portrait quality, yearbook-ready composition',
+    'campus-outdoors': 'an outdoor school campus courtyard with school building entrance visible, green grass, trees, natural sunlight, casual academic atmosphere',
+    'grade-level-theme': 'an age-appropriate school setting, elementary with bright colors and alphabet decorations, middle school with lockers, high school with mature academic decor',
+    'teacher-and-class': 'a warm classroom setting with teacher desk visible, students arranged around teacher, mentor and students together, collaborative learning atmosphere',
+    'achievement-class': 'an honor class achievement setting with gold star decorations, achievement banners, recognition ribbons, proud moment celebration, excellence atmosphere',
+    'school-identity': 'a school-branded setting with school colors prominently displayed, school crest or mascot visible, institutional pride, academic tradition atmosphere',
+    'fun-friendly': 'a bright fun elementary classroom with colorful decorations, friendly shapes on walls, rainbow elements, happy learning atmosphere, child-friendly environment',
+    'minimal-portrait': 'a clean minimal portrait studio with simple white or soft gray backdrop, distraction-free, professional neutral lighting, gallery-ready quality',
   };
   
   // Style-specific instructions
@@ -805,16 +815,6 @@ export async function generateFestiveTransform(params: {
     'school-photo-day': 'a classic school photo day studio with blue or gray gradient backdrop, professional portrait lighting',
     'mall-photo-booth': 'a fun 80s-90s mall photo booth or Glamour Shots studio with colorful props and backdrops',
     'awkward-portrait': 'a classic 1980s-90s department store portrait studio with cheesy laser beam or gradient backdrop in blue purple and pink colors, soft diffused studio lighting, fake nature props or abstract geometric shapes, JCPenney Sears portrait studio aesthetic',
-    // Education Class Portrait Scenes (9 scenes)
-    'classroom-portrait': 'a traditional classroom setting with desks, chalkboard, learning wall, soft academic lighting, school-safe environment',
-    'formal-group': 'a professional studio portrait setting with clean neutral backdrop, balanced group composition, timeless portrait lighting',
-    'campus-outdoors': 'an outdoor school campus setting with courtyard, front of school entrance, green space, natural lighting, casual academic atmosphere',
-    'grade-level-theme': 'an age-appropriate school setting matching grade level aesthetics, elementary bright or high school classic styling',
-    'teacher-and-class': 'a classroom setting with teacher and students together, mentor moment, guided learning atmosphere, community focus',
-    'achievement-class': 'an achievement-focused setting with honor class banner, recognition frame, excellence focus, proud moment celebration',
-    'school-identity': 'a school-branded setting with school colors, crest background, mascot subtle, academic tradition, formal branding',
-    'fun-friendly': 'a fun elementary school setting with colorful backdrop, friendly shapes, happy learning atmosphere, early learner friendly',
-    'minimal-portrait': 'a clean minimal portrait setting with white or soft gray backdrop, distraction-free, professional neutral, gallery ready',
   };
   
   // Determine the actual scene description

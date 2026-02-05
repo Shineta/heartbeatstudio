@@ -1884,8 +1884,9 @@ export default function CreatePage() {
         portraitData: {
           imageUrls: uploadedPhotoUrls,
           selectedFaces: detectedFaces.filter(f => selectedFaceIds.includes(f.id)),
-          scene: portraitScene,
-          style: portraitStyle,
+          // Use education-specific scene/style for Education category
+          scene: categoryTab === 'education' ? educationPortraitScene : portraitScene,
+          style: categoryTab === 'education' ? educationPortraitStyle : portraitStyle,
           keepOutfits,
           removeBracesIds,
         }
