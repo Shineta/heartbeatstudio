@@ -1066,6 +1066,16 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'creative-professional': 'modern creative professional portrait setting with artistic backdrop, contemporary and stylish atmosphere',
     'tech-startup': 'casual tech startup portrait setting with modern office or workspace backdrop, innovative and approachable atmosphere',
     'academic-portrait': 'scholarly academic portrait setting with library or campus backdrop, intellectual and distinguished atmosphere',
+    // Education Class Portrait Scenes
+    'classroom-portrait': 'traditional classroom setting with student desks arranged in rows, green chalkboard with colorful chalk writing, educational posters on walls, alphabet chart, soft fluorescent lighting, welcoming school atmosphere',
+    'formal-group': 'professional school portrait studio with clean neutral gray backdrop, balanced lighting, timeless yearbook-ready composition',
+    'campus-outdoors': 'outdoor school campus courtyard with school building entrance visible, green grass, mature trees, natural sunlight, casual academic atmosphere',
+    'grade-level-theme': 'age-appropriate school setting matching grade level, elementary with bright colors and alphabet decorations, or high school with mature academic decor',
+    'teacher-and-class': 'warm classroom setting with teacher desk visible, students arranged around teacher, mentor and students together, collaborative learning atmosphere',
+    'achievement-class': 'honor class achievement setting with gold star decorations, achievement banners, recognition ribbons, proud moment celebration, excellence atmosphere',
+    'school-identity': 'school-branded setting with school colors prominently displayed, school crest or mascot visible, institutional pride, academic tradition atmosphere',
+    'fun-friendly': 'bright fun elementary classroom with colorful decorations, friendly shapes on walls, rainbow elements, happy learning atmosphere, child-friendly environment',
+    'minimal-portrait': 'clean minimal school portrait studio with simple white or soft gray backdrop, distraction-free, professional neutral lighting, gallery-ready quality',
   };
 
   // Blast from the Past scene overrides - when style IS the scene
