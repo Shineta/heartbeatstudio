@@ -749,8 +749,8 @@ export default function CreatePage() {
       let actualScene: string;
       let actualStyle: string;
       
-      // Business tab uses business-specific festive scenes/styles
-      if (activeTab === 'business') {
+      // Business category tab uses business-specific festive scenes/styles
+      if (categoryTab === 'business') {
         // Business festive scenes are direct - scene is the scene, style is the style
         actualScene = businessFestiveScene;
         actualStyle = businessFestiveStyle;
