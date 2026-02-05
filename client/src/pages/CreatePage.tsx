@@ -5797,6 +5797,52 @@ export default function CreatePage() {
                                           </Select>
                                         </div>
                                       </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <Switch
+                                          id="keep-outfits-tab"
+                                          checked={keepOutfits}
+                                          onCheckedChange={setKeepOutfits}
+                                          data-testid="switch-keep-outfits-tab"
+                                        />
+                                        <Label htmlFor="keep-outfits-tab" className="text-sm">Keep original outfits</Label>
+                                      </div>
+
+                                      {/* Remove braces option */}
+                                      {detectedFaces.filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id)).length > 0 && (
+                                        <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+                                          <Label className="text-xs font-medium">Remove dental braces from:</Label>
+                                          <div className="space-y-1">
+                                            {detectedFaces
+                                              .filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id))
+                                              .map(face => (
+                                                <div key={face.id} className="flex items-center gap-2">
+                                                  <input
+                                                    type="checkbox"
+                                                    id={`braces-tab-${face.id}`}
+                                                    checked={removeBracesIds.includes(face.id)}
+                                                    onChange={(e) => {
+                                                      if (e.target.checked) {
+                                                        setRemoveBracesIds(prev => [...prev, face.id]);
+                                                      } else {
+                                                        setRemoveBracesIds(prev => prev.filter(id => id !== face.id));
+                                                      }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-muted-foreground"
+                                                    data-testid={`checkbox-braces-tab-${face.id}`}
+                                                  />
+                                                  <Label htmlFor={`braces-tab-${face.id}`} className="text-sm cursor-pointer">
+                                                    {face.name}
+                                                  </Label>
+                                                </div>
+                                              ))
+                                            }
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">
+                                            Check the people who have braces in photos that you want removed in the portrait
+                                          </p>
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -6558,6 +6604,52 @@ export default function CreatePage() {
                                           </Select>
                                         </div>
                                       </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <Switch
+                                          id="keep-outfits-tab"
+                                          checked={keepOutfits}
+                                          onCheckedChange={setKeepOutfits}
+                                          data-testid="switch-keep-outfits-tab"
+                                        />
+                                        <Label htmlFor="keep-outfits-tab" className="text-sm">Keep original outfits</Label>
+                                      </div>
+
+                                      {/* Remove braces option */}
+                                      {detectedFaces.filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id)).length > 0 && (
+                                        <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+                                          <Label className="text-xs font-medium">Remove dental braces from:</Label>
+                                          <div className="space-y-1">
+                                            {detectedFaces
+                                              .filter(f => f.type !== 'pet' && selectedFaceIds.includes(f.id))
+                                              .map(face => (
+                                                <div key={face.id} className="flex items-center gap-2">
+                                                  <input
+                                                    type="checkbox"
+                                                    id={`braces-tab-${face.id}`}
+                                                    checked={removeBracesIds.includes(face.id)}
+                                                    onChange={(e) => {
+                                                      if (e.target.checked) {
+                                                        setRemoveBracesIds(prev => [...prev, face.id]);
+                                                      } else {
+                                                        setRemoveBracesIds(prev => prev.filter(id => id !== face.id));
+                                                      }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-muted-foreground"
+                                                    data-testid={`checkbox-braces-tab-${face.id}`}
+                                                  />
+                                                  <Label htmlFor={`braces-tab-${face.id}`} className="text-sm cursor-pointer">
+                                                    {face.name}
+                                                  </Label>
+                                                </div>
+                                              ))
+                                            }
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">
+                                            Check the people who have braces in photos that you want removed in the portrait
+                                          </p>
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>
