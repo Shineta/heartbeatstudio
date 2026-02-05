@@ -1286,6 +1286,9 @@ export default function CreatePage() {
   // State for education festive scene and style
   const [educationFestiveScene, setEducationFestiveScene] = useState('student-celebration');
   const [educationFestiveStyle, setEducationFestiveStyle] = useState('you-did-it');
+  
+  // State for education grade level
+  const [educationGrade, setEducationGrade] = useState('');
 
   // Get available styles for the selected education festive scene
   const currentEducationFestiveStyles = educationFestiveStylesByScene[educationFestiveScene] || educationFestiveStylesByScene['student-celebration'];
@@ -1823,6 +1826,8 @@ export default function CreatePage() {
     const cardData = {
       ...data,
       coverImageSource,
+      // Include grade level for education cards
+      ...(categoryTab === 'education' && educationGrade && { grade: educationGrade }),
       // Include attached song if selected
       ...(attachedSongId && { songIds: [attachedSongId] }),
       // Include attached animation if selected
@@ -6844,6 +6849,33 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+
+                            {/* Grade Level - shown for Student, Class, or Team */}
+                            <div className="space-y-2">
+                              <Label>Grade Level</Label>
+                              <Select value={educationGrade} onValueChange={setEducationGrade}>
+                                <SelectTrigger data-testid="select-education-grade">
+                                  <SelectValue placeholder="Select grade (optional)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pre-k">Pre-K</SelectItem>
+                                  <SelectItem value="kindergarten">Kindergarten</SelectItem>
+                                  <SelectItem value="1st">1st Grade</SelectItem>
+                                  <SelectItem value="2nd">2nd Grade</SelectItem>
+                                  <SelectItem value="3rd">3rd Grade</SelectItem>
+                                  <SelectItem value="4th">4th Grade</SelectItem>
+                                  <SelectItem value="5th">5th Grade</SelectItem>
+                                  <SelectItem value="6th">6th Grade</SelectItem>
+                                  <SelectItem value="7th">7th Grade</SelectItem>
+                                  <SelectItem value="8th">8th Grade</SelectItem>
+                                  <SelectItem value="freshman">Freshman (9th)</SelectItem>
+                                  <SelectItem value="sophomore">Sophomore (10th)</SelectItem>
+                                  <SelectItem value="junior">Junior (11th)</SelectItem>
+                                  <SelectItem value="senior">Senior (12th)</SelectItem>
+                                  <SelectItem value="college">College</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
 
                             <FormField
                               control={cardForm.control}
