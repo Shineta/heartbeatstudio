@@ -5579,6 +5579,151 @@ export default function CreatePage() {
                                   )}
                                 </div>
                               )}
+
+                              {/* Portrait Options */}
+                              {coverImageSource === 'portrait' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload 2-6 photos and combine them into a team portrait for your card cover.
+                                  </p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {portraitPhotos.map((photo, index) => (
+                                      <div key={index} className="relative aspect-square">
+                                        <img src={URL.createObjectURL(photo)} alt={`Photo ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => removePortraitPhoto(index)}>
+                                          <X className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    {portraitPhotos.length < 6 && (
+                                      <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                        {isUploadingPortraitPhoto ? (
+                                          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                                            <span className="text-xs text-muted-foreground">Add Photo</span>
+                                          </>
+                                        )}
+                                        <input type="file" accept="image/*" onChange={handlePortraitPhotoUpload} className="hidden" disabled={isUploadingPortraitPhoto} />
+                                      </label>
+                                    )}
+                                  </div>
+                                  {portraitPhotos.length >= 2 && (
+                                    <div className="space-y-3">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <Label className="text-xs mb-1 block">Scene</Label>
+                                          <Select value={portraitScene} onValueChange={setPortraitScene}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              {portraitSceneOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs mb-1 block">Style</Label>
+                                          <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              {portraitStyleOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Festive Transform Options */}
+                              {coverImageSource === 'festive' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload a photo and transform it into a festive scene for your card cover.
+                                  </p>
+                                  {!festivePhotoUrl ? (
+                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                      {isUploadingFestivePhoto ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                          <span className="text-sm text-muted-foreground">Uploading...</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <User className="w-8 h-8 text-muted-foreground" />
+                                          <span className="text-sm text-muted-foreground">Upload a photo of one person</span>
+                                        </div>
+                                      )}
+                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} />
+                                    </label>
+                                  ) : (
+                                    <div className="space-y-4">
+                                      <div className="relative w-full max-w-xs mx-auto">
+                                        <img src={generatedFestiveUrl || festivePhotoUrl} alt="Festive photo" className="w-full rounded-lg border" />
+                                        {!generatedFestiveUrl && (
+                                          <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>
+                                            <X className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                      {!generatedFestiveUrl && (
+                                        <div className="space-y-3">
+                                          <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                              <Label className="text-xs mb-1 block">Scene</Label>
+                                              <Select value={festiveScene} onValueChange={setFestiveScene}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                  {festiveSceneOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            <div>
+                                              <Label className="text-xs mb-1 block">Style</Label>
+                                              <Select value={festiveStyle} onValueChange={setFestiveStyle}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                  {festiveScene === 'holidays' && holidayStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                          </div>
+                                          <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full">
+                                            {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><PartyPopper className="w-4 h-4 mr-2" />Generate Festive Image</>}
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {generatedFestiveUrl && (
+                                        <div className="flex gap-2 justify-center">
+                                          <Button type="button" variant="outline" onClick={() => setGeneratedFestiveUrl(null)}>Try Different Scene</Button>
+                                          <Button type="button" variant="outline" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>New Photo</Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
 
                             {/* Attach a Song */}
@@ -6062,6 +6207,151 @@ export default function CreatePage() {
                                       )}
                                       <input type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
                                     </label>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Portrait Options */}
+                              {coverImageSource === 'portrait' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload 2-6 photos and combine them into a class portrait for your card cover.
+                                  </p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {portraitPhotos.map((photo, index) => (
+                                      <div key={index} className="relative aspect-square">
+                                        <img src={URL.createObjectURL(photo)} alt={`Photo ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => removePortraitPhoto(index)}>
+                                          <X className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    {portraitPhotos.length < 6 && (
+                                      <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                        {isUploadingPortraitPhoto ? (
+                                          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                                            <span className="text-xs text-muted-foreground">Add Photo</span>
+                                          </>
+                                        )}
+                                        <input type="file" accept="image/*" onChange={handlePortraitPhotoUpload} className="hidden" disabled={isUploadingPortraitPhoto} />
+                                      </label>
+                                    )}
+                                  </div>
+                                  {portraitPhotos.length >= 2 && (
+                                    <div className="space-y-3">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <Label className="text-xs mb-1 block">Scene</Label>
+                                          <Select value={portraitScene} onValueChange={setPortraitScene}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              {portraitSceneOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs mb-1 block">Style</Label>
+                                          <Select value={portraitStyle} onValueChange={setPortraitStyle}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              {portraitStyleOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Festive Transform Options */}
+                              {coverImageSource === 'festive' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload a photo and transform it into a festive scene for your card cover.
+                                  </p>
+                                  {!festivePhotoUrl ? (
+                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                      {isUploadingFestivePhoto ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                          <span className="text-sm text-muted-foreground">Uploading...</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <User className="w-8 h-8 text-muted-foreground" />
+                                          <span className="text-sm text-muted-foreground">Upload a photo of one person</span>
+                                        </div>
+                                      )}
+                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} />
+                                    </label>
+                                  ) : (
+                                    <div className="space-y-4">
+                                      <div className="relative w-full max-w-xs mx-auto">
+                                        <img src={generatedFestiveUrl || festivePhotoUrl} alt="Festive photo" className="w-full rounded-lg border" />
+                                        {!generatedFestiveUrl && (
+                                          <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>
+                                            <X className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                      {!generatedFestiveUrl && (
+                                        <div className="space-y-3">
+                                          <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                              <Label className="text-xs mb-1 block">Scene</Label>
+                                              <Select value={festiveScene} onValueChange={setFestiveScene}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                  {festiveSceneOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            <div>
+                                              <Label className="text-xs mb-1 block">Style</Label>
+                                              <Select value={festiveStyle} onValueChange={setFestiveStyle}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                  {festiveScene === 'holidays' && holidayStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                  {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                          </div>
+                                          <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full">
+                                            {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><PartyPopper className="w-4 h-4 mr-2" />Generate Festive Image</>}
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {generatedFestiveUrl && (
+                                        <div className="flex gap-2 justify-center">
+                                          <Button type="button" variant="outline" onClick={() => setGeneratedFestiveUrl(null)}>Try Different Scene</Button>
+                                          <Button type="button" variant="outline" onClick={() => { setFestivePhoto(null); setFestivePhotoUrl(null); setGeneratedFestiveUrl(null); }}>New Photo</Button>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
