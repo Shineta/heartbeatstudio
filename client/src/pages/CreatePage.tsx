@@ -6167,6 +6167,16 @@ export default function CreatePage() {
                                           <p className="text-xs text-muted-foreground">
                                             Scenes and styles are curated for workplace-appropriate celebrations.
                                           </p>
+                                          <div>
+                                            <Label className="text-xs mb-1 block">Custom Instructions (Optional)</Label>
+                                            <Textarea 
+                                              placeholder="Add specific details about the image you want, e.g., 'Include a '10 Years' banner' or 'Show them holding an award trophy'"
+                                              value={festiveInstructions}
+                                              onChange={(e) => setFestiveInstructions(e.target.value)}
+                                              className="min-h-[60px] text-sm"
+                                              data-testid="input-business-festive-instructions"
+                                            />
+                                          </div>
                                           <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full">
                                             {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><PartyPopper className="w-4 h-4 mr-2" />Generate Festive Image</>}
                                           </Button>
