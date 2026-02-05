@@ -1036,6 +1036,118 @@ export default function CreatePage() {
     }
   };
 
+  // Business Festive Transform - 8 scenes with curated professional styles
+  const businessFestiveSceneOptions = [
+    { value: 'professional-celebration', label: 'Professional Celebration' },
+    { value: 'milestone-moment', label: 'Milestone Moment' },
+    { value: 'team-celebration', label: 'Team Celebration' },
+    { value: 'client-appreciation', label: 'Client Appreciation' },
+    { value: 'event-gathering', label: 'Event & Gathering' },
+    { value: 'seasonal-festive', label: 'Seasonal Festive (Business-Safe)' },
+    { value: 'brand-celebration', label: 'Brand Celebration' },
+    { value: 'modern-abstract-festive', label: 'Modern Abstract Festive' },
+  ];
+
+  // Styles for each Business Festive scene
+  const businessFestiveStylesByScene: Record<string, { value: string; label: string }[]> = {
+    'professional-celebration': [
+      { value: 'elegant-confetti', label: 'Elegant Confetti' },
+      { value: 'subtle-sparkle', label: 'Subtle Sparkle' },
+      { value: 'achievement-glow', label: 'Achievement Glow' },
+      { value: 'polished-cheers', label: 'Polished Cheers' },
+      { value: 'soft-gold-accents', label: 'Soft Gold Accents' },
+      { value: 'modern-celebration', label: 'Modern Celebration' },
+      { value: 'corporate-festive', label: 'Corporate Festive' },
+      { value: 'minimal-party', label: 'Minimal Party' },
+    ],
+    'milestone-moment': [
+      { value: 'promotion-spotlight', label: 'Promotion Spotlight' },
+      { value: 'work-anniversary', label: 'Work Anniversary' },
+      { value: 'career-growth', label: 'Career Growth' },
+      { value: 'achievement-marker', label: 'Achievement Marker' },
+      { value: 'timeline-highlight', label: 'Timeline Highlight' },
+      { value: 'next-level', label: 'Next Level' },
+      { value: 'success-step', label: 'Success Step' },
+      { value: 'recognition-frame', label: 'Recognition Frame' },
+    ],
+    'team-celebration': [
+      { value: 'team-win', label: 'Team Win' },
+      { value: 'collective-success', label: 'Collective Success' },
+      { value: 'collaboration-energy', label: 'Collaboration Energy' },
+      { value: 'unity-highlights', label: 'Unity Highlights' },
+      { value: 'together-we-did-it', label: 'Together We Did It' },
+      { value: 'momentum-flow', label: 'Momentum Flow' },
+      { value: 'shared-achievement', label: 'Shared Achievement' },
+      { value: 'connected-wins', label: 'Connected Wins' },
+    ],
+    'client-appreciation': [
+      { value: 'thank-you-elegant', label: 'Thank You Elegant' },
+      { value: 'premium-gratitude', label: 'Premium Gratitude' },
+      { value: 'partnership-celebration', label: 'Partnership Celebration' },
+      { value: 'valued-relationship', label: 'Valued Relationship' },
+      { value: 'trusted-partner', label: 'Trusted Partner' },
+      { value: 'appreciation-note', label: 'Appreciation Note' },
+      { value: 'professional-warmth', label: 'Professional Warmth' },
+      { value: 'relationship-focus', label: 'Relationship Focus' },
+    ],
+    'event-gathering': [
+      { value: 'company-event', label: 'Company Event' },
+      { value: 'conference-energy', label: 'Conference Energy' },
+      { value: 'corporate-social', label: 'Corporate Social' },
+      { value: 'annual-celebration', label: 'Annual Celebration' },
+      { value: 'networking-night', label: 'Networking Night' },
+      { value: 'brand-gathering', label: 'Brand Gathering' },
+      { value: 'formal-festive', label: 'Formal Festive' },
+      { value: 'event-highlights', label: 'Event Highlights' },
+    ],
+    'seasonal-festive': [
+      { value: 'winter-neutral', label: 'Winter Neutral' },
+      { value: 'year-end-celebration', label: 'Year-End Celebration' },
+      { value: 'seasonal-glow', label: 'Seasonal Glow' },
+      { value: 'festive-minimal', label: 'Festive Minimal' },
+      { value: 'new-year-forward', label: 'New Year Forward' },
+      { value: 'holiday-abstract', label: 'Holiday Abstract' },
+      { value: 'seasonal-professional', label: 'Seasonal Professional' },
+      { value: 'end-of-year-warmth', label: 'End-of-Year Warmth' },
+    ],
+    'brand-celebration': [
+      { value: 'logo-spotlight', label: 'Logo Spotlight' },
+      { value: 'brand-colors-festive', label: 'Brand Colors Festive' },
+      { value: 'identity-glow', label: 'Identity Glow' },
+      { value: 'corporate-signature', label: 'Corporate Signature' },
+      { value: 'branded-confetti', label: 'Branded Confetti' },
+      { value: 'typography-celebration', label: 'Typography Celebration' },
+      { value: 'minimal-brand-party', label: 'Minimal Brand Party' },
+      { value: 'polished-identity', label: 'Polished Identity' },
+    ],
+    'modern-abstract-festive': [
+      { value: 'gradient-motion', label: 'Gradient Motion' },
+      { value: 'soft-light-trails', label: 'Soft Light Trails' },
+      { value: 'abstract-spark', label: 'Abstract Spark' },
+      { value: 'minimal-celebration', label: 'Minimal Celebration' },
+      { value: 'geometric-festive', label: 'Geometric Festive' },
+      { value: 'motion-shapes', label: 'Motion Shapes' },
+      { value: 'clean-energy', label: 'Clean Energy' },
+      { value: 'contemporary-glow', label: 'Contemporary Glow' },
+    ],
+  };
+
+  // State for business festive scene and style
+  const [businessFestiveScene, setBusinessFestiveScene] = useState('professional-celebration');
+  const [businessFestiveStyle, setBusinessFestiveStyle] = useState('elegant-confetti');
+
+  // Get available styles for the selected business festive scene
+  const currentBusinessFestiveStyles = businessFestiveStylesByScene[businessFestiveScene] || businessFestiveStylesByScene['professional-celebration'];
+
+  // Update style when business festive scene changes
+  const handleBusinessFestiveSceneChange = (scene: string) => {
+    setBusinessFestiveScene(scene);
+    const styles = businessFestiveStylesByScene[scene] || [];
+    if (styles.length > 0) {
+      setBusinessFestiveStyle(styles[0].value);
+    }
+  };
+
   // "Same People, New Scene" - Generate a variant card with saved family set
   const generateFamilyVariant = async (scene: string, style: string) => {
     if (!savedFamilySet) {
@@ -5985,11 +6097,11 @@ export default function CreatePage() {
                                 </div>
                               )}
 
-                              {/* Festive Transform Options */}
+                              {/* Festive Transform Options - Business-specific scenes */}
                               {coverImageSource === 'festive' && (
                                 <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
                                   <p className="text-sm text-muted-foreground">
-                                    Upload a photo and transform it into a festive scene for your card cover.
+                                    Upload a photo and transform it into a professional festive scene for your card cover.
                                   </p>
                                   {!festivePhotoUrl ? (
                                     <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
@@ -6021,10 +6133,10 @@ export default function CreatePage() {
                                           <div className="grid grid-cols-2 gap-3">
                                             <div>
                                               <Label className="text-xs mb-1 block">Scene</Label>
-                                              <Select value={festiveScene} onValueChange={setFestiveScene}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                              <Select value={businessFestiveScene} onValueChange={handleBusinessFestiveSceneChange}>
+                                                <SelectTrigger data-testid="select-business-festive-scene"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                  {festiveSceneOptions.map(opt => (
+                                                  {businessFestiveSceneOptions.map(opt => (
                                                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                                   ))}
                                                 </SelectContent>
@@ -6032,28 +6144,19 @@ export default function CreatePage() {
                                             </div>
                                             <div>
                                               <Label className="text-xs mb-1 block">Style</Label>
-                                              <Select value={festiveStyle} onValueChange={setFestiveStyle}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                              <Select value={businessFestiveStyle} onValueChange={setBusinessFestiveStyle}>
+                                                <SelectTrigger data-testid="select-business-festive-style"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                  {festiveScene === 'holidays' && holidayStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'life-events' && lifeEventsStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'seasons' && seasonsStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                  ))}
-                                                  {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
+                                                  {currentBusinessFestiveStyles.map(opt => (
                                                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                                   ))}
                                                 </SelectContent>
                                               </Select>
                                             </div>
                                           </div>
+                                          <p className="text-xs text-muted-foreground">
+                                            Scenes and styles are curated for workplace-appropriate celebrations.
+                                          </p>
                                           <Button type="button" onClick={generateFestiveTransform} disabled={isGeneratingFestive} className="w-full">
                                             {isGeneratingFestive ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transforming...</> : <><PartyPopper className="w-4 h-4 mr-2" />Generate Festive Image</>}
                                           </Button>
