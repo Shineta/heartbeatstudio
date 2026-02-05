@@ -746,10 +746,20 @@ export default function CreatePage() {
     
     setIsGeneratingFestive(true);
     try {
-      // For category scenes (holidays, life-events, seasons), the "style" is actually the scene
-      // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
-      const actualScene = festiveScene === 'blast-from-past' ? 'blast-from-past' : festiveStyle;
-      const actualStyle = festiveScene === 'blast-from-past' ? festiveStyle : 'festive-photo';
+      let actualScene: string;
+      let actualStyle: string;
+      
+      // Business tab uses business-specific festive scenes/styles
+      if (activeTab === 'business') {
+        // Business festive scenes are direct - scene is the scene, style is the style
+        actualScene = businessFestiveScene;
+        actualStyle = businessFestiveStyle;
+      } else {
+        // For category scenes (holidays, life-events, seasons), the "style" is actually the scene
+        // For blast-from-past, scene is 'blast-from-past' and style is the specific era/show
+        actualScene = festiveScene === 'blast-from-past' ? 'blast-from-past' : festiveStyle;
+        actualStyle = festiveScene === 'blast-from-past' ? festiveStyle : 'festive-photo';
+      }
       
       const res = await apiRequest("POST", "/api/generate/festive-transform", {
         imageUrl: festivePhotoUrl,
