@@ -883,6 +883,25 @@ export default function CreatePage() {
     { value: 'awkward-portrait', label: 'awkward family portrait' },
   ];
 
+  // Portrait scene and style options for team/class portraits
+  const portraitSceneOptions = [
+    { value: 'studio', label: 'Studio' },
+    { value: 'office', label: 'Office' },
+    { value: 'outdoors', label: 'Outdoors' },
+    { value: 'holiday', label: 'Holiday' },
+    { value: 'celebration', label: 'Celebration' },
+    { value: 'graduation', label: 'Graduation' },
+  ];
+
+  const portraitStyleOptions = [
+    { value: 'photo', label: 'Photo Realistic' },
+    { value: 'cartoon', label: 'Cartoon' },
+    { value: 'watercolor', label: 'Watercolor' },
+    { value: 'oil-painting', label: 'Oil Painting' },
+    { value: 'digital-art', label: 'Digital Art' },
+    { value: 'vintage', label: 'Vintage' },
+  ];
+
   // "Same People, New Scene" - Generate a variant card with saved family set
   const generateFamilyVariant = async (scene: string, style: string) => {
     if (!savedFamilySet) {
