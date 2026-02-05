@@ -7179,10 +7179,16 @@ export default function CreatePage() {
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
                                           <Label className="text-xs mb-1 block">Scene</Label>
-                                          <Select value={portraitScene} onValueChange={setPortraitScene}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <Select value={educationPortraitScene} onValueChange={(value) => {
+                                            setEducationPortraitScene(value);
+                                            const styles = educationPortraitStylesByScene[value];
+                                            if (styles && styles.length > 0) {
+                                              setEducationPortraitStyle(styles[0].value);
+                                            }
+                                          }}>
+                                            <SelectTrigger data-testid="select-education-portrait-scene"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              {portraitSceneOptions.map(opt => (
+                                              {educationPortraitSceneOptions.map(opt => (
                                                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                               ))}
                                             </SelectContent>
@@ -7190,10 +7196,10 @@ export default function CreatePage() {
                                         </div>
                                         <div>
                                           <Label className="text-xs mb-1 block">Style</Label>
-                                          <Select value={portraitStyle} onValueChange={setPortraitStyle}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <Select value={educationPortraitStyle} onValueChange={setEducationPortraitStyle}>
+                                            <SelectTrigger data-testid="select-education-portrait-style"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              {portraitStyleOptions.map(opt => (
+                                              {currentEducationPortraitStyles.map(opt => (
                                                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                               ))}
                                             </SelectContent>
@@ -7203,12 +7209,12 @@ export default function CreatePage() {
 
                                       <div className="flex items-center gap-2">
                                         <Switch
-                                          id="keep-outfits-tab"
+                                          id="keep-outfits-edu"
                                           checked={keepOutfits}
                                           onCheckedChange={setKeepOutfits}
-                                          data-testid="switch-keep-outfits-tab"
+                                          data-testid="switch-keep-outfits-edu"
                                         />
-                                        <Label htmlFor="keep-outfits-tab" className="text-sm">Keep original outfits</Label>
+                                        <Label htmlFor="keep-outfits-edu" className="text-sm">Keep original outfits</Label>
                                       </div>
 
                                       {/* Remove braces option */}
