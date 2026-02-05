@@ -5623,27 +5623,42 @@ export default function CreatePage() {
                                     {portraitPhotos.map((photo, index) => (
                                       <div key={index} className="relative aspect-square">
                                         <img src={URL.createObjectURL(photo)} alt={`Photo ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
-                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => removePortraitPhoto(index)}>
+                                        <button type="button" onClick={() => removePortraitPhoto(index)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
                                           <X className="w-3 h-3" />
-                                        </Button>
+                                        </button>
                                       </div>
                                     ))}
                                     {portraitPhotos.length < 6 && (
                                       <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
-                                        {isUploadingPortraitPhoto ? (
-                                          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
-                                        ) : (
-                                          <>
-                                            <Upload className="w-6 h-6 text-muted-foreground mb-1" />
-                                            <span className="text-xs text-muted-foreground">Add Photo</span>
-                                          </>
-                                        )}
-                                        <input type="file" accept="image/*" onChange={handlePortraitPhotoUpload} className="hidden" disabled={isUploadingPortraitPhoto} />
+                                        <Upload className="w-6 h-6 text-muted-foreground" />
+                                        <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
+                                        <input type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
                                       </label>
                                     )}
                                   </div>
-                                  {portraitPhotos.length >= 2 && (
-                                    <div className="space-y-3">
+
+                                  {/* Analyze Button */}
+                                  {portraitPhotos.length >= 2 && detectedFaces.length === 0 && (
+                                    <Button type="button" onClick={uploadAndAnalyzePhotos} disabled={isUploadingPhotos || isAnalyzingPhotos} className="w-full" variant="secondary">
+                                      {isUploadingPhotos ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : isAnalyzingPhotos ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Detecting People...</> : <><Sparkles className="w-4 h-4 mr-2" />Analyze Photos</>}
+                                    </Button>
+                                  )}
+
+                                  {/* Face Selection */}
+                                  {detectedFaces.length > 0 && (
+                                    <>
+                                      <div className="space-y-2">
+                                        <Label className="text-sm">Select people to include:</Label>
+                                        {detectedFaces.map((face) => (
+                                          <div key={face.id} className={`flex items-center gap-3 p-2 border rounded-lg cursor-pointer ${selectedFaceIds.includes(face.id) ? 'bg-primary/10 border-primary' : 'hover-elevate'}`} onClick={() => setSelectedFaceIds(prev => prev.includes(face.id) ? prev.filter(id => id !== face.id) : [...prev, face.id])}>
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedFaceIds.includes(face.id) ? 'bg-primary border-primary' : 'border-muted-foreground/50'}`}>
+                                              {selectedFaceIds.includes(face.id) && <Check className="w-3 h-3 text-primary-foreground" />}
+                                            </div>
+                                            <span className="text-sm font-medium">{face.name}</span>
+                                            <span className="text-xs text-muted-foreground">{face.description}</span>
+                                          </div>
+                                        ))}
+                                      </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
                                           <Label className="text-xs mb-1 block">Scene</Label>
@@ -5668,7 +5683,7 @@ export default function CreatePage() {
                                           </Select>
                                         </div>
                                       </div>
-                                    </div>
+                                    </>
                                   )}
                                 </div>
                               )}
@@ -6254,27 +6269,42 @@ export default function CreatePage() {
                                     {portraitPhotos.map((photo, index) => (
                                       <div key={index} className="relative aspect-square">
                                         <img src={URL.createObjectURL(photo)} alt={`Photo ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
-                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => removePortraitPhoto(index)}>
+                                        <button type="button" onClick={() => removePortraitPhoto(index)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
                                           <X className="w-3 h-3" />
-                                        </Button>
+                                        </button>
                                       </div>
                                     ))}
                                     {portraitPhotos.length < 6 && (
                                       <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
-                                        {isUploadingPortraitPhoto ? (
-                                          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
-                                        ) : (
-                                          <>
-                                            <Upload className="w-6 h-6 text-muted-foreground mb-1" />
-                                            <span className="text-xs text-muted-foreground">Add Photo</span>
-                                          </>
-                                        )}
-                                        <input type="file" accept="image/*" onChange={handlePortraitPhotoUpload} className="hidden" disabled={isUploadingPortraitPhoto} />
+                                        <Upload className="w-6 h-6 text-muted-foreground" />
+                                        <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
+                                        <input type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
                                       </label>
                                     )}
                                   </div>
-                                  {portraitPhotos.length >= 2 && (
-                                    <div className="space-y-3">
+
+                                  {/* Analyze Button */}
+                                  {portraitPhotos.length >= 2 && detectedFaces.length === 0 && (
+                                    <Button type="button" onClick={uploadAndAnalyzePhotos} disabled={isUploadingPhotos || isAnalyzingPhotos} className="w-full" variant="secondary">
+                                      {isUploadingPhotos ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : isAnalyzingPhotos ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Detecting People...</> : <><Sparkles className="w-4 h-4 mr-2" />Analyze Photos</>}
+                                    </Button>
+                                  )}
+
+                                  {/* Face Selection */}
+                                  {detectedFaces.length > 0 && (
+                                    <>
+                                      <div className="space-y-2">
+                                        <Label className="text-sm">Select people to include:</Label>
+                                        {detectedFaces.map((face) => (
+                                          <div key={face.id} className={`flex items-center gap-3 p-2 border rounded-lg cursor-pointer ${selectedFaceIds.includes(face.id) ? 'bg-primary/10 border-primary' : 'hover-elevate'}`} onClick={() => setSelectedFaceIds(prev => prev.includes(face.id) ? prev.filter(id => id !== face.id) : [...prev, face.id])}>
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedFaceIds.includes(face.id) ? 'bg-primary border-primary' : 'border-muted-foreground/50'}`}>
+                                              {selectedFaceIds.includes(face.id) && <Check className="w-3 h-3 text-primary-foreground" />}
+                                            </div>
+                                            <span className="text-sm font-medium">{face.name}</span>
+                                            <span className="text-xs text-muted-foreground">{face.description}</span>
+                                          </div>
+                                        ))}
+                                      </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
                                           <Label className="text-xs mb-1 block">Scene</Label>
@@ -6299,7 +6329,7 @@ export default function CreatePage() {
                                           </Select>
                                         </div>
                                       </div>
-                                    </div>
+                                    </>
                                   )}
                                 </div>
                               )}
