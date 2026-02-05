@@ -1826,8 +1826,12 @@ export default function CreatePage() {
     const cardData = {
       ...data,
       coverImageSource,
-      // Include grade level for education cards
-      ...(categoryTab === 'education' && educationGrade && { grade: educationGrade }),
+      // Include grade level, scene, and style for education cards
+      ...(categoryTab === 'education' && {
+        ...(educationGrade && { grade: educationGrade }),
+        educationScene: educationFestiveScene,
+        educationStyle: educationFestiveStyle,
+      }),
       // Include attached song if selected
       ...(attachedSongId && { songIds: [attachedSongId] }),
       // Include attached animation if selected
@@ -6873,6 +6877,42 @@ export default function CreatePage() {
                                   <SelectItem value="junior">Junior (11th)</SelectItem>
                                   <SelectItem value="senior">Senior (12th)</SelectItem>
                                   <SelectItem value="college">College</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Education Scene Selector */}
+                            <div className="space-y-2">
+                              <Label>Scene</Label>
+                              <Select value={educationFestiveScene} onValueChange={handleEducationFestiveSceneChange}>
+                                <SelectTrigger data-testid="select-education-scene">
+                                  <SelectValue placeholder="Select scene" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {educationFestiveSceneOptions.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                      <div className="flex flex-col">
+                                        <span>{opt.label}</span>
+                                        <span className="text-xs text-muted-foreground">{opt.description}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">All styles are age-appropriate, school-safe, and designed for educational settings.</p>
+                            </div>
+
+                            {/* Education Style Selector */}
+                            <div className="space-y-2">
+                              <Label>Style</Label>
+                              <Select value={educationFestiveStyle} onValueChange={setEducationFestiveStyle}>
+                                <SelectTrigger data-testid="select-education-scene-style">
+                                  <SelectValue placeholder="Select style" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {currentEducationFestiveStyles.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>
