@@ -5493,6 +5493,138 @@ export default function CreatePage() {
                               )}
                             />
 
+                            {/* Cover Image Source */}
+                            <div className="space-y-3">
+                              <Label>Cover Image</Label>
+                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'ai' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('ai')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-ai"
+                                >
+                                  <Sparkles className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">AI Generated</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'portrait' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('portrait')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-portrait"
+                                >
+                                  <Users className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Team Portrait</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'festive' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('festive')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-festive"
+                                >
+                                  <PartyPopper className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Festive Transform</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'upload' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('upload')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-upload"
+                                >
+                                  <Upload className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Upload Image</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'none' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('none')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-none"
+                                >
+                                  <Mail className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">No Image</span>
+                                </Button>
+                              </div>
+
+                              {coverImageSource === 'upload' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload your company logo or a professional image.
+                                  </p>
+                                  {uploadedCoverUrl ? (
+                                    <div className="relative w-full max-w-xs mx-auto">
+                                      <img src={uploadedCoverUrl} alt="Uploaded cover" className="w-full rounded-lg border" />
+                                      <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={clearUploadedCover}>
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                      {isUploadingCoverImage ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                          <span className="text-sm text-muted-foreground">Uploading...</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Upload className="w-8 h-8 text-muted-foreground" />
+                                          <span className="text-sm text-muted-foreground">Click to upload an image</span>
+                                        </div>
+                                      )}
+                                      <input type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
+                                    </label>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Attach a Song */}
+                            <div className="space-y-3">
+                              <Label className="flex items-center gap-2">
+                                <Music className="w-4 h-4" />
+                                Attach a Song (Optional)
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Add a song to play when the card is viewed
+                              </p>
+                              <Select value={attachedSongId || "none"} onValueChange={(val) => setAttachedSongId(val === "none" ? null : val)}>
+                                <SelectTrigger data-testid="select-business-song">
+                                  <SelectValue placeholder="No song attached" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">No song attached</SelectItem>
+                                  {userSongs.map((song) => (
+                                    <SelectItem key={song.id} value={song.id}>{song.title || "Untitled Song"}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Attach an Animation */}
+                            <div className="space-y-3">
+                              <Label className="flex items-center gap-2">
+                                <Video className="w-4 h-4" />
+                                Attach an Animation (Optional)
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Add an animation to play when the card is viewed
+                              </p>
+                              <Select value={attachedAnimationId || "none"} onValueChange={(val) => setAttachedAnimationId(val === "none" ? null : val)}>
+                                <SelectTrigger data-testid="select-business-animation">
+                                  <SelectValue placeholder="No animation attached" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">No animation attached</SelectItem>
+                                  {userAnimations.map((anim) => (
+                                    <SelectItem key={anim.id} value={anim.id}>{anim.title || "Untitled Animation"}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
                             <Button type="submit" className="w-full" disabled={cardMutation.isPending} data-testid="button-generate-business-card">
                               {cardMutation.isPending ? (
                                 <>
@@ -5846,6 +5978,138 @@ export default function CreatePage() {
                                 </FormItem>
                               )}
                             />
+
+                            {/* Cover Image Source */}
+                            <div className="space-y-3">
+                              <Label>Cover Image</Label>
+                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'ai' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('ai')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-ai"
+                                >
+                                  <Sparkles className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">AI Generated</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'portrait' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('portrait')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-portrait"
+                                >
+                                  <Users className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Class Portrait</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'festive' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('festive')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-festive"
+                                >
+                                  <PartyPopper className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Festive Transform</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'upload' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('upload')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-upload"
+                                >
+                                  <Upload className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Upload Image</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={coverImageSource === 'none' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('none')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-none"
+                                >
+                                  <Mail className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">No Image</span>
+                                </Button>
+                              </div>
+
+                              {coverImageSource === 'upload' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Upload a school logo or class photo.
+                                  </p>
+                                  {uploadedCoverUrl ? (
+                                    <div className="relative w-full max-w-xs mx-auto">
+                                      <img src={uploadedCoverUrl} alt="Uploaded cover" className="w-full rounded-lg border" />
+                                      <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={clearUploadedCover}>
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                      {isUploadingCoverImage ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                                          <span className="text-sm text-muted-foreground">Uploading...</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                          <Upload className="w-8 h-8 text-muted-foreground" />
+                                          <span className="text-sm text-muted-foreground">Click to upload an image</span>
+                                        </div>
+                                      )}
+                                      <input type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
+                                    </label>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Attach a Song */}
+                            <div className="space-y-3">
+                              <Label className="flex items-center gap-2">
+                                <Music className="w-4 h-4" />
+                                Attach a Song (Optional)
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Add a song to play when the card is viewed
+                              </p>
+                              <Select value={attachedSongId || "none"} onValueChange={(val) => setAttachedSongId(val === "none" ? null : val)}>
+                                <SelectTrigger data-testid="select-education-song">
+                                  <SelectValue placeholder="No song attached" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">No song attached</SelectItem>
+                                  {userSongs.map((song) => (
+                                    <SelectItem key={song.id} value={song.id}>{song.title || "Untitled Song"}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Attach an Animation */}
+                            <div className="space-y-3">
+                              <Label className="flex items-center gap-2">
+                                <Video className="w-4 h-4" />
+                                Attach an Animation (Optional)
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Add an animation to play when the card is viewed
+                              </p>
+                              <Select value={attachedAnimationId || "none"} onValueChange={(val) => setAttachedAnimationId(val === "none" ? null : val)}>
+                                <SelectTrigger data-testid="select-education-animation">
+                                  <SelectValue placeholder="No animation attached" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">No animation attached</SelectItem>
+                                  {userAnimations.map((anim) => (
+                                    <SelectItem key={anim.id} value={anim.id}>{anim.title || "Untitled Animation"}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
 
                             <Button type="submit" className="w-full" disabled={cardMutation.isPending} data-testid="button-generate-education-card">
                               {cardMutation.isPending ? (
