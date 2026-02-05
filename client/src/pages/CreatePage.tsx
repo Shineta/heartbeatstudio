@@ -1302,73 +1302,116 @@ export default function CreatePage() {
     }
   };
 
-  // Education Portrait Scene Options (for Class Portrait feature)
+  // Education Portrait Scene Options (for Class Portrait feature) - 9 scenes with 8 styles each
   const educationPortraitSceneOptions = [
-    { value: 'classroom', label: 'Classroom' },
-    { value: 'school-library', label: 'School Library' },
-    { value: 'playground', label: 'Playground' },
-    { value: 'graduation-stage', label: 'Graduation Stage' },
-    { value: 'science-lab', label: 'Science Lab' },
-    { value: 'art-studio', label: 'Art Studio' },
-    { value: 'sports-field', label: 'Sports Field' },
-    { value: 'auditorium', label: 'Auditorium' },
+    { value: 'classroom-portrait', label: '🏫 Classroom Portrait', description: 'Yearbooks, formal class photos' },
+    { value: 'formal-group', label: '📸 Formal Group Portrait', description: 'Official school use, administration' },
+    { value: 'campus-outdoors', label: '🌳 Campus / Outdoors', description: 'Informal but polished portraits' },
+    { value: 'grade-level-theme', label: '🎒 Grade-Level Theme', description: 'Matching age group aesthetics' },
+    { value: 'teacher-and-class', label: '🧑‍🏫 Teacher & Class', description: 'Classroom memory keepsakes' },
+    { value: 'achievement-class', label: '🏆 Achievement Class Portrait', description: 'Competition wins, recognition' },
+    { value: 'school-identity', label: '🏫 School Identity', description: 'Branded portraits, district use' },
+    { value: 'fun-friendly', label: '🌈 Fun & Friendly (Elementary)', description: 'Pre-K through Grade 3' },
+    { value: 'minimal-portrait', label: '✨ Minimal Portrait', description: 'Older students, formal displays' },
   ];
 
-  // Education Portrait Styles
+  // Education Portrait Styles - 9 scenes x 8 styles each
   const educationPortraitStylesByScene: Record<string, { value: string; label: string }[]> = {
-    'classroom': [
+    'classroom-portrait': [
+      { value: 'traditional-classroom', label: 'Traditional Classroom' },
+      { value: 'chalkboard-background', label: 'Chalkboard Background' },
+      { value: 'learning-wall', label: 'Learning Wall' },
+      { value: 'desk-and-board', label: 'Desk & Board' },
+      { value: 'soft-classroom-light', label: 'Soft Classroom Light' },
+      { value: 'neutral-classroom', label: 'Neutral Classroom' },
+      { value: 'minimal-classroom', label: 'Minimal Classroom' },
+      { value: 'academic-focus', label: 'Academic Focus' },
+    ],
+    'formal-group': [
+      { value: 'studio-neutral', label: 'Studio Neutral' },
+      { value: 'clean-backdrop', label: 'Clean Backdrop' },
       { value: 'classic-school-photo', label: 'Classic School Photo' },
-      { value: 'learning-atmosphere', label: 'Learning Atmosphere' },
-      { value: 'bright-and-cheerful', label: 'Bright & Cheerful' },
-      { value: 'academic-warm', label: 'Academic Warm' },
+      { value: 'soft-gray-studio', label: 'Soft Gray Studio' },
+      { value: 'white-background', label: 'White Background' },
+      { value: 'balanced-group-layout', label: 'Balanced Group Layout' },
+      { value: 'centered-composition', label: 'Centered Composition' },
+      { value: 'timeless-portrait', label: 'Timeless Portrait' },
     ],
-    'school-library': [
-      { value: 'scholarly', label: 'Scholarly' },
-      { value: 'bookworm-charm', label: 'Bookworm Charm' },
-      { value: 'quiet-focus', label: 'Quiet Focus' },
-      { value: 'knowledge-glow', label: 'Knowledge Glow' },
+    'campus-outdoors': [
+      { value: 'school-courtyard', label: 'School Courtyard' },
+      { value: 'front-of-school', label: 'Front of School' },
+      { value: 'playground-younger', label: 'Playground (Younger Grades)' },
+      { value: 'green-space', label: 'Green Space' },
+      { value: 'building-entrance', label: 'Building Entrance' },
+      { value: 'outdoor-academic', label: 'Outdoor Academic' },
+      { value: 'natural-light', label: 'Natural Light' },
+      { value: 'casual-school-day', label: 'Casual School Day' },
     ],
-    'playground': [
-      { value: 'playful-energy', label: 'Playful Energy' },
-      { value: 'outdoor-fun', label: 'Outdoor Fun' },
-      { value: 'friendship-vibes', label: 'Friendship Vibes' },
-      { value: 'active-joy', label: 'Active Joy' },
+    'grade-level-theme': [
+      { value: 'elementary-bright', label: 'Elementary Bright' },
+      { value: 'middle-school-modern', label: 'Middle School Modern' },
+      { value: 'high-school-classic', label: 'High School Classic' },
+      { value: 'senior-class-style', label: 'Senior Class Style' },
+      { value: 'early-learners', label: 'Early Learners' },
+      { value: 'upper-grades', label: 'Upper Grades' },
+      { value: 'age-appropriate-tone', label: 'Age-Appropriate Tone' },
+      { value: 'level-pride', label: 'Level Pride' },
     ],
-    'graduation-stage': [
-      { value: 'proud-moment', label: 'Proud Moment' },
-      { value: 'formal-celebration', label: 'Formal Celebration' },
-      { value: 'achievement-spotlight', label: 'Achievement Spotlight' },
-      { value: 'next-chapter', label: 'Next Chapter' },
+    'teacher-and-class': [
+      { value: 'teacher-center', label: 'Teacher Center' },
+      { value: 'side-by-side', label: 'Side-by-Side' },
+      { value: 'classroom-leader', label: 'Classroom Leader' },
+      { value: 'mentor-moment', label: 'Mentor Moment' },
+      { value: 'guided-learning', label: 'Guided Learning' },
+      { value: 'proud-classroom', label: 'Proud Classroom' },
+      { value: 'community-focus', label: 'Community Focus' },
+      { value: 'together-in-learning', label: 'Together in Learning' },
     ],
-    'science-lab': [
-      { value: 'curious-explorer', label: 'Curious Explorer' },
-      { value: 'stem-focus', label: 'STEM Focus' },
-      { value: 'discovery-mode', label: 'Discovery Mode' },
-      { value: 'experiment-ready', label: 'Experiment Ready' },
+    'achievement-class': [
+      { value: 'honor-class', label: 'Honor Class' },
+      { value: 'achievement-banner', label: 'Achievement Banner' },
+      { value: 'award-winning-class', label: 'Award-Winning Class' },
+      { value: 'edu-recognition-frame', label: 'Recognition Frame' },
+      { value: 'class-milestone', label: 'Class Milestone' },
+      { value: 'excellence-focus', label: 'Excellence Focus' },
+      { value: 'class-proud-moment', label: 'Proud Moment' },
+      { value: 'celebration-neutral', label: 'Celebration Neutral' },
     ],
-    'art-studio': [
-      { value: 'creative-spirit', label: 'Creative Spirit' },
-      { value: 'artistic-flair', label: 'Artistic Flair' },
-      { value: 'colorful-expression', label: 'Colorful Expression' },
-      { value: 'imagination-unleashed', label: 'Imagination Unleashed' },
+    'school-identity': [
+      { value: 'edu-school-colors', label: 'School Colors' },
+      { value: 'mascot-subtle', label: 'Mascot Subtle' },
+      { value: 'crest-background', label: 'Crest Background' },
+      { value: 'identity-frame', label: 'Identity Frame' },
+      { value: 'edu-school-pride', label: 'School Pride' },
+      { value: 'district-neutral', label: 'District Neutral' },
+      { value: 'formal-branding', label: 'Formal Branding' },
+      { value: 'academic-tradition', label: 'Academic Tradition' },
     ],
-    'sports-field': [
-      { value: 'team-champion', label: 'Team Champion' },
-      { value: 'athletic-pride', label: 'Athletic Pride' },
-      { value: 'victory-moment', label: 'Victory Moment' },
-      { value: 'sporty-energy', label: 'Sporty Energy' },
+    'fun-friendly': [
+      { value: 'smiling-classroom', label: 'Smiling Classroom' },
+      { value: 'colorful-backdrop', label: 'Colorful Backdrop' },
+      { value: 'friendly-shapes', label: 'Friendly Shapes' },
+      { value: 'happy-learning', label: 'Happy Learning' },
+      { value: 'warm-welcoming', label: 'Warm & Welcoming' },
+      { value: 'playful-neutral', label: 'Playful Neutral' },
+      { value: 'classroom-joy', label: 'Classroom Joy' },
+      { value: 'early-learner-friendly', label: 'Early Learner Friendly' },
     ],
-    'auditorium': [
-      { value: 'performance-ready', label: 'Performance Ready' },
-      { value: 'stage-presence', label: 'Stage Presence' },
-      { value: 'assembly-formal', label: 'Assembly Formal' },
-      { value: 'spotlight-moment', label: 'Spotlight Moment' },
+    'minimal-portrait': [
+      { value: 'clean-white', label: 'Clean White' },
+      { value: 'soft-gray', label: 'Soft Gray' },
+      { value: 'natural-tones', label: 'Natural Tones' },
+      { value: 'simple-focus', label: 'Simple Focus' },
+      { value: 'calm-composition', label: 'Calm Composition' },
+      { value: 'distraction-free', label: 'Distraction-Free' },
+      { value: 'professional-neutral', label: 'Professional Neutral' },
+      { value: 'gallery-ready', label: 'Gallery Ready' },
     ],
   };
 
   // State for education portrait scene and style
-  const [educationPortraitScene, setEducationPortraitScene] = useState('classroom');
-  const [educationPortraitStyle, setEducationPortraitStyle] = useState('classic-school-photo');
+  const [educationPortraitScene, setEducationPortraitScene] = useState('classroom-portrait');
+  const [educationPortraitStyle, setEducationPortraitStyle] = useState('traditional-classroom');
 
   // Get available styles for the selected education portrait scene
   const currentEducationPortraitStyles = educationPortraitStylesByScene[educationPortraitScene] || educationPortraitStylesByScene['classroom'];

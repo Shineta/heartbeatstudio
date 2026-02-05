@@ -1,0 +1,239 @@
+🎓 Class Portrait — Education
+
+Scene → Style Library
+
+🏫 Scene: Classroom Portrait
+
+Styles
+
+Traditional Classroom
+
+Chalkboard Background
+
+Learning Wall
+
+Desk & Board
+
+Soft Classroom Light
+
+Neutral Classroom
+
+Minimal Classroom
+
+Academic Focus
+
+Best for: yearbooks, formal class photos
+
+📸 Scene: Formal Group Portrait
+
+Styles
+
+Studio Neutral
+
+Clean Backdrop
+
+Classic School Photo
+
+Soft Gray Studio
+
+White Background
+
+Balanced Group Layout
+
+Centered Composition
+
+Timeless Portrait
+
+Best for: official school use, administration, yearbooks
+
+🌳 Scene: Campus / Outdoors
+
+Styles
+
+School Courtyard
+
+Front of School
+
+Playground (Younger Grades)
+
+Green Space
+
+Building Entrance
+
+Outdoor Academic
+
+Natural Light
+
+Casual School Day
+
+Best for: informal but polished portraits
+
+🎒 Scene: Grade-Level Theme
+
+Styles
+
+Elementary Bright
+
+Middle School Modern
+
+High School Classic
+
+Senior Class Style
+
+Early Learners
+
+Upper Grades
+
+Age-Appropriate Tone
+
+Level Pride
+
+Best for: matching age group aesthetics
+
+🧑‍🏫 Scene: Teacher & Class
+
+Styles
+
+Teacher Center
+
+Side-by-Side
+
+Classroom Leader
+
+Mentor Moment
+
+Guided Learning
+
+Proud Classroom
+
+Community Focus
+
+Together in Learning
+
+Best for: classroom memory keepsakes
+
+🏆 Scene: Achievement Class Portrait
+
+Styles
+
+Honor Class
+
+Achievement Banner
+
+Award-Winning Class
+
+Recognition Frame
+
+Class Milestone
+
+Excellence Focus
+
+Proud Moment
+
+Celebration Neutral
+
+Best for: competition wins, recognition
+
+🏫 Scene: School Identity
+
+Styles
+
+School Colors
+
+Mascot Subtle
+
+Crest Background
+
+Identity Frame
+
+School Pride
+
+District Neutral
+
+Formal Branding
+
+Academic Tradition
+
+Best for: branded portraits, district use
+
+🌈 Scene: Fun & Friendly (Elementary)
+
+Styles
+
+Smiling Classroom
+
+Colorful Backdrop
+
+Friendly Shapes
+
+Happy Learning
+
+Warm & Welcoming
+
+Playful Neutral
+
+Classroom Joy
+
+Early Learner Friendly
+
+Best for: Pre-K–Grade 3
+
+✨ Scene: Minimal Portrait
+
+Styles
+
+Clean White
+
+Soft Gray
+
+Natural Tones
+
+Simple Focus
+
+Calm Composition
+
+Distraction-Free
+
+Professional Neutral
+
+Gallery Ready
+
+Best for: older students, formal displays
+
+🔐 CLASS PORTRAIT SAFETY & COMPLIANCE (IMPORTANT)
+
+UI helper text:
+
+“All Class Portrait styles are school-safe, age-appropriate, and designed for group photography.”
+
+Recommended enforced rules:
+
+🚫 No face distortion
+
+🚫 No costumes or fantasy elements
+
+🚫 No individual highlighting (unless permitted)
+
+✅ Balanced group spacing
+
+✅ Neutral attire enhancement only
+
+Optional toggles:
+
+✔ Keep school dress code
+
+✔ Uniform colors only
+
+✔ No background distractions
+
+🧠 UX SMART DEFAULTS
+
+Elementary → Fun & Friendly
+
+Middle School → Classroom Portrait
+
+High School → Formal Group Portrait
+
+District Use → Minimal Portrait
+
+Teacher Included → Teacher & Class
