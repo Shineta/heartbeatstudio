@@ -859,9 +859,9 @@ export default function CreatePage() {
     
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);
       
-      const res = await fetch('/api/upload-image', {
+      const res = await fetch('/api/upload/cover-image', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -870,7 +870,7 @@ export default function CreatePage() {
       if (!res.ok) throw new Error('Failed to upload photo');
       
       const data = await res.json();
-      setYearbookPhotoUrl(data.url);
+      setYearbookPhotoUrl(data.imageUrl);
       toast({ title: "Photo uploaded", description: "Ready to generate your yearbook headshot" });
     } catch (error: any) {
       toast({ title: "Upload failed", description: error.message || "Could not upload photo", variant: "destructive" });
