@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2, Book } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2, Book, Lightbulb } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -310,10 +310,11 @@ export default function CreatePage() {
     }
   }, [currentSongIndex]);
 
-  // Handle Yearbook quick start - auto-select headshot tab
   useEffect(() => {
     if (educationQuickStart === 'yearbook') {
       setActiveTab('headshot');
+    } else if (educationQuickStart === 'learning-songs') {
+      setActiveTab('song');
     }
   }, [educationQuickStart]);
 
@@ -6788,6 +6789,20 @@ export default function CreatePage() {
 
                   <Card 
                     className="hover-elevate cursor-pointer transition-all"
+                    onClick={() => setEducationQuickStart('learning-songs')}
+                    data-testid="education-card-learning-songs"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Lightbulb className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Learning Songs</h4>
+                      <p className="text-sm text-muted-foreground">Create songs that teach lessons or accompany classroom topics.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all"
                     onClick={() => setEducationQuickStart('yearbook')}
                     data-testid="education-card-yearbook"
                   >
@@ -6819,8 +6834,15 @@ export default function CreatePage() {
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className={`grid w-full mb-8 ${educationQuickStart === 'yearbook' ? 'grid-cols-3' : 'grid-cols-4'}`}>
-                    {educationQuickStart === 'yearbook' ? (
+                  <TabsList className={`grid w-full mb-8 ${educationQuickStart === 'yearbook' ? 'grid-cols-3' : educationQuickStart === 'learning-songs' ? 'grid-cols-1' : 'grid-cols-4'}`}>
+                    {educationQuickStart === 'learning-songs' ? (
+                      <>
+                        <TabsTrigger value="song" data-testid="tab-learning-song">
+                          <Lightbulb className="w-4 h-4 mr-2" />
+                          Learning Song
+                        </TabsTrigger>
+                      </>
+                    ) : educationQuickStart === 'yearbook' ? (
                       <>
                         <TabsTrigger value="headshot" data-testid="tab-yearbook-headshot">
                           <User className="w-4 h-4 mr-2" />
@@ -7995,11 +8017,17 @@ export default function CreatePage() {
                       <Card>
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
-                            <Music className="w-5 h-5 text-primary" />
-                            Education Song Creator
+                            {educationQuickStart === 'learning-songs' ? (
+                              <Lightbulb className="w-5 h-5 text-primary" />
+                            ) : (
+                              <Music className="w-5 h-5 text-primary" />
+                            )}
+                            {educationQuickStart === 'learning-songs' ? 'Learning Song Creator' : 'Education Song Creator'}
                           </CardTitle>
                           <CardDescription>
-                            Fun, uplifting songs for classrooms, assemblies, and celebrations
+                            {educationQuickStart === 'learning-songs'
+                              ? 'Create songs that teach academic content or accompany classroom lessons'
+                              : 'Fun, uplifting songs for classrooms, assemblies, and celebrations'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -8010,6 +8038,14 @@ export default function CreatePage() {
                                 <span className="font-medium text-foreground">School-Safe:</span> All songs are age-appropriate with positive, uplifting content.
                               </p>
                             </div>
+                            {educationQuickStart === 'learning-songs' && (
+                              <div className="flex items-start gap-2">
+                                <Lightbulb className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                                <p className="text-sm text-muted-foreground">
+                                  <span className="font-medium text-foreground">Academic Content:</span> Songs that teach subjects, reinforce lessons, or make studying fun.
+                                </p>
+                              </div>
+                            )}
                             <div className="flex items-start gap-2">
                               <Music className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                               <p className="text-sm text-muted-foreground">
@@ -8020,257 +8056,516 @@ export default function CreatePage() {
                           <Form {...songForm}>
                             <form onSubmit={songForm.handleSubmit(onGenerateQuestionnaire)} className="space-y-6">
 
-                              <FormField
-                                control={songForm.control}
-                                name="recipientName"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Who is this song for?</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="e.g. Mrs. Johnson's 3rd Grade Class, Tyler, The Science Club"
-                                        {...field}
-                                        data-testid="input-edu-song-recipient"
-                                      />
-                                    </FormControl>
-                                    <p className="text-xs text-muted-foreground">
-                                      A student, teacher, class, or school group
-                                    </p>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                              {educationQuickStart === 'learning-songs' ? (
+                                <>
+                                  <FormField
+                                    control={songForm.control}
+                                    name="recipientName"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Class or Student Name</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            placeholder="e.g. Mrs. Chen's 4th Grade, Biology 101, Tyler's Study Group"
+                                            {...field}
+                                            data-testid="input-learning-song-recipient"
+                                          />
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          Who will be listening to or learning from this song?
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="relationship"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Role</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-role">
-                                          <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="Student">Student</SelectItem>
-                                          <SelectItem value="Teacher">Teacher</SelectItem>
-                                          <SelectItem value="Class">Whole Class</SelectItem>
-                                          <SelectItem value="Principal">Principal</SelectItem>
-                                          <SelectItem value="School Staff">School Staff</SelectItem>
-                                          <SelectItem value="Coach">Coach</SelectItem>
-                                          <SelectItem value="Club">Club or Team</SelectItem>
-                                          <SelectItem value="Graduate">Graduate</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="occasion"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Subject</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-subject">
+                                              <SelectValue placeholder="Select subject" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="math">Math</SelectItem>
+                                              <SelectItem value="science">Science</SelectItem>
+                                              <SelectItem value="history">History / Social Studies</SelectItem>
+                                              <SelectItem value="english">English / Language Arts</SelectItem>
+                                              <SelectItem value="reading">Reading / Phonics</SelectItem>
+                                              <SelectItem value="geography">Geography</SelectItem>
+                                              <SelectItem value="foreign-language">Foreign Language</SelectItem>
+                                              <SelectItem value="health">Health / Wellness</SelectItem>
+                                              <SelectItem value="art-music">Art / Music Appreciation</SelectItem>
+                                              <SelectItem value="pe">Physical Education</SelectItem>
+                                              <SelectItem value="technology">Technology / Computer Science</SelectItem>
+                                              <SelectItem value="life-skills">Life Skills / Character</SelectItem>
+                                              <SelectItem value="social-emotional">Social-Emotional Learning</SelectItem>
+                                              <SelectItem value="bible-study">Bible Study / Religious Ed</SelectItem>
+                                              <SelectItem value="general">General / Multi-Subject</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="occasion"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Occasion</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-occasion">
-                                          <SelectValue placeholder="Select occasion" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="graduation">Graduation</SelectItem>
-                                          <SelectItem value="end-of-year">End of School Year</SelectItem>
-                                          <SelectItem value="teacher-appreciation">Teacher Appreciation</SelectItem>
-                                          <SelectItem value="welcome-back">Welcome Back to School</SelectItem>
-                                          <SelectItem value="class-spirit">Class Spirit / Pep Rally</SelectItem>
-                                          <SelectItem value="science-fair">Science Fair / Academic Event</SelectItem>
-                                          <SelectItem value="field-day">Field Day / Sports Day</SelectItem>
-                                          <SelectItem value="school-play">School Play / Performance</SelectItem>
-                                          <SelectItem value="birthday">Student Birthday</SelectItem>
-                                          <SelectItem value="encouragement">Encouragement / Motivation</SelectItem>
-                                          <SelectItem value="holiday">Holiday Celebration</SelectItem>
-                                          <SelectItem value="farewell">Farewell / Moving Away</SelectItem>
-                                          <SelectItem value="achievement">Achievement / Award</SelectItem>
-                                          <SelectItem value="reading-week">Reading Week / Book Fair</SelectItem>
-                                          <SelectItem value="stem">STEM / Learning Celebration</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="relationship"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Grade Level</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-grade">
+                                              <SelectValue placeholder="Select grade level" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Pre-K">Pre-K / Preschool</SelectItem>
+                                              <SelectItem value="Kindergarten">Kindergarten</SelectItem>
+                                              <SelectItem value="1st-2nd Grade">1st - 2nd Grade</SelectItem>
+                                              <SelectItem value="3rd-4th Grade">3rd - 4th Grade</SelectItem>
+                                              <SelectItem value="5th-6th Grade">5th - 6th Grade</SelectItem>
+                                              <SelectItem value="Middle School">Middle School (7th-8th)</SelectItem>
+                                              <SelectItem value="High School">High School (9th-12th)</SelectItem>
+                                              <SelectItem value="College">College / Adult Learners</SelectItem>
+                                              <SelectItem value="All Ages">All Ages</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="genre"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Music Style</FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        onValueChange={(value) => {
-                                          field.onChange(value);
-                                          songForm.setValue("subGenre", "");
-                                        }}
-                                        value={field.value}
-                                      >
-                                        <SelectTrigger data-testid="select-edu-song-genre">
-                                          <SelectValue placeholder="Select style" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="pop">Pop (Upbeat & Catchy)</SelectItem>
-                                          <SelectItem value="hiphop">Hip-Hop (Fun & Rhythmic)</SelectItem>
-                                          <SelectItem value="rock">Rock (Energetic)</SelectItem>
-                                          <SelectItem value="folk">Folk / Acoustic (Warm & Cozy)</SelectItem>
-                                          <SelectItem value="r&b">R&B (Smooth & Soulful)</SelectItem>
-                                          <SelectItem value="gospel">Gospel (Uplifting & Inspiring)</SelectItem>
-                                          <SelectItem value="country">Country (Storytelling)</SelectItem>
-                                          <SelectItem value="reggae">Reggae (Feel-Good Vibes)</SelectItem>
-                                          <SelectItem value="funk">Funk (Groovy & Fun)</SelectItem>
-                                          <SelectItem value="latin">Latin (Festive & Lively)</SelectItem>
-                                          <SelectItem value="jazz">Jazz (Smooth & Cool)</SelectItem>
-                                          <SelectItem value="electronic">Electronic (Modern & Bouncy)</SelectItem>
-                                          <SelectItem value="musical-theater">Musical Theater (Dramatic & Fun)</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="genre"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Music Style</FormLabel>
+                                        <FormControl>
+                                          <Select
+                                            onValueChange={(value) => {
+                                              field.onChange(value);
+                                              songForm.setValue("subGenre", "");
+                                            }}
+                                            value={field.value}
+                                          >
+                                            <SelectTrigger data-testid="select-learning-song-genre">
+                                              <SelectValue placeholder="Select style" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="pop">Pop (Catchy & Memorable)</SelectItem>
+                                              <SelectItem value="hiphop">Hip-Hop (Rhythmic & Easy to Remember)</SelectItem>
+                                              <SelectItem value="folk">Folk / Acoustic (Sing-Along Friendly)</SelectItem>
+                                              <SelectItem value="rock">Rock (Energetic & Fun)</SelectItem>
+                                              <SelectItem value="r&b">R&B (Smooth & Soulful)</SelectItem>
+                                              <SelectItem value="gospel">Gospel (Uplifting & Inspiring)</SelectItem>
+                                              <SelectItem value="reggae">Reggae (Relaxed & Groovy)</SelectItem>
+                                              <SelectItem value="funk">Funk (Groovy & Funky)</SelectItem>
+                                              <SelectItem value="country">Country (Storytelling)</SelectItem>
+                                              <SelectItem value="latin">Latin (Festive & Danceable)</SelectItem>
+                                              <SelectItem value="jazz">Jazz (Smooth & Cool)</SelectItem>
+                                              <SelectItem value="electronic">Electronic (Modern & Bouncy)</SelectItem>
+                                              <SelectItem value="musical-theater">Musical Theater (Dramatic & Memorable)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="tone"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Tone</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-tone">
-                                          <SelectValue placeholder="Select tone" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="uplifting">Uplifting</SelectItem>
-                                          <SelectItem value="playful">Playful & Fun</SelectItem>
-                                          <SelectItem value="celebratory">Celebratory</SelectItem>
-                                          <SelectItem value="heartfelt">Heartfelt</SelectItem>
-                                          <SelectItem value="funny">Funny & Silly</SelectItem>
-                                          <SelectItem value="grateful">Grateful</SelectItem>
-                                          <SelectItem value="motivational">Motivational</SelectItem>
-                                          <SelectItem value="sweet">Sweet & Gentle</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="tone"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Song Approach</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-approach">
+                                              <SelectValue placeholder="How should this song teach?" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="playful">Playful & Fun (Make Learning a Game)</SelectItem>
+                                              <SelectItem value="uplifting">Catchy & Memorable (Stick in Your Head)</SelectItem>
+                                              <SelectItem value="funny">Silly & Humorous (Learn Through Laughter)</SelectItem>
+                                              <SelectItem value="heartfelt">Story-Based (Teach Through a Narrative)</SelectItem>
+                                              <SelectItem value="celebratory">Call-and-Response (Interactive)</SelectItem>
+                                              <SelectItem value="motivational">Motivational (You Can Do It!)</SelectItem>
+                                              <SelectItem value="sweet">Gentle & Calming (Soothing Review)</SelectItem>
+                                              <SelectItem value="grateful">Appreciative (Celebrate What We Learned)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="voice"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Voice (optional)</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-voice">
-                                          <SelectValue placeholder="Any voice" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="any">Any Voice</SelectItem>
-                                          <SelectItem value="male">Male</SelectItem>
-                                          <SelectItem value="female">Female</SelectItem>
-                                          <SelectItem value="duet">Duet (Male & Female)</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="voice"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Voice (optional)</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-voice">
+                                              <SelectValue placeholder="Any voice" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="any">Any Voice</SelectItem>
+                                              <SelectItem value="male">Male</SelectItem>
+                                              <SelectItem value="female">Female</SelectItem>
+                                              <SelectItem value="duet">Duet (Male & Female)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="duration"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Song Length</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-duration">
-                                          <SelectValue placeholder="Select length" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="quick">Quick (~1 min) - Faster generation</SelectItem>
-                                          <SelectItem value="extended">Extended (~3 min) - Full song</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <p className="text-xs text-muted-foreground">
-                                      Quick songs generate in about 1 minute. Extended songs take 3-5 minutes.
-                                    </p>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="duration"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Song Length</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-duration">
+                                              <SelectValue placeholder="Select length" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="quick">Quick (~1 min) - Great for short concepts</SelectItem>
+                                              <SelectItem value="extended">Extended (~3 min) - Full lesson song</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          Quick songs work great for single concepts. Extended songs can cover more material.
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="language"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Language</FormLabel>
-                                    <FormControl>
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger data-testid="select-edu-song-language">
-                                          <SelectValue placeholder="Select language" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="english">English</SelectItem>
-                                          <SelectItem value="spanish">Spanish</SelectItem>
-                                          <SelectItem value="french">French</SelectItem>
-                                          <SelectItem value="mandarin">Mandarin Chinese</SelectItem>
-                                          <SelectItem value="german">German</SelectItem>
-                                          <SelectItem value="italian">Italian</SelectItem>
-                                          <SelectItem value="portuguese">Portuguese</SelectItem>
-                                          <SelectItem value="japanese">Japanese</SelectItem>
-                                          <SelectItem value="korean">Korean</SelectItem>
-                                          <SelectItem value="tagalog">Tagalog (Filipino)</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="language"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Language</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-learning-song-language">
+                                              <SelectValue placeholder="Select language" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="english">English</SelectItem>
+                                              <SelectItem value="spanish">Spanish</SelectItem>
+                                              <SelectItem value="french">French</SelectItem>
+                                              <SelectItem value="mandarin">Mandarin Chinese</SelectItem>
+                                              <SelectItem value="german">German</SelectItem>
+                                              <SelectItem value="italian">Italian</SelectItem>
+                                              <SelectItem value="portuguese">Portuguese</SelectItem>
+                                              <SelectItem value="japanese">Japanese</SelectItem>
+                                              <SelectItem value="korean">Korean</SelectItem>
+                                              <SelectItem value="tagalog">Tagalog (Filipino)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
 
-                              <FormField
-                                control={songForm.control}
-                                name="songDetails"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Song Details <span className="text-destructive">*</span></FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        placeholder="Tell us about the song you want! For example: 'A fun graduation song for Mrs. Johnson's 5th grade class. They love science and their class mascot is a frog named Ribbit. Include something about how they've grown so much this year.'"
-                                        className="min-h-[100px] resize-none"
-                                        {...field}
-                                        data-testid="textarea-edu-song-details"
-                                      />
-                                    </FormControl>
-                                    <p className="text-xs text-muted-foreground">
-                                      Share details about the class, student, or event — we'll craft a special song
-                                    </p>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                  <FormField
+                                    control={songForm.control}
+                                    name="songDetails"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>What should this song teach? <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                          <Textarea
+                                            placeholder="Describe the lesson or topic. For example:&#10;&#10;• 'A song about the water cycle for 3rd graders - evaporation, condensation, precipitation'&#10;• 'Teach the times tables for 7s in a catchy hip-hop way'&#10;• 'A song about the American Revolution for 5th grade history class'&#10;• 'Help kindergartners learn the days of the week and months of the year'&#10;• 'A song about growth mindset and not giving up when things are hard'"
+                                            className="min-h-[120px] resize-none"
+                                            {...field}
+                                            data-testid="textarea-learning-song-details"
+                                          />
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          Include the specific facts, concepts, or vocabulary you want students to learn from the song
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <FormField
+                                    control={songForm.control}
+                                    name="recipientName"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Who is this song for?</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            placeholder="e.g. Mrs. Johnson's 3rd Grade Class, Tyler, The Science Club"
+                                            {...field}
+                                            data-testid="input-edu-song-recipient"
+                                          />
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          A student, teacher, class, or school group
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="relationship"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Role</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-role">
+                                              <SelectValue placeholder="Select role" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Student">Student</SelectItem>
+                                              <SelectItem value="Teacher">Teacher</SelectItem>
+                                              <SelectItem value="Class">Whole Class</SelectItem>
+                                              <SelectItem value="Principal">Principal</SelectItem>
+                                              <SelectItem value="School Staff">School Staff</SelectItem>
+                                              <SelectItem value="Coach">Coach</SelectItem>
+                                              <SelectItem value="Club">Club or Team</SelectItem>
+                                              <SelectItem value="Graduate">Graduate</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="occasion"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Occasion</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-occasion">
+                                              <SelectValue placeholder="Select occasion" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="graduation">Graduation</SelectItem>
+                                              <SelectItem value="end-of-year">End of School Year</SelectItem>
+                                              <SelectItem value="teacher-appreciation">Teacher Appreciation</SelectItem>
+                                              <SelectItem value="welcome-back">Welcome Back to School</SelectItem>
+                                              <SelectItem value="class-spirit">Class Spirit / Pep Rally</SelectItem>
+                                              <SelectItem value="science-fair">Science Fair / Academic Event</SelectItem>
+                                              <SelectItem value="field-day">Field Day / Sports Day</SelectItem>
+                                              <SelectItem value="school-play">School Play / Performance</SelectItem>
+                                              <SelectItem value="birthday">Student Birthday</SelectItem>
+                                              <SelectItem value="encouragement">Encouragement / Motivation</SelectItem>
+                                              <SelectItem value="holiday">Holiday Celebration</SelectItem>
+                                              <SelectItem value="farewell">Farewell / Moving Away</SelectItem>
+                                              <SelectItem value="achievement">Achievement / Award</SelectItem>
+                                              <SelectItem value="reading-week">Reading Week / Book Fair</SelectItem>
+                                              <SelectItem value="stem">STEM / Learning Celebration</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="genre"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Music Style</FormLabel>
+                                        <FormControl>
+                                          <Select
+                                            onValueChange={(value) => {
+                                              field.onChange(value);
+                                              songForm.setValue("subGenre", "");
+                                            }}
+                                            value={field.value}
+                                          >
+                                            <SelectTrigger data-testid="select-edu-song-genre">
+                                              <SelectValue placeholder="Select style" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="pop">Pop (Upbeat & Catchy)</SelectItem>
+                                              <SelectItem value="hiphop">Hip-Hop (Fun & Rhythmic)</SelectItem>
+                                              <SelectItem value="rock">Rock (Energetic)</SelectItem>
+                                              <SelectItem value="folk">Folk / Acoustic (Warm & Cozy)</SelectItem>
+                                              <SelectItem value="r&b">R&B (Smooth & Soulful)</SelectItem>
+                                              <SelectItem value="gospel">Gospel (Uplifting & Inspiring)</SelectItem>
+                                              <SelectItem value="country">Country (Storytelling)</SelectItem>
+                                              <SelectItem value="reggae">Reggae (Feel-Good Vibes)</SelectItem>
+                                              <SelectItem value="funk">Funk (Groovy & Fun)</SelectItem>
+                                              <SelectItem value="latin">Latin (Festive & Lively)</SelectItem>
+                                              <SelectItem value="jazz">Jazz (Smooth & Cool)</SelectItem>
+                                              <SelectItem value="electronic">Electronic (Modern & Bouncy)</SelectItem>
+                                              <SelectItem value="musical-theater">Musical Theater (Dramatic & Fun)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="tone"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Tone</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-tone">
+                                              <SelectValue placeholder="Select tone" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="uplifting">Uplifting</SelectItem>
+                                              <SelectItem value="playful">Playful & Fun</SelectItem>
+                                              <SelectItem value="celebratory">Celebratory</SelectItem>
+                                              <SelectItem value="heartfelt">Heartfelt</SelectItem>
+                                              <SelectItem value="funny">Funny & Silly</SelectItem>
+                                              <SelectItem value="grateful">Grateful</SelectItem>
+                                              <SelectItem value="motivational">Motivational</SelectItem>
+                                              <SelectItem value="sweet">Sweet & Gentle</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="voice"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Voice (optional)</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-voice">
+                                              <SelectValue placeholder="Any voice" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="any">Any Voice</SelectItem>
+                                              <SelectItem value="male">Male</SelectItem>
+                                              <SelectItem value="female">Female</SelectItem>
+                                              <SelectItem value="duet">Duet (Male & Female)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="duration"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Song Length</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-duration">
+                                              <SelectValue placeholder="Select length" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="quick">Quick (~1 min) - Faster generation</SelectItem>
+                                              <SelectItem value="extended">Extended (~3 min) - Full song</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          Quick songs generate in about 1 minute. Extended songs take 3-5 minutes.
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="language"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Language</FormLabel>
+                                        <FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger data-testid="select-edu-song-language">
+                                              <SelectValue placeholder="Select language" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="english">English</SelectItem>
+                                              <SelectItem value="spanish">Spanish</SelectItem>
+                                              <SelectItem value="french">French</SelectItem>
+                                              <SelectItem value="mandarin">Mandarin Chinese</SelectItem>
+                                              <SelectItem value="german">German</SelectItem>
+                                              <SelectItem value="italian">Italian</SelectItem>
+                                              <SelectItem value="portuguese">Portuguese</SelectItem>
+                                              <SelectItem value="japanese">Japanese</SelectItem>
+                                              <SelectItem value="korean">Korean</SelectItem>
+                                              <SelectItem value="tagalog">Tagalog (Filipino)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={songForm.control}
+                                    name="songDetails"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Song Details <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                          <Textarea
+                                            placeholder="Tell us about the song you want! For example: 'A fun graduation song for Mrs. Johnson's 5th grade class. They love science and their class mascot is a frog named Ribbit. Include something about how they've grown so much this year.'"
+                                            className="min-h-[100px] resize-none"
+                                            {...field}
+                                            data-testid="textarea-edu-song-details"
+                                          />
+                                        </FormControl>
+                                        <p className="text-xs text-muted-foreground">
+                                          Share details about the class, student, or event — we'll craft a special song
+                                        </p>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </>
+                              )}
 
                               {questionnaireMutation.isPending && (
                                 <Card className="bg-primary/5 border-primary/20">
@@ -8280,7 +8575,7 @@ export default function CreatePage() {
                                       <div className="text-center">
                                         <p className="font-semibold text-lg">Preparing Your Questions...</p>
                                         <p className="text-sm text-muted-foreground">
-                                          AI is analyzing your story to ask the right follow-up questions
+                                          AI is analyzing your details to ask the right follow-up questions
                                         </p>
                                       </div>
                                     </div>
@@ -8296,7 +8591,11 @@ export default function CreatePage() {
                                   </>
                                 ) : (
                                   <>
-                                    <Music className="w-4 h-4 mr-2" />
+                                    {educationQuickStart === 'learning-songs' ? (
+                                      <Lightbulb className="w-4 h-4 mr-2" />
+                                    ) : (
+                                      <Music className="w-4 h-4 mr-2" />
+                                    )}
                                     Continue
                                   </>
                                 )}
