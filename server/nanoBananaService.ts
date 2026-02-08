@@ -989,13 +989,13 @@ export async function generateYearbookHeadshot(params: {
     'teal': 'solid professional teal background, modern school portrait backdrop, fresh and contemporary',
   };
   
-  // Style descriptions for yearbook portraits
+  // Style descriptions with clothing and posing guidance
   const styleDescriptions: Record<string, string> = {
-    'classic': 'traditional yearbook photo style, soft professional lighting, head and shoulders framing, timeless school portrait',
-    'modern': 'contemporary yearbook style, bright natural lighting, crisp clean look, modern professional portrait',
-    'formal': 'formal academic portrait style, dignified lighting, traditional pose, distinguished school photo',
-    'friendly': 'approachable warm yearbook style, soft flattering lighting, natural smile, inviting school portrait',
-    'dramatic': 'bold yearbook style, dramatic studio lighting, confident pose, standout school portrait',
+    'classic': 'Dress the person in a classic dark suit jacket or blazer over a collared dress shirt. Traditional yearbook pose: shoulders slightly angled, head turned toward camera with a gentle natural smile. Soft even studio lighting from front-left, subtle catchlights in eyes.',
+    'modern': 'Dress the person in a smart contemporary outfit — fitted blazer or clean button-up shirt in a solid color. Slightly relaxed confident pose facing camera straight-on with a natural expression. Bright, even, modern studio lighting, crisp and clean look.',
+    'formal': 'Dress the person in a formal dark suit with tie or professional formal attire. Dignified upright pose, shoulders square, composed expression. Classic Rembrandt portrait lighting, authoritative and distinguished.',
+    'friendly': 'Dress the person in a neat collared polo shirt or smart casual button-up in a warm color. Warm approachable pose with a genuine friendly smile, head slightly tilted. Soft flattering fill lighting, warm and inviting tone.',
+    'dramatic': 'Dress the person in a sharp dark blazer or jacket, bold and confident look. Strong confident pose, slight lean forward, direct eye contact. Dramatic studio lighting with deeper shadows on one side, bold and striking.',
   };
   
   const bgDesc = backgroundColors[backgroundColor] || backgroundColors['classic-blue'];
@@ -1011,15 +1011,20 @@ export async function generateYearbookHeadshot(params: {
     removalInstr = ' Remove any dental braces from the person, giving them a natural smile.';
   }
   
-  const prompt = `Transform this photo into a professional yearbook headshot portrait.
-${bgDesc}.
-${styleDesc}.
-Keep the exact same person with their exact face, features, and identity preserved.
-Frame as a head and shoulders portrait, centered in frame.
-Person should appear well-groomed and professionally presented.
-Clean, polished yearbook-ready appearance.${removalInstr}
-Professional school portrait photography quality, sharp focus on face.
-Photorealistic, high quality result suitable for a yearbook or school directory.`;
+  const prompt = `Transform this photo into a professional yearbook headshot portrait. This must be a COMPLETE TRANSFORMATION — not just a background swap.
+
+BACKGROUND: ${bgDesc}.
+
+CLOTHING AND STYLE: ${styleDesc}
+
+CRITICAL REQUIREMENTS:
+- Keep the EXACT same person — preserve their face, skin tone, facial features, and identity perfectly.
+- CHANGE their clothing to the described professional attire (do NOT keep their original clothes, hat, or accessories).
+- Remove any hats, caps, or head coverings — show their natural hair.
+- Frame as a head-and-shoulders portrait, centered, cropped from mid-chest up.
+- Apply professional portrait retouching: smooth skin, even lighting, polished yearbook-ready appearance.${removalInstr}
+- Professional school portrait photography quality, sharp focus on face, slight soft-focus on shoulders.
+- Photorealistic, high quality result suitable for an official yearbook or school directory.`;
 
   console.log(`[NanoBanana] Generating yearbook headshot: ${backgroundColor} background, ${style} style`);
 
