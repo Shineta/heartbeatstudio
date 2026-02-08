@@ -4331,40 +4331,7 @@ export default function CreatePage() {
                   </div>
                   <Form {...songForm}>
                     <form onSubmit={songForm.handleSubmit(onGenerateQuestionnaire)} className="space-y-6">
-                      {/* Client Mode Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
-                        <div className="flex items-center gap-3">
-                          {isClientMode ? (
-                            <Briefcase className="w-5 h-5 text-primary" />
-                          ) : (
-                            <Users className="w-5 h-5 text-primary" />
-                          )}
-                          <div>
-                            <Label htmlFor="client-mode" className="text-sm font-medium">
-                              {isClientMode ? "Creating for a Client" : "Creating for a Loved One"}
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                              {isClientMode 
-                                ? "Professional song for your business client" 
-                                : "Personal song for someone special"}
-                            </p>
-                          </div>
-                        </div>
-                        <Switch
-                          id="client-mode"
-                          checked={isClientMode}
-                          onCheckedChange={(checked) => {
-                            setIsClientMode(checked);
-                            // Reset form fields when switching modes
-                            songForm.setValue("lovedOneId", "");
-                            songForm.setValue("recipientName", "");
-                            songForm.setValue("relationship", checked ? "Client" : "");
-                          }}
-                          data-testid="switch-client-mode"
-                        />
-                      </div>
-
-                      {/* Loved One Selector - only show in personal mode */}
+                      {/* Loved One Selector */}
                       {!isClientMode && (
                         <FormField
                           control={songForm.control}
@@ -5059,38 +5026,7 @@ export default function CreatePage() {
                   </div>
                   <Form {...mixtapeForm}>
                     <form onSubmit={mixtapeForm.handleSubmit(onMixtapeSubmit)} className="space-y-6">
-                      {/* Client Mode Toggle for Mixtapes */}
-                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
-                        <div className="flex items-center gap-3">
-                          {isMixtapeClientMode ? (
-                            <Briefcase className="w-5 h-5 text-primary" />
-                          ) : (
-                            <Users className="w-5 h-5 text-primary" />
-                          )}
-                          <div>
-                            <Label htmlFor="mixtape-client-mode" className="text-sm font-medium">
-                              {isMixtapeClientMode ? "Creating for a Client" : "Creating for a Loved One"}
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                              {isMixtapeClientMode 
-                                ? "Professional mixtape for your business client" 
-                                : "Personal mixtape for someone special"}
-                            </p>
-                          </div>
-                        </div>
-                        <Switch
-                          id="mixtape-client-mode"
-                          checked={isMixtapeClientMode}
-                          onCheckedChange={(checked) => {
-                            setIsMixtapeClientMode(checked);
-                            mixtapeForm.setValue("lovedOneId", "");
-                            mixtapeForm.setValue("recipientName", "");
-                          }}
-                          data-testid="switch-mixtape-client-mode"
-                        />
-                      </div>
-
-                      {/* Loved One Selector - only show in personal mode */}
+                      {/* Loved One Selector */}
                       {!isMixtapeClientMode && (
                         <FormField
                           control={mixtapeForm.control}
