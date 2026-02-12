@@ -1225,6 +1225,20 @@ export async function generateSongWithLyrics(params: {
       }
     }
     
+    // Ensure voice preference is always applied to the style string
+    // The getDetailedStyle path already includes the voice tag, but boosted paths (rap, gospel) skip it
+    if (params.voice && params.voice !== 'any') {
+      const voiceLower = style.toLowerCase();
+      const hasVoiceTag = voiceLower.includes('female') || voiceLower.includes('male') || voiceLower.includes('duet');
+      if (!hasVoiceTag) {
+        const voicePrefix = params.voice === 'duet' ? 'MALE AND FEMALE DUET VOCALS'
+          : params.voice === 'female' ? 'FEMALE VOCALS'
+          : 'MALE VOCALS';
+        style = `${voicePrefix}, ${style}`;
+        console.log(`[Suno] Prepended voice preference: ${voicePrefix}`);
+      }
+    }
+
     // Append artist inspiration to style if detected
     if (artistInspiration) {
       style = `${style}, ${artistInspiration} inspired, ${artistInspiration} style`;
