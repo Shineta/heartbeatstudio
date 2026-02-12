@@ -498,6 +498,9 @@ interface SunoBoostStyleResponse {
   };
 }
 
+// Detailed description for gospel genre to be boosted by V4.5
+const gospelStyleDescription = "AUTHENTIC BLACK GOSPEL, 12/8 worship groove, Hammond B3 organ, full gospel choir with call and response, tambourine and hand claps, praise break section, soulful powerful lead vocals, church worship atmosphere, Kirk Franklin Donny Hathaway Hezekiah Walker inspired";
+
 // Detailed descriptions for rap sub-genres to be boosted by V4.5
 const rapSubGenreDescriptions: Record<string, string> = {
   "trap": "140 BPM trap with heavy 808 sub bass, triplet hi-hat rolls, dark synths, aggressive MC rap verses with no melodic singing, Future/Young Thug style",
@@ -1196,6 +1199,16 @@ export async function generateSongWithLyrics(params: {
           // Fall back to the detailed description without boost
           style = rapSubGenreStyle.substring(0, 200);
           console.log(`[Suno] Boost failed, using fallback rap style: ${style.substring(0, 80)}...`);
+        }
+      } else if (isGospel) {
+        // Use V4.5 Boost Style API for gospel genre
+        console.log(`[Suno] Detected gospel genre, boosting style`);
+        try {
+          style = await boostMusicStyle(gospelStyleDescription);
+          console.log(`[Suno] Using BOOSTED gospel style: ${style.substring(0, 80)}...`);
+        } catch (err) {
+          style = gospelStyleDescription;
+          console.log(`[Suno] Boost failed, using fallback gospel style`);
         }
       } else {
         style = getDetailedStyle(resolvedGenre, params.tone, params.voice);
