@@ -137,6 +137,7 @@ export default function CreatePage() {
   }
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireData | null>(null);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const [artistInspiration, setArtistInspiration] = useState('');
   const [songFormData, setSongFormData] = useState<z.infer<typeof songFormSchema> | null>(null);
   
   // Lyrics preview state
@@ -2042,7 +2043,11 @@ export default function CreatePage() {
       .join('\n\n');
     
     // Append questionnaire answers to song details for more personalized lyrics
-    const enhancedSongDetails = `${songFormData.songDetails}\n\n--- Additional Context from Questionnaire ---\n${answersText}`;
+    let enhancedSongDetails = `${songFormData.songDetails}\n\n--- Additional Context from Questionnaire ---\n${answersText}`;
+    
+    if (artistInspiration.trim()) {
+      enhancedSongDetails += `\n\nArtist Inspiration: in the style of ${artistInspiration.trim()}`;
+    }
     
     lyricsPreviewMutation.mutate({
       ...songFormData,
@@ -2053,7 +2058,11 @@ export default function CreatePage() {
   // Skip questionnaire and generate lyrics directly
   const onSkipQuestionnaire = () => {
     if (!songFormData) return;
-    lyricsPreviewMutation.mutate(songFormData);
+    let details = songFormData.songDetails;
+    if (artistInspiration.trim()) {
+      details = `${details}\n\nArtist Inspiration: in the style of ${artistInspiration.trim()}`;
+    }
+    lyricsPreviewMutation.mutate({ ...songFormData, songDetails: details });
   };
 
   // Go back to form from questionnaire
@@ -2061,6 +2070,7 @@ export default function CreatePage() {
     setQuestionnaire(null);
     setSongFormData(null);
     setQuestionnaireAnswers({});
+    setArtistInspiration('');
   };
 
   // Create song with the edited lyrics
@@ -4145,6 +4155,22 @@ export default function CreatePage() {
                         />
                       </div>
                     ))}
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t border-border/50">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Star className="w-4 h-4 text-primary" />
+                      Artist Inspiration (optional)
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Want the song to sound like a specific artist? Enter their name and we'll match that style.
+                    </p>
+                    <Input
+                      value={artistInspiration}
+                      onChange={(e) => setArtistInspiration(e.target.value)}
+                      placeholder="e.g. Kirk Franklin, Adele, Bruno Mars, Drake"
+                      data-testid="input-artist-inspiration"
+                    />
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-3 sm:flex-row">
@@ -7832,6 +7858,22 @@ export default function CreatePage() {
                                 />
                               </div>
                             ))}
+                          </div>
+
+                          <div className="space-y-2 pt-4 border-t border-border/50">
+                            <label className="text-sm font-medium flex items-center gap-2">
+                              <Star className="w-4 h-4 text-primary" />
+                              Artist Inspiration (optional)
+                            </label>
+                            <p className="text-xs text-muted-foreground">
+                              Want the song to sound like a specific artist? Enter their name and we'll match that style.
+                            </p>
+                            <Input
+                              value={artistInspiration}
+                              onChange={(e) => setArtistInspiration(e.target.value)}
+                              placeholder="e.g. Kirk Franklin, Adele, Bruno Mars, Drake"
+                              data-testid="input-edu-artist-inspiration"
+                            />
                           </div>
                         </CardContent>
                         <CardFooter className="flex flex-col gap-3 sm:flex-row">
