@@ -21,7 +21,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-sm text-muted-foreground max-w-md">
-              Create magic for the people you love—instantly. Beautiful, personalized celebrations powered by AI.
+              Create magic for the people you love—instantly. Beautiful, personalized celebrations made easy.
             </p>
           </div>
 
