@@ -74,7 +74,7 @@ const creditPlans: CreditPlan[] = [
     ],
     cta: "Buy Credits",
     highlighted: false,
-    badge: "Best Value",
+    badge: "Most Popular",
     mode: "payment",
   },
   {
@@ -94,7 +94,7 @@ const creditPlans: CreditPlan[] = [
     ],
     cta: "Subscribe Now",
     highlighted: true,
-    badge: "Most Popular",
+    badge: "Best Value",
     mode: "subscription",
   },
 ];
