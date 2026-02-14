@@ -48,8 +48,8 @@ const creditPlans: CreditPlan[] = [
     icon: Sparkles,
     features: [
       { text: "3 credits (1 credit = 1 song or card)", included: true },
-      { text: "Standard AI voices & styles", included: true },
-      { text: "AI-generated cover art", included: true },
+      { text: "Standard voices & styles", included: true },
+      { text: "Custom cover art", included: true },
       { text: "Shareable link", included: true },
       { text: "Email sign-in required", included: false, warning: true },
     ],
@@ -67,9 +67,9 @@ const creditPlans: CreditPlan[] = [
     icon: CreditCard,
     features: [
       { text: "5 credits (songs or cards)", included: true },
-      { text: "Premium AI voices & styles", included: true },
+      { text: "Premium voices & styles", included: true },
       { text: "Higher-quality audio", included: true },
-      { text: "AI cover art + shareable links", included: true },
+      { text: "Cover art + shareable links", included: true },
       { text: "Credits never expire", included: true },
     ],
     cta: "Buy Credits",
@@ -617,7 +617,7 @@ export default function PricingSection() {
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Image className="w-5 h-5 text-primary" />
               </div>
-              <span className="font-medium">AI-generated cover art</span>
+              <span className="font-medium">Custom cover art</span>
             </div>
             
             <div className="flex items-center gap-2">
