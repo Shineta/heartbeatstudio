@@ -2409,7 +2409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/song-with-lyrics', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, title, lyrics, tone, genre } = req.body;
+      const { lovedOneId, title, lyrics, tone, genre, voice, songDetails, duration } = req.body;
 
       if (!title || !lyrics) {
         return res.status(400).json({ message: "Title and lyrics are required" });
@@ -2431,6 +2431,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genre: genre || "pop",
         customLyrics: lyrics,
         customTitle: title,
+        voice: voice || undefined,
+        additionalNotes: songDetails || undefined,
+        duration: duration || undefined,
       });
 
       // Upload cover image if provided

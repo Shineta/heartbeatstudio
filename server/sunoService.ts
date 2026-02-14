@@ -1168,8 +1168,8 @@ export async function generateSongWithLyrics(params: {
     let artistInspiration = '';
     if (params.additionalNotes) {
       const artistPatterns = [
-        /(?:like|inspired by|sound(?:s)? like|in the style of|similar to|channeling|channel|vibes? (?:of|like))\s+([A-Z][a-zA-Z0-9\s\-'\.]+?)(?:\s*(?:style|vibe|sound|energy|flow|,|\.|$))/i,
-        /([A-Z][a-zA-Z0-9\s\-'\.]+?)\s+(?:style|inspired|vibe|sound|energy|flow)(?:\s|,|\.|$)/i,
+        /(?:like|inspired by|sound(?:s)? like|in the style of|similar to|channeling|channel|vibes? (?:of|like))\s+([a-zA-Z][a-zA-Z0-9\s\-'\.]+?)(?:\s*(?:style|vibe|sound|energy|flow|,|\.|$))/i,
+        /([a-zA-Z][a-zA-Z0-9\s\-'\.]+?)\s+(?:style|inspired|vibe|sound|energy|flow)(?:\s|,|\.|$)/i,
       ];
       for (const pattern of artistPatterns) {
         const match = params.additionalNotes.match(pattern);
