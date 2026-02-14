@@ -11,7 +11,7 @@ const steps = [
   {
     number: 2,
     title: "Choose Creation",
-    description: "Pick from AI songs, greeting cards, or mini animations",
+    description: "Pick from songs, greeting cards, or mini animations",
     icon: Sparkles,
   },
   {
