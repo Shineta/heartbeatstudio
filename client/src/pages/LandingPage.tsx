@@ -40,21 +40,21 @@ export default function LandingPage() {
               Three Ways to Celebrate
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              AI-powered tools that make celebrating effortless and personal
+              Creative tools that make celebrating effortless and personal
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FeatureCard
-              title="AI Song Creator"
+              title="Song Creator"
               description="Create personalized 30-60 second songs with custom lyrics, music, and cover art in any style or genre."
               icon={Music}
               imageUrl={songPreview}
               onTryIt={() => handleTryIt('song')}
             />
             <FeatureCard
-              title="AI Card Maker"
-              description="Generate beautiful greeting cards with AI-crafted messages and stunning illustrations for any occasion."
+              title="Card Maker"
+              description="Generate beautiful greeting cards with personalized messages and stunning illustrations for any occasion."
               icon={Mail}
               imageUrl={cardPreview}
               onTryIt={() => handleTryIt('card')}
