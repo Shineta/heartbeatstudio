@@ -45,8 +45,6 @@ async function initStripe() {
   }
 }
 
-await initStripe();
-
 app.post(
   '/api/stripe/webhook',
   express.raw({ type: 'application/json' }),
@@ -144,5 +142,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    // Initialize Stripe after server is listening so health checks pass immediately
+    initStripe().catch(err => console.error('Stripe init error:', err));
   });
 })();
