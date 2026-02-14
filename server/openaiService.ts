@@ -462,12 +462,52 @@ Return ONLY a JSON object with this exact shape:
   // Base prompt body describing the situation + recipient
   const basePrompt = buildBasePrompt(params, normalizedGenre);
 
+  // Extract artist inspiration from additionalNotes if present
+  let artistInspiration = '';
+  if (params.additionalNotes) {
+    const artistPatterns = [
+      /Artist Inspiration:\s*in the style of\s+(.+?)(?:\n|$)/i,
+      /(?:like|inspired by|sound(?:s)? like|in the style of|similar to)\s+([a-zA-Z][a-zA-Z0-9\s\-'\.]+?)(?:\s*(?:style|vibe|sound|energy|flow|,|\.|$))/i,
+    ];
+    for (const pattern of artistPatterns) {
+      const match = params.additionalNotes.match(pattern);
+      if (match && match[1] && match[1].trim().length > 1) {
+        artistInspiration = match[1].trim();
+        console.log(`[OpenAI Lyrics] Detected artist inspiration: ${artistInspiration}`);
+        break;
+      }
+    }
+  }
+
+  const artistStyleBlock = artistInspiration ? `
+ARTIST INSPIRATION — THIS IS CRITICAL:
+The user wants lyrics written in the style of ${artistInspiration}. You must deeply channel ${artistInspiration}'s signature lyrical approach:
+- Study ${artistInspiration}'s songwriting patterns: their typical song structures, rhythmic cadence, vocabulary, emotional tone, and lyrical devices.
+- If ${artistInspiration} is known for spoken word, conversational flow, or poetry-style lyrics, write in THAT style — NOT in standard verse/chorus format.
+- If ${artistInspiration} uses natural speech patterns, pauses, repetition, interjections (like "you know?", "mmm", "baby"), parenthetical asides, or stream-of-consciousness flow, incorporate those elements authentically.
+- If ${artistInspiration} uses non-traditional song structures (no rigid verse/chorus), follow THEIR structure instead of conventional pop/R&B structures.
+- Match ${artistInspiration}'s emotional depth, imagery style, and vocal delivery cues.
+- The lyrics should feel like ${artistInspiration} could have written them — capturing their artistic DNA, not just their genre.
+`.trim() : '';
+
   // If it's Black gospel, use the heavy gospel instruction block.
   // Otherwise, we can still encourage a decent length.
   const styleBlock =
     normalizedGenre === "black-gospel"
       ? buildBlackGospelInstructionBlock()
-      : `
+      : artistInspiration ? `
+Write this as a song inspired by ${artistInspiration}'s style within the ${normalizedGenre || "pop"} genre.
+
+STRUCTURE & LENGTH:
+- Match ${artistInspiration}'s typical song structure. If they use non-traditional structures (spoken word, poetry, jazz flow), use THAT instead of standard verse/chorus format.
+- Aim for lyrics suitable for a ~3-minute song.
+- OVERALL LENGTH: at least 180–220 words of lyrics.
+- Include section labels that match the artist's style (e.g., [Spoken/Sung], [Interlude - Melodic], [Spoken word bridge] for spoken word artists, or [Verse 1], [Chorus] for traditional song artists).
+
+GENERAL:
+- Keep it singable/performable and emotionally aligned with the tone.
+- Do NOT copy any existing songs or lyrics — capture the STYLE, not the words.
+`.trim() : `
 Write this as a modern, radio-ready ${normalizedGenre || "pop"} song.
 
 STRUCTURE & LENGTH:
@@ -485,13 +525,15 @@ GENERAL:
   const systemPrompt = `
 You are a professional songwriter who specializes in writing fully structured lyrics.
 You return ONLY valid JSON that my code can parse.
-
+${artistInspiration ? `You are deeply familiar with ${artistInspiration}'s songwriting style, vocal delivery, lyrical patterns, and artistic identity. You can authentically channel their creative voice.` : ''}
 When the genre is "black-gospel", you write for an authentic contemporary Black church context.
 You respect the culture and voice: no stereotypes, no parody, no mockery.
 `.trim();
 
   const userPrompt = `
 ${basePrompt}
+
+${artistStyleBlock}
 
 ${styleBlock}
 
@@ -501,7 +543,7 @@ Return ONLY a JSON object with this exact shape (no extra commentary):
 
 {
   "title": "Short, powerful song title here",
-  "lyrics": "Full song lyrics here with line breaks and section labels (e.g., [Verse 1], [Chorus], [Bridge], [Vamp])."
+  "lyrics": "Full song lyrics here with line breaks and section labels${artistInspiration ? ` (use section labels that match ${artistInspiration}'s style)` : ' (e.g., [Verse 1], [Chorus], [Bridge], [Vamp])'}.
 }
 `.trim();
 
