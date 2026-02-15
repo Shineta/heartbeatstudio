@@ -1700,9 +1700,6 @@ export default function CreatePage() {
       queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
       setCreatedSong(data);
       setLyricsPreview(null);
-      setPendingSongData(null);
-      setEditedLyrics("");
-      setEditedTitle("");
       setSongGenerationTime(0);
       if (data.status === 'generating') {
         toast({ title: "Song Generation Started!", description: "Your song is being created. This may take 2-4 minutes. Check your dashboard to see it when ready!" });
@@ -2088,6 +2085,12 @@ export default function CreatePage() {
       duration: pendingSongData.duration,
       customCoverImageUrl: customCoverImageUrl || undefined,
     });
+  };
+
+  const onTryAgainSong = () => {
+    if (!pendingSongData) return;
+    setCreatedSong(null);
+    lyricsPreviewMutation.mutate(pendingSongData);
   };
 
   // Handle cover image upload
@@ -4093,8 +4096,14 @@ export default function CreatePage() {
                       </>
                     )}
                   </CardContent>
-                  <CardFooter className="flex gap-3">
-                    <Button onClick={() => setCreatedSong(null)} variant="outline" data-testid="button-create-another">
+                  <CardFooter className="flex flex-wrap gap-3">
+                    {createdSong.status !== 'generating' && pendingSongData && (
+                      <Button onClick={onTryAgainSong} variant="outline" disabled={lyricsPreviewMutation.isPending} data-testid="button-try-again-song">
+                        <RefreshCw className={`w-4 h-4 mr-2 ${lyricsPreviewMutation.isPending ? 'animate-spin' : ''}`} />
+                        {lyricsPreviewMutation.isPending ? 'Regenerating...' : 'Try Again'}
+                      </Button>
+                    )}
+                    <Button onClick={() => { setCreatedSong(null); setPendingSongData(null); setEditedLyrics(""); setEditedTitle(""); }} variant="outline" data-testid="button-create-another">
                       Create Another
                     </Button>
                     {createdSong.status !== 'generating' && (
