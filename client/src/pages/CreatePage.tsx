@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
@@ -149,6 +150,12 @@ export default function CreatePage() {
   // Custom cover image state
   const [customCoverImageUrl, setCustomCoverImageUrl] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  
+  // Try Again modal state
+  const [showTryAgainModal, setShowTryAgainModal] = useState(false);
+  const [tryAgainMode, setTryAgainMode] = useState<'change-genre' | 'edit-lyrics' | 'feedback' | null>(null);
+  const [tryAgainGenre, setTryAgainGenre] = useState('');
+  const [tryAgainFeedback, setTryAgainFeedback] = useState('');
   
   // Client mode toggle (for creating songs for business clients)
   const [isClientMode, setIsClientMode] = useState(false);
@@ -2087,10 +2094,36 @@ export default function CreatePage() {
     });
   };
 
-  const onTryAgainSong = () => {
+  const openTryAgainModal = () => {
     if (!pendingSongData) return;
+    setTryAgainMode(null);
+    setTryAgainGenre(pendingSongData.genre || '');
+    setTryAgainFeedback('');
+    setShowTryAgainModal(true);
+  };
+
+  const onTryAgainSubmit = () => {
+    if (!pendingSongData) return;
+    setShowTryAgainModal(false);
     setCreatedSong(null);
-    lyricsPreviewMutation.mutate(pendingSongData);
+
+    if (tryAgainMode === 'change-genre') {
+      const updatedData = { ...pendingSongData, genre: tryAgainGenre };
+      setPendingSongData(updatedData);
+      lyricsPreviewMutation.mutate(updatedData);
+    } else if (tryAgainMode === 'edit-lyrics') {
+      setEditedLyrics(createdSong?.content || editedLyrics || '');
+      setEditedTitle(createdSong?.title || editedTitle || '');
+      setLyricsPreview({ title: createdSong?.title || editedTitle || '', lyrics: createdSong?.content || editedLyrics || '', description: '' });
+    } else if (tryAgainMode === 'feedback') {
+      const feedbackNote = `\n\nUser feedback on previous version (MUST address these changes): ${tryAgainFeedback}`;
+      const updatedData = {
+        ...pendingSongData,
+        songDetails: (pendingSongData.songDetails || '') + feedbackNote,
+      };
+      setPendingSongData(updatedData);
+      lyricsPreviewMutation.mutate(updatedData);
+    }
   };
 
   // Handle cover image upload
@@ -4098,7 +4131,7 @@ export default function CreatePage() {
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-3">
                     {createdSong.status !== 'generating' && pendingSongData && (
-                      <Button onClick={onTryAgainSong} variant="outline" disabled={lyricsPreviewMutation.isPending} data-testid="button-try-again-song">
+                      <Button onClick={openTryAgainModal} variant="outline" disabled={lyricsPreviewMutation.isPending} data-testid="button-try-again-song">
                         <RefreshCw className={`w-4 h-4 mr-2 ${lyricsPreviewMutation.isPending ? 'animate-spin' : ''}`} />
                         {lyricsPreviewMutation.isPending ? 'Regenerating...' : 'Try Again'}
                       </Button>
@@ -4119,6 +4152,105 @@ export default function CreatePage() {
                     )}
                   </CardFooter>
                 </Card>
+
+                <Dialog open={showTryAgainModal} onOpenChange={setShowTryAgainModal}>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>How would you like to try again?</DialogTitle>
+                      <DialogDescription>
+                        Your questionnaire answers are saved. Pick how you'd like to adjust the song.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2">
+                      <button
+                        onClick={() => setTryAgainMode('change-genre')}
+                        className={`w-full text-left p-4 rounded-md border transition-colors ${tryAgainMode === 'change-genre' ? 'border-primary bg-primary/5' : 'border-border hover-elevate'}`}
+                        data-testid="button-try-again-change-genre"
+                      >
+                        <p className="font-medium">Change the genre</p>
+                        <p className="text-sm text-muted-foreground">Keep the same story but switch to a different music style</p>
+                      </button>
+                      <button
+                        onClick={() => setTryAgainMode('edit-lyrics')}
+                        className={`w-full text-left p-4 rounded-md border transition-colors ${tryAgainMode === 'edit-lyrics' ? 'border-primary bg-primary/5' : 'border-border hover-elevate'}`}
+                        data-testid="button-try-again-edit-lyrics"
+                      >
+                        <p className="font-medium">Edit the lyrics</p>
+                        <p className="text-sm text-muted-foreground">Go back to the lyrics editor to make your own changes</p>
+                      </button>
+                      <button
+                        onClick={() => setTryAgainMode('feedback')}
+                        className={`w-full text-left p-4 rounded-md border transition-colors ${tryAgainMode === 'feedback' ? 'border-primary bg-primary/5' : 'border-border hover-elevate'}`}
+                        data-testid="button-try-again-feedback"
+                      >
+                        <p className="font-medium">Describe what to change</p>
+                        <p className="text-sm text-muted-foreground">Tell us what you didn't like and we'll generate new lyrics</p>
+                      </button>
+
+                      {tryAgainMode === 'change-genre' && (
+                        <div className="pt-2 space-y-2">
+                          <Label>New genre</Label>
+                          <Select value={tryAgainGenre} onValueChange={setTryAgainGenre}>
+                            <SelectTrigger data-testid="select-try-again-genre">
+                              <SelectValue placeholder="Select genre" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="r&b">R&B</SelectItem>
+                              <SelectItem value="gospel">Gospel</SelectItem>
+                              <SelectItem value="black-gospel">Black Gospel</SelectItem>
+                              <SelectItem value="neo-soul">Neo-Soul</SelectItem>
+                              <SelectItem value="soul">Soul</SelectItem>
+                              <SelectItem value="motown">Motown</SelectItem>
+                              <SelectItem value="rap">Rap</SelectItem>
+                              <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                              <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                              <SelectItem value="jazz">Jazz</SelectItem>
+                              <SelectItem value="blues">Blues</SelectItem>
+                              <SelectItem value="funk">Funk</SelectItem>
+                              <SelectItem value="reggae">Reggae</SelectItem>
+                              <SelectItem value="pop">Pop</SelectItem>
+                              <SelectItem value="rock">Rock</SelectItem>
+                              <SelectItem value="country">Country</SelectItem>
+                              <SelectItem value="alternative">Alternative</SelectItem>
+                              <SelectItem value="electronic">Electronic/EDM</SelectItem>
+                              <SelectItem value="indie">Indie</SelectItem>
+                              <SelectItem value="folk">Folk</SelectItem>
+                              <SelectItem value="latin">Latin</SelectItem>
+                              <SelectItem value="kpop">K-Pop</SelectItem>
+                              <SelectItem value="christian">Christian</SelectItem>
+                              <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {tryAgainMode === 'feedback' && (
+                        <div className="pt-2 space-y-2">
+                          <Label>What would you like changed?</Label>
+                          <Textarea
+                            placeholder="e.g. Make it more upbeat, add more personal details, the chorus is too repetitive, I want it to sound more like spoken word..."
+                            value={tryAgainFeedback}
+                            onChange={(e) => setTryAgainFeedback(e.target.value)}
+                            rows={4}
+                            data-testid="textarea-try-again-feedback"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowTryAgainModal(false)} data-testid="button-try-again-cancel">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={onTryAgainSubmit}
+                        disabled={!tryAgainMode || (tryAgainMode === 'feedback' && !tryAgainFeedback.trim())}
+                        data-testid="button-try-again-submit"
+                      >
+                        {tryAgainMode === 'edit-lyrics' ? 'Open Lyrics Editor' : 'Regenerate Song'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             ) : questionnaire ? (
               /* AI Questionnaire Step */
