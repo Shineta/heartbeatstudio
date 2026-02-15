@@ -15,6 +15,7 @@ import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2, Book, Lightbulb } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
@@ -4129,11 +4130,19 @@ export default function CreatePage() {
                       </>
                     )}
                   </CardContent>
+                  {createdSong.status !== 'generating' && pendingSongData && (
+                    <div className="mx-6 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Not quite right?</span> Change the genre, edit the lyrics, or tell us what to fix — no need to re-answer your questions.
+                      </p>
+                    </div>
+                  )}
                   <CardFooter className="flex flex-wrap gap-3">
                     {createdSong.status !== 'generating' && pendingSongData && (
                       <Button onClick={openTryAgainModal} variant="outline" disabled={lyricsPreviewMutation.isPending} data-testid="button-try-again-song">
                         <RefreshCw className={`w-4 h-4 mr-2 ${lyricsPreviewMutation.isPending ? 'animate-spin' : ''}`} />
                         {lyricsPreviewMutation.isPending ? 'Regenerating...' : 'Try Again'}
+                        <Badge variant="secondary" className="ml-2 text-xs no-default-hover-elevate no-default-active-elevate">NEW</Badge>
                       </Button>
                     )}
                     <Button onClick={() => { setCreatedSong(null); setPendingSongData(null); setEditedLyrics(""); setEditedTitle(""); }} variant="outline" data-testid="button-create-another">
