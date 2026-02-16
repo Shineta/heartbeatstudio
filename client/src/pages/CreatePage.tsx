@@ -2111,7 +2111,21 @@ export default function CreatePage() {
     if (tryAgainMode === 'change-genre') {
       const updatedData = { ...pendingSongData, genre: tryAgainGenre };
       setPendingSongData(updatedData);
-      lyricsPreviewMutation.mutate(updatedData);
+      const existingLyrics = createdSong?.content || editedLyrics || '';
+      const existingTitle = createdSong?.title || editedTitle || '';
+      setEditedLyrics(existingLyrics);
+      setEditedTitle(existingTitle);
+      songWithLyricsMutation.mutate({
+        lovedOneId: updatedData.lovedOneId,
+        tone: updatedData.tone,
+        genre: tryAgainGenre,
+        title: existingTitle,
+        lyrics: existingLyrics,
+        songDetails: updatedData.songDetails,
+        voice: updatedData.voice,
+        duration: updatedData.duration,
+        customCoverImageUrl: customCoverImageUrl || undefined,
+      });
     } else if (tryAgainMode === 'edit-lyrics') {
       setEditedLyrics(createdSong?.content || editedLyrics || '');
       setEditedTitle(createdSong?.title || editedTitle || '');
