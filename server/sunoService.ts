@@ -993,17 +993,24 @@ async function pollTaskStatus(
       }
 
       if (status === "FAILED" || status === "GENERATE_AUDIO_FAILED") {
-        console.error(`[Suno] Song generation failed: ${errorMessage}`);
+        console.error(`[Suno] Song generation failed with terminal status ${status}: ${errorMessage}`);
         throw new Error(errorMessage || "Song generation failed");
       }
     } catch (error: any) {
+      const isTerminalSunoFailure =
+        error.message?.includes("Internal Error") ||
+        error.message?.includes("Song generation failed");
+
+      if (isTerminalSunoFailure) {
+        console.error(`[Suno] Terminal failure detected, switching to backup service: ${error.message}`);
+        throw error;
+      }
+
       const isRetryable = 
         error.code === 'ECONNRESET' ||
         error.code === 'ETIMEDOUT' ||
         error.code === 'ECONNABORTED' ||
-        (error.response?.status >= 500 && error.response?.status < 600) ||
-        error.message?.includes("Internal Error") ||
-        error.message?.includes("GENERATE_AUDIO_FAILED");
+        (error.response?.status >= 500 && error.response?.status < 600);
 
       if (isRetryable) {
         consecutiveErrors++;
@@ -1015,11 +1022,9 @@ async function pollTaskStatus(
           console.error(`[Suno] Too many consecutive API errors, giving up`);
           throw new Error(`Music service temporarily unavailable. Please try again in a few minutes.`);
         }
-        // Continue to next iteration to retry
         continue;
       }
 
-      // Non-retryable error, throw immediately
       throw error;
     }
   }
