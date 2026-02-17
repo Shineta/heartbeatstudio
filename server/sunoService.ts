@@ -997,12 +997,13 @@ async function pollTaskStatus(
         throw new Error(errorMessage || "Song generation failed");
       }
     } catch (error: any) {
-      // Check if it's a retryable error (5xx, network error, timeout)
       const isRetryable = 
         error.code === 'ECONNRESET' ||
         error.code === 'ETIMEDOUT' ||
         error.code === 'ECONNABORTED' ||
-        (error.response?.status >= 500 && error.response?.status < 600);
+        (error.response?.status >= 500 && error.response?.status < 600) ||
+        error.message?.includes("Internal Error") ||
+        error.message?.includes("GENERATE_AUDIO_FAILED");
 
       if (isRetryable) {
         consecutiveErrors++;
@@ -1385,11 +1386,13 @@ export async function generateSongWithLyrics(params: {
   } catch (error: any) {
     console.error("Suno API error:", error.response?.data || error.message);
 
-    // Try Loudly as a fallback for certain errors
     const isRetryableError = 
       error.response?.status >= 500 ||
       error.message?.includes("temporarily unavailable") ||
       error.message?.includes("timed out") ||
+      error.message?.includes("Internal Error") ||
+      error.message?.includes("GENERATE_AUDIO_FAILED") ||
+      error.message?.includes("Song generation failed") ||
       error.code === 'ECONNRESET' ||
       error.code === 'ETIMEDOUT';
 
