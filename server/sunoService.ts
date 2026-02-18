@@ -1251,41 +1251,61 @@ export async function generateSongWithLyrics(params: {
       console.log(`[Suno] Added artist inspiration to style: ${artistInspiration}`);
     }
 
-    // Step 1: Generate initial clip (uses V4 for longer initial output)
     console.log(
       `[Suno] Starting extended song generation (~3 minutes) for: ${params.title} [genre=${resolvedGenre}]`,
     );
 
-    const response = await axios.post<SunoGenerateResponse>(
-      `${SUNO_API_BASE_URL}/api/v1/generate`,
-      {
-        prompt: params.lyrics, // lyrics in custom mode
-        style,
-        title: params.title,
-        customMode: true,
-        instrumental: false,
-        model: "V5",
-        callBackUrl: callbackUrl,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${SUNO_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 60000, // 60 second timeout for initial API call
-      },
-    );
+    const modelsToTry = ["V4", "V3_5"];
+    let initialResult: any = null;
+    let lastSunoError: any = null;
 
-    if (response.data.code !== 200) {
-      throw new Error(response.data.msg || "Failed to generate song");
+    for (const model of modelsToTry) {
+      try {
+        console.log(`[Suno] Attempting generation with model ${model}...`);
+        const response = await axios.post<SunoGenerateResponse>(
+          `${SUNO_API_BASE_URL}/api/v1/generate`,
+          {
+            prompt: params.lyrics,
+            style,
+            title: params.title,
+            customMode: true,
+            instrumental: false,
+            model,
+            callBackUrl: callbackUrl,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${SUNO_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 60000,
+          },
+        );
+
+        if (response.data.code !== 200) {
+          throw new Error(response.data.msg || "Failed to generate song");
+        }
+
+        const taskId = response.data.data.taskId;
+        console.log(
+          `[Suno] Clip generation started with model ${model}, taskId: ${taskId}`,
+        );
+
+        initialResult = await pollTaskStatus(taskId);
+        console.log(`[Suno] Model ${model} succeeded!`);
+        break;
+      } catch (modelError: any) {
+        lastSunoError = modelError;
+        console.warn(`[Suno] Model ${model} failed: ${modelError.message}`);
+        if (model !== modelsToTry[modelsToTry.length - 1]) {
+          console.log(`[Suno] Retrying with next model...`);
+        }
+      }
     }
 
-    const taskId = response.data.data.taskId;
-    console.log(
-      `[Suno] Initial clip generation started with taskId: ${taskId}`,
-    );
-
-    const initialResult = await pollTaskStatus(taskId);
+    if (!initialResult) {
+      throw lastSunoError || new Error("All Suno models failed");
+    }
 
     if (
       !initialResult ||
@@ -1368,13 +1388,9 @@ export async function generateSongWithLyrics(params: {
         finalAudioUrl = await concatenateClips(clipIds);
       } catch (concatError: any) {
         console.error(
-          `[Suno] Concatenation failed, using last extension:`,
+          `[Suno] Concatenation failed, using last clip audio:`,
           concatError.message,
         );
-        const lastResult = await pollTaskStatus(taskId);
-        if (lastResult?.sunoData?.[0]?.audioUrl) {
-          finalAudioUrl = lastResult.sunoData[0].audioUrl;
-        }
       }
     }
 

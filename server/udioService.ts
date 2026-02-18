@@ -157,7 +157,13 @@ async function pollUdioStatus(
       }
 
       if (status === "failed" || status === "error") {
-        throw new Error(`Udio generation failed: ${data.message || data.msg || "Unknown error"}`);
+        const failureReason = data.data?.response_data?.error || 
+          data.data?.response_data?.message ||
+          (typeof data.data?.response_data === 'string' ? data.data.response_data : null) ||
+          (data.data as any)?.errorMessage ||
+          "Unknown error";
+        console.error(`[Udio] Full failure response:`, JSON.stringify(data, null, 2));
+        throw new Error(`Udio generation failed: ${failureReason}`);
       }
 
     } catch (error: any) {
