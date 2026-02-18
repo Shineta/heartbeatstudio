@@ -993,19 +993,11 @@ async function pollTaskStatus(
       }
 
       if (status === "FAILED" || status === "GENERATE_AUDIO_FAILED") {
-        console.error(`[Suno] Song generation failed with terminal status ${status}: ${errorMessage}`);
+        console.error(`[Suno] Song generation failed: ${errorMessage}`);
         throw new Error(errorMessage || "Song generation failed");
       }
     } catch (error: any) {
-      const isTerminalSunoFailure =
-        error.message?.includes("Internal Error") ||
-        error.message?.includes("Song generation failed");
-
-      if (isTerminalSunoFailure) {
-        console.error(`[Suno] Terminal failure detected, switching to backup service: ${error.message}`);
-        throw error;
-      }
-
+      // Check if it's a retryable error (5xx, network error, timeout)
       const isRetryable = 
         error.code === 'ECONNRESET' ||
         error.code === 'ETIMEDOUT' ||
@@ -1022,9 +1014,11 @@ async function pollTaskStatus(
           console.error(`[Suno] Too many consecutive API errors, giving up`);
           throw new Error(`Music service temporarily unavailable. Please try again in a few minutes.`);
         }
+        // Continue to next iteration to retry
         continue;
       }
 
+      // Non-retryable error, throw immediately
       throw error;
     }
   }
@@ -1251,61 +1245,41 @@ export async function generateSongWithLyrics(params: {
       console.log(`[Suno] Added artist inspiration to style: ${artistInspiration}`);
     }
 
+    // Step 1: Generate initial clip (uses V4 for longer initial output)
     console.log(
       `[Suno] Starting extended song generation (~3 minutes) for: ${params.title} [genre=${resolvedGenre}]`,
     );
 
-    const modelsToTry = ["V4", "V3_5"];
-    let initialResult: any = null;
-    let lastSunoError: any = null;
+    const response = await axios.post<SunoGenerateResponse>(
+      `${SUNO_API_BASE_URL}/api/v1/generate`,
+      {
+        prompt: params.lyrics, // lyrics in custom mode
+        style,
+        title: params.title,
+        customMode: true,
+        instrumental: false,
+        model: "V5",
+        callBackUrl: callbackUrl,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${SUNO_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 60000, // 60 second timeout for initial API call
+      },
+    );
 
-    for (const model of modelsToTry) {
-      try {
-        console.log(`[Suno] Attempting generation with model ${model}...`);
-        const response = await axios.post<SunoGenerateResponse>(
-          `${SUNO_API_BASE_URL}/api/v1/generate`,
-          {
-            prompt: params.lyrics,
-            style,
-            title: params.title,
-            customMode: true,
-            instrumental: false,
-            model,
-            callBackUrl: callbackUrl,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${SUNO_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            timeout: 60000,
-          },
-        );
-
-        if (response.data.code !== 200) {
-          throw new Error(response.data.msg || "Failed to generate song");
-        }
-
-        const taskId = response.data.data.taskId;
-        console.log(
-          `[Suno] Clip generation started with model ${model}, taskId: ${taskId}`,
-        );
-
-        initialResult = await pollTaskStatus(taskId);
-        console.log(`[Suno] Model ${model} succeeded!`);
-        break;
-      } catch (modelError: any) {
-        lastSunoError = modelError;
-        console.warn(`[Suno] Model ${model} failed: ${modelError.message}`);
-        if (model !== modelsToTry[modelsToTry.length - 1]) {
-          console.log(`[Suno] Retrying with next model...`);
-        }
-      }
+    if (response.data.code !== 200) {
+      throw new Error(response.data.msg || "Failed to generate song");
     }
 
-    if (!initialResult) {
-      throw lastSunoError || new Error("All Suno models failed");
-    }
+    const taskId = response.data.data.taskId;
+    console.log(
+      `[Suno] Initial clip generation started with taskId: ${taskId}`,
+    );
+
+    const initialResult = await pollTaskStatus(taskId);
 
     if (
       !initialResult ||
@@ -1388,9 +1362,13 @@ export async function generateSongWithLyrics(params: {
         finalAudioUrl = await concatenateClips(clipIds);
       } catch (concatError: any) {
         console.error(
-          `[Suno] Concatenation failed, using last clip audio:`,
+          `[Suno] Concatenation failed, using last extension:`,
           concatError.message,
         );
+        const lastResult = await pollTaskStatus(taskId);
+        if (lastResult?.sunoData?.[0]?.audioUrl) {
+          finalAudioUrl = lastResult.sunoData[0].audioUrl;
+        }
       }
     }
 
@@ -1407,13 +1385,11 @@ export async function generateSongWithLyrics(params: {
   } catch (error: any) {
     console.error("Suno API error:", error.response?.data || error.message);
 
+    // Try Loudly as a fallback for certain errors
     const isRetryableError = 
       error.response?.status >= 500 ||
       error.message?.includes("temporarily unavailable") ||
       error.message?.includes("timed out") ||
-      error.message?.includes("Internal Error") ||
-      error.message?.includes("GENERATE_AUDIO_FAILED") ||
-      error.message?.includes("Song generation failed") ||
       error.code === 'ECONNRESET' ||
       error.code === 'ETIMEDOUT';
 
