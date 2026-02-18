@@ -407,7 +407,7 @@ export default function CreatePage() {
             clearInterval(songPollingRef.current.interval);
             songPollingRef.current.interval = null;
           }
-          toast({ title: "Error", description: "Song generation failed. Please try again.", variant: "destructive" });
+          toast({ title: "Song Feature Updating", description: "Our song creation feature is currently being updated. Please try again a little later!", variant: "destructive" });
         }
       } catch (error) {
         console.error('[SongPoll] Failed to poll song status:', error);
@@ -1750,8 +1750,8 @@ export default function CreatePage() {
       }
       
       toast({
-        title: "Song Generation Failed",
-        description: errorMessage,
+        title: "Song Feature Updating",
+        description: "Our song creation feature is currently being updated. Please try again a little later! Your credit has not been charged.",
         variant: "destructive",
       });
     },
@@ -1808,8 +1808,8 @@ export default function CreatePage() {
       }
       
       toast({
-        title: "Song Generation Failed",
-        description: errorMessage,
+        title: "Song Feature Updating",
+        description: "Our song creation feature is currently being updated. Please try again a little later! Your credit has not been charged.",
         variant: "destructive",
       });
     },
@@ -4100,8 +4100,8 @@ export default function CreatePage() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Song...' : createdSong.title}</CardTitle>
-                    {createdSong.genre && (
+                    <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Song...' : createdSong.status === 'failed' ? 'Song Update in Progress' : createdSong.title}</CardTitle>
+                    {createdSong.status !== 'failed' && createdSong.genre && (
                       <CardDescription>Genre: {createdSong.genre}</CardDescription>
                     )}
                   </CardHeader>
@@ -4118,6 +4118,20 @@ export default function CreatePage() {
                         </p>
                         <Button onClick={() => setLocation('/dashboard')} variant="outline" data-testid="button-go-to-dashboard">
                           Go to Dashboard
+                        </Button>
+                      </div>
+                    ) : createdSong.status === 'failed' ? (
+                      <div className="text-center py-8">
+                        <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="text-lg font-semibold mb-2">Song Feature Currently Updating</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Our song creation feature is being updated to bring you an even better experience. Please try again a little later!
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-6">
+                          Your credit has been refunded. No worries!
+                        </p>
+                        <Button onClick={() => { setCreatedSong(null); setPendingSongData(null); }} variant="outline" data-testid="button-try-again-later">
+                          Back to Song Creator
                         </Button>
                       </div>
                     ) : (
@@ -4144,7 +4158,7 @@ export default function CreatePage() {
                       </>
                     )}
                   </CardContent>
-                  {createdSong.status !== 'generating' && pendingSongData && (
+                  {createdSong.status !== 'generating' && createdSong.status !== 'failed' && pendingSongData && (
                     <div className="mx-6 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-md">
                       <p className="text-sm text-muted-foreground">
                         <span className="font-medium text-foreground">Not quite right?</span> Change the genre, edit the lyrics, or tell us what to fix — no need to re-answer your questions.
@@ -7821,8 +7835,8 @@ export default function CreatePage() {
                       <div className="space-y-6">
                         <Card>
                           <CardHeader>
-                            <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Song...' : createdSong.title}</CardTitle>
-                            {createdSong.genre && (
+                            <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Song...' : createdSong.status === 'failed' ? 'Song Update in Progress' : createdSong.title}</CardTitle>
+                            {createdSong.status !== 'failed' && createdSong.genre && (
                               <CardDescription>Genre: {createdSong.genre}</CardDescription>
                             )}
                           </CardHeader>
@@ -7839,6 +7853,20 @@ export default function CreatePage() {
                                 </p>
                                 <Button onClick={() => setLocation('/dashboard')} variant="outline" data-testid="button-edu-go-to-dashboard">
                                   Go to Dashboard
+                                </Button>
+                              </div>
+                            ) : createdSong.status === 'failed' ? (
+                              <div className="text-center py-8">
+                                <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                                <h3 className="text-lg font-semibold mb-2">Song Feature Currently Updating</h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Our song creation feature is being updated to bring you an even better experience. Please try again a little later!
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-6">
+                                  Your credit has been refunded. No worries!
+                                </p>
+                                <Button onClick={() => { setCreatedSong(null); setPendingSongData(null); }} variant="outline" data-testid="button-edu-try-again-later">
+                                  Back to Song Creator
                                 </Button>
                               </div>
                             ) : (
@@ -7864,7 +7892,7 @@ export default function CreatePage() {
                               </>
                             )}
                           </CardContent>
-                          {createdSong.status !== 'generating' && pendingSongData && (
+                          {createdSong.status !== 'generating' && createdSong.status !== 'failed' && pendingSongData && (
                             <div className="mx-6 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-md">
                               <p className="text-sm text-muted-foreground">
                                 <span className="font-medium text-foreground">Not quite right?</span> Change the genre, edit the lyrics, or tell us what to fix — no need to re-answer your questions.
@@ -7872,7 +7900,7 @@ export default function CreatePage() {
                             </div>
                           )}
                           <CardFooter className="flex gap-3 flex-wrap">
-                            {createdSong.status !== 'generating' && pendingSongData && (
+                            {createdSong.status !== 'generating' && createdSong.status !== 'failed' && pendingSongData && (
                               <Button onClick={openTryAgainModal} variant="outline" disabled={lyricsPreviewMutation.isPending} data-testid="button-edu-try-again-song">
                                 <RefreshCw className={`w-4 h-4 mr-2 ${lyricsPreviewMutation.isPending ? 'animate-spin' : ''}`} />
                                 {lyricsPreviewMutation.isPending ? 'Regenerating...' : 'Try Again'}
@@ -7882,7 +7910,7 @@ export default function CreatePage() {
                             <Button onClick={() => { setCreatedSong(null); setPendingSongData(null); setEditedLyrics(""); setEditedTitle(""); }} variant="outline" data-testid="button-edu-create-another">
                               Create Another
                             </Button>
-                            {createdSong.status !== 'generating' && (
+                            {createdSong.status !== 'generating' && createdSong.status !== 'failed' && (
                               <Button onClick={() => {
                                 const shareLink = createdSong.shareableLink?.startsWith('/share/')
                                   ? createdSong.shareableLink
