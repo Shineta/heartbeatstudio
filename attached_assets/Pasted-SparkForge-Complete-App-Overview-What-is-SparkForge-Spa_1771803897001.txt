@@ -1,0 +1,164 @@
+SparkForge - Complete App Overview
+What is SparkForge?
+SparkForge is an AI-powered platform that turns conversations into complete digital product businesses. It enables creators to ideate, build, brand, package, and sell digital products through natural AI-assisted conversations—from initial concept to final sale.
+
+🎯 Core Concept
+Instead of manually creating digital products, users simply chat with an AI assistant that guides them through the entire process:
+
+Product creation
+Content generation
+Brand identity design
+Storefront setup
+Sales and analytics
+🛍️ Digital Products You Can Create
+1. E-books
+Professional e-books with AI-generated content, covers, and formatting
+Export to PDF, ePub, and MOBI formats
+Examples: Business Guides, Recipe Books, Travel Guides, Self-Help, Novels
+Time: 30-60 minutes
+Difficulty: Beginner
+2. Workbooks
+Interactive workbooks with exercises, worksheets, and hands-on activities
+Built-in completion tracking and progress monitoring
+Examples: Training Workbooks, Skill-Building Exercises, Assessment Tools
+Time: 45-75 minutes
+Difficulty: Beginner
+3. Online Courses
+Comprehensive courses with video outlines, scripts, and slides
+Lesson-by-lesson structure with interactive elements
+Progress tracking and completion certificates
+Examples: Programming, Marketing, Design, Photography, Cooking
+Time: 2-4 hours
+Difficulty: Intermediate
+4. Interactive Planners
+Dynamic planners with task management (Kanban boards)
+Habit tracking with streak counters
+Goal setting with milestone tracking
+Calendar views and analytics dashboard
+Feature: Tasks can be scheduled with start dates
+5. Other Product Types Supported:
+Design Templates
+Code Tools
+Automation Products
+Card Games
+Board Games
+Computer Games
+🎨 Key Features
+1. AI Chat Interface
+Primary interaction method for creating products
+Conversational product generation
+Real-time content creation
+Context-aware assistance
+2. Brand Kit Generator
+AI-generated complete brand identity:
+Color palettes
+Font recommendations
+Brand voice guidelines
+Logo style directions
+3. Product Editor
+Full WYSIWYG editor for products
+Manage titles, descriptions, content structure
+Chapter/section/lesson organization
+Pricing tier configuration
+Status management (Draft, Published, Archived)
+4. Content Library
+Upload and manage content (images, documents, videos, audio)
+AI-powered content analysis:
+Text extraction
+Content summarization
+Automatic insights
+Use uploaded content in your products
+5. AI Image Generation
+Professional image generation using AI
+Simple prompt mode
+Specialized controls for:
+Skincare photography
+Product advertising
+Book covers
+6. AI Model Templates
+Create custom AI models for specialized image generation
+Reusable templates for consistent branding
+7. Storefront
+Automated product storefronts
+Display published products with pricing tiers
+Integrated checkout process
+Customer purchase flow
+8. Payment Processing
+Stripe integration for secure payments
+Support for multiple pricing tiers
+Order confirmation pages
+Transaction history
+9. Interactive Learning Tools
+Workbook Completion: Track progress through exercises
+Course Taking: Lesson-by-lesson completion tracking
+Certificates: Earn and verify completion certificates
+Public Certificate Verification: Shareable credential verification
+10. Analytics Dashboard
+Product performance metrics
+Sales trend analysis
+User engagement tracking
+Revenue insights
+11. Social Media Promotion
+Step-by-step promotion guides for:
+TikTok
+Facebook
+Instagram
+Marketing best practices
+Content templates
+12. Pricing Plans
+Three subscription tiers:
+
+Starter: Basic features
+Pro: Advanced capabilities
+Studio: Enterprise-level features
+🔐 Authentication & Security
+Replit OpenID Connect (OIDC) authentication
+Passport.js session management
+PostgreSQL-backed sessions
+HTTP-only secure cookies
+Protected routes for user data
+💻 Technical Stack
+Frontend
+React 18 + TypeScript
+Vite for fast development
+Shadcn/ui component library (Radix UI)
+Tailwind CSS with custom purple/blue gradient design
+TanStack Query for state management
+Wouter for routing
+Backend
+Node.js + Express.js
+TypeScript with ES modules
+PostgreSQL database (Neon serverless)
+Drizzle ORM for type-safe database access
+OpenAI GPT-5 for AI features
+Stripe for payments
+Key Integrations
+OpenAI API: Content generation and conversational AI
+Stripe: Payment processing
+Replit Auth: User authentication
+PostgreSQL: Data persistence
+Object Storage: File management
+🌓 Design System
+Light/Dark Mode support
+Purple-to-blue gradient theme
+Reference-inspired design (Notion, Linear, Cursor, Gumroad)
+Custom elevation states and hover effects
+Comprehensive component library
+📊 User Journey
+Sign up with Replit authentication
+Chat with AI to define your product idea
+Generate content through AI assistance
+Create brand identity with AI brand kit
+Edit and refine product in editor
+Publish to automated storefront
+Share and sell with integrated payments
+Track performance with analytics
+Promote using built-in guides
+🎯 Target Users
+Content Creators: Writers, educators, designers
+Entrepreneurs: Building digital product businesses
+Educators: Creating courses and learning materials
+Coaches: Developing workbooks and training programs
+Anyone: Looking to monetize their knowledge and skills
+SparkForge eliminates the technical barriers to creating and selling digital products, letting creators focus on their content while AI handles the heavy lifting of production, branding, and setup.
+
