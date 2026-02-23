@@ -6942,7 +6942,7 @@ export default function CreatePage() {
                                   <FormItem>
                                     <FormLabel>Brand / Business Name</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="e.g., Utibe Samuel TV" {...field} data-testid="input-reel-brand" />
+                                      <Input placeholder="Your brand or channel name" {...field} data-testid="input-reel-brand" />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
