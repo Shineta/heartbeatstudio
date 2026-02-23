@@ -58,6 +58,17 @@ const songFormSchema = z.object({
   songDetails: z.string().min(10, "Please share some details about the song (at least 10 characters)"),
 });
 
+const reelMusicFormSchema = z.object({
+  brandName: z.string().min(1, "Brand or business name is required"),
+  contentNiche: z.string().min(1, "Content niche is required"),
+  vibe: z.string().min(1, "Vibe/mood is required"),
+  genre: z.string().min(1, "Genre is required"),
+  duration: z.string().optional(),
+  voice: z.string().optional(),
+  description: z.string().min(10, "Describe what the reel is about (at least 10 characters)"),
+  instrumental: z.boolean().optional().default(false),
+});
+
 const animationFormSchema = z.object({
   lovedOneId: z.string().optional(),
   recipientName: z.string().min(1, "Name is required"),
@@ -468,6 +479,20 @@ export default function CreatePage() {
       duration: "extended",
       language: "english",
       songDetails: "",
+    },
+  });
+
+  const reelMusicForm = useForm<z.infer<typeof reelMusicFormSchema>>({
+    resolver: zodResolver(reelMusicFormSchema),
+    defaultValues: {
+      brandName: user?.brandName || "",
+      contentNiche: "",
+      vibe: "",
+      genre: "pop",
+      duration: "short",
+      voice: "",
+      description: "",
+      instrumental: false,
     },
   });
 
@@ -1754,6 +1779,47 @@ export default function CreatePage() {
         description: "Our song creation feature is currently being updated. Please try again a little later! Your credit has not been charged.",
         variant: "destructive",
       });
+    },
+  });
+
+  const reelMusicLyricsMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof reelMusicFormSchema>) => {
+      const mappedData = {
+        recipientName: data.brandName,
+        relationship: "brand",
+        occasion: "social media reel",
+        tone: data.vibe,
+        genre: data.genre,
+        language: "english",
+        songDetails: `This is background music for a social media reel/short video. Brand: ${data.brandName}. Content niche: ${data.contentNiche}. The reel is about: ${data.description}. Mood/vibe: ${data.vibe}. ${data.instrumental ? 'IMPORTANT: This should be INSTRUMENTAL ONLY — no vocals, no singing, no words. Pure background music.' : 'Include catchy vocals that work as background music.'} The song should be catchy, loop-friendly, and work perfectly as background audio for short-form video content (Instagram Reels, TikTok, Facebook Reels). Keep it energetic and attention-grabbing within the first few seconds. ${data.duration === 'short' ? 'Keep the song around 30-60 seconds — perfect reel length.' : data.duration === 'medium' ? 'Song should be around 1-2 minutes.' : 'Full-length song around 2-3 minutes.'}`,
+      };
+      const res = await apiRequest("POST", "/api/generate/lyrics-preview", mappedData);
+      return await res.json() as LyricsPreview;
+    },
+    onSuccess: (data: LyricsPreview, variables) => {
+      setLyricsPreview(data);
+      setEditedLyrics(data.lyrics);
+      setEditedTitle(data.title);
+      const reelSongDetails = `This is background music for a social media reel/short video. Brand: ${variables.brandName}. Content niche: ${variables.contentNiche}. The reel is about: ${variables.description}. Mood/vibe: ${variables.vibe}. ${variables.instrumental ? 'INSTRUMENTAL ONLY — no vocals, no singing, no words. Pure background music.' : 'Include catchy vocals that work as background music.'} The song should be catchy, loop-friendly, and work perfectly as background audio for short-form video content (Instagram Reels, TikTok, Facebook Reels).`;
+      setPendingSongData({
+        recipientName: variables.brandName,
+        relationship: "brand",
+        occasion: "social media reel",
+        tone: variables.vibe,
+        genre: variables.genre,
+        songDetails: reelSongDetails,
+        voice: variables.voice || "",
+        duration: variables.duration === 'short' ? 'short' : variables.duration === 'medium' ? 'standard' : 'extended',
+      } as any);
+      toast({ title: "Lyrics Ready!", description: "Review your reel music lyrics before creating the song." });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({ title: "Unauthorized", description: "Please log in again", variant: "destructive" });
+        setTimeout(() => { window.location.href = "/api/login"; }, 500);
+        return;
+      }
+      toast({ title: "Error", description: "Failed to generate lyrics. Please try again.", variant: "destructive" });
     },
   });
 
@@ -6018,13 +6084,36 @@ export default function CreatePage() {
                       <p className="text-sm text-muted-foreground">Create content for holiday parties, retreats, and celebrations.</p>
                     </CardContent>
                   </Card>
+
+                  <Card 
+                    className="hover-elevate cursor-pointer transition-all border-primary/30"
+                    onClick={() => {
+                      setBusinessQuickStart('reel-music');
+                      setActiveTab('song');
+                    }}
+                    data-testid="business-card-reel-music"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Video className="w-6 h-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Reel Music</h4>
+                      <p className="text-sm text-muted-foreground">Create custom background music for your social media reels and short videos.</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             ) : (
               <div className="space-y-6">
                 <Button 
                   variant="ghost" 
-                  onClick={() => setBusinessQuickStart(null)}
+                  onClick={() => {
+                    setBusinessQuickStart(null);
+                    setCreatedSong(null);
+                    setLyricsPreview(null);
+                    setPendingSongData(null);
+                    reelMusicForm.reset();
+                  }}
                   className="mb-4"
                   data-testid="button-back-business"
                 >
@@ -6693,24 +6782,388 @@ export default function CreatePage() {
                   </TabsContent>
 
                   <TabsContent value="song">
+                    {createdSong && businessQuickStart === 'reel-music' ? (
+                      <div className="space-y-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>{createdSong.status === 'generating' ? 'Creating Your Reel Music...' : createdSong.status === 'failed' ? 'Song Update in Progress' : createdSong.title}</CardTitle>
+                            {createdSong.status !== 'failed' && createdSong.genre && (
+                              <CardDescription>Genre: {createdSong.genre}</CardDescription>
+                            )}
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {createdSong.status === 'generating' ? (
+                              <div className="text-center py-8">
+                                <div className="w-full max-w-md mx-auto mb-6">
+                                  <Progress value={songProgress} className="h-3" data-testid="progress-reel-song-generation" />
+                                  <p className="text-sm text-muted-foreground mt-2">{Math.round(songProgress)}% complete</p>
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">Your reel music is being created!</h3>
+                                <p className="text-muted-foreground mb-4">
+                                  This usually takes 2-4 minutes. You can wait here or check your dashboard later.
+                                </p>
+                              </div>
+                            ) : createdSong.status === 'failed' ? (
+                              <div className="text-center py-8">
+                                <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                                <h3 className="text-lg font-semibold mb-2">Song Feature Currently Updating</h3>
+                                <p className="text-muted-foreground mb-2">
+                                  Our song creation feature is being updated to bring you an even better experience. Please try again a little later!
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Your credit has been refunded. No worries!
+                                </p>
+                                <Button onClick={() => { setCreatedSong(null); setLyricsPreview(null); }} data-testid="button-back-reel-creator">
+                                  <ArrowLeft className="w-4 h-4 mr-2" />
+                                  Back to Reel Music Creator
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                {createdSong.imageUrl && (
+                                  <img src={createdSong.imageUrl} alt={createdSong.title || "Cover"} className="w-full max-w-sm mx-auto rounded-md" />
+                                )}
+                                {createdSong.mediaUrl && (
+                                  <audio controls className="w-full" src={createdSong.mediaUrl} data-testid="audio-reel-song" />
+                                )}
+                                {createdSong.content && (
+                                  <div className="p-4 bg-muted/30 rounded-lg border">
+                                    <p className="whitespace-pre-wrap text-sm">{createdSong.content}</p>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </CardContent>
+                          {createdSong.status !== 'generating' && createdSong.status !== 'failed' && (
+                            <CardFooter className="flex flex-wrap gap-2">
+                              <Button variant="outline" onClick={() => { setCreatedSong(null); setLyricsPreview(null); reelMusicForm.reset(); }} data-testid="button-create-another-reel">
+                                Create Another
+                              </Button>
+                              {createdSong.shareableLink && (
+                                <Button onClick={() => {
+                                  const shareLink = createdSong.shareableLink?.startsWith('/share/')
+                                    ? createdSong.shareableLink
+                                    : `/share/${createdSong.shareableLink}`;
+                                  navigator.clipboard.writeText(`${window.location.origin}${shareLink}`);
+                                  toast({ title: "Copied!", description: "Shareable link copied to clipboard" });
+                                }} data-testid="button-share-reel">
+                                  Share
+                                </Button>
+                              )}
+                            </CardFooter>
+                          )}
+                        </Card>
+                      </div>
+                    ) : lyricsPreview && businessQuickStart === 'reel-music' ? (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Edit className="w-5 h-5" />
+                            Review Your Reel Music
+                          </CardTitle>
+                          <CardDescription>
+                            Review and edit the lyrics before we create your song
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label>Song Title</Label>
+                            <Input
+                              value={editedTitle}
+                              onChange={(e) => setEditedTitle(e.target.value)}
+                              className="mt-1"
+                              data-testid="input-reel-title"
+                            />
+                          </div>
+                          <div>
+                            <Label>Lyrics</Label>
+                            <Textarea
+                              value={editedLyrics}
+                              onChange={(e) => setEditedLyrics(e.target.value)}
+                              className="mt-1 min-h-[200px] font-mono text-sm"
+                              data-testid="input-reel-lyrics"
+                            />
+                          </div>
+                        </CardContent>
+                        <CardFooter className="flex flex-wrap gap-2">
+                          <Button
+                            onClick={() => {
+                              if (!pendingSongData) return;
+                              songWithLyricsMutation.mutate({
+                                tone: pendingSongData.tone,
+                                genre: pendingSongData.genre,
+                                title: editedTitle,
+                                lyrics: editedLyrics,
+                                songDetails: pendingSongData.songDetails,
+                                voice: pendingSongData.voice,
+                                duration: pendingSongData.duration,
+                              });
+                            }}
+                            disabled={songWithLyricsMutation.isPending}
+                            data-testid="button-create-reel-song"
+                          >
+                            {songWithLyricsMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Creating...
+                              </>
+                            ) : (
+                              <>
+                                <Music className="w-4 h-4 mr-2" />
+                                Create Reel Music
+                              </>
+                            )}
+                          </Button>
+                          <Button variant="outline" onClick={() => { setLyricsPreview(null); setPendingSongData(null); }} data-testid="button-back-reel-form">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Form
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ) : (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <Music className="w-5 h-5" />
-                          Business Song Creator
+                          <Video className="w-5 h-5" />
+                          Reel Music Creator
                         </CardTitle>
                         <CardDescription>
-                          Professional, light-background music for internal sharing and events
+                          Create custom background music for your social media reels, TikToks, and short videos
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p className="mb-2">Business Song Creator</p>
-                          <p className="text-sm">Corporate-friendly songs with professional genres coming soon!</p>
-                        </div>
+                        {businessQuickStart === 'reel-music' ? (
+                          <Form {...reelMusicForm}>
+                            <form onSubmit={reelMusicForm.handleSubmit((data) => reelMusicLyricsMutation.mutate(data))} className="space-y-4">
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="brandName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Brand / Business Name</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="e.g., Utibe Samuel TV" {...field} data-testid="input-reel-brand" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="contentNiche"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Content Niche</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-reel-niche">
+                                          <SelectValue placeholder="What kind of content do you make?" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="fashion-beauty">Fashion & Beauty</SelectItem>
+                                        <SelectItem value="fitness-health">Fitness & Health</SelectItem>
+                                        <SelectItem value="food-cooking">Food & Cooking</SelectItem>
+                                        <SelectItem value="tech-gadgets">Tech & Gadgets</SelectItem>
+                                        <SelectItem value="travel-lifestyle">Travel & Lifestyle</SelectItem>
+                                        <SelectItem value="business-finance">Business & Finance</SelectItem>
+                                        <SelectItem value="education-tips">Education & Tips</SelectItem>
+                                        <SelectItem value="comedy-entertainment">Comedy & Entertainment</SelectItem>
+                                        <SelectItem value="motivation-mindset">Motivation & Mindset</SelectItem>
+                                        <SelectItem value="real-estate">Real Estate</SelectItem>
+                                        <SelectItem value="music-dance">Music & Dance</SelectItem>
+                                        <SelectItem value="diy-crafts">DIY & Crafts</SelectItem>
+                                        <SelectItem value="parenting-family">Parenting & Family</SelectItem>
+                                        <SelectItem value="pets-animals">Pets & Animals</SelectItem>
+                                        <SelectItem value="sports-athletics">Sports & Athletics</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>What's the Reel About?</FormLabel>
+                                    <FormControl>
+                                      <Textarea 
+                                        placeholder="e.g., DIY fashion tips showing how to style handbags, 4-minute tutorial with outfit transitions..." 
+                                        {...field} 
+                                        className="min-h-[80px]"
+                                        data-testid="input-reel-description" 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="vibe"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Vibe / Mood</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-reel-vibe">
+                                          <SelectValue placeholder="What's the energy?" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="confident-boss">Confident & Boss</SelectItem>
+                                        <SelectItem value="upbeat-energetic">Upbeat & Energetic</SelectItem>
+                                        <SelectItem value="chill-smooth">Chill & Smooth</SelectItem>
+                                        <SelectItem value="inspiring-motivational">Inspiring & Motivational</SelectItem>
+                                        <SelectItem value="fun-playful">Fun & Playful</SelectItem>
+                                        <SelectItem value="luxe-elegant">Luxe & Elegant</SelectItem>
+                                        <SelectItem value="dramatic-cinematic">Dramatic & Cinematic</SelectItem>
+                                        <SelectItem value="warm-feel-good">Warm & Feel-Good</SelectItem>
+                                        <SelectItem value="edgy-bold">Edgy & Bold</SelectItem>
+                                        <SelectItem value="trendy-viral">Trendy & Viral-Ready</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="genre"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Genre</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-reel-genre">
+                                          <SelectValue placeholder="Select genre" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="afrobeat">Afrobeat</SelectItem>
+                                        <SelectItem value="pop">Pop</SelectItem>
+                                        <SelectItem value="r&b">R&B</SelectItem>
+                                        <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                        <SelectItem value="trap">Trap</SelectItem>
+                                        <SelectItem value="lo-fi">Lo-Fi</SelectItem>
+                                        <SelectItem value="edm">EDM / Electronic</SelectItem>
+                                        <SelectItem value="reggaeton">Reggaeton</SelectItem>
+                                        <SelectItem value="latin">Latin</SelectItem>
+                                        <SelectItem value="amapiano">Amapiano</SelectItem>
+                                        <SelectItem value="dancehall">Dancehall</SelectItem>
+                                        <SelectItem value="funk">Funk</SelectItem>
+                                        <SelectItem value="jazz">Jazz</SelectItem>
+                                        <SelectItem value="soul">Soul</SelectItem>
+                                        <SelectItem value="indie">Indie</SelectItem>
+                                        <SelectItem value="acoustic">Acoustic</SelectItem>
+                                        <SelectItem value="cinematic">Cinematic / Orchestral</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                  control={reelMusicForm.control}
+                                  name="duration"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Duration</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger data-testid="select-reel-duration">
+                                            <SelectValue placeholder="Song length" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="short">Short (30-60s)</SelectItem>
+                                          <SelectItem value="medium">Medium (1-2 min)</SelectItem>
+                                          <SelectItem value="full">Full Length (2-3 min)</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={reelMusicForm.control}
+                                  name="voice"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Voice (if vocals)</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger data-testid="select-reel-voice">
+                                            <SelectValue placeholder="Select voice" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="female">Female</SelectItem>
+                                          <SelectItem value="male">Male</SelectItem>
+                                          <SelectItem value="duet">Duet</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <FormField
+                                control={reelMusicForm.control}
+                                name="instrumental"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center gap-3 space-y-0 rounded-md border p-3">
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        data-testid="switch-reel-instrumental"
+                                      />
+                                    </FormControl>
+                                    <div>
+                                      <FormLabel className="cursor-pointer">Instrumental Only</FormLabel>
+                                      <p className="text-xs text-muted-foreground">No vocals — pure background music for your voiceover</p>
+                                    </div>
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={reelMusicLyricsMutation.isPending}
+                                data-testid="button-generate-reel-lyrics"
+                              >
+                                {reelMusicLyricsMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Generating Lyrics...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Music className="w-4 h-4 mr-2" />
+                                    Generate Reel Music
+                                  </>
+                                )}
+                              </Button>
+                            </form>
+                          </Form>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p className="mb-2">Select "Reel Music" from Business options to create background music for your reels</p>
+                            <Button variant="outline" onClick={() => { setBusinessQuickStart(null); }} className="mt-2" data-testid="button-back-select-reel">
+                              <ArrowLeft className="w-4 h-4 mr-2" />
+                              Back to Business Options
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="mixtape">
