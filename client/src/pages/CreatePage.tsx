@@ -1018,6 +1018,7 @@ export default function CreatePage() {
     { value: 'seasons', label: 'Seasons' },
     { value: 'professional', label: 'Professional' },
     { value: 'blast-from-past', label: 'Blast from the Past' },
+    { value: 'gaming', label: 'Gaming' },
   ];
   
   // Holiday options - shown when "Holidays" scene is selected
@@ -1117,6 +1118,20 @@ export default function CreatePage() {
     { value: 'school-photo-day', label: 'School Photo Day' },
     { value: 'mall-photo-booth', label: 'Mall Photo Booth' },
     { value: 'awkward-portrait', label: 'awkward family portrait' },
+  ];
+
+  const gamingStyleOptions = [
+    { value: 'gaming-moments', label: 'Gaming Moments' },
+    { value: 'esports-celebration', label: 'Esports Celebration' },
+    { value: 'level-up', label: 'Level Up / Achievement' },
+    { value: 'victory-win', label: 'Victory / Win' },
+    { value: 'character-spotlight', label: 'Character Spotlight' },
+    { value: '2k-player', label: '2K Player Card' },
+    { value: 'battle-royale', label: 'Battle Royale (Fortnite)' },
+    { value: 'gta-street', label: 'GTA / Street Style' },
+    { value: 'minecraft', label: 'Minecraft' },
+    { value: 'roblox', label: 'Roblox' },
+    { value: 'retro-arcade', label: 'Retro Arcade' },
   ];
 
   // Portrait scene and style options for team/class portraits
@@ -1282,6 +1297,7 @@ export default function CreatePage() {
     { value: 'seasonal-festive', label: 'Seasonal Festive (Business-Safe)' },
     { value: 'brand-celebration', label: 'Brand Celebration' },
     { value: 'modern-abstract-festive', label: 'Modern Abstract Festive' },
+    { value: 'gaming', label: 'Gaming' },
   ];
 
   // Styles for each Business Festive scene
@@ -1366,6 +1382,19 @@ export default function CreatePage() {
       { value: 'clean-energy', label: 'Clean Energy' },
       { value: 'contemporary-glow', label: 'Contemporary Glow' },
     ],
+    'gaming': [
+      { value: 'gaming-moments', label: 'Gaming Moments' },
+      { value: 'esports-celebration', label: 'Esports Celebration' },
+      { value: 'level-up', label: 'Level Up / Achievement' },
+      { value: 'victory-win', label: 'Victory / Win' },
+      { value: 'character-spotlight', label: 'Character Spotlight' },
+      { value: '2k-player', label: '2K Player Card' },
+      { value: 'battle-royale', label: 'Battle Royale (Fortnite)' },
+      { value: 'gta-street', label: 'GTA / Street Style' },
+      { value: 'minecraft', label: 'Minecraft' },
+      { value: 'roblox', label: 'Roblox' },
+      { value: 'retro-arcade', label: 'Retro Arcade' },
+    ],
   };
 
   // State for business festive scene and style
@@ -1399,6 +1428,7 @@ export default function CreatePage() {
     { value: 'festive-school', label: '🎊 Festive School Celebration', description: 'Inclusive celebrations (non-religious)' },
     { value: 'fun-encouraging', label: '🌈 Fun & Encouraging', description: 'Younger grades, motivation' },
     { value: 'minimal-academic', label: '✨ Minimal Academic', description: 'Older students, formal schools' },
+    { value: 'gaming', label: '🎮 Gaming', description: 'Game-themed celebrations and rewards' },
   ];
 
   // Styles for each Education Festive scene
@@ -1502,6 +1532,19 @@ export default function CreatePage() {
       { value: 'academic-neutral', label: 'Academic Neutral' },
       { value: 'focused-pride', label: 'Focused Pride' },
       { value: 'quiet-win', label: 'Quiet Win' },
+    ],
+    'gaming': [
+      { value: 'gaming-moments', label: 'Gaming Moments' },
+      { value: 'esports-celebration', label: 'Esports Celebration' },
+      { value: 'level-up', label: 'Level Up / Achievement' },
+      { value: 'victory-win', label: 'Victory / Win' },
+      { value: 'character-spotlight', label: 'Character Spotlight' },
+      { value: '2k-player', label: '2K Player Card' },
+      { value: 'battle-royale', label: 'Battle Royale (Fortnite)' },
+      { value: 'gta-street', label: 'GTA / Street Style' },
+      { value: 'minecraft', label: 'Minecraft' },
+      { value: 'roblox', label: 'Roblox' },
+      { value: 'retro-arcade', label: 'Retro Arcade' },
     ],
   };
 
@@ -3378,6 +3421,8 @@ export default function CreatePage() {
                                               setFestiveStyle('corporate-headshot');
                                             } else if (value === 'blast-from-past') {
                                               setFestiveStyle('retro-70s');
+                                            } else if (value === 'gaming') {
+                                              setFestiveStyle('gaming-moments');
                                             }
                                           }}
                                         >
@@ -3397,7 +3442,8 @@ export default function CreatePage() {
                                            festiveScene === 'life-events' ? 'Event' :
                                            festiveScene === 'seasons' ? 'Season' :
                                            festiveScene === 'professional' ? 'Type' :
-                                           festiveScene === 'blast-from-past' ? 'Style' : 'Style'}
+                                           festiveScene === 'blast-from-past' ? 'Style' :
+                                           festiveScene === 'gaming' ? 'Game Style' : 'Style'}
                                         </Label>
                                         <Select 
                                           value={festiveStyle} 
@@ -3417,6 +3463,9 @@ export default function CreatePage() {
                                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                             ))}
                                             {festiveScene === 'professional' && professionalStyleOptions.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                            {festiveScene === 'gaming' && gamingStyleOptions.map(opt => (
                                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                             ))}
                                             {festiveScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (
@@ -3775,6 +3824,8 @@ export default function CreatePage() {
                                           setPortraitStyle('corporate-headshot');
                                         } else if (value === 'blast-from-past') {
                                           setPortraitStyle('retro-70s');
+                                        } else if (value === 'gaming') {
+                                          setPortraitStyle('gaming-moments');
                                         }
                                       }}
                                     >
@@ -3794,7 +3845,8 @@ export default function CreatePage() {
                                        portraitScene === 'life-events' ? 'Event' :
                                        portraitScene === 'seasons' ? 'Season' :
                                        portraitScene === 'professional' ? 'Type' :
-                                       portraitScene === 'blast-from-past' ? 'Style' : 'Style'}
+                                       portraitScene === 'blast-from-past' ? 'Style' :
+                                       portraitScene === 'gaming' ? 'Game Style' : 'Style'}
                                     </Label>
                                     <Select value={portraitStyle} onValueChange={setPortraitStyle}>
                                       <SelectTrigger data-testid="select-portrait-style">
@@ -3811,6 +3863,9 @@ export default function CreatePage() {
                                           <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                         ))}
                                         {portraitScene === 'professional' && professionalStyleOptions.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                        {portraitScene === 'gaming' && gamingStyleOptions.map(opt => (
                                           <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                                         ))}
                                         {portraitScene === 'blast-from-past' && blastFromPastStyleOptions.map(opt => (

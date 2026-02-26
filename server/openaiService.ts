@@ -1278,6 +1278,18 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'school-identity': 'school-branded setting with school colors prominently displayed, school crest or mascot visible, institutional pride, academic tradition atmosphere',
     'fun-friendly': 'bright fun elementary classroom with colorful decorations, friendly shapes on walls, rainbow elements, happy learning atmosphere, child-friendly environment',
     'minimal-portrait': 'clean minimal school portrait studio with simple white or soft gray backdrop, distraction-free, professional neutral lighting, gallery-ready quality',
+    // Gaming scenes and styles
+    'gaming-moments': 'an epic gaming moment scene with action and excitement, dramatic lighting, game controller elements, vibrant neon glow, competitive energy, esports atmosphere',
+    'esports-celebration': 'an electrifying esports celebration scene with championship stage, LED screens, confetti, trophy, team victory moment, professional gaming arena, dramatic spotlights',
+    'level-up': 'a dramatic level-up achievement scene with glowing XP bar, achievement unlocked banner, golden light burst, power-up effects, game UI overlay elements',
+    'victory-win': 'an epic victory scene with winner podium, confetti explosion, golden trophy, celebration effects, dramatic backlight, champion energy, game over screen aesthetic',
+    'character-spotlight': 'a dramatic character spotlight scene with hero pose, character select screen aesthetic, glowing outline, dramatic backlighting, game character introduction screen',
+    '2k-player': 'an NBA 2K basketball player card scene with basketball court background, player stats overlay, holographic card border, premium sports card design, arena lighting',
+    'battle-royale': 'a Fortnite Battle Royale victory scene with Victory Royale banner, island landscape, colorful game UI elements, bright exciting atmosphere, loot and rewards',
+    'gta-street': 'a Grand Theft Auto style urban scene with city skyline at dusk, neon lights, luxury cars, street culture vibes, cinematic widescreen composition, loading screen aesthetic',
+    'minecraft': 'a Minecraft pixel art world scene with blocky landscape, green grass blocks, blue sky, character skin, achievement unlocked banner, hearts and inventory UI overlay',
+    'roblox': 'a colorful Roblox game world scene with blocky avatar characters, bright playful environment, fun game UI elements, robux badges, party celebration setting',
+    'retro-arcade': 'a retro 8-bit arcade game scene with pixel art, CRT screen scanline effects, classic arcade cabinet border, neon glow, Game Over or You Win text, 80s arcade aesthetic',
   };
 
   // Blast from the Past scene overrides - when style IS the scene
