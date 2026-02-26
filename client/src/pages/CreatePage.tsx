@@ -183,6 +183,9 @@ export default function CreatePage() {
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   
   // Festive Transform state (single person photo transformation)
+  const festiveFileInputRef = useRef<HTMLInputElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
+  const portraitPhotoInputRef = useRef<HTMLInputElement>(null);
   const [festivePhoto, setFestivePhoto] = useState<File | null>(null);
   const [festivePhotoUrl, setFestivePhotoUrl] = useState<string | null>(null);
   const [festiveScene, setFestiveScene] = useState('holidays');
@@ -2983,7 +2986,11 @@ export default function CreatePage() {
                                 </Button>
                               </div>
                             ) : (
-                              <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                              <div
+                                className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                onClick={() => coverImageInputRef.current?.click()}
+                                data-testid="button-cover-upload-area"
+                              >
                                 {isUploadingCoverImage ? (
                                   <div className="flex flex-col items-center gap-2">
                                     <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -2996,6 +3003,7 @@ export default function CreatePage() {
                                   </div>
                                 )}
                                 <input
+                                  ref={coverImageInputRef}
                                   type="file"
                                   accept="image/*"
                                   onChange={handleCardCoverUpload}
@@ -3003,7 +3011,7 @@ export default function CreatePage() {
                                   disabled={isUploadingCoverImage}
                                   data-testid="input-cover-image"
                                 />
-                              </label>
+                              </div>
                             )}
                           </div>
                         )}
@@ -3020,7 +3028,11 @@ export default function CreatePage() {
                             
                             {/* Photo Upload */}
                             {!festivePhotoUrl ? (
-                              <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                              <div
+                                className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                onClick={() => festiveFileInputRef.current?.click()}
+                                data-testid="button-festive-upload-area"
+                              >
                                 {isUploadingFestivePhoto ? (
                                   <div className="flex flex-col items-center gap-2">
                                     <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -3033,6 +3045,7 @@ export default function CreatePage() {
                                   </div>
                                 )}
                                 <input
+                                  ref={festiveFileInputRef}
                                   type="file"
                                   accept="image/*"
                                   onChange={handleFestivePhotoUpload}
@@ -3040,7 +3053,7 @@ export default function CreatePage() {
                                   disabled={isUploadingFestivePhoto}
                                   data-testid="input-festive-photo"
                                 />
-                              </label>
+                              </div>
                             ) : (
                               <div className="space-y-4">
                                 {/* Photo Preview */}
@@ -3308,10 +3321,15 @@ export default function CreatePage() {
                                 </div>
                               ))}
                               {portraitPhotos.length < 6 && (
-                                <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                <div
+                                  className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate"
+                                  onClick={() => portraitPhotoInputRef.current?.click()}
+                                  data-testid="button-portrait-upload-area"
+                                >
                                   <Upload className="w-6 h-6 text-muted-foreground" />
                                   <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
                                   <input
+                                    ref={portraitPhotoInputRef}
                                     type="file"
                                     accept="image/*"
                                     multiple
@@ -3319,7 +3337,7 @@ export default function CreatePage() {
                                     className="hidden"
                                     data-testid="input-portrait-photos"
                                   />
-                                </label>
+                                </div>
                               )}
                             </div>
 
@@ -6467,7 +6485,11 @@ export default function CreatePage() {
                                       </Button>
                                     </div>
                                   ) : (
-                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                    <div
+                                      className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                      onClick={() => coverImageInputRef.current?.click()}
+                                      data-testid="button-business-cover-upload-area"
+                                    >
                                       {isUploadingCoverImage ? (
                                         <div className="flex flex-col items-center gap-2">
                                           <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -6479,8 +6501,8 @@ export default function CreatePage() {
                                           <span className="text-sm text-muted-foreground">Click to upload an image</span>
                                         </div>
                                       )}
-                                      <input type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
-                                    </label>
+                                      <input ref={coverImageInputRef} type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -6501,11 +6523,15 @@ export default function CreatePage() {
                                       </div>
                                     ))}
                                     {portraitPhotos.length < 6 && (
-                                      <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                      <div
+                                        className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate"
+                                        onClick={() => portraitPhotoInputRef.current?.click()}
+                                        data-testid="button-business-portrait-upload-area"
+                                      >
                                         <Upload className="w-6 h-6 text-muted-foreground" />
                                         <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
-                                        <input type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
-                                      </label>
+                                        <input ref={portraitPhotoInputRef} type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
+                                      </div>
                                     )}
                                   </div>
 
@@ -6616,7 +6642,11 @@ export default function CreatePage() {
                                     Upload a photo and transform it into a professional festive scene for your card cover.
                                   </p>
                                   {!festivePhotoUrl ? (
-                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                    <div
+                                      className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                      onClick={() => festiveFileInputRef.current?.click()}
+                                      data-testid="button-business-festive-upload-area"
+                                    >
                                       {isUploadingFestivePhoto ? (
                                         <div className="flex flex-col items-center gap-2">
                                           <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -6628,8 +6658,8 @@ export default function CreatePage() {
                                           <span className="text-sm text-muted-foreground">Upload a photo of one person</span>
                                         </div>
                                       )}
-                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} />
-                                    </label>
+                                      <input ref={festiveFileInputRef} type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} />
+                                    </div>
                                   ) : (
                                     <div className="space-y-4">
                                       <div className="relative w-full max-w-xs mx-auto">
@@ -7934,7 +7964,11 @@ export default function CreatePage() {
                                       </Button>
                                     </div>
                                   ) : (
-                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                    <div
+                                      className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                      onClick={() => coverImageInputRef.current?.click()}
+                                      data-testid="button-education-cover-upload-area"
+                                    >
                                       {isUploadingCoverImage ? (
                                         <div className="flex flex-col items-center gap-2">
                                           <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -7946,8 +7980,8 @@ export default function CreatePage() {
                                           <span className="text-sm text-muted-foreground">Click to upload an image</span>
                                         </div>
                                       )}
-                                      <input type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
-                                    </label>
+                                      <input ref={coverImageInputRef} type="file" accept="image/*" onChange={handleCardCoverUpload} className="hidden" disabled={isUploadingCoverImage} />
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -7968,11 +8002,15 @@ export default function CreatePage() {
                                       </div>
                                     ))}
                                     {portraitPhotos.length < 6 && (
-                                      <label className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate">
+                                      <div
+                                        className="aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover-elevate"
+                                        onClick={() => portraitPhotoInputRef.current?.click()}
+                                        data-testid="button-education-portrait-upload-area"
+                                      >
                                         <Upload className="w-6 h-6 text-muted-foreground" />
                                         <span className="text-xs text-muted-foreground mt-1">Add Photo</span>
-                                        <input type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
-                                      </label>
+                                        <input ref={portraitPhotoInputRef} type="file" accept="image/*" multiple onChange={handlePortraitPhotoSelect} className="hidden" />
+                                      </div>
                                     )}
                                   </div>
 
@@ -8104,7 +8142,11 @@ export default function CreatePage() {
                                     All styles are age-appropriate, school-safe, and designed for educational settings.
                                   </p>
                                   {!festivePhotoUrl ? (
-                                    <label className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate">
+                                    <div
+                                      className="block border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                                      onClick={() => festiveFileInputRef.current?.click()}
+                                      data-testid="button-education-festive-upload-area"
+                                    >
                                       {isUploadingFestivePhoto ? (
                                         <div className="flex flex-col items-center gap-2">
                                           <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
@@ -8116,8 +8158,8 @@ export default function CreatePage() {
                                           <span className="text-sm text-muted-foreground">Upload a photo of a student or teacher</span>
                                         </div>
                                       )}
-                                      <input type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} data-testid="input-education-festive-upload" />
-                                    </label>
+                                      <input ref={festiveFileInputRef} type="file" accept="image/*" onChange={handleFestivePhotoUpload} className="hidden" disabled={isUploadingFestivePhoto} data-testid="input-education-festive-upload" />
+                                    </div>
                                   ) : (
                                     <div className="space-y-4">
                                       <div className="relative w-full max-w-xs mx-auto">
