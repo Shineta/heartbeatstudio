@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Navigation from "@/components/Navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2, Book, Lightbulb } from "lucide-react";
+import { Sparkles, Music, Mail, ArrowLeft, Heart, Loader2, Edit, RefreshCw, ListMusic, Play, Pause, SkipBack, SkipForward, Upload, X, ImageIcon, Briefcase, Users, MessageCircle, TreePine, Sun, Camera, PartyPopper, Palette, Frame, Pencil, Check, RotateCcw, Dog, User, Download, Link as LinkIcon, ChevronsUpDown, Video, Share2, Lock, GraduationCap, Award, Building2, Trophy, Star, Handshake, Calendar, UserPlus, BookOpen, School, Megaphone, Shield, CheckCircle2, Book, Lightbulb, Gamepad2, Swords, Zap, Crown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -178,7 +178,7 @@ export default function CreatePage() {
   const [isUploadingCassetteCover, setIsUploadingCassetteCover] = useState(false);
   
   // Card cover image source state
-  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'upload' | 'festive' | 'none'>('ai');
+  const [coverImageSource, setCoverImageSource] = useState<'ai' | 'portrait' | 'upload' | 'festive' | 'gaming' | 'none'>('ai');
   const [uploadedCoverUrl, setUploadedCoverUrl] = useState<string | null>(null);
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   
@@ -202,6 +202,17 @@ export default function CreatePage() {
   // TV show styles that can include characters
   const tvShowStyles = ['tv-fresh-prince', 'tv-family-matters', 'tv-cosby-show', 'tv-good-times', 'tv-martin', 'tv-sitcom-living-room', 'tv-old-western'];
   const isTvShowStyle = tvShowStyles.includes(festiveStyle);
+
+  // Gaming Card state
+  const [gamingScene, setGamingScene] = useState('gaming-moments');
+  const [gamingStyle, setGamingStyle] = useState('2k-player');
+  const [gamingUsername, setGamingUsername] = useState('');
+  const [gamingLevel, setGamingLevel] = useState('');
+  const [gamingRank, setGamingRank] = useState('');
+  const [gamingTeam, setGamingTeam] = useState('');
+  const [gamingPosition, setGamingPosition] = useState('');
+  const [gamingStats, setGamingStats] = useState('');
+  const [gamingOverallRating, setGamingOverallRating] = useState('');
   
   // Yearbook Headshot state (individual portrait photos)
   const [yearbookPhoto, setYearbookPhoto] = useState<File | null>(null);
@@ -762,7 +773,7 @@ export default function CreatePage() {
   };
 
   // Handle cover source change - clear uploaded cover when switching away from 'upload'
-  const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'festive' | 'none') => {
+  const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'festive' | 'gaming' | 'none') => {
     if (coverImageSource === 'upload' && newSource !== 'upload') {
       setUploadedCoverUrl(null);
     }
@@ -770,6 +781,15 @@ export default function CreatePage() {
       setFestivePhoto(null);
       setFestivePhotoUrl(null);
       setGeneratedFestiveUrl(null);
+    }
+    if (coverImageSource === 'gaming' && newSource !== 'gaming') {
+      setGamingUsername('');
+      setGamingLevel('');
+      setGamingRank('');
+      setGamingTeam('');
+      setGamingPosition('');
+      setGamingStats('');
+      setGamingOverallRating('');
     }
     setCoverImageSource(newSource);
   };
@@ -2070,6 +2090,20 @@ export default function CreatePage() {
       // Include festive transformed image when festive is selected
       ...(coverImageSource === 'festive' && generatedFestiveUrl && {
         festiveImageUrl: generatedFestiveUrl
+      }),
+      // Include gaming card data when gaming is selected
+      ...(coverImageSource === 'gaming' && {
+        gamingData: {
+          scene: gamingScene,
+          style: gamingStyle,
+          username: gamingUsername || undefined,
+          level: gamingLevel || undefined,
+          rank: gamingRank || undefined,
+          team: gamingTeam || undefined,
+          position: gamingPosition || undefined,
+          stats: gamingStats || undefined,
+          overallRating: gamingOverallRating || undefined,
+        }
       })
     };
     cardMutation.mutate(cardData);
@@ -2906,7 +2940,7 @@ export default function CreatePage() {
                       {/* Cover Image Source */}
                       <div className="space-y-3">
                         <Label>Cover Image</Label>
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                           <Button
                             type="button"
                             variant={coverImageSource === 'ai' ? 'default' : 'outline'}
@@ -2939,6 +2973,16 @@ export default function CreatePage() {
                           </Button>
                           <Button
                             type="button"
+                            variant={coverImageSource === 'gaming' ? 'default' : 'outline'}
+                            onClick={() => handleCoverSourceChange('gaming')}
+                            className="flex-col h-auto py-3"
+                            data-testid="button-cover-gaming"
+                          >
+                            <Gamepad2 className="w-5 h-5 mb-1" />
+                            <span className="text-xs">Gaming Card</span>
+                          </Button>
+                          <Button
+                            type="button"
                             variant={coverImageSource === 'upload' ? 'default' : 'outline'}
                             onClick={() => handleCoverSourceChange('upload')}
                             className="flex-col h-auto py-3"
@@ -2958,6 +3002,124 @@ export default function CreatePage() {
                             <span className="text-xs">No Image</span>
                           </Button>
                         </div>
+
+                        {/* Gaming Card Options - shown when gaming is selected */}
+                        {coverImageSource === 'gaming' && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Create a gaming-themed card cover. Choose a game style and fill in the player details.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs mb-1 block">Scene</Label>
+                                <Select value={gamingScene} onValueChange={setGamingScene}>
+                                  <SelectTrigger data-testid="select-gaming-scene">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="gaming-moments">Gaming Moments</SelectItem>
+                                    <SelectItem value="esports-celebration">Esports Celebration</SelectItem>
+                                    <SelectItem value="level-up">Level Up / Achievement</SelectItem>
+                                    <SelectItem value="victory-win">Victory / Win</SelectItem>
+                                    <SelectItem value="character-spotlight">Character Spotlight</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-xs mb-1 block">Game Style</Label>
+                                <Select value={gamingStyle} onValueChange={setGamingStyle}>
+                                  <SelectTrigger data-testid="select-gaming-style">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="2k-player">2K Player Card</SelectItem>
+                                    <SelectItem value="battle-royale">Battle Royale (Fortnite)</SelectItem>
+                                    <SelectItem value="gta-street">GTA / Street Style</SelectItem>
+                                    <SelectItem value="minecraft">Minecraft</SelectItem>
+                                    <SelectItem value="roblox">Roblox</SelectItem>
+                                    <SelectItem value="retro-arcade">Retro Arcade</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <Label className="text-xs font-medium">Player Details</Label>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs mb-1 block text-muted-foreground">Username / Player Name</Label>
+                                  <Input
+                                    placeholder={gamingStyle === '2k-player' ? 'Player name' : gamingStyle === 'battle-royale' ? 'Gamertag' : gamingStyle === 'gta-street' ? 'Character name' : 'Username'}
+                                    value={gamingUsername}
+                                    onChange={(e) => setGamingUsername(e.target.value)}
+                                    data-testid="input-gaming-username"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs mb-1 block text-muted-foreground">
+                                    {gamingStyle === '2k-player' ? 'Overall Rating' : gamingStyle === 'battle-royale' ? 'XP / Level' : gamingStyle === 'retro-arcade' ? 'High Score' : 'Level'}
+                                  </Label>
+                                  <Input
+                                    placeholder={gamingStyle === '2k-player' ? '99' : gamingStyle === 'battle-royale' ? '100' : gamingStyle === 'retro-arcade' ? '999,999' : '50'}
+                                    value={gamingStyle === '2k-player' ? gamingOverallRating : gamingLevel}
+                                    onChange={(e) => gamingStyle === '2k-player' ? setGamingOverallRating(e.target.value) : setGamingLevel(e.target.value)}
+                                    data-testid="input-gaming-level"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs mb-1 block text-muted-foreground">
+                                    {gamingStyle === '2k-player' ? 'Position' : gamingStyle === 'gta-street' ? 'Title' : 'Rank'}
+                                  </Label>
+                                  <Input
+                                    placeholder={gamingStyle === '2k-player' ? 'Point Guard' : gamingStyle === 'gta-street' ? 'Boss, CEO, Hustler' : gamingStyle === 'battle-royale' ? 'Diamond, Champion' : 'Master'}
+                                    value={gamingStyle === '2k-player' ? gamingPosition : gamingRank}
+                                    onChange={(e) => gamingStyle === '2k-player' ? setGamingPosition(e.target.value) : setGamingRank(e.target.value)}
+                                    data-testid="input-gaming-rank"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs mb-1 block text-muted-foreground">
+                                    {gamingStyle === '2k-player' ? 'Team' : gamingStyle === 'battle-royale' ? 'Squad' : 'Team / Squad'}
+                                  </Label>
+                                  <Input
+                                    placeholder={gamingStyle === '2k-player' ? 'Family, Squad' : gamingStyle === 'battle-royale' ? 'Squad name' : 'Team name'}
+                                    value={gamingTeam}
+                                    onChange={(e) => setGamingTeam(e.target.value)}
+                                    data-testid="input-gaming-team"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <Label className="text-xs mb-1 block text-muted-foreground">
+                                  {gamingStyle === '2k-player' ? 'Stats (e.g. Loyalty 99, Love 100, Hustle 95)' : gamingStyle === 'battle-royale' ? 'Unlock Rewards / Achievements' : gamingStyle === 'gta-street' ? 'Cash / Respect Stats' : gamingStyle === 'retro-arcade' ? 'Scoreboard Stats' : 'Custom Stats'}
+                                </Label>
+                                <Input
+                                  placeholder={gamingStyle === '2k-player' ? 'Loyalty 99, Love 100, Hustle 95' : gamingStyle === 'battle-royale' ? 'Victory Royale, XP 5000' : gamingStyle === 'gta-street' ? 'Cash: $1M, Respect: MAX' : gamingStyle === 'retro-arcade' ? 'Lives: 3, Score: 999,999' : gamingStyle === 'minecraft' ? 'Achievement Unlocked, Diamonds: 64' : 'Stats here'}
+                                  value={gamingStats}
+                                  onChange={(e) => setGamingStats(e.target.value)}
+                                  data-testid="input-gaming-stats"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="p-3 bg-background rounded-md border">
+                              <p className="text-xs text-muted-foreground">
+                                {gamingStyle === '2k-player' && 'Creates a basketball player card with your rating, stats, position, and team name.'}
+                                {gamingStyle === 'battle-royale' && 'Creates a Victory Royale screen with your username, XP, squad, and unlocked rewards.'}
+                                {gamingStyle === 'gta-street' && 'Creates a character intro screen with your title, cash/respect stats, and city backdrop.'}
+                                {gamingStyle === 'minecraft' && 'Creates a blocky pixel world with Achievement Unlocked banner, character skin, and build scene.'}
+                                {gamingStyle === 'roblox' && 'Creates a colorful avatar-based world with playful UI elements and fun environment.'}
+                                {gamingStyle === 'retro-arcade' && 'Creates a pixel art arcade screen with scoreboard, Game Over / You Win text, and retro vibes.'}
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Upload Image Options - shown when upload is selected */}
                         {coverImageSource === 'upload' && (
@@ -6419,7 +6581,7 @@ export default function CreatePage() {
                             {/* Cover Image Source */}
                             <div className="space-y-3">
                               <Label>Cover Image</Label>
-                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                                 <Button
                                   type="button"
                                   variant={coverImageSource === 'ai' ? 'default' : 'outline'}
@@ -6452,6 +6614,16 @@ export default function CreatePage() {
                                 </Button>
                                 <Button
                                   type="button"
+                                  variant={coverImageSource === 'gaming' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('gaming')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-business-cover-gaming"
+                                >
+                                  <Gamepad2 className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Gaming Card</span>
+                                </Button>
+                                <Button
+                                  type="button"
                                   variant={coverImageSource === 'upload' ? 'default' : 'outline'}
                                   onClick={() => handleCoverSourceChange('upload')}
                                   className="flex-col h-auto py-3"
@@ -6471,6 +6643,71 @@ export default function CreatePage() {
                                   <span className="text-xs">No Image</span>
                                 </Button>
                               </div>
+
+                              {/* Gaming Card Options - Business */}
+                              {coverImageSource === 'gaming' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Create a gaming-themed card cover for esports, gaming brands, or team celebrations.
+                                  </p>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Scene</Label>
+                                      <Select value={gamingScene} onValueChange={setGamingScene}>
+                                        <SelectTrigger data-testid="select-business-gaming-scene"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="gaming-moments">Gaming Moments</SelectItem>
+                                          <SelectItem value="esports-celebration">Esports Celebration</SelectItem>
+                                          <SelectItem value="level-up">Level Up / Achievement</SelectItem>
+                                          <SelectItem value="victory-win">Victory / Win</SelectItem>
+                                          <SelectItem value="character-spotlight">Character Spotlight</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Game Style</Label>
+                                      <Select value={gamingStyle} onValueChange={setGamingStyle}>
+                                        <SelectTrigger data-testid="select-business-gaming-style"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="2k-player">2K Player Card</SelectItem>
+                                          <SelectItem value="battle-royale">Battle Royale (Fortnite)</SelectItem>
+                                          <SelectItem value="gta-street">GTA / Street Style</SelectItem>
+                                          <SelectItem value="minecraft">Minecraft</SelectItem>
+                                          <SelectItem value="roblox">Roblox</SelectItem>
+                                          <SelectItem value="retro-arcade">Retro Arcade</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3">
+                                    <Label className="text-xs font-medium">Player Details</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">Username / Player Name</Label>
+                                        <Input placeholder="Player name" value={gamingUsername} onChange={(e) => setGamingUsername(e.target.value)} data-testid="input-business-gaming-username" />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">{gamingStyle === '2k-player' ? 'Overall Rating' : 'Level'}</Label>
+                                        <Input placeholder={gamingStyle === '2k-player' ? '99' : '50'} value={gamingStyle === '2k-player' ? gamingOverallRating : gamingLevel} onChange={(e) => gamingStyle === '2k-player' ? setGamingOverallRating(e.target.value) : setGamingLevel(e.target.value)} data-testid="input-business-gaming-level" />
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">{gamingStyle === '2k-player' ? 'Position' : 'Rank'}</Label>
+                                        <Input placeholder={gamingStyle === '2k-player' ? 'Point Guard' : 'Champion'} value={gamingStyle === '2k-player' ? gamingPosition : gamingRank} onChange={(e) => gamingStyle === '2k-player' ? setGamingPosition(e.target.value) : setGamingRank(e.target.value)} data-testid="input-business-gaming-rank" />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">Team / Squad</Label>
+                                        <Input placeholder="Team name" value={gamingTeam} onChange={(e) => setGamingTeam(e.target.value)} data-testid="input-business-gaming-team" />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block text-muted-foreground">Custom Stats</Label>
+                                      <Input placeholder="Loyalty 99, Love 100, Hustle 95" value={gamingStats} onChange={(e) => setGamingStats(e.target.value)} data-testid="input-business-gaming-stats" />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
 
                               {coverImageSource === 'upload' && (
                                 <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
@@ -7898,7 +8135,7 @@ export default function CreatePage() {
                             {/* Cover Image Source */}
                             <div className="space-y-3">
                               <Label>Cover Image</Label>
-                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                                 <Button
                                   type="button"
                                   variant={coverImageSource === 'ai' ? 'default' : 'outline'}
@@ -7931,6 +8168,16 @@ export default function CreatePage() {
                                 </Button>
                                 <Button
                                   type="button"
+                                  variant={coverImageSource === 'gaming' ? 'default' : 'outline'}
+                                  onClick={() => handleCoverSourceChange('gaming')}
+                                  className="flex-col h-auto py-3"
+                                  data-testid="button-education-cover-gaming"
+                                >
+                                  <Gamepad2 className="w-5 h-5 mb-1" />
+                                  <span className="text-xs">Gaming Card</span>
+                                </Button>
+                                <Button
+                                  type="button"
                                   variant={coverImageSource === 'upload' ? 'default' : 'outline'}
                                   onClick={() => handleCoverSourceChange('upload')}
                                   className="flex-col h-auto py-3"
@@ -7950,6 +8197,70 @@ export default function CreatePage() {
                                   <span className="text-xs">No Image</span>
                                 </Button>
                               </div>
+
+                              {/* Gaming Card Options - Education */}
+                              {coverImageSource === 'gaming' && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Create a gaming-themed card for student achievements, classroom celebrations, or educational milestones.
+                                  </p>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Scene</Label>
+                                      <Select value={gamingScene} onValueChange={setGamingScene}>
+                                        <SelectTrigger data-testid="select-education-gaming-scene"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="gaming-moments">Gaming Moments</SelectItem>
+                                          <SelectItem value="esports-celebration">Esports Celebration</SelectItem>
+                                          <SelectItem value="level-up">Level Up / Achievement</SelectItem>
+                                          <SelectItem value="victory-win">Victory / Win</SelectItem>
+                                          <SelectItem value="character-spotlight">Character Spotlight</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block">Game Style</Label>
+                                      <Select value={gamingStyle} onValueChange={setGamingStyle}>
+                                        <SelectTrigger data-testid="select-education-gaming-style"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="2k-player">2K Player Card</SelectItem>
+                                          <SelectItem value="battle-royale">Battle Royale (Fortnite)</SelectItem>
+                                          <SelectItem value="minecraft">Minecraft</SelectItem>
+                                          <SelectItem value="roblox">Roblox</SelectItem>
+                                          <SelectItem value="retro-arcade">Retro Arcade</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3">
+                                    <Label className="text-xs font-medium">Student Details</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">Student Name</Label>
+                                        <Input placeholder="Student name" value={gamingUsername} onChange={(e) => setGamingUsername(e.target.value)} data-testid="input-education-gaming-username" />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">{gamingStyle === '2k-player' ? 'Overall Rating' : 'Level / Grade'}</Label>
+                                        <Input placeholder={gamingStyle === '2k-player' ? '99' : 'Level 10'} value={gamingStyle === '2k-player' ? gamingOverallRating : gamingLevel} onChange={(e) => gamingStyle === '2k-player' ? setGamingOverallRating(e.target.value) : setGamingLevel(e.target.value)} data-testid="input-education-gaming-level" />
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">{gamingStyle === '2k-player' ? 'Position' : 'Achievement'}</Label>
+                                        <Input placeholder={gamingStyle === '2k-player' ? 'Star Student' : 'Honor Roll'} value={gamingStyle === '2k-player' ? gamingPosition : gamingRank} onChange={(e) => gamingStyle === '2k-player' ? setGamingPosition(e.target.value) : setGamingRank(e.target.value)} data-testid="input-education-gaming-rank" />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs mb-1 block text-muted-foreground">Class / Team</Label>
+                                        <Input placeholder="Class name" value={gamingTeam} onChange={(e) => setGamingTeam(e.target.value)} data-testid="input-education-gaming-team" />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block text-muted-foreground">Stats / Achievements</Label>
+                                      <Input placeholder="Reading 99, Math 100, Science 95" value={gamingStats} onChange={(e) => setGamingStats(e.target.value)} data-testid="input-education-gaming-stats" />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
 
                               {coverImageSource === 'upload' && (
                                 <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">

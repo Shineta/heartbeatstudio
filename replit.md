@@ -157,7 +157,7 @@ Preferred communication style: Simple, everyday language.
     - Route: POST /api/generate/festive-transform
     - Uses image-to-image transformation with NanoBanana Pro model
   - **Family Portrait Composer**: Integrated into card creator as cover image option
-    - Users choose cover image source: AI Generated, Family Portrait, Festive Transform, Upload Image, or No Image
+    - Users choose cover image source: AI Generated, Family Portrait, Festive Transform, Gaming Card, Upload Image, or No Image
     - Family Portrait flow: upload 2-6 photos → AI face detection → select people → choose scene/style
     - Scenes: studio, living-room, holiday, outdoors, graduation, birthday
     - Styles: studio-photo, watercolor, cartoon, oil-painting, digital-art, vintage
@@ -167,6 +167,14 @@ Preferred communication style: Simple, everyday language.
     - Quick preset buttons: Christmas Card, Vacation Postcard, Studio Portrait, Birthday Cartoon, Watercolor Art, Classic Painting
     - No need to re-upload photos - instantly create new scenes with the same people
     - Great for creating card sets (holiday collection, different occasions)
+  - **Gaming Card**: Gaming-themed greeting card cover images
+    - 5 scenes: Gaming Moments, Esports Celebration, Level Up/Achievement, Victory/Win, Character Spotlight
+    - 6 game styles: 2K Player Card, Battle Royale (Fortnite), GTA/Street, Minecraft, Roblox, Retro Arcade
+    - Player detail inputs: username, level, rank, team, position, stats, overall rating
+    - Style-specific prompts for authentic game UI aesthetics
+    - Available across all three category tabs (Loved Ones, Business, Education)
+    - Generated via OpenAI GPT-Image-1 with `generateGamingCardImage()` in `server/openaiService.ts`
+    - Route: POST /api/generate/gaming-card
   - **Scene expansion**: 27+ scenes organized by Classic Scenes (studio, living room, outdoors, beach, garden), Life Events (birthday, graduation, wedding, baby shower, anniversary, retirement), and Major Holidays (Christmas, Hanukkah, Kwanzaa, New Year's, Thanksgiving, Easter, Passover, Halloween, Fourth of July, Valentine's Day, Mother's Day, Father's Day, St. Patrick's Day, Cinco de Mayo, Diwali, Eid, Lunar New Year) with culturally appropriate outfit suggestions
 
 **Authentication**

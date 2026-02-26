@@ -673,6 +673,132 @@ export async function generateCardImage(params: {
   return b64Json;
 }
 
+// Generate gaming-themed card image (returns base64)
+export async function generateGamingCardImage(params: {
+  recipientName: string;
+  occasion: string;
+  scene: string;
+  style: string;
+  username: string;
+  level?: string;
+  rank?: string;
+  team?: string;
+  position?: string;
+  stats?: string;
+  overallRating?: string;
+  message?: string;
+}): Promise<string> {
+  const sceneDescriptions: Record<string, string> = {
+    'gaming-moments': 'an epic gaming moment with action and excitement',
+    'esports-celebration': 'an esports tournament victory celebration with confetti, stage lights, and cheering crowd',
+    'level-up': 'a dramatic level-up achievement unlock moment with glowing effects and power-up visuals',
+    'victory-win': 'a triumphant victory screen with winner effects, golden light, and celebration',
+    'character-spotlight': 'a character showcase/spotlight with dramatic lighting and cool pose',
+  };
+
+  const stylePrompts: Record<string, string> = {
+    '2k-player': `NBA 2K basketball player card design. Create a professional basketball player card layout with:
+- The player name "${params.username}" displayed prominently at the top
+${params.overallRating ? `- A large overall rating number "${params.overallRating}" in a bold circle/badge` : '- A rating badge'}
+${params.position ? `- Position label: "${params.position}"` : ''}
+${params.team ? `- Team name: "${params.team}"` : ''}
+${params.stats ? `- Stats display showing: ${params.stats}` : '- Stats bars showing attributes like Loyalty, Love, Hustle'}
+- Basketball court or arena background
+- Professional sports card design with metallic/holographic accents
+- Dynamic lighting and premium card aesthetics
+- The card should feel like an actual NBA 2K MyPlayer card`,
+
+    'battle-royale': `Fortnite Battle Royale victory screen design. Create a dramatic Victory Royale scene with:
+- "VICTORY ROYALE" headline text displayed prominently
+- Player username "${params.username}" displayed prominently
+${params.level ? `- XP/Level display: "${params.level}"` : '- XP earned display'}
+${params.rank ? `- Rank badge: "${params.rank}"` : ''}
+${params.team ? `- Squad: "${params.team}"` : ''}
+${params.stats ? `- Rewards/achievements: ${params.stats}` : '- Unlocked rewards display'}
+- Colorful Fortnite-style UI elements and graphics
+- Island/battle arena in the background
+- Bright, exciting, game UI aesthetic with glowing effects`,
+
+    'gta-street': `Grand Theft Auto character introduction screen design. Create a GTA-style scene with:
+- Character name "${params.username}" in bold GTA font
+${params.rank ? `- Title: "${params.rank}"` : '- Title display'}
+${params.stats ? `- Stats: ${params.stats}` : '- Cash and respect meters'}
+${params.team ? `- Crew: "${params.team}"` : ''}
+- Urban city skyline backdrop at dusk/night
+- GTA-style loading screen aesthetic
+- Neon lights, luxury cars, and street culture vibes
+- Cinematic widescreen composition
+- Bold, edgy graphic design with GTA color palette`,
+
+    'minecraft': `Minecraft-style pixel art scene design. Create a Minecraft world scene with:
+- "ACHIEVEMENT UNLOCKED" banner text
+- Player name "${params.username}" in Minecraft font style
+${params.level ? `- Level display: "${params.level}"` : ''}
+${params.stats ? `- Achievement details: ${params.stats}` : '- Diamonds and items display'}
+${params.team ? `- Server/World: "${params.team}"` : ''}
+- Blocky pixel art world with recognizable Minecraft elements
+- Custom character skin standing in the scene
+- Green grass blocks, trees, and blue sky
+- Minecraft-style UI overlay with hearts, hunger bar, and inventory
+- Colorful and fun pixel aesthetic`,
+
+    'roblox': `Roblox game world design. Create a colorful Roblox-style scene with:
+- Player name "${params.username}" displayed prominently
+${params.level ? `- Level: "${params.level}"` : ''}
+${params.stats ? `- Stats: ${params.stats}` : ''}
+${params.team ? `- Group: "${params.team}"` : ''}
+- Roblox-style avatar character with blocky proportions
+- Bright, playful, colorful world environment
+- Fun Roblox-style UI elements (robux, badges, icons)
+- Multiple characters in a party/celebration setting
+- Vibrant colors and playful, kid-friendly aesthetic`,
+
+    'retro-arcade': `Retro 8-bit arcade game screen design. Create a pixel art arcade scene with:
+- "${params.username}" on the scoreboard
+${params.level ? `- Score/Level: "${params.level}"` : '- High score display'}
+${params.rank ? `- Rank: "${params.rank}"` : ''}
+${params.stats ? `- Scoreboard: ${params.stats}` : '- Classic scoreboard with initials and scores'}
+- "GAME OVER" or "YOU WIN!" text in pixel font
+- Classic pixel art with limited color palette
+- CRT screen scanline effects
+- Retro arcade cabinet border/frame
+- Classic 80s arcade aesthetic with neon glow
+- Pac-Man, Space Invaders style visual elements`,
+  };
+
+  const sceneDesc = sceneDescriptions[params.scene] || sceneDescriptions['gaming-moments'];
+  const stylePrompt = stylePrompts[params.style] || stylePrompts['2k-player'];
+
+  const occasionContext = params.occasion && params.occasion !== 'celebration'
+    ? `This is a ${params.occasion.replace(/-/g, ' ')} card for ${params.recipientName}.`
+    : `This is a celebration card for ${params.recipientName}.`;
+
+  const prompt = `Create a gaming-themed digital greeting card cover image. ${occasionContext}
+
+Scene context: ${sceneDesc}
+
+${stylePrompt}
+
+${params.message ? `Card message context: "${params.message}"` : ''}
+
+IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.`;
+
+  console.log(`[GamingCard] Generating ${params.style} style gaming card for ${params.recipientName}`);
+  console.log(`[GamingCard] Prompt preview: ${prompt.substring(0, 300)}...`);
+
+  const response = await openai.images.generate({
+    model: "gpt-image-1",
+    prompt,
+    size: "1024x1024",
+  });
+
+  const b64Json = response.data?.[0]?.b64_json;
+  if (!b64Json) {
+    throw new Error("No image data returned from AI service for gaming card");
+  }
+  return b64Json;
+}
+
 // Generate personalized follow-up questions based on initial song details
 // Used for the AI questionnaire feature to gather more context
 export interface QuestionnaireParams {

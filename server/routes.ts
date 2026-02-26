@@ -1193,7 +1193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl, gamingData } = req.body;
       
       // Check if user has credits available (cards cost 1 credit)
       const user = await storage.getUser(userId);
@@ -1220,7 +1220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate coverImageSource if provided
-      const validCoverSources = ['ai', 'portrait', 'upload', 'festive', 'none'];
+      const validCoverSources = ['ai', 'portrait', 'upload', 'festive', 'gaming', 'none'];
       const effectiveCoverSource = coverImageSource && validCoverSources.includes(coverImageSource) 
         ? coverImageSource 
         : 'ai';
@@ -1350,6 +1350,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use the pre-generated festive transform image
         console.log('[Card] Using festive transform image:', festiveImageUrl);
         imageUrl = festiveImageUrl;
+      } else if (effectiveCoverSource === 'gaming' && gamingData) {
+        // Generate gaming-themed card cover
+        console.log('[Card] Generating gaming card cover, style:', gamingData.style, 'scene:', gamingData.scene);
+        const { generateGamingCardImage } = await import('./openaiService');
+        
+        const gamingImageBase64 = await generateGamingCardImage({
+          recipientName,
+          occasion: occasion || 'celebration',
+          scene: gamingData.scene || 'gaming-moments',
+          style: gamingData.style || '2k-player',
+          username: gamingData.username || recipientName,
+          level: gamingData.level,
+          rank: gamingData.rank,
+          team: gamingData.team,
+          position: gamingData.position,
+          stats: gamingData.stats,
+          overallRating: gamingData.overallRating,
+          message: cardContent.message,
+        });
+        
+        imageUrl = await objectStorageService.uploadBase64Image(
+          gamingImageBase64,
+          `cards/${userId}`,
+          'gaming-card'
+        );
+        console.log('[Card] Gaming card image uploaded to storage:', imageUrl);
       } else {
         // Default: AI generated cover image
         if (process.env.NANO_BANANA_API_KEY) {
