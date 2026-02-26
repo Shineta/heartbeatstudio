@@ -9865,7 +9865,7 @@ export default function CreatePage() {
       </Dialog>
 
       <Dialog open={!!fullscreenImageUrl} onOpenChange={(open) => !open && setFullscreenImageUrl(null)}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] p-2">
+        <DialogContent className="sm:max-w-3xl p-2 overflow-y-auto max-h-[95vh]">
           <DialogHeader className="sr-only">
             <DialogTitle>Image Preview</DialogTitle>
             <DialogDescription>Full size preview of the generated image</DialogDescription>
@@ -9874,7 +9874,7 @@ export default function CreatePage() {
             <img 
               src={fullscreenImageUrl} 
               alt="Full size preview" 
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg" 
+              className="w-full h-auto rounded-lg" 
               data-testid="img-fullscreen-preview"
             />
           )}
