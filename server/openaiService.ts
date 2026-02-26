@@ -699,15 +699,17 @@ export async function generateGamingCardImage(params: {
 
   const stylePrompts: Record<string, string> = {
     '2k-player': `NBA 2K basketball player card design. Create a professional basketball player card layout with:
-- The player name "${params.username}" displayed prominently at the top
+- The player name "${params.username}" displayed prominently at the top in large bold text
 ${params.overallRating ? `- A large overall rating number "${params.overallRating}" in a bold circle/badge` : '- A rating badge'}
 ${params.position ? `- Position label: "${params.position}"` : ''}
-${params.team ? `- Team name: "${params.team}"` : ''}
+${params.team ? `- Team name displayed clearly as: "${params.team}" - spell this EXACTLY as written, letter by letter: ${params.team.split('').join('-')}` : ''}
 ${params.stats ? `- Stats display showing: ${params.stats}` : '- Stats bars showing attributes like Loyalty, Love, Hustle'}
+- The person should be wearing a basketball jersey and shorts in an action pose
 - Basketball court or arena background
 - Professional sports card design with metallic/holographic accents
 - Dynamic lighting and premium card aesthetics
-- The card should feel like an actual NBA 2K MyPlayer card`,
+- The card should feel like an actual NBA 2K MyPlayer card
+- ALL TEXT on the card must be spelled correctly and be clearly legible`,
 
     'battle-royale': `Fortnite Battle Royale victory screen design. Create a dramatic Victory Royale scene with:
 - "VICTORY ROYALE" headline text displayed prominently
@@ -775,7 +777,11 @@ ${params.stats ? `- Scoreboard: ${params.stats}` : '- Classic scoreboard with in
     : `This is a celebration card for ${params.recipientName}.`;
 
   const photoInstruction = params.photoUrl
-    ? `IMPORTANT: The user has provided a photo of the person. You MUST incorporate this person's face/likeness prominently into the card design. For a 2K player card, place their face as the main player portrait. For other styles, feature them as the main character/player in the scene. Preserve their facial features accurately while integrating them into the game art style.`
+    ? `IMPORTANT: The user has provided a reference photo of the person. You MUST:
+1. Use this person's EXACT face/likeness as the main subject of the card - preserve their facial features, skin tone, hair, and glasses accurately
+2. CHANGE their outfit/clothing to match the game style (e.g. basketball jersey and shorts for 2K, battle armor for Battle Royale, etc.) - do NOT keep their original clothing
+3. Place them prominently as the main player/character portrait in the card design
+4. Integrate them naturally into the game art style while keeping their face recognizable`
     : '';
 
   const prompt = `Create a gaming-themed digital greeting card cover image. ${occasionContext}

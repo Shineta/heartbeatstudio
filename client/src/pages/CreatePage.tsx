@@ -218,6 +218,7 @@ export default function CreatePage() {
   const gamingPhotoInputRef = useRef<HTMLInputElement>(null);
   const [isGeneratingGamingCard, setIsGeneratingGamingCard] = useState(false);
   const [generatedGamingCardUrl, setGeneratedGamingCardUrl] = useState<string | null>(null);
+  const [fullscreenImageUrl, setFullscreenImageUrl] = useState<string | null>(null);
   
   // Yearbook Headshot state (individual portrait photos)
   const [yearbookPhoto, setYearbookPhoto] = useState<File | null>(null);
@@ -3248,7 +3249,7 @@ export default function CreatePage() {
                             {generatedGamingCardUrl ? (
                               <div className="space-y-3">
                                 <div className="relative w-full max-w-xs mx-auto">
-                                  <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-gaming-card-preview" />
+                                  <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border cursor-pointer" onClick={() => setFullscreenImageUrl(generatedGamingCardUrl)} data-testid="img-gaming-card-preview" />
                                   <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-gaming-card">
                                     <X className="w-3 h-3" />
                                   </Button>
@@ -6895,7 +6896,7 @@ export default function CreatePage() {
                                   {generatedGamingCardUrl ? (
                                     <div className="space-y-3">
                                       <div className="relative w-full max-w-xs mx-auto">
-                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-business-gaming-card-preview" />
+                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border cursor-pointer" onClick={() => setFullscreenImageUrl(generatedGamingCardUrl)} data-testid="img-business-gaming-card-preview" />
                                         <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-business-gaming-card">
                                           <X className="w-3 h-3" />
                                         </Button>
@@ -8483,7 +8484,7 @@ export default function CreatePage() {
                                   {generatedGamingCardUrl ? (
                                     <div className="space-y-3">
                                       <div className="relative w-full max-w-xs mx-auto">
-                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-education-gaming-card-preview" />
+                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border cursor-pointer" onClick={() => setFullscreenImageUrl(generatedGamingCardUrl)} data-testid="img-education-gaming-card-preview" />
                                         <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-education-gaming-card">
                                           <X className="w-3 h-3" />
                                         </Button>
@@ -9860,6 +9861,23 @@ export default function CreatePage() {
               {tryAgainMode === 'edit-lyrics' ? 'Open Lyrics Editor' : 'Regenerate Song'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!fullscreenImageUrl} onOpenChange={(open) => !open && setFullscreenImageUrl(null)}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+            <DialogDescription>Full size preview of the generated image</DialogDescription>
+          </DialogHeader>
+          {fullscreenImageUrl && (
+            <img 
+              src={fullscreenImageUrl} 
+              alt="Full size preview" 
+              className="w-full h-auto max-h-[80vh] object-contain rounded-lg" 
+              data-testid="img-fullscreen-preview"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
