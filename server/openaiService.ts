@@ -797,13 +797,14 @@ IMPORTANT: This must look like an authentic game UI screen/card that someone wou
   if (params.photoUrl) {
     try {
       const photoResponse = await fetch(params.photoUrl);
-      const photoArrayBuffer = await photoResponse.arrayBuffer();
+      const photoBuffer = Buffer.from(await photoResponse.arrayBuffer());
 
-      console.log(`[GamingCard] Using uploaded photo as reference image`);
-      const photoBlob = new Blob([photoArrayBuffer], { type: 'image/png' });
+      console.log(`[GamingCard] Using uploaded photo as reference image, size: ${photoBuffer.length} bytes`);
+      const { toFile } = await import('openai');
+      const imageFile = await toFile(photoBuffer, 'player-photo.png', { type: 'image/png' });
       response = await openai.images.edit({
         model: "gpt-image-1",
-        image: photoBlob as any,
+        image: imageFile,
         prompt,
         size: "1024x1024" as any,
       });
