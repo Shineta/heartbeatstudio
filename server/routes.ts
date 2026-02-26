@@ -1368,6 +1368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           stats: gamingData.stats,
           overallRating: gamingData.overallRating,
           message: cardContent.message,
+          photoUrl: gamingData.photoUrl,
         });
         
         imageUrl = await objectStorageService.uploadBase64Image(

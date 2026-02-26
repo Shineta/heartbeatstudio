@@ -213,6 +213,9 @@ export default function CreatePage() {
   const [gamingPosition, setGamingPosition] = useState('');
   const [gamingStats, setGamingStats] = useState('');
   const [gamingOverallRating, setGamingOverallRating] = useState('');
+  const [gamingPhotoUrl, setGamingPhotoUrl] = useState<string | null>(null);
+  const [isUploadingGamingPhoto, setIsUploadingGamingPhoto] = useState(false);
+  const gamingPhotoInputRef = useRef<HTMLInputElement>(null);
   
   // Yearbook Headshot state (individual portrait photos)
   const [yearbookPhoto, setYearbookPhoto] = useState<File | null>(null);
@@ -772,6 +775,35 @@ export default function CreatePage() {
     setUploadedCoverUrl(null);
   };
 
+  const handleGamingPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingGamingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/upload/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to upload photo');
+      }
+
+      const data = await res.json();
+      setGamingPhotoUrl(data.imageUrl);
+      toast({ title: "Photo uploaded!", description: "Your photo will be included in the gaming card" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to upload photo", variant: "destructive" });
+    } finally {
+      setIsUploadingGamingPhoto(false);
+    }
+  };
+
   // Handle cover source change - clear uploaded cover when switching away from 'upload'
   const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'festive' | 'gaming' | 'none') => {
     if (coverImageSource === 'upload' && newSource !== 'upload') {
@@ -790,6 +822,7 @@ export default function CreatePage() {
       setGamingPosition('');
       setGamingStats('');
       setGamingOverallRating('');
+      setGamingPhotoUrl(null);
     }
     setCoverImageSource(newSource);
   };
@@ -2103,6 +2136,7 @@ export default function CreatePage() {
           position: gamingPosition || undefined,
           stats: gamingStats || undefined,
           overallRating: gamingOverallRating || undefined,
+          photoUrl: gamingPhotoUrl || undefined,
         }
       })
     };
@@ -3105,6 +3139,24 @@ export default function CreatePage() {
                                   onChange={(e) => setGamingStats(e.target.value)}
                                   data-testid="input-gaming-stats"
                                 />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs mb-1 block text-muted-foreground">Player Photo (Optional)</Label>
+                                {gamingPhotoUrl ? (
+                                  <div className="relative w-20 h-20">
+                                    <img src={gamingPhotoUrl} alt="Player photo" className="w-20 h-20 rounded-lg object-cover border" data-testid="img-gaming-photo-preview" />
+                                    <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-background" onClick={() => setGamingPhotoUrl(null)} data-testid="button-remove-gaming-photo">
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button type="button" variant="outline" className="w-full" onClick={() => gamingPhotoInputRef.current?.click()} disabled={isUploadingGamingPhoto} data-testid="button-upload-gaming-photo">
+                                    {isUploadingGamingPhoto ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : <><Camera className="w-4 h-4 mr-2" />Upload Photo</>}
+                                  </Button>
+                                )}
+                                <input ref={gamingPhotoInputRef} type="file" accept="image/*" onChange={handleGamingPhotoUpload} className="hidden" disabled={isUploadingGamingPhoto} data-testid="input-gaming-photo" />
+                                <p className="text-xs text-muted-foreground mt-1">Upload a photo to feature on the card</p>
                               </div>
                             </div>
 
@@ -6705,6 +6757,23 @@ export default function CreatePage() {
                                       <Label className="text-xs mb-1 block text-muted-foreground">Custom Stats</Label>
                                       <Input placeholder="Loyalty 99, Love 100, Hustle 95" value={gamingStats} onChange={(e) => setGamingStats(e.target.value)} data-testid="input-business-gaming-stats" />
                                     </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block text-muted-foreground">Player Photo (Optional)</Label>
+                                      {gamingPhotoUrl ? (
+                                        <div className="relative w-20 h-20">
+                                          <img src={gamingPhotoUrl} alt="Player photo" className="w-20 h-20 rounded-lg object-cover border" data-testid="img-business-gaming-photo-preview" />
+                                          <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-background" onClick={() => setGamingPhotoUrl(null)} data-testid="button-remove-business-gaming-photo">
+                                            <X className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <Button type="button" variant="outline" className="w-full" onClick={() => gamingPhotoInputRef.current?.click()} disabled={isUploadingGamingPhoto} data-testid="button-upload-business-gaming-photo">
+                                          {isUploadingGamingPhoto ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : <><Camera className="w-4 h-4 mr-2" />Upload Photo</>}
+                                        </Button>
+                                      )}
+                                      <input ref={gamingPhotoInputRef} type="file" accept="image/*" onChange={handleGamingPhotoUpload} className="hidden" disabled={isUploadingGamingPhoto} data-testid="input-business-gaming-photo" />
+                                      <p className="text-xs text-muted-foreground mt-1">Upload a photo to feature on the card</p>
+                                    </div>
                                   </div>
                                 </div>
                               )}
@@ -8257,6 +8326,23 @@ export default function CreatePage() {
                                     <div>
                                       <Label className="text-xs mb-1 block text-muted-foreground">Stats / Achievements</Label>
                                       <Input placeholder="Reading 99, Math 100, Science 95" value={gamingStats} onChange={(e) => setGamingStats(e.target.value)} data-testid="input-education-gaming-stats" />
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs mb-1 block text-muted-foreground">Student Photo (Optional)</Label>
+                                      {gamingPhotoUrl ? (
+                                        <div className="relative w-20 h-20">
+                                          <img src={gamingPhotoUrl} alt="Student photo" className="w-20 h-20 rounded-lg object-cover border" data-testid="img-education-gaming-photo-preview" />
+                                          <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-background" onClick={() => setGamingPhotoUrl(null)} data-testid="button-remove-education-gaming-photo">
+                                            <X className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <Button type="button" variant="outline" className="w-full" onClick={() => gamingPhotoInputRef.current?.click()} disabled={isUploadingGamingPhoto} data-testid="button-upload-education-gaming-photo">
+                                          {isUploadingGamingPhoto ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : <><Camera className="w-4 h-4 mr-2" />Upload Photo</>}
+                                        </Button>
+                                      )}
+                                      <input ref={gamingPhotoInputRef} type="file" accept="image/*" onChange={handleGamingPhotoUpload} className="hidden" disabled={isUploadingGamingPhoto} data-testid="input-education-gaming-photo" />
+                                      <p className="text-xs text-muted-foreground mt-1">Upload a photo to feature on the card</p>
                                     </div>
                                   </div>
                                 </div>

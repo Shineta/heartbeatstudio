@@ -687,6 +687,7 @@ export async function generateGamingCardImage(params: {
   stats?: string;
   overallRating?: string;
   message?: string;
+  photoUrl?: string;
 }): Promise<string> {
   const sceneDescriptions: Record<string, string> = {
     'gaming-moments': 'an epic gaming moment with action and excitement',
@@ -773,24 +774,54 @@ ${params.stats ? `- Scoreboard: ${params.stats}` : '- Classic scoreboard with in
     ? `This is a ${params.occasion.replace(/-/g, ' ')} card for ${params.recipientName}.`
     : `This is a celebration card for ${params.recipientName}.`;
 
+  const photoInstruction = params.photoUrl
+    ? `IMPORTANT: The user has provided a photo of the person. You MUST incorporate this person's face/likeness prominently into the card design. For a 2K player card, place their face as the main player portrait. For other styles, feature them as the main character/player in the scene. Preserve their facial features accurately while integrating them into the game art style.`
+    : '';
+
   const prompt = `Create a gaming-themed digital greeting card cover image. ${occasionContext}
 
 Scene context: ${sceneDesc}
 
 ${stylePrompt}
 
+${photoInstruction}
+
 ${params.message ? `Card message context: "${params.message}"` : ''}
 
 IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.`;
 
-  console.log(`[GamingCard] Generating ${params.style} style gaming card for ${params.recipientName}`);
+  console.log(`[GamingCard] Generating ${params.style} style gaming card for ${params.recipientName}${params.photoUrl ? ' (with photo)' : ''}`);
   console.log(`[GamingCard] Prompt preview: ${prompt.substring(0, 300)}...`);
 
-  const response = await openai.images.generate({
-    model: "gpt-image-1",
-    prompt,
-    size: "1024x1024",
-  });
+  let response;
+  if (params.photoUrl) {
+    try {
+      const photoResponse = await fetch(params.photoUrl);
+      const photoArrayBuffer = await photoResponse.arrayBuffer();
+
+      console.log(`[GamingCard] Using uploaded photo as reference image`);
+      const photoBlob = new Blob([photoArrayBuffer], { type: 'image/png' });
+      response = await openai.images.edit({
+        model: "gpt-image-1",
+        image: photoBlob as any,
+        prompt,
+        size: "1024x1024" as any,
+      });
+    } catch (photoError) {
+      console.error(`[GamingCard] Failed to use photo, falling back to text-only generation:`, photoError);
+      response = await openai.images.generate({
+        model: "gpt-image-1",
+        prompt,
+        size: "1024x1024",
+      });
+    }
+  } else {
+    response = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt,
+      size: "1024x1024",
+    });
+  }
 
   const b64Json = response.data?.[0]?.b64_json;
   if (!b64Json) {
