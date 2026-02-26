@@ -1193,7 +1193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate/card', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl, gamingData } = req.body;
+      const { lovedOneId, tone, occasion, style, coverImageSource, portraitData, uploadedCoverUrl, festiveImageUrl, gamingData, gamingCardImageUrl } = req.body;
       
       // Check if user has credits available (cards cost 1 credit)
       const user = await storage.getUser(userId);
@@ -1350,8 +1350,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use the pre-generated festive transform image
         console.log('[Card] Using festive transform image:', festiveImageUrl);
         imageUrl = festiveImageUrl;
+      } else if (effectiveCoverSource === 'gaming' && gamingCardImageUrl) {
+        // Use the pre-generated gaming card image
+        console.log('[Card] Using pre-generated gaming card image:', gamingCardImageUrl);
+        imageUrl = gamingCardImageUrl;
       } else if (effectiveCoverSource === 'gaming' && gamingData) {
-        // Generate gaming-themed card cover
+        // Generate gaming-themed card cover on the fly
         console.log('[Card] Generating gaming card cover, style:', gamingData.style, 'scene:', gamingData.scene);
         const { generateGamingCardImage } = await import('./openaiService');
         
@@ -1800,6 +1804,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userMessage = 'Could not save the generated image. Please try again.';
       }
       
+      res.status(500).json({ message: userMessage });
+    }
+  });
+
+  // Generate Gaming Card preview
+  app.post('/api/generate/gaming-card', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        scene: z.string().default('gaming-moments'),
+        style: z.string().default('2k-player'),
+        username: z.string().optional(),
+        level: z.string().optional(),
+        rank: z.string().optional(),
+        team: z.string().optional(),
+        position: z.string().optional(),
+        stats: z.string().optional(),
+        overallRating: z.string().optional(),
+        photoUrl: z.string().optional(),
+      });
+
+      const validatedData = schema.parse(req.body);
+      const userId = (req.user as any)?.id;
+
+      console.log(`[GamingCard] Preview generation requested by user ${userId}, style: ${validatedData.style}, scene: ${validatedData.scene}`);
+
+      const { generateGamingCardImage } = await import('./openaiService');
+
+      const gamingImageBase64 = await generateGamingCardImage({
+        recipientName: validatedData.username || 'Player',
+        occasion: 'celebration',
+        scene: validatedData.scene,
+        style: validatedData.style,
+        username: validatedData.username || 'Player',
+        level: validatedData.level,
+        rank: validatedData.rank,
+        team: validatedData.team,
+        position: validatedData.position,
+        stats: validatedData.stats,
+        overallRating: validatedData.overallRating,
+        photoUrl: validatedData.photoUrl,
+      });
+
+      const objectStorage = new ObjectStorageService();
+      const publicPath = await objectStorage.uploadBase64Image(
+        gamingImageBase64,
+        `cards/${userId}`,
+        'gaming-card'
+      );
+
+      const baseUrl = getBaseUrl();
+      const publicUrl = `${baseUrl}${publicPath}`;
+
+      console.log(`[GamingCard] Preview saved: ${publicUrl}`);
+      res.json({ imageUrl: publicUrl });
+    } catch (error: any) {
+      console.error('Error generating gaming card:', error);
+      let userMessage = 'Failed to generate gaming card. Please try again.';
+      if (error.message?.includes('timeout')) {
+        userMessage = 'The image generation timed out. Please try again.';
+      } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        userMessage = 'Service is temporarily busy. Please wait a moment and try again.';
+      }
       res.status(500).json({ message: userMessage });
     }
   });

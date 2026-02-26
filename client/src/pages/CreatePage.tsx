@@ -216,6 +216,8 @@ export default function CreatePage() {
   const [gamingPhotoUrl, setGamingPhotoUrl] = useState<string | null>(null);
   const [isUploadingGamingPhoto, setIsUploadingGamingPhoto] = useState(false);
   const gamingPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [isGeneratingGamingCard, setIsGeneratingGamingCard] = useState(false);
+  const [generatedGamingCardUrl, setGeneratedGamingCardUrl] = useState<string | null>(null);
   
   // Yearbook Headshot state (individual portrait photos)
   const [yearbookPhoto, setYearbookPhoto] = useState<File | null>(null);
@@ -804,6 +806,42 @@ export default function CreatePage() {
     }
   };
 
+  const generateGamingCard = async () => {
+    setIsGeneratingGamingCard(true);
+    try {
+      const res = await fetch('/api/generate/gaming-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scene: gamingScene,
+          style: gamingStyle,
+          username: gamingUsername || undefined,
+          level: gamingLevel || undefined,
+          rank: gamingRank || undefined,
+          team: gamingTeam || undefined,
+          position: gamingPosition || undefined,
+          stats: gamingStats || undefined,
+          overallRating: gamingOverallRating || undefined,
+          photoUrl: gamingPhotoUrl || undefined,
+        }),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to generate gaming card');
+      }
+
+      const data = await res.json();
+      setGeneratedGamingCardUrl(data.imageUrl);
+      toast({ title: "Gaming card generated!", description: "Your card preview is ready" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to generate gaming card", variant: "destructive" });
+    } finally {
+      setIsGeneratingGamingCard(false);
+    }
+  };
+
   // Handle cover source change - clear uploaded cover when switching away from 'upload'
   const handleCoverSourceChange = (newSource: 'ai' | 'portrait' | 'upload' | 'festive' | 'gaming' | 'none') => {
     if (coverImageSource === 'upload' && newSource !== 'upload') {
@@ -823,6 +861,7 @@ export default function CreatePage() {
       setGamingStats('');
       setGamingOverallRating('');
       setGamingPhotoUrl(null);
+      setGeneratedGamingCardUrl(null);
     }
     setCoverImageSource(newSource);
   };
@@ -2125,7 +2164,10 @@ export default function CreatePage() {
         festiveImageUrl: generatedFestiveUrl
       }),
       // Include gaming card data when gaming is selected
-      ...(coverImageSource === 'gaming' && {
+      ...(coverImageSource === 'gaming' && generatedGamingCardUrl && {
+        gamingCardImageUrl: generatedGamingCardUrl
+      }),
+      ...(coverImageSource === 'gaming' && !generatedGamingCardUrl && {
         gamingData: {
           scene: gamingScene,
           style: gamingStyle,
@@ -3160,16 +3202,35 @@ export default function CreatePage() {
                               </div>
                             </div>
 
-                            <div className="p-3 bg-background rounded-md border">
-                              <p className="text-xs text-muted-foreground">
-                                {gamingStyle === '2k-player' && 'Creates a basketball player card with your rating, stats, position, and team name.'}
-                                {gamingStyle === 'battle-royale' && 'Creates a Victory Royale screen with your username, XP, squad, and unlocked rewards.'}
-                                {gamingStyle === 'gta-street' && 'Creates a character intro screen with your title, cash/respect stats, and city backdrop.'}
-                                {gamingStyle === 'minecraft' && 'Creates a blocky pixel world with Achievement Unlocked banner, character skin, and build scene.'}
-                                {gamingStyle === 'roblox' && 'Creates a colorful avatar-based world with playful UI elements and fun environment.'}
-                                {gamingStyle === 'retro-arcade' && 'Creates a pixel art arcade screen with scoreboard, Game Over / You Win text, and retro vibes.'}
-                              </p>
-                            </div>
+                            {generatedGamingCardUrl ? (
+                              <div className="space-y-3">
+                                <div className="relative w-full max-w-xs mx-auto">
+                                  <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-gaming-card-preview" />
+                                  <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-gaming-card">
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                                <Button type="button" variant="outline" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-regenerate-gaming-card">
+                                  {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Regenerating...</> : <><RefreshCw className="w-4 h-4 mr-2" />Regenerate</>}
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                <div className="p-3 bg-background rounded-md border">
+                                  <p className="text-xs text-muted-foreground">
+                                    {gamingStyle === '2k-player' && 'Creates a basketball player card with your rating, stats, position, and team name.'}
+                                    {gamingStyle === 'battle-royale' && 'Creates a Victory Royale screen with your username, XP, squad, and unlocked rewards.'}
+                                    {gamingStyle === 'gta-street' && 'Creates a character intro screen with your title, cash/respect stats, and city backdrop.'}
+                                    {gamingStyle === 'minecraft' && 'Creates a blocky pixel world with Achievement Unlocked banner, character skin, and build scene.'}
+                                    {gamingStyle === 'roblox' && 'Creates a colorful avatar-based world with playful UI elements and fun environment.'}
+                                    {gamingStyle === 'retro-arcade' && 'Creates a pixel art arcade screen with scoreboard, Game Over / You Win text, and retro vibes.'}
+                                  </p>
+                                </div>
+                                <Button type="button" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-generate-gaming-card">
+                                  {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating Gaming Card...</> : <><Gamepad2 className="w-4 h-4 mr-2" />Generate Gaming Card</>}
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -6775,6 +6836,24 @@ export default function CreatePage() {
                                       <p className="text-xs text-muted-foreground mt-1">Upload a photo to feature on the card</p>
                                     </div>
                                   </div>
+
+                                  {generatedGamingCardUrl ? (
+                                    <div className="space-y-3">
+                                      <div className="relative w-full max-w-xs mx-auto">
+                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-business-gaming-card-preview" />
+                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-business-gaming-card">
+                                          <X className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                      <Button type="button" variant="outline" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-regenerate-business-gaming-card">
+                                        {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Regenerating...</> : <><RefreshCw className="w-4 h-4 mr-2" />Regenerate</>}
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button type="button" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-generate-business-gaming-card">
+                                      {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating Gaming Card...</> : <><Gamepad2 className="w-4 h-4 mr-2" />Generate Gaming Card</>}
+                                    </Button>
+                                  )}
                                 </div>
                               )}
 
@@ -8345,6 +8424,24 @@ export default function CreatePage() {
                                       <p className="text-xs text-muted-foreground mt-1">Upload a photo to feature on the card</p>
                                     </div>
                                   </div>
+
+                                  {generatedGamingCardUrl ? (
+                                    <div className="space-y-3">
+                                      <div className="relative w-full max-w-xs mx-auto">
+                                        <img src={generatedGamingCardUrl} alt="Gaming card preview" className="w-full rounded-lg border" data-testid="img-education-gaming-card-preview" />
+                                        <Button type="button" variant="outline" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background" onClick={() => setGeneratedGamingCardUrl(null)} data-testid="button-clear-education-gaming-card">
+                                          <X className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                      <Button type="button" variant="outline" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-regenerate-education-gaming-card">
+                                        {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Regenerating...</> : <><RefreshCw className="w-4 h-4 mr-2" />Regenerate</>}
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button type="button" className="w-full" onClick={generateGamingCard} disabled={isGeneratingGamingCard} data-testid="button-generate-education-gaming-card">
+                                      {isGeneratingGamingCard ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating Gaming Card...</> : <><Gamepad2 className="w-4 h-4 mr-2" />Generate Gaming Card</>}
+                                    </Button>
+                                  )}
                                 </div>
                               )}
 
