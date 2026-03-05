@@ -782,6 +782,11 @@ export default function CreatePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 25 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please upload an image under 25MB.", variant: "destructive" });
+      return;
+    }
+
     setIsUploadingGamingPhoto(true);
     try {
       const formData = new FormData();
@@ -794,7 +799,8 @@ export default function CreatePage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to upload photo');
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to upload photo');
       }
 
       const data = await res.json();
@@ -804,6 +810,7 @@ export default function CreatePage() {
       toast({ title: "Error", description: error.message || "Failed to upload photo", variant: "destructive" });
     } finally {
       setIsUploadingGamingPhoto(false);
+      if (e.target) e.target.value = '';
     }
   };
 

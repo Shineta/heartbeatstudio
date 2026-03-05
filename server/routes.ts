@@ -20,7 +20,7 @@ import { insertLovedOneSchema, insertCreationSchema, type Creation } from "@shar
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 25 * 1024 * 1024, // 25MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -3847,6 +3847,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error fetching stats:', error);
       res.status(500).json({ message: 'Failed to fetch stats' });
     }
+  });
+
+  app.use((err: any, req: Request, res: Response, next: any) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ message: 'File is too large. Please upload an image under 25MB.' });
+      }
+      return res.status(400).json({ message: `Upload error: ${err.message}` });
+    }
+    if (err?.message === 'Only image files are allowed') {
+      return res.status(400).json({ message: 'Only image files (JPG, PNG, etc.) are allowed.' });
+    }
+    next(err);
   });
 
   const httpServer = createServer(app);
