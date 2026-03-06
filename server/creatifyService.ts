@@ -78,11 +78,88 @@ export interface CreatifyVoice {
   gender?: string;
 }
 
+function sanitizeUrl(url: string): string {
+  return url
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, '')
+    .trim();
+}
+
+async function createLinkResource(url: string): Promise<string> {
+  const cleanUrl = sanitizeUrl(url);
+  console.log(`[Creatify] Creating link resource for URL: ${cleanUrl}`);
+
+  const response = await fetch(`${CREATIFY_BASE_URL}/links/`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ url: cleanUrl }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Creatify] Create link error:', response.status, errorText);
+    throw new Error(`Failed to create Creatify link: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log(`[Creatify] Link resource created with ID: ${data.id}`);
+  return data.id;
+}
+
+async function waitForLinkReady(linkId: string, maxAttempts = 30): Promise<void> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const response = await fetch(`${CREATIFY_BASE_URL}/links/${linkId}/`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to check link status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`[Creatify] Link ${linkId} status: ${data.status}`);
+
+    if (data.status === 'done' || data.status === 'completed') {
+      return;
+    }
+    if (data.status === 'failed' || data.status === 'error') {
+      throw new Error(`Link analysis failed: ${data.failed_reason || 'Unknown error'}`);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  throw new Error('Link analysis timed out after 60 seconds');
+}
+
 export async function createVideoFromLink(params: CreateVideoParams): Promise<CreatifyVideo> {
+  const linkId = await createLinkResource(params.link);
+  await waitForLinkReady(linkId);
+
+  const videoParams: Record<string, any> = {
+    link: linkId,
+  };
+
+  if (params.name) videoParams.name = params.name;
+  if (params.target_platform) videoParams.target_platform = params.target_platform;
+  if (params.target_audience) videoParams.target_audience = params.target_audience;
+  if (params.language) videoParams.language = params.language;
+  if (params.video_length) videoParams.video_length = params.video_length;
+  if (params.aspect_ratio) videoParams.aspect_ratio = params.aspect_ratio;
+  if (params.script_style) videoParams.script_style = params.script_style;
+  if (params.visual_style) videoParams.visual_style = params.visual_style;
+  if (params.override_script && params.override_script.trim().length >= 20) {
+    videoParams.override_script = params.override_script.trim();
+  }
+  if (params.no_background_music !== undefined) videoParams.no_background_music = params.no_background_music;
+  if (params.no_caption !== undefined) videoParams.no_caption = params.no_caption;
+
+  console.log(`[Creatify] Creating video with link ID: ${linkId}`);
+
   const response = await fetch(`${CREATIFY_BASE_URL}/link_to_videos/`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(params),
+    body: JSON.stringify(videoParams),
   });
 
   if (!response.ok) {
@@ -160,19 +237,38 @@ export function isCreatifyConfigured(): boolean {
 
 export const VISUAL_STYLES = [
   { value: 'AvatarBubbleTemplate', label: 'Avatar Bubble' },
-  { value: 'AvatarFullTemplate', label: 'Avatar Full Screen' },
-  { value: 'SplitScreenTemplate', label: 'Split Screen' },
-  { value: 'StockVideoTemplate', label: 'Stock Video' },
-  { value: 'ExplainerTemplate', label: 'Explainer' },
+  { value: 'FullScreenTemplate', label: 'Full Screen' },
+  { value: 'FullScreenV2Template', label: 'Full Screen V2' },
+  { value: 'SideBySideTemplate', label: 'Side by Side' },
+  { value: 'VanillaTemplate', label: 'Vanilla' },
+  { value: 'EnhancedVanillaTemplate', label: 'Dynamic Vanilla' },
+  { value: 'DramaticTemplate', label: 'Dramatic' },
+  { value: 'FeatureHighlightTemplate', label: 'Feature Highlight' },
+  { value: 'MotionCardsTemplate', label: 'Motion Cards' },
+  { value: 'SmartAdsTemplate', label: 'Smart Ads' },
+  { value: 'StandardAdsTemplate', label: 'Standard Ads' },
+  { value: 'VlogTemplate', label: 'Vlog' },
+  { value: 'ScribbleTemplate', label: 'Scribble' },
+  { value: 'QuickTransitionTemplate', label: 'Quick Transition' },
+  { value: 'DynamicProductTemplate', label: 'Product' },
+  { value: 'SimpleAvatarOverlayTemplate', label: 'Product Presenter' },
+  { value: 'GreenScreenEffectTemplate', label: 'Green Screen Effect' },
 ] as const;
 
 export const SCRIPT_STYLES = [
   { value: 'BenefitsV2', label: 'Benefits' },
-  { value: 'ProblemSolution', label: 'Problem & Solution' },
-  { value: 'Storytelling', label: 'Storytelling' },
-  { value: 'Testimonial', label: 'Testimonial' },
-  { value: 'HowTo', label: 'How-To' },
-  { value: 'ListStyle', label: 'List Style' },
+  { value: 'ProblemSolutionV2', label: 'Problem & Solution' },
+  { value: 'StoryTimeWriter', label: 'Storytelling' },
+  { value: 'HowToV2', label: 'How-To' },
+  { value: 'EmotionalWriter', label: 'Emotional' },
+  { value: 'BrandStoryV2', label: 'Brand Story' },
+  { value: 'CallToActionV2', label: 'Call to Action' },
+  { value: 'DiscoveryWriter', label: 'Discovery' },
+  { value: 'ProductHighlightsV2', label: 'Product Highlights' },
+  { value: 'SpecialOffersV2', label: 'Special Offers' },
+  { value: 'ThreeReasonsWriter', label: '3 Reasons Why' },
+  { value: 'GenzWriter', label: 'Gen Z' },
+  { value: 'MotivationalWriter', label: 'Motivational' },
 ] as const;
 
 export const PLATFORMS = [

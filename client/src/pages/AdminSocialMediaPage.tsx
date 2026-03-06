@@ -49,19 +49,38 @@ interface CreatifyVideo {
 
 const VISUAL_STYLES = [
   { value: 'AvatarBubbleTemplate', label: 'Avatar Bubble' },
-  { value: 'AvatarFullTemplate', label: 'Avatar Full Screen' },
-  { value: 'SplitScreenTemplate', label: 'Split Screen' },
-  { value: 'StockVideoTemplate', label: 'Stock Video' },
-  { value: 'ExplainerTemplate', label: 'Explainer' },
+  { value: 'FullScreenTemplate', label: 'Full Screen' },
+  { value: 'FullScreenV2Template', label: 'Full Screen V2' },
+  { value: 'SideBySideTemplate', label: 'Side by Side' },
+  { value: 'VanillaTemplate', label: 'Vanilla' },
+  { value: 'EnhancedVanillaTemplate', label: 'Dynamic Vanilla' },
+  { value: 'DramaticTemplate', label: 'Dramatic' },
+  { value: 'FeatureHighlightTemplate', label: 'Feature Highlight' },
+  { value: 'MotionCardsTemplate', label: 'Motion Cards' },
+  { value: 'SmartAdsTemplate', label: 'Smart Ads' },
+  { value: 'StandardAdsTemplate', label: 'Standard Ads' },
+  { value: 'VlogTemplate', label: 'Vlog' },
+  { value: 'ScribbleTemplate', label: 'Scribble' },
+  { value: 'QuickTransitionTemplate', label: 'Quick Transition' },
+  { value: 'DynamicProductTemplate', label: 'Product' },
+  { value: 'SimpleAvatarOverlayTemplate', label: 'Product Presenter' },
+  { value: 'GreenScreenEffectTemplate', label: 'Green Screen Effect' },
 ];
 
 const SCRIPT_STYLES = [
   { value: 'BenefitsV2', label: 'Benefits' },
-  { value: 'ProblemSolution', label: 'Problem & Solution' },
-  { value: 'Storytelling', label: 'Storytelling' },
-  { value: 'Testimonial', label: 'Testimonial' },
-  { value: 'HowTo', label: 'How-To' },
-  { value: 'ListStyle', label: 'List Style' },
+  { value: 'ProblemSolutionV2', label: 'Problem & Solution' },
+  { value: 'StoryTimeWriter', label: 'Storytelling' },
+  { value: 'HowToV2', label: 'How-To' },
+  { value: 'EmotionalWriter', label: 'Emotional' },
+  { value: 'BrandStoryV2', label: 'Brand Story' },
+  { value: 'CallToActionV2', label: 'Call to Action' },
+  { value: 'DiscoveryWriter', label: 'Discovery' },
+  { value: 'ProductHighlightsV2', label: 'Product Highlights' },
+  { value: 'SpecialOffersV2', label: 'Special Offers' },
+  { value: 'ThreeReasonsWriter', label: '3 Reasons Why' },
+  { value: 'GenzWriter', label: 'Gen Z' },
+  { value: 'MotivationalWriter', label: 'Motivational' },
 ];
 
 const PLATFORMS = [
@@ -150,7 +169,7 @@ export default function AdminSocialMediaPage() {
   const [videoLength, setVideoLength] = useState('30');
   const [aspectRatio, setAspectRatio] = useState('9x16');
   const [scriptStyle, setScriptStyle] = useState('BenefitsV2');
-  const [visualStyle, setVisualStyle] = useState('AvatarBubbleTemplate');
+  const [visualStyle, setVisualStyle] = useState('AI Avatar - Bubble');
   const [overrideScript, setOverrideScript] = useState('');
   const [noBackgroundMusic, setNoBackgroundMusic] = useState(false);
   const [noCaptions, setNoCaptions] = useState(false);
@@ -224,32 +243,52 @@ export default function AdminSocialMediaPage() {
     setVideoLength('30');
     setAspectRatio('9x16');
     setScriptStyle('BenefitsV2');
-    setVisualStyle('AvatarBubbleTemplate');
+    setVisualStyle('AI Avatar - Bubble');
     setOverrideScript('');
     setNoBackgroundMusic(false);
     setNoCaptions(false);
   }
 
+  function sanitizeUrl(url: string): string {
+    return url
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '')
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, '')
+      .trim();
+  }
+
   function handleCreate() {
-    if (!link.trim()) {
+    const cleanLink = sanitizeUrl(link);
+    if (!cleanLink) {
       toast({ title: "Link required", description: "Enter a URL to create a video from.", variant: "destructive" });
       return;
     }
 
-    createMutation.mutate({
-      link: link.trim(),
-      name: name.trim() || undefined,
+    try {
+      new URL(cleanLink);
+    } catch {
+      toast({ title: "Invalid URL", description: "Please enter a valid URL starting with https://", variant: "destructive" });
+      return;
+    }
+
+    const payload: Record<string, any> = {
+      link: cleanLink,
       target_platform: targetPlatform,
-      target_audience: targetAudience.trim() || undefined,
       language,
       video_length: parseInt(videoLength),
       aspect_ratio: aspectRatio,
       script_style: scriptStyle,
       visual_style: visualStyle,
-      override_script: overrideScript.trim() || undefined,
       no_background_music: noBackgroundMusic,
       no_caption: noCaptions,
-    });
+    };
+
+    if (name.trim()) payload.name = name.trim();
+    if (targetAudience.trim()) payload.target_audience = targetAudience.trim();
+    if (overrideScript.trim() && overrideScript.trim().length >= 20) {
+      payload.override_script = overrideScript.trim();
+    }
+
+    createMutation.mutate(payload);
   }
 
   if (authLoading) {
@@ -474,6 +513,11 @@ export default function AdminSocialMediaPage() {
                   rows={4}
                   data-testid="input-override-script"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {overrideScript.trim().length > 0 && overrideScript.trim().length < 20
+                    ? `Script must be at least 20 characters (currently ${overrideScript.trim().length}). Otherwise leave empty for auto-generation.`
+                    : 'Leave empty to auto-generate from URL content. If provided, must be at least 20 characters.'}
+                </p>
               </div>
 
               <div className="flex items-center gap-6 flex-wrap">
