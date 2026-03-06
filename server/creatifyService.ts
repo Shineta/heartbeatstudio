@@ -89,52 +89,47 @@ async function createLinkResource(url: string): Promise<string> {
   const cleanUrl = sanitizeUrl(url);
   console.log(`[Creatify] Creating link resource for URL: ${cleanUrl}`);
 
-  const response = await fetch(`${CREATIFY_BASE_URL}/links/`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ url: cleanUrl }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Creatify] Create link error:', response.status, errorText);
-    throw new Error(`Failed to create Creatify link: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  console.log(`[Creatify] Link resource created with ID: ${data.id}`);
-  return data.id;
-}
-
-async function waitForLinkReady(linkId: string, maxAttempts = 30): Promise<void> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const response = await fetch(`${CREATIFY_BASE_URL}/links/${linkId}/`, {
-      method: 'GET',
+  try {
+    const response = await fetch(`${CREATIFY_BASE_URL}/links/`, {
+      method: 'POST',
       headers: getHeaders(),
+      body: JSON.stringify({ url: cleanUrl }),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeout);
+
     if (!response.ok) {
-      throw new Error(`Failed to check link status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[Creatify] Create link error:', response.status, errorText);
+      throw new Error(`Failed to create Creatify link: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log(`[Creatify] Link ${linkId} status: ${data.status}`);
-
-    if (data.status === 'done' || data.status === 'completed') {
-      return;
-    }
-    if (data.status === 'failed' || data.status === 'error') {
-      throw new Error(`Link analysis failed: ${data.failed_reason || 'Unknown error'}`);
+    if (data.id) {
+      console.log(`[Creatify] Link resource created with ID: ${data.id}`);
+      return data.id;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (Array.isArray(data) && data.length > 0) {
+      throw new Error(`Creatify link creation failed: ${data.join(', ')}`);
+    }
+
+    throw new Error('Creatify link creation returned unexpected response');
+  } catch (error: any) {
+    clearTimeout(timeout);
+    if (error.name === 'AbortError') {
+      throw new Error('Creatify link creation timed out. The URL may be unreachable or slow to load. Try a different URL.');
+    }
+    throw error;
   }
-  throw new Error('Link analysis timed out after 60 seconds');
 }
 
 export async function createVideoFromLink(params: CreateVideoParams): Promise<CreatifyVideo> {
   const linkId = await createLinkResource(params.link);
-  await waitForLinkReady(linkId);
 
   const videoParams: Record<string, any> = {
     link: linkId,
