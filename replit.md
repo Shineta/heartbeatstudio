@@ -218,11 +218,12 @@ Preferred communication style: Simple, everyday language.
 - Features:
   - Create promotional videos from any URL (link-to-video)
   - Target platform selection: Instagram, TikTok, YouTube, Facebook, LinkedIn
-  - Multiple visual styles: Avatar Bubble, Avatar Full Screen, Split Screen, Stock Video, Explainer
-  - Script styles: Benefits, Problem & Solution, Storytelling, Testimonial, How-To, List
+  - Multiple visual styles: Avatar Bubble, Full Screen, Side by Side, Dramatic, Smart Ads, Vlog, Product, and more (17 options)
+  - Script styles: Benefits, Problem & Solution, Storytelling, How-To, Emotional, Brand Story, Call to Action, and more (13 options)
   - Aspect ratios: 9:16, 16:9, 1:1
-  - Custom script override option
-  - Video length selection (15-90 seconds)
+  - Custom script override option (minimum 20 characters)
+  - Video length selection (15-60 seconds)
+  - Two-step API flow: creates link resource first, then generates video from link UUID
   - Multi-language support
   - Auto-polling for video generation status
   - Preview, render, play, download, and edit via Creatify editor

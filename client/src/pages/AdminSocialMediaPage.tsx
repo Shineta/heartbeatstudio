@@ -169,7 +169,7 @@ export default function AdminSocialMediaPage() {
   const [videoLength, setVideoLength] = useState('30');
   const [aspectRatio, setAspectRatio] = useState('9x16');
   const [scriptStyle, setScriptStyle] = useState('BenefitsV2');
-  const [visualStyle, setVisualStyle] = useState('AI Avatar - Bubble');
+  const [visualStyle, setVisualStyle] = useState('AvatarBubbleTemplate');
   const [overrideScript, setOverrideScript] = useState('');
   const [noBackgroundMusic, setNoBackgroundMusic] = useState(false);
   const [noCaptions, setNoCaptions] = useState(false);
@@ -243,7 +243,7 @@ export default function AdminSocialMediaPage() {
     setVideoLength('30');
     setAspectRatio('9x16');
     setScriptStyle('BenefitsV2');
-    setVisualStyle('AI Avatar - Bubble');
+    setVisualStyle('AvatarBubbleTemplate');
     setOverrideScript('');
     setNoBackgroundMusic(false);
     setNoCaptions(false);
@@ -455,7 +455,6 @@ export default function AdminSocialMediaPage() {
                       <SelectItem value="30">30 seconds</SelectItem>
                       <SelectItem value="45">45 seconds</SelectItem>
                       <SelectItem value="60">60 seconds</SelectItem>
-                      <SelectItem value="90">90 seconds</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
