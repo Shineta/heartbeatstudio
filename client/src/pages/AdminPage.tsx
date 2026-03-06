@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, Mail, Phone, Calendar, Crown, CheckCircle, XCircle, Download, Search, ArrowLeft, Shield } from 'lucide-react';
+import { Users, Mail, Phone, Calendar, Crown, CheckCircle, XCircle, Download, Search, ArrowLeft, Shield, Video } from 'lucide-react';
 
 interface AdminUser {
   id: string;
@@ -126,6 +126,10 @@ export default function AdminPage() {
               <p className="text-muted-foreground text-sm">Manage users and view analytics</p>
             </div>
           </div>
+          <Button onClick={() => setLocation('/admin/social-media')} data-testid="button-social-media-studio">
+            <Video className="w-4 h-4 mr-2" />
+            Social Media Studio
+          </Button>
         </div>
 
         {/* Stats Cards */}

@@ -3849,6 +3849,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== ADMIN: CREATIFY SOCIAL MEDIA ROUTES ==========
+
+  app.get('/api/admin/creatify/videos', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { getVideoHistory } = await import('./creatifyService');
+      const videos = await getVideoHistory();
+      res.json(videos);
+    } catch (error: any) {
+      console.error('Error fetching Creatify videos:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch videos' });
+    }
+  });
+
+  app.post('/api/admin/creatify/create', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { createVideoFromLink } = await import('./creatifyService');
+      const video = await createVideoFromLink(req.body);
+      console.log(`[Creatify] Video creation started: ${video.id}`);
+      res.json(video);
+    } catch (error: any) {
+      console.error('Error creating Creatify video:', error);
+      res.status(500).json({ message: error.message || 'Failed to create video' });
+    }
+  });
+
+  app.get('/api/admin/creatify/videos/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { getVideoStatus } = await import('./creatifyService');
+      const video = await getVideoStatus(req.params.id);
+      res.json(video);
+    } catch (error: any) {
+      console.error('Error fetching Creatify video status:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch video status' });
+    }
+  });
+
+  app.post('/api/admin/creatify/videos/:id/render', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { renderVideo } = await import('./creatifyService');
+      const video = await renderVideo(req.params.id);
+      console.log(`[Creatify] Video render started: ${video.id}`);
+      res.json(video);
+    } catch (error: any) {
+      console.error('Error rendering Creatify video:', error);
+      res.status(500).json({ message: error.message || 'Failed to render video' });
+    }
+  });
+
+  app.get('/api/admin/creatify/voices', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { getVoices } = await import('./creatifyService');
+      const voices = await getVoices();
+      res.json(voices);
+    } catch (error: any) {
+      console.error('Error fetching Creatify voices:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch voices' });
+    }
+  });
+
   app.use((err: any, req: Request, res: Response, next: any) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {

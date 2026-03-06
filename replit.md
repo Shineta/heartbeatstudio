@@ -209,6 +209,28 @@ Preferred communication style: Simple, everyday language.
 - Protected by `isAdmin` middleware on backend API routes
 - Non-admin users are automatically redirected to dashboard
 
+**Admin Social Media Studio**
+- Accessible at `/admin/social-media` route (admin users only)
+- Powered by Creatify API for AI video generation
+  - Requires CREATIFY_API_ID and CREATIFY_API_KEY environment variables
+  - API endpoint: `https://api.creatify.ai/api/`
+  - Authentication: X-API-ID and X-API-KEY headers
+- Features:
+  - Create promotional videos from any URL (link-to-video)
+  - Target platform selection: Instagram, TikTok, YouTube, Facebook, LinkedIn
+  - Multiple visual styles: Avatar Bubble, Avatar Full Screen, Split Screen, Stock Video, Explainer
+  - Script styles: Benefits, Problem & Solution, Storytelling, Testimonial, How-To, List
+  - Aspect ratios: 9:16, 16:9, 1:1
+  - Custom script override option
+  - Video length selection (15-90 seconds)
+  - Multi-language support
+  - Auto-polling for video generation status
+  - Preview, render, play, download, and edit via Creatify editor
+  - Video history with status tracking (Processing, Completed, Failed)
+- Service file: `server/creatifyService.ts`
+- Frontend page: `client/src/pages/AdminSocialMediaPage.tsx`
+- API routes: `/api/admin/creatify/*` (all admin-protected)
+
 **Terms of Service**
 - Accessible at `/terms` route
 - Required acceptance during registration (checkbox must be checked)
