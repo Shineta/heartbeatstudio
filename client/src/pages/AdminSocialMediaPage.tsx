@@ -188,7 +188,7 @@ export default function AdminSocialMediaPage() {
 
   const [ttv_prompt, setTtvPrompt] = useState('');
   const [ttv_model, setTtvModel] = useState('kling-video/v3/pro/text-to-video');
-  const [ttv_duration, setTtvDuration] = useState('5');
+  const [ttv_duration, setTtvDuration] = useState('10');
   const [ttv_aspectRatio, setTtvAspectRatio] = useState('16:9');
   const [ttv_negativePrompt, setTtvNegativePrompt] = useState('');
   const [assetPollingId, setAssetPollingId] = useState<string | null>(null);
@@ -522,6 +522,11 @@ export default function AdminSocialMediaPage() {
                         <SelectContent>
                           <SelectItem value="5">5 seconds</SelectItem>
                           <SelectItem value="10">10 seconds</SelectItem>
+                          <SelectItem value="15">15 seconds</SelectItem>
+                          <SelectItem value="20">20 seconds</SelectItem>
+                          <SelectItem value="30">30 seconds</SelectItem>
+                          <SelectItem value="45">45 seconds</SelectItem>
+                          <SelectItem value="60">60 seconds</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
