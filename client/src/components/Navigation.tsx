@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X, LogOut, Settings, Coins } from "lucide-react";
+import { Heart, Menu, X, LogOut, Settings, Coins, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -184,6 +184,18 @@ export default function Navigation() {
                     </div>
                   </DialogContent>
                 </Dialog>
+                {typedUser?.isAdmin && (
+                  <Link href="/admin">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      data-testid="button-admin"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -205,6 +217,30 @@ export default function Navigation() {
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
+
+        {mobileMenuOpen && isAuthenticated && (
+          <div className="md:hidden py-4 border-t">
+            <div className="flex flex-col gap-2">
+              {typedUser?.isAdmin && (
+                <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start" data-testid="button-admin-mobile">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin Dashboard
+                  </Button>
+                </Link>
+              )}
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                data-testid="button-logout-mobile"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        )}
 
         {mobileMenuOpen && !isAuthenticated && (
           <div className="md:hidden py-4 border-t">
