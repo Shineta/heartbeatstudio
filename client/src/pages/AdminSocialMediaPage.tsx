@@ -188,7 +188,7 @@ export default function AdminSocialMediaPage() {
 
   const [ttv_prompt, setTtvPrompt] = useState('');
   const [ttv_model, setTtvModel] = useState('kling-video/v3/pro/text-to-video');
-  const [ttv_duration, setTtvDuration] = useState('10');
+  const [ttv_duration, setTtvDuration] = useState('5');
   const [ttv_aspectRatio, setTtvAspectRatio] = useState('16:9');
   const [ttv_negativePrompt, setTtvNegativePrompt] = useState('');
   const [assetPollingIds, setAssetPollingIds] = useState<Set<string>>(new Set());
@@ -579,19 +579,15 @@ export default function AdminSocialMediaPage() {
                         <SelectContent>
                           <SelectItem value="3">3 seconds</SelectItem>
                           <SelectItem value="4">4 seconds</SelectItem>
-                          <SelectItem value="5">5 seconds</SelectItem>
+                          <SelectItem value="5">5 seconds (recommended)</SelectItem>
                           <SelectItem value="6">6 seconds</SelectItem>
                           <SelectItem value="7">7 seconds</SelectItem>
                           <SelectItem value="8">8 seconds</SelectItem>
                           <SelectItem value="9">9 seconds</SelectItem>
                           <SelectItem value="10">10 seconds</SelectItem>
-                          <SelectItem value="11">11 seconds</SelectItem>
-                          <SelectItem value="12">12 seconds</SelectItem>
-                          <SelectItem value="13">13 seconds</SelectItem>
-                          <SelectItem value="14">14 seconds</SelectItem>
-                          <SelectItem value="15">15 seconds</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">Shorter durations (5s) are most reliable. Longer durations may fail silently with some models.</p>
                     </div>
 
                     <div className="space-y-2">
