@@ -350,13 +350,9 @@ export default function AdminSocialMediaPage() {
       prompt: ttv_prompt.trim(),
       aspect_ratio: ttv_aspectRatio,
     };
-    if (ttv_model.startsWith('kling')) {
-      inputParams.duration = ttv_duration;
-    } else if (ttv_model.startsWith('veo')) {
-      inputParams.duration = parseInt(ttv_duration);
+    inputParams.duration = `${ttv_duration}s`;
+    if (ttv_model.startsWith('veo')) {
       inputParams.enhance_prompt = true;
-    } else if (ttv_model.startsWith('sora')) {
-      inputParams.duration = parseInt(ttv_duration);
     }
     if (ttv_negativePrompt.trim()) {
       inputParams.negative_prompt = ttv_negativePrompt.trim();
@@ -577,17 +573,10 @@ export default function AdminSocialMediaPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="3">3 seconds</SelectItem>
-                          <SelectItem value="4">4 seconds</SelectItem>
-                          <SelectItem value="5">5 seconds (recommended)</SelectItem>
-                          <SelectItem value="6">6 seconds</SelectItem>
-                          <SelectItem value="7">7 seconds</SelectItem>
-                          <SelectItem value="8">8 seconds</SelectItem>
-                          <SelectItem value="9">9 seconds</SelectItem>
+                          <SelectItem value="5">5 seconds</SelectItem>
                           <SelectItem value="10">10 seconds</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">Shorter durations (5s) are most reliable. Longer durations may fail silently with some models.</p>
                     </div>
 
                     <div className="space-y-2">
