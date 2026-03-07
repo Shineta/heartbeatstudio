@@ -110,6 +110,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[Config] SUNO_API_KEY is configured');
   }
 
+  // Recover stuck "generating" songs from previous server restarts
+  (async () => {
+    try {
+      const { db } = await import('./db');
+      const { creations, users } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const stuckCreations = await db.select().from(creations).where(eq(creations.status, 'generating'));
+      
+      if (stuckCreations.length > 0) {
+        console.log(`[Recovery] Found ${stuckCreations.length} stuck "generating" creation(s). Marking as failed...`);
+        
+        for (const creation of stuckCreations) {
+          await db.update(creations).set({ 
+            status: 'failed', 
+            title: 'Song generation failed' 
+          }).where(eq(creations.id, creation.id));
+          
+          // Refund credit for non-admin, non-subscriber users
+          if (creation.userId) {
+            const [user] = await db.select().from(users).where(eq(users.id, creation.userId));
+            if (user && user.subscriptionStatus !== 'active' && !user.isAdmin) {
+              const refunded = (user.songsRemaining ?? 0) + 1;
+              await db.update(users).set({ songsRemaining: refunded }).where(eq(users.id, user.id));
+              console.log(`[Recovery] Refunded credit for user ${user.id}. Songs remaining: ${refunded}`);
+            }
+          }
+        }
+        console.log(`[Recovery] Cleaned up ${stuckCreations.length} stuck creation(s).`);
+      }
+    } catch (err: any) {
+      console.error('[Recovery] Failed to clean up stuck creations:', err.message);
+    }
+  })();
+
   // Debug endpoint to test object storage
   app.get('/api/debug/test-storage', async (req: Request, res: Response) => {
     try {
