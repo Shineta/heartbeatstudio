@@ -191,7 +191,7 @@ export default function AdminSocialMediaPage() {
   const [ttv_duration, setTtvDuration] = useState('10');
   const [ttv_aspectRatio, setTtvAspectRatio] = useState('16:9');
   const [ttv_negativePrompt, setTtvNegativePrompt] = useState('');
-  const [assetPollingId, setAssetPollingId] = useState<string | null>(null);
+  const [assetPollingIds, setAssetPollingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !user?.isAdmin) {
@@ -226,6 +226,19 @@ export default function AdminSocialMediaPage() {
     failed_reason: t.failedReason || undefined,
   }));
 
+  useEffect(() => {
+    const pendingIds = assetTasksData
+      .filter(t => t.status === 'pending' || t.status === 'generating')
+      .map(t => t.id);
+    if (pendingIds.length > 0) {
+      setAssetPollingIds(prev => {
+        const next = new Set(prev);
+        pendingIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+  }, [assetTasksData]);
+
   const { data: videos, isLoading: videosLoading, refetch: refetchVideos } = useQuery<CreatifyVideo[]>({
     queryKey: ['/api/admin/creatify/videos'],
     enabled: !!user?.isAdmin,
@@ -247,24 +260,36 @@ export default function AdminSocialMediaPage() {
   }, [pollingId, videos, toast]);
 
   useEffect(() => {
-    if (!assetPollingId) return;
+    if (assetPollingIds.size === 0) return;
     const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/admin/creatify/asset-generator/${assetPollingId}`, { credentials: 'include' });
-        if (!res.ok) return;
-        const task = await res.json();
+      const idsToRemove: string[] = [];
+      for (const taskId of assetPollingIds) {
+        try {
+          const res = await fetch(`/api/admin/creatify/asset-generator/${taskId}`, { credentials: 'include' });
+          if (!res.ok) continue;
+          const task = await res.json();
+          if (task.status === 'done' || task.status === 'completed') {
+            idsToRemove.push(taskId);
+            toast({ title: "Video generated!", description: "Your text-to-video is ready to view and download." });
+          } else if (task.status === 'failed' || task.status === 'error') {
+            idsToRemove.push(taskId);
+            toast({ title: "Generation failed", description: task.failed_reason || "Something went wrong.", variant: "destructive" });
+          }
+        } catch (e) {}
+      }
+      if (idsToRemove.length > 0) {
         queryClient.invalidateQueries({ queryKey: ['/api/admin/creatify/asset-tasks'] });
-        if (task.status === 'done' || task.status === 'completed') {
-          setAssetPollingId(null);
-          toast({ title: "Video generated!", description: "Your text-to-video is ready to view and download." });
-        } else if (task.status === 'failed' || task.status === 'error') {
-          setAssetPollingId(null);
-          toast({ title: "Generation failed", description: task.failed_reason || "Something went wrong.", variant: "destructive" });
-        }
-      } catch (e) {}
+        setAssetPollingIds(prev => {
+          const next = new Set(prev);
+          idsToRemove.forEach(id => next.delete(id));
+          return next;
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/creatify/asset-tasks'] });
+      }
     }, 5000);
     return () => clearInterval(interval);
-  }, [assetPollingId, toast]);
+  }, [assetPollingIds, toast]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -306,7 +331,7 @@ export default function AdminSocialMediaPage() {
     onSuccess: (data: any) => {
       toast({ title: "Video generation started", description: `Using ${ttv_model.split('/').slice(0, 2).join(' ')} — this may take a few minutes.` });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/creatify/asset-tasks'] });
-      setAssetPollingId(data.id);
+      setAssetPollingIds(prev => new Set([...prev, data.id]));
       setShowCreateForm(false);
       setTtvPrompt('');
       setTtvNegativePrompt('');
