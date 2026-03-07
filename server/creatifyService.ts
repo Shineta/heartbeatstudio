@@ -149,7 +149,7 @@ export async function createVideoFromLink(params: CreateVideoParams): Promise<Cr
   if (params.no_background_music !== undefined) videoParams.no_background_music = params.no_background_music;
   if (params.no_caption !== undefined) videoParams.no_caption = params.no_caption;
 
-  console.log(`[Creatify] Creating video with link ID: ${linkId}`);
+  console.log(`[Creatify] Creating video with link ID: ${linkId}`, JSON.stringify(videoParams, null, 2));
 
   const response = await fetch(`${CREATIFY_BASE_URL}/link_to_videos/`, {
     method: 'POST',

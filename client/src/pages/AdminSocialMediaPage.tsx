@@ -284,8 +284,14 @@ export default function AdminSocialMediaPage() {
 
     if (name.trim()) payload.name = name.trim();
     if (targetAudience.trim()) payload.target_audience = targetAudience.trim();
-    if (overrideScript.trim() && overrideScript.trim().length >= 20) {
-      payload.override_script = overrideScript.trim();
+
+    const scriptText = overrideScript.trim();
+    if (scriptText) {
+      if (scriptText.length < 20) {
+        toast({ title: "Script too short", description: `Your custom script is ${scriptText.length} characters. It must be at least 20 characters, or leave the field empty for auto-generation.`, variant: "destructive" });
+        return;
+      }
+      payload.override_script = scriptText;
     }
 
     createMutation.mutate(payload);
