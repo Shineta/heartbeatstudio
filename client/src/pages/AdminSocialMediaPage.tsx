@@ -437,9 +437,15 @@ export default function AdminSocialMediaPage() {
 
   if (!user?.isAdmin) return null;
 
-  const processingCount = videos?.filter(v => v.status === 'pending' || v.status === 'processing' || v.status === 'in_progress').length || 0;
-  const completedCount = videos?.filter(v => v.status === 'done' || v.status === 'completed').length || 0;
-  const failedCount = videos?.filter(v => v.status === 'failed' || v.status === 'error').length || 0;
+  const videoProcessing = videos?.filter(v => v.status === 'pending' || v.status === 'processing' || v.status === 'in_progress').length || 0;
+  const videoCompleted = videos?.filter(v => v.status === 'done' || v.status === 'completed').length || 0;
+  const videoFailed = videos?.filter(v => v.status === 'failed' || v.status === 'error').length || 0;
+  const assetProcessing = assetTasks.filter(t => t.status === 'pending' || t.status === 'generating' || t.status === 'processing').length;
+  const assetCompleted = assetTasks.filter(t => t.status === 'done' || t.status === 'completed').length;
+  const assetFailed = assetTasks.filter(t => t.status === 'failed' || t.status === 'error').length;
+  const processingCount = videoProcessing + assetProcessing;
+  const completedCount = videoCompleted + assetCompleted;
+  const failedCount = videoFailed + assetFailed;
 
   return (
     <div className="min-h-screen bg-background">
