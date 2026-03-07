@@ -425,14 +425,16 @@ export default function AdminSocialMediaPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="audience">Target Audience</Label>
-                <Input
+                <Label htmlFor="audience">Video Description</Label>
+                <Textarea
                   id="audience"
                   value={targetAudience}
                   onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="e.g., Young couples looking for creative gift ideas"
-                  data-testid="input-target-audience"
+                  placeholder="Describe what you want to see in the video. For example: Showcase how easy it is to create personalized birthday songs. Highlight the emotional reaction of receiving a custom song. Target young couples and parents looking for unique gift ideas. Use upbeat, warm energy."
+                  rows={3}
+                  data-testid="input-video-description"
                 />
+                <p className="text-xs text-muted-foreground">Describe your vision for the video — the audience, tone, key messages, and what you want to highlight.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
