@@ -226,6 +226,72 @@ export async function getVoices(): Promise<any[]> {
   return response.json();
 }
 
+export interface AssetGeneratorTask {
+  id: string;
+  model_name: string;
+  status: string;
+  failed_reason: string;
+  assets: Array<{
+    id: string;
+    type: string;
+    url: string;
+    thumbnail_url: string;
+    name: string;
+  }>;
+  input_params: Record<string, any>;
+  created_at?: string;
+}
+
+export async function createAssetGeneratorTask(
+  modelName: string,
+  inputParams: Record<string, any>
+): Promise<AssetGeneratorTask> {
+  console.log(`[Creatify] Creating asset generator task: ${modelName}`, JSON.stringify(inputParams, null, 2));
+
+  const response = await fetch(`${CREATIFY_BASE_URL}/asset_generator/`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      model_name: modelName,
+      input_params: inputParams,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Creatify] Asset generator error:', response.status, errorText);
+    throw new Error(`Creatify Asset Generator error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log(`[Creatify] Asset generator task created: ${data.id}`);
+  return data;
+}
+
+export async function getAssetGeneratorStatus(taskId: string): Promise<AssetGeneratorTask> {
+  const response = await fetch(`${CREATIFY_BASE_URL}/asset_generator/${taskId}/`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Creatify] Asset generator status error:', response.status, errorText);
+    throw new Error(`Creatify Asset Generator error: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
+
+export const TEXT_TO_VIDEO_MODELS = [
+  { value: 'kling-video/v3/pro/text-to-video', label: 'Kling V3 Pro' },
+  { value: 'kling-video/v3/standard/text-to-video', label: 'Kling V3 Standard' },
+  { value: 'veo3.1', label: 'Veo 3.1' },
+  { value: 'veo3.1/fast', label: 'Veo 3.1 Fast' },
+  { value: 'sora-2/text-to-video', label: 'Sora 2' },
+  { value: 'sora-2/text-to-video/pro', label: 'Sora 2 Pro' },
+] as const;
+
 export function isCreatifyConfigured(): boolean {
   return !!(CREATIFY_API_ID && CREATIFY_API_KEY);
 }

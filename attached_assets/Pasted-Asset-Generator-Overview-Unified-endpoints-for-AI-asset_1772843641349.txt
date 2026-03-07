@@ -1,0 +1,106 @@
+Asset Generator
+Overview
+Unified endpoints for AI assets generation (image, video) with discoverable input schemas.
+
+​
+🚀 Introduction
+The Asset Generator API provides a single interface to run image / video generations.
+First list available models and their input parameter schemas, then create a generation and poll or receive a webhook when it’s ready.
+​
+✅ Prerequisites
+A Creatify account with API access
+Your API credentials (see Authentication)
+​
+0) Supported Models & Pricing
+Supported Models and Pricing
+​
+1) Discover Models & Input Schemas
+Use this endpoint to list available models and the JSON schema for their input_params.
+Filter by model_name using a comma-separated list.
+Endpoint: GET /api/asset_generator/schemas/
+Query params: model_name (optional, comma-separated)
+
+Example Request
+
+Example Response
+curl --request GET \
+  --url "https://api.creatify.ai/api/asset_generator/schemas/" \
+  --header 'X-API-ID: your-api-id' \
+  --header 'X-API-KEY: your-api-key'
+Notes
+input_params_schema is a JSON Schema containing $schema, required, and properties; fields listed in required must be present, and all other entries in properties are optional when creating Asset Generator task.
+​
+2) Create a Generation Task
+Send model_name, input_params (must satisfy the schema from step 1), and optional webhook_url.
+Endpoint: POST /api/asset_generator/
+Body:
+model_name (string, required)
+input_params (json, required; must match schema)
+webhook_url (string URL, optional)
+
+Example Request (kling image-to-video)
+
+Example Response
+curl --request POST \
+  --url https://api.creatify.ai/api/asset_generator/ \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-ID: your-api-id' \
+  --header 'X-API-KEY: your-api-key' \
+  --data '{
+    "model_name": "kling-video/v1.6/pro/image-to-video",
+    "webhook_url": "https://webhook.site/8de4fa26-a1aa-4e83-8795-ede39bb99d78",
+    "input_params": {
+        "prompt": "A man working in the snow moutains with small image logo.",
+        "duration": "5",
+        "cfg_scale": 0.5,
+        "image_url": "https://d35ghwdno3nak3.cloudfront.net/media_file/18165/d91443bdd92c82ed5d5992e38f3ff9d3.jpg",
+        "aspect_ratio": "16:9",
+        "negative_prompt": "blur, distort, and low quality"
+    }
+}'
+​
+3) Check Status (Poll) or Receive Webhook
+You can poll the job until it’s done, or provide a webhook to be notified automatically. You can get the generated result from the assets field.
+Endpoint: GET /api/asset_generator/{id}/
+​
+Poll
+
+Example Request
+
+Example Response
+curl --request GET \
+  --url https://api.creatify.ai/api/asset_generator/1ea584a7-4930-4892-90a0-d7c74c6623dd/ \
+  --header 'X-API-ID: your-api-id' \
+  --header 'X-API-KEY: your-api-key'
+​
+Webhook (Optional)
+If you supplied a webhook_url when creating the job, we’ll POST a payload when it finishes. You can get the generated result from the assets field.
+{
+  "id": "1ea584a7-4930-4892-90a0-d7c74c6623dd",
+  "status": "done",
+  "failed_reason": "",
+  "assets": [
+    {
+      "id": "4238460a-bee5-4747-8be0-f267783f21fd",
+      "type": "video",
+      "url": "https://d35ghwdno3nak3.cloudfront.net/user/1/20251104/eb7e2f3e.mp4",
+      "thumbnail_url": "https://d35ghwdno3nak3.cloudfront.net/creative_assets/4238460a-bee5-4747-8be0-f267783f21fd/thumbnail.jpg",
+      "name": "Video-714bec31"
+    }
+  ]
+}
+You can verify the job any time with a GET to /api/asset_generator/{id}/.
+​
+📚 Endpoint Reference
+Action	Endpoint
+List models & input schemas	GET /api/asset_generator/schemas/
+Create a generation task	POST /api/asset_generator/
+Check task status / get result	GET /api/asset_generator/{id}/
+​
+🎯 Summary
+Step	What you do
+1	List models and get their input schema
+2	Create a generation with model_name + input_params (+ optional webhook_url)
+3	Poll /api/asset_generator/{id}/ or receive a webhook with the final result
+Get Custom Template Video by id
+Get Asset Generator Models and Schemas

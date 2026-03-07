@@ -228,6 +228,13 @@ Preferred communication style: Simple, everyday language.
   - Auto-polling for video generation status
   - Preview, render, play, download, and edit via Creatify editor
   - Video history with status tracking (Processing, Completed, Failed)
+  - **Text-to-Video (Asset Generator)**: Generate videos from text descriptions
+    - Uses Creatify Asset Generator API (`/api/asset_generator/`)
+    - Models: Kling V3 Pro/Standard, Veo 3.1/Fast, Sora 2/Pro
+    - Parameters: prompt, duration (5-10s), aspect ratio (16:9, 9:16, 1:1), negative prompt
+    - Auto-polling for generation status with result display
+    - Video preview and download in results section
+    - API routes: POST `/api/admin/creatify/asset-generator`, GET `/api/admin/creatify/asset-generator/:id`
 - Service file: `server/creatifyService.ts`
 - Frontend page: `client/src/pages/AdminSocialMediaPage.tsx`
 - API routes: `/api/admin/creatify/*` (all admin-protected)

@@ -129,6 +129,15 @@ function getStatusColor(status: string) {
   }
 }
 
+const TEXT_TO_VIDEO_MODELS = [
+  { value: 'kling-video/v3/pro/text-to-video', label: 'Kling V3 Pro' },
+  { value: 'kling-video/v3/standard/text-to-video', label: 'Kling V3 Standard' },
+  { value: 'veo3.1', label: 'Veo 3.1' },
+  { value: 'veo3.1/fast', label: 'Veo 3.1 Fast' },
+  { value: 'sora-2/text-to-video', label: 'Sora 2' },
+  { value: 'sora-2/text-to-video/pro', label: 'Sora 2 Pro' },
+];
+
 function getStatusIcon(status: string) {
   switch (status?.toLowerCase()) {
     case 'done':
@@ -174,7 +183,16 @@ export default function AdminSocialMediaPage() {
   const [noBackgroundMusic, setNoBackgroundMusic] = useState(false);
   const [noCaptions, setNoCaptions] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createMode, setCreateMode] = useState<'link' | 'text'>('text');
   const [pollingId, setPollingId] = useState<string | null>(null);
+
+  const [ttv_prompt, setTtvPrompt] = useState('');
+  const [ttv_model, setTtvModel] = useState('kling-video/v3/pro/text-to-video');
+  const [ttv_duration, setTtvDuration] = useState('5');
+  const [ttv_aspectRatio, setTtvAspectRatio] = useState('16:9');
+  const [ttv_negativePrompt, setTtvNegativePrompt] = useState('');
+  const [assetPollingId, setAssetPollingId] = useState<string | null>(null);
+  const [assetTasks, setAssetTasks] = useState<Array<{id: string; status: string; model: string; prompt: string; assets: any[]; failed_reason?: string}>>([]);
 
   useEffect(() => {
     if (!authLoading && !user?.isAdmin) {
@@ -201,6 +219,26 @@ export default function AdminSocialMediaPage() {
       }
     }
   }, [pollingId, videos, toast]);
+
+  useEffect(() => {
+    if (!assetPollingId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/admin/creatify/asset-generator/${assetPollingId}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const task = await res.json();
+        setAssetTasks(prev => prev.map(t => t.id === assetPollingId ? { ...t, status: task.status, assets: task.assets || [], failed_reason: task.failed_reason } : t));
+        if (task.status === 'done' || task.status === 'completed') {
+          setAssetPollingId(null);
+          toast({ title: "Video generated!", description: "Your text-to-video is ready to view and download." });
+        } else if (task.status === 'failed' || task.status === 'error') {
+          setAssetPollingId(null);
+          toast({ title: "Generation failed", description: task.failed_reason || "Something went wrong.", variant: "destructive" });
+        }
+      } catch (e) {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [assetPollingId, toast]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -233,6 +271,47 @@ export default function AdminSocialMediaPage() {
       toast({ title: "Error", description: error.message || "Failed to render video", variant: "destructive" });
     },
   });
+
+  const ttvMutation = useMutation({
+    mutationFn: async (data: { model_name: string; input_params: Record<string, any> }) => {
+      const res = await apiRequest('POST', '/api/admin/creatify/asset-generator', data);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({ title: "Video generation started", description: `Using ${ttv_model.split('/').slice(0, 2).join(' ')} — this may take a few minutes.` });
+      setAssetTasks(prev => [{ id: data.id, status: data.status || 'pending', model: ttv_model, prompt: ttv_prompt, assets: [] }, ...prev]);
+      setAssetPollingId(data.id);
+      setShowCreateForm(false);
+      setTtvPrompt('');
+      setTtvNegativePrompt('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to create video", variant: "destructive" });
+    },
+  });
+
+  function handleCreateTextToVideo() {
+    if (!ttv_prompt.trim()) {
+      toast({ title: "Description required", description: "Describe what you want to see in the video.", variant: "destructive" });
+      return;
+    }
+    const inputParams: Record<string, any> = {
+      prompt: ttv_prompt.trim(),
+      aspect_ratio: ttv_aspectRatio,
+    };
+    if (ttv_model.startsWith('kling')) {
+      inputParams.duration = ttv_duration;
+    } else if (ttv_model.startsWith('veo')) {
+      inputParams.duration = parseInt(ttv_duration);
+      inputParams.enhance_prompt = true;
+    } else if (ttv_model.startsWith('sora')) {
+      inputParams.duration = parseInt(ttv_duration);
+    }
+    if (ttv_negativePrompt.trim()) {
+      inputParams.negative_prompt = ttv_negativePrompt.trim();
+    }
+    ttvMutation.mutate({ model_name: ttv_model, input_params: inputParams });
+  }
 
   function resetForm() {
     setLink('');
@@ -378,196 +457,367 @@ export default function AdminSocialMediaPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                Create Social Media Video
+                Create Video
               </CardTitle>
-              <CardDescription>
-                Enter a URL from your site and Creatify will generate a promotional video with an AI avatar presenter.
-              </CardDescription>
+              <div className="flex items-center gap-2 pt-2">
+                <Button
+                  variant={createMode === 'text' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCreateMode('text')}
+                  data-testid="button-mode-text"
+                >
+                  <Film className="w-4 h-4 mr-1" />
+                  Text to Video
+                </Button>
+                <Button
+                  variant={createMode === 'link' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCreateMode('link')}
+                  data-testid="button-mode-link"
+                >
+                  <Globe className="w-4 h-4 mr-1" />
+                  Link to Video
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="link">Page URL *</Label>
-                <Input
-                  id="link"
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                  placeholder="https://heartbeatstudio.replit.app/features"
-                  data-testid="input-video-link"
-                />
-                <p className="text-xs text-muted-foreground">The URL Creatify will use to generate video content from</p>
-              </div>
+              {createMode === 'text' ? (
+                <>
+                  <p className="text-sm text-muted-foreground">Describe a scene and generate a short video clip using models like Kling, Veo, or Sora.</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Video Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Holiday Promo - Instagram Reel"
-                    data-testid="input-video-name"
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ttv-prompt">Video Description *</Label>
+                    <Textarea
+                      id="ttv-prompt"
+                      value={ttv_prompt}
+                      onChange={(e) => setTtvPrompt(e.target.value)}
+                      placeholder="A joyful family opening birthday presents in a cozy living room, warm golden lighting, cinematic style..."
+                      rows={4}
+                      data-testid="input-ttv-prompt"
+                    />
+                    <p className="text-xs text-muted-foreground">Be specific — describe setting, mood, camera movement, and style for best results.</p>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Target Platform</Label>
-                  <Select value={targetPlatform} onValueChange={setTargetPlatform}>
-                    <SelectTrigger data-testid="select-platform">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLATFORMS.map(p => (
-                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Model</Label>
+                      <Select value={ttv_model} onValueChange={setTtvModel}>
+                        <SelectTrigger data-testid="select-ttv-model">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TEXT_TO_VIDEO_MODELS.map(m => (
+                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="audience">Video Description</Label>
-                <Textarea
-                  id="audience"
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="Describe what you want to see in the video. For example: Showcase how easy it is to create personalized birthday songs. Highlight the emotional reaction of receiving a custom song. Target young couples and parents looking for unique gift ideas. Use upbeat, warm energy."
-                  rows={3}
-                  data-testid="input-video-description"
-                />
-                <p className="text-xs text-muted-foreground">Describe your vision for the video — the audience, tone, key messages, and what you want to highlight.</p>
-              </div>
+                    <div className="space-y-2">
+                      <Label>Duration (seconds)</Label>
+                      <Select value={ttv_duration} onValueChange={setTtvDuration}>
+                        <SelectTrigger data-testid="select-ttv-duration">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 seconds</SelectItem>
+                          <SelectItem value="10">10 seconds</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Language</Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger data-testid="select-language">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map(l => (
-                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label>Aspect Ratio</Label>
+                      <Select value={ttv_aspectRatio} onValueChange={setTtvAspectRatio}>
+                        <SelectTrigger data-testid="select-ttv-aspect">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                          <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                          <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Video Length (seconds)</Label>
-                  <Select value={videoLength} onValueChange={setVideoLength}>
-                    <SelectTrigger data-testid="select-video-length">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 seconds</SelectItem>
-                      <SelectItem value="30">30 seconds</SelectItem>
-                      <SelectItem value="45">45 seconds</SelectItem>
-                      <SelectItem value="60">60 seconds</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ttv-negative">Negative Prompt (optional)</Label>
+                    <Input
+                      id="ttv-negative"
+                      value={ttv_negativePrompt}
+                      onChange={(e) => setTtvNegativePrompt(e.target.value)}
+                      placeholder="blurry, low quality, distorted faces, text overlays..."
+                      data-testid="input-ttv-negative"
+                    />
+                    <p className="text-xs text-muted-foreground">Describe what you don't want to see in the video.</p>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Aspect Ratio</Label>
-                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                    <SelectTrigger data-testid="select-aspect-ratio">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ASPECT_RATIOS.map(a => (
-                        <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <Separator />
 
-                <div className="space-y-2">
-                  <Label>Script Style</Label>
-                  <Select value={scriptStyle} onValueChange={setScriptStyle}>
-                    <SelectTrigger data-testid="select-script-style">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCRIPT_STYLES.map(s => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Button
+                      onClick={handleCreateTextToVideo}
+                      disabled={ttvMutation.isPending || !ttv_prompt.trim()}
+                      data-testid="button-generate-ttv"
+                    >
+                      {ttvMutation.isPending ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                      ) : (
+                        <><Sparkles className="w-4 h-4 mr-2" />Generate Video</>
+                      )}
+                    </Button>
+                    <Button variant="outline" onClick={() => { setShowCreateForm(false); resetForm(); }} data-testid="button-cancel-ttv">
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Enter a URL from your site and Creatify will generate a promotional video with an AI avatar presenter.</p>
 
-              <div className="space-y-2">
-                <Label>Visual Style</Label>
-                <Select value={visualStyle} onValueChange={setVisualStyle}>
-                  <SelectTrigger data-testid="select-visual-style">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VISUAL_STYLES.map(v => (
-                      <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="link">Page URL *</Label>
+                    <Input
+                      id="link"
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      placeholder="https://heartbeatstudio.replit.app/features"
+                      data-testid="input-video-link"
+                    />
+                    <p className="text-xs text-muted-foreground">The URL Creatify will use to generate video content from</p>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="override-script">Custom Script (optional)</Label>
-                <Textarea
-                  id="override-script"
-                  value={overrideScript}
-                  onChange={(e) => setOverrideScript(e.target.value)}
-                  placeholder="Write your own script for the video. Leave empty to let Creatify auto-generate one from the URL content."
-                  rows={4}
-                  data-testid="input-override-script"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {overrideScript.trim().length > 0 && overrideScript.trim().length < 20
-                    ? `Script must be at least 20 characters (currently ${overrideScript.trim().length}). Otherwise leave empty for auto-generation.`
-                    : 'Leave empty to auto-generate from URL content. If provided, must be at least 20 characters.'}
-                </p>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Video Name</Label>
+                      <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g., Holiday Promo - Instagram Reel"
+                        data-testid="input-video-name"
+                      />
+                    </div>
 
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="no-music"
-                    checked={noBackgroundMusic}
-                    onCheckedChange={setNoBackgroundMusic}
-                    data-testid="switch-no-music"
-                  />
-                  <Label htmlFor="no-music" className="cursor-pointer">No background music</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="no-captions"
-                    checked={noCaptions}
-                    onCheckedChange={setNoCaptions}
-                    data-testid="switch-no-captions"
-                  />
-                  <Label htmlFor="no-captions" className="cursor-pointer">No captions</Label>
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label>Target Platform</Label>
+                      <Select value={targetPlatform} onValueChange={setTargetPlatform}>
+                        <SelectTrigger data-testid="select-platform">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PLATFORMS.map(p => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-              <Separator />
+                  <div className="space-y-2">
+                    <Label htmlFor="audience">Video Description</Label>
+                    <Textarea
+                      id="audience"
+                      value={targetAudience}
+                      onChange={(e) => setTargetAudience(e.target.value)}
+                      placeholder="Describe what you want to see in the video. For example: Showcase how easy it is to create personalized birthday songs. Highlight the emotional reaction of receiving a custom song. Target young couples and parents looking for unique gift ideas. Use upbeat, warm energy."
+                      rows={3}
+                      data-testid="input-video-description"
+                    />
+                    <p className="text-xs text-muted-foreground">Describe your vision for the video — the audience, tone, key messages, and what you want to highlight.</p>
+                  </div>
 
-              <div className="flex items-center gap-3 flex-wrap">
-                <Button
-                  onClick={handleCreate}
-                  disabled={createMutation.isPending || !link.trim()}
-                  data-testid="button-create-video"
-                >
-                  {createMutation.isPending ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>
-                  ) : (
-                    <><Video className="w-4 h-4 mr-2" />Create Video</>
-                  )}
-                </Button>
-                <Button variant="outline" onClick={() => { setShowCreateForm(false); resetForm(); }} data-testid="button-cancel-create">
-                  Cancel
-                </Button>
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label>Language</Label>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger data-testid="select-language">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LANGUAGES.map(l => (
+                            <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Video Length (seconds)</Label>
+                      <Select value={videoLength} onValueChange={setVideoLength}>
+                        <SelectTrigger data-testid="select-video-length">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="15">15 seconds</SelectItem>
+                          <SelectItem value="30">30 seconds</SelectItem>
+                          <SelectItem value="45">45 seconds</SelectItem>
+                          <SelectItem value="60">60 seconds</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Aspect Ratio</Label>
+                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                        <SelectTrigger data-testid="select-aspect-ratio">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ASPECT_RATIOS.map(a => (
+                            <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Script Style</Label>
+                      <Select value={scriptStyle} onValueChange={setScriptStyle}>
+                        <SelectTrigger data-testid="select-script-style">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SCRIPT_STYLES.map(s => (
+                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Visual Style</Label>
+                    <Select value={visualStyle} onValueChange={setVisualStyle}>
+                      <SelectTrigger data-testid="select-visual-style">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISUAL_STYLES.map(v => (
+                          <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="override-script">Custom Script (optional)</Label>
+                    <Textarea
+                      id="override-script"
+                      value={overrideScript}
+                      onChange={(e) => setOverrideScript(e.target.value)}
+                      placeholder="Write your own script for the video. Leave empty to let Creatify auto-generate one from the URL content."
+                      rows={4}
+                      data-testid="input-override-script"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {overrideScript.trim().length > 0 && overrideScript.trim().length < 20
+                        ? `Script must be at least 20 characters (currently ${overrideScript.trim().length}). Otherwise leave empty for auto-generation.`
+                        : 'Leave empty to auto-generate from URL content. If provided, must be at least 20 characters.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-6 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="no-music"
+                        checked={noBackgroundMusic}
+                        onCheckedChange={setNoBackgroundMusic}
+                        data-testid="switch-no-music"
+                      />
+                      <Label htmlFor="no-music" className="cursor-pointer">No background music</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="no-captions"
+                        checked={noCaptions}
+                        onCheckedChange={setNoCaptions}
+                        data-testid="switch-no-captions"
+                      />
+                      <Label htmlFor="no-captions" className="cursor-pointer">No captions</Label>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Button
+                      onClick={handleCreate}
+                      disabled={createMutation.isPending || !link.trim()}
+                      data-testid="button-create-video"
+                    >
+                      {createMutation.isPending ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>
+                      ) : (
+                        <><Video className="w-4 h-4 mr-2" />Create Video</>
+                      )}
+                    </Button>
+                    <Button variant="outline" onClick={() => { setShowCreateForm(false); resetForm(); }} data-testid="button-cancel-create">
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
+        )}
+
+        {assetTasks.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2" data-testid="text-ttv-history-title">
+              <Sparkles className="w-5 h-5" />
+              Text-to-Video Results
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assetTasks.map((task) => (
+                <Card key={task.id} data-testid={`card-ttv-task-${task.id}`}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-sm font-medium truncate" data-testid={`text-ttv-model-${task.id}`}>
+                        {TEXT_TO_VIDEO_MODELS.find(m => m.value === task.model)?.label || task.model}
+                      </span>
+                      <Badge variant={getStatusColor(task.status)}>
+                        {getStatusIcon(task.status)}
+                        <span className="ml-1">{task.status}</span>
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2" data-testid={`text-ttv-prompt-${task.id}`}>{task.prompt}</p>
+                    {task.status === 'pending' || task.status === 'processing' || task.status === 'in_progress' ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating video...
+                      </div>
+                    ) : null}
+                    {task.failed_reason && (
+                      <p className="text-xs text-destructive" data-testid={`text-ttv-error-${task.id}`}>{task.failed_reason}</p>
+                    )}
+                    {task.assets && task.assets.length > 0 && task.assets.map((asset: any) => (
+                      <div key={asset.id || asset.url} className="space-y-2">
+                        {asset.type === 'video' && asset.url && (
+                          <video controls className="w-full rounded-md" data-testid={`video-ttv-${task.id}`}>
+                            <source src={asset.url} type="video/mp4" />
+                          </video>
+                        )}
+                        {asset.url && (
+                          <a
+                            href={asset.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                            data-testid={`link-ttv-download-${task.id}`}
+                          >
+                            <Download className="w-3 h-3" />
+                            Download
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
 
         <div className="space-y-4">

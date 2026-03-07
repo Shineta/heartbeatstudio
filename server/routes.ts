@@ -3897,6 +3897,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/creatify/asset-generator', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { createAssetGeneratorTask } = await import('./creatifyService');
+      const { model_name, input_params } = req.body;
+      if (!model_name || !input_params) {
+        return res.status(400).json({ message: 'model_name and input_params are required' });
+      }
+      const task = await createAssetGeneratorTask(model_name, input_params);
+      res.json(task);
+    } catch (error: any) {
+      console.error('Error creating asset generator task:', error);
+      res.status(500).json({ message: error.message || 'Failed to create asset generator task' });
+    }
+  });
+
+  app.get('/api/admin/creatify/asset-generator/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { getAssetGeneratorStatus } = await import('./creatifyService');
+      const task = await getAssetGeneratorStatus(req.params.id);
+      res.json(task);
+    } catch (error: any) {
+      console.error('Error fetching asset generator status:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch task status' });
+    }
+  });
+
   app.get('/api/admin/creatify/voices', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
       const { getVoices } = await import('./creatifyService');
