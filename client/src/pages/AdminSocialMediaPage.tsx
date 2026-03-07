@@ -520,13 +520,19 @@ export default function AdminSocialMediaPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="3">3 seconds</SelectItem>
+                          <SelectItem value="4">4 seconds</SelectItem>
                           <SelectItem value="5">5 seconds</SelectItem>
+                          <SelectItem value="6">6 seconds</SelectItem>
+                          <SelectItem value="7">7 seconds</SelectItem>
+                          <SelectItem value="8">8 seconds</SelectItem>
+                          <SelectItem value="9">9 seconds</SelectItem>
                           <SelectItem value="10">10 seconds</SelectItem>
+                          <SelectItem value="11">11 seconds</SelectItem>
+                          <SelectItem value="12">12 seconds</SelectItem>
+                          <SelectItem value="13">13 seconds</SelectItem>
+                          <SelectItem value="14">14 seconds</SelectItem>
                           <SelectItem value="15">15 seconds</SelectItem>
-                          <SelectItem value="20">20 seconds</SelectItem>
-                          <SelectItem value="30">30 seconds</SelectItem>
-                          <SelectItem value="45">45 seconds</SelectItem>
-                          <SelectItem value="60">60 seconds</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
