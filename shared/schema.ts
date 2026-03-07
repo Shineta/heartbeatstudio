@@ -168,6 +168,28 @@ export const insertScheduledDeliverySchema = createInsertSchema(scheduledDeliver
 export type InsertScheduledDelivery = z.infer<typeof insertScheduledDeliverySchema>;
 export type ScheduledDelivery = typeof scheduledDeliveries.$inferSelect;
 
+// Asset generator tasks (text-to-video via Creatify)
+export const assetTasks = pgTable("asset_tasks", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  modelName: varchar("model_name").notNull(),
+  status: varchar("status").notNull().default('pending'),
+  prompt: text("prompt"),
+  inputParams: jsonb("input_params"),
+  assets: jsonb("assets"),
+  failedReason: text("failed_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAssetTaskSchema = createInsertSchema(assetTasks).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAssetTask = z.infer<typeof insertAssetTaskSchema>;
+export type AssetTask = typeof assetTasks.$inferSelect;
+
 // Song previews for "Try it now" feature (guest users)
 export const songPreviews = pgTable("song_previews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

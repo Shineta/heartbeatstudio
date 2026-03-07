@@ -3932,15 +3932,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/creatify/asset-tasks', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const tasks = await storage.getAssetTasksByUserId(userId);
+      res.json(tasks);
+    } catch (error: any) {
+      console.error('Error fetching asset tasks:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch asset tasks' });
+    }
+  });
+
   app.post('/api/admin/creatify/asset-generator', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
       const { createAssetGeneratorTask } = await import('./creatifyService');
+      const userId = (req.user as any).id;
       const { model_name, input_params } = req.body;
       if (!model_name || !input_params) {
         return res.status(400).json({ message: 'model_name and input_params are required' });
       }
-      const task = await createAssetGeneratorTask(model_name, input_params);
-      res.json(task);
+      const creatifyTask = await createAssetGeneratorTask(model_name, input_params);
+      
+      await storage.createAssetTask({
+        id: creatifyTask.id,
+        userId,
+        modelName: model_name,
+        status: creatifyTask.status || 'pending',
+        prompt: input_params.prompt || '',
+        inputParams: input_params,
+        assets: creatifyTask.assets || [],
+        failedReason: creatifyTask.failed_reason || null,
+      });
+      
+      res.json(creatifyTask);
     } catch (error: any) {
       console.error('Error creating asset generator task:', error);
       res.status(500).json({ message: error.message || 'Failed to create asset generator task' });
@@ -3951,6 +3975,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { getAssetGeneratorStatus } = await import('./creatifyService');
       const task = await getAssetGeneratorStatus(req.params.id);
+      
+      await storage.updateAssetTask(req.params.id, {
+        status: task.status,
+        assets: task.assets || [],
+        failedReason: task.failed_reason || null,
+      });
+      
       res.json(task);
     } catch (error: any) {
       console.error('Error fetching asset generator status:', error);

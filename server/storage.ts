@@ -7,6 +7,7 @@ import {
   mixtapes,
   scheduledDeliveries,
   songPreviews,
+  assetTasks,
   type User,
   type UpsertUser,
   type LovedOne,
@@ -21,6 +22,8 @@ import {
   type InsertScheduledDelivery,
   type SongPreview,
   type InsertSongPreview,
+  type AssetTask,
+  type InsertAssetTask,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, lte } from "drizzle-orm";
@@ -79,6 +82,12 @@ export interface IStorage {
   getSongPreviewsByUserId(userId: string): Promise<SongPreview[]>;
   claimSongPreview(previewId: string, userId: string): Promise<SongPreview | undefined>;
   deleteSongPreview(previewId: string): Promise<void>;
+
+  // Asset task operations (text-to-video)
+  createAssetTask(task: InsertAssetTask): Promise<AssetTask>;
+  getAssetTaskById(id: string): Promise<AssetTask | undefined>;
+  getAssetTasksByUserId(userId: string): Promise<AssetTask[]>;
+  updateAssetTask(id: string, task: Partial<InsertAssetTask>): Promise<AssetTask | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -400,6 +409,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSongPreview(previewId: string): Promise<void> {
     await db.delete(songPreviews).where(eq(songPreviews.id, previewId));
+  }
+
+  async createAssetTask(task: InsertAssetTask): Promise<AssetTask> {
+    const [created] = await db.insert(assetTasks).values(task).returning();
+    return created;
+  }
+
+  async getAssetTaskById(id: string): Promise<AssetTask | undefined> {
+    const [task] = await db.select().from(assetTasks).where(eq(assetTasks.id, id));
+    return task;
+  }
+
+  async getAssetTasksByUserId(userId: string): Promise<AssetTask[]> {
+    return db.select().from(assetTasks).where(eq(assetTasks.userId, userId)).orderBy(desc(assetTasks.createdAt));
+  }
+
+  async updateAssetTask(id: string, task: Partial<InsertAssetTask>): Promise<AssetTask | undefined> {
+    const [updated] = await db.update(assetTasks).set({ ...task, updatedAt: new Date() }).where(eq(assetTasks.id, id)).returning();
+    return updated;
   }
 }
 

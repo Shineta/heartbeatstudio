@@ -192,13 +192,39 @@ export default function AdminSocialMediaPage() {
   const [ttv_aspectRatio, setTtvAspectRatio] = useState('16:9');
   const [ttv_negativePrompt, setTtvNegativePrompt] = useState('');
   const [assetPollingId, setAssetPollingId] = useState<string | null>(null);
-  const [assetTasks, setAssetTasks] = useState<Array<{id: string; status: string; model: string; prompt: string; assets: any[]; failed_reason?: string}>>([]);
 
   useEffect(() => {
     if (!authLoading && !user?.isAdmin) {
       setLocation('/dashboard');
     }
   }, [authLoading, user?.isAdmin, setLocation]);
+
+  interface AssetTaskDB {
+    id: string;
+    userId: string;
+    modelName: string;
+    status: string;
+    prompt: string;
+    inputParams: Record<string, any>;
+    assets: any[];
+    failedReason: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  const { data: assetTasksData = [] } = useQuery<AssetTaskDB[]>({
+    queryKey: ['/api/admin/creatify/asset-tasks'],
+    enabled: !!user?.isAdmin,
+  });
+
+  const assetTasks = assetTasksData.map(t => ({
+    id: t.id,
+    status: t.status,
+    model: t.modelName,
+    prompt: t.prompt || '',
+    assets: (t.assets as any[]) || [],
+    failed_reason: t.failedReason || undefined,
+  }));
 
   const { data: videos, isLoading: videosLoading, refetch: refetchVideos } = useQuery<CreatifyVideo[]>({
     queryKey: ['/api/admin/creatify/videos'],
@@ -227,7 +253,7 @@ export default function AdminSocialMediaPage() {
         const res = await fetch(`/api/admin/creatify/asset-generator/${assetPollingId}`, { credentials: 'include' });
         if (!res.ok) return;
         const task = await res.json();
-        setAssetTasks(prev => prev.map(t => t.id === assetPollingId ? { ...t, status: task.status, assets: task.assets || [], failed_reason: task.failed_reason } : t));
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/creatify/asset-tasks'] });
         if (task.status === 'done' || task.status === 'completed') {
           setAssetPollingId(null);
           toast({ title: "Video generated!", description: "Your text-to-video is ready to view and download." });
@@ -279,7 +305,7 @@ export default function AdminSocialMediaPage() {
     },
     onSuccess: (data: any) => {
       toast({ title: "Video generation started", description: `Using ${ttv_model.split('/').slice(0, 2).join(' ')} — this may take a few minutes.` });
-      setAssetTasks(prev => [{ id: data.id, status: data.status || 'pending', model: ttv_model, prompt: ttv_prompt, assets: [] }, ...prev]);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/creatify/asset-tasks'] });
       setAssetPollingId(data.id);
       setShowCreateForm(false);
       setTtvPrompt('');
