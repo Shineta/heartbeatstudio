@@ -1,0 +1,130 @@
+You are working in the Heartbeat Studio codebase on branch hotfix/p0-launch-flow-fixes.
+
+Fix the following confirmed bugs. Root causes are already identified — implement the smallest safe fix for each.
+
+---
+
+ISSUE #2 — Landing page CTAs do nothing
+
+File: client/src/components/HeroSection.tsx
+
+Root cause:
+Both buttons have onClick={() => console.log(...)} placeholder handlers. Also the "Heartbeat Studio by Horton's Tech Innovations" badge in the hero looks like a clickable button but isn't needed since Navigation already shows the logo.
+
+Fix:
+- Import useLocation from wouter and add const [, setLocation] = useLocation()
+- "Start Creating Free" → setLocation('/auth')
+- "See How It Works" → document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
+- Verify an element with id="how-it-works" exists. If not, add id="how-it-works" to the root wrapper of the How It Works section.
+- Remove the brand badge div in HeroSection, specifically the rounded-full bordered div wrapping the Heart icon + "Heartbeat Studio by Horton's Tech Innovations".
+
+File: client/src/components/PricingSection.tsx
+
+Root cause:
+"Not Sure What to Choose" cards use "→ Credits", "→ Special Experience", etc. which look like links.
+
+Fix:
+Replace each arrow label with a non-clickable pill badge using this pattern:
+
+<span className="inline-block mt-1 text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">Credits</span>
+
+Use the same pattern for each label.
+
+---
+
+ISSUE #3 — Footer overlap
+
+Investigate the footer and bottom nav overlap Aitya reported. Identify the CSS/layout cause and apply the minimal spacing fix.
+
+Likely desired fix:
+- Add enough bottom padding/margin to the page/footer wrapper on mobile so fixed bottom navigation does not cover the footer.
+- Do not redesign the footer.
+- Do not remove the bottom nav.
+
+---
+
+ISSUES #18 #19 #21 #28 — Auth redirect sends users to dashboard instead of intended destination
+
+File: client/src/pages/AuthPage.tsx
+
+Root cause:
+Two places say window.location.href = '/dashboard' after login — hardcoded, ignoring where the user came from.
+
+Fix:
+Replace both hardcoded dashboard redirects with a helper.
+
+Use a safe redirect helper that only allows relative in-app paths:
+
+const getRedirectTarget = (): string => {
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get('returnTo');
+
+  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') && returnTo !== '/auth') {
+    return returnTo;
+  }
+
+  return '/dashboard';
+};
+
+Then use:
+
+window.location.href = getRedirectTarget();
+
+in both places:
+- the isAuthenticated useEffect
+- the loginSuccess useEffect
+
+Also search the codebase for links/buttons/routes that send logged-out users to /auth from specific experiences such as Birthday Blast, Gospel Greeting, Sung Prayer, and Classroom Cheers.
+
+If those CTAs currently route to /auth directly, update them to include a returnTo query parameter, for example:
+
+/auth?returnTo=/birthday-blast
+
+Use encodeURIComponent if constructing dynamically:
+
+setLocation(`/auth?returnTo=${encodeURIComponent(targetPath)}`)
+
+Do not change unrelated auth behavior.
+
+---
+
+ISSUE #55 — "No Image" card creation fails
+
+Investigate why submitting a greeting card with "No Image" as the cover source fails.
+
+Find the API call, schema validation, or backend handler that's rejecting it and apply the minimal fix.
+
+Expected behavior:
+- If the user selects "No Image", the card should save successfully without a cover image.
+- Do not send invalid empty image fields if the backend expects null/undefined.
+- Do not require an uploaded/generated image when cover source is "No Image".
+
+---
+
+ISSUE #58 — Card creation with attached song fails
+
+Investigate why attaching an existing song to a greeting card causes creation to fail.
+
+Check:
+- What payload the frontend form sends
+- What field name/type the backend expects
+- Whether the backend expects songId, attachedSongId, selectedSongId, or a relation record
+- Whether the shared-card/detail page expects a different field for playback
+
+Fix the smallest frontend/backend mismatch.
+
+Expected behavior:
+- A user can select a previously generated song while creating a card.
+- The card saves successfully.
+- The card detail/share view can play the attached song.
+
+---
+
+Rules:
+- Do not call paid AI generation APIs: Suno, OpenAI, NanoBanana, or image/video generation APIs during investigation.
+- Do not refactor unrelated code.
+- Do not rewrite routing or auth broadly.
+- Keep diffs minimal and reversible.
+- After each fix, briefly state what changed and why.
+- Run npm run check and report any TypeScript errors.
+- If npm run check fails because of pre-existing unrelated errors, identify which are unrelated and do not chase unrelated cleanup.
