@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AttachedSong {
   id: string;
   title: string;
-  mediaUrl: string;
+  mediaUrl: string | null | undefined;
 }
 
 interface AttachedAnimation {
@@ -121,10 +121,7 @@ export default function SharePage() {
         
         // If this is a card or animation with attached songs, use the first one
         if ((data.type === 'card' || data.type === 'animation') && data.attachedSongs && data.attachedSongs.length > 0) {
-          const firstSong = data.attachedSongs[0];
-          if (firstSong.mediaUrl) {
-            setAttachedSong(firstSong);
-          }
+          setAttachedSong(data.attachedSongs[0]);
         }
         
         // If this is a card with an attached animation, set it
@@ -303,28 +300,36 @@ export default function SharePage() {
                     <h3 className="font-semibold text-lg">A Song For You</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">{attachedSong.title}</p>
-                  {!cardSongStarted && (
-                    <div className="flex justify-center py-4">
-                      <Button 
-                        size="lg" 
-                        onClick={handlePlayCardSong}
-                        className="h-16 px-10 text-lg gap-3 animate-pulse"
-                        data-testid="button-play-animation-song"
+                  {attachedSong.mediaUrl ? (
+                    <>
+                      {!cardSongStarted && (
+                        <div className="flex justify-center py-4">
+                          <Button 
+                            size="lg" 
+                            onClick={handlePlayCardSong}
+                            className="h-16 px-10 text-lg gap-3 animate-pulse"
+                            data-testid="button-play-animation-song"
+                          >
+                            <Play className="w-6 h-6" />
+                            Play Song
+                          </Button>
+                        </div>
+                      )}
+                      <audio 
+                        ref={cardAudioRef}
+                        controls 
+                        className="w-full"
+                        data-testid="animation-audio-player"
                       >
-                        <Play className="w-6 h-6" />
-                        Play Song
-                      </Button>
-                    </div>
+                        <source src={attachedSong.mediaUrl} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic" data-testid="animation-song-processing">
+                      Song is still being processed — check back soon.
+                    </p>
                   )}
-                  <audio 
-                    ref={cardAudioRef}
-                    controls 
-                    className="w-full"
-                    data-testid="animation-audio-player"
-                  >
-                    <source src={attachedSong.mediaUrl} type="audio/mpeg" />
-                    Your browser does not support the audio element.
-                  </audio>
                 </div>
               )}
 
@@ -336,28 +341,36 @@ export default function SharePage() {
                     <h3 className="font-semibold text-lg">A Song For You</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">{attachedSong.title}</p>
-                  {!cardSongStarted && (
-                    <div className="flex justify-center py-4">
-                      <Button 
-                        size="lg" 
-                        onClick={handlePlayCardSong}
-                        className="h-16 px-10 text-lg gap-3 animate-pulse"
-                        data-testid="button-play-card-song"
+                  {attachedSong.mediaUrl ? (
+                    <>
+                      {!cardSongStarted && (
+                        <div className="flex justify-center py-4">
+                          <Button 
+                            size="lg" 
+                            onClick={handlePlayCardSong}
+                            className="h-16 px-10 text-lg gap-3 animate-pulse"
+                            data-testid="button-play-card-song"
+                          >
+                            <Play className="w-6 h-6" />
+                            Play Song
+                          </Button>
+                        </div>
+                      )}
+                      <audio 
+                        ref={cardAudioRef}
+                        controls 
+                        className="w-full"
+                        data-testid="card-audio-player"
                       >
-                        <Play className="w-6 h-6" />
-                        Play Song
-                      </Button>
-                    </div>
+                        <source src={attachedSong.mediaUrl} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic" data-testid="card-song-processing">
+                      Song is still being processed — check back soon.
+                    </p>
                   )}
-                  <audio 
-                    ref={cardAudioRef}
-                    controls 
-                    className="w-full"
-                    data-testid="card-audio-player"
-                  >
-                    <source src={attachedSong.mediaUrl} type="audio/mpeg" />
-                    Your browser does not support the audio element.
-                  </audio>
                 </div>
               )}
 

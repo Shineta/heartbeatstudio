@@ -603,9 +603,15 @@ export default function CreatePage() {
         }, 500);
         return;
       }
+      let description = "Failed to create card. Please try again.";
+      try {
+        const jsonPart = error.message.replace(/^\d+:\s*/, "");
+        const parsed = JSON.parse(jsonPart);
+        if (parsed?.message) description = parsed.message;
+      } catch { /* use default */ }
       toast({
         title: "Error",
-        description: "Failed to create card. Please try again.",
+        description,
         variant: "destructive",
       });
     },
