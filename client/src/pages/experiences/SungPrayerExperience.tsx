@@ -42,7 +42,7 @@ export default function SungPrayerExperience() {
         title: "Sign in required",
         description: "Please sign in to create a Sung Prayer.",
       });
-      setLocation('/auth');
+      setLocation('/auth?returnTo=/experience/sung-prayer');
       return;
     }
 
@@ -65,7 +65,7 @@ export default function SungPrayerExperience() {
         title: "Sign in required",
         description: "Please sign in to purchase this experience.",
       });
-      setLocation('/auth');
+      setLocation('/auth?returnTo=/experience/sung-prayer');
       return;
     }
 

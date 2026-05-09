@@ -563,7 +563,7 @@ export default function PricingSection() {
                 </div>
                 <div>
                   <p className="font-medium">"I want to customize everything"</p>
-                  <p className="text-sm text-muted-foreground">→ Credits</p>
+                  <span className="inline-block mt-1 text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">Credits</span>
                 </div>
               </div>
             </Card>
@@ -575,7 +575,7 @@ export default function PricingSection() {
                 </div>
                 <div>
                   <p className="font-medium">"I'm short on time"</p>
-                  <p className="text-sm text-muted-foreground">→ Special Experience</p>
+                  <span className="inline-block mt-1 text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">Special Experience</span>
                 </div>
               </div>
             </Card>
@@ -587,7 +587,7 @@ export default function PricingSection() {
                 </div>
                 <div>
                   <p className="font-medium">"I want this to feel special"</p>
-                  <p className="text-sm text-muted-foreground">→ Special Experience</p>
+                  <span className="inline-block mt-1 text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">Special Experience</span>
                 </div>
               </div>
             </Card>
@@ -599,7 +599,7 @@ export default function PricingSection() {
                 </div>
                 <div>
                   <p className="font-medium">"I'll use this often"</p>
-                  <p className="text-sm text-muted-foreground">→ Subscription</p>
+                  <span className="inline-block mt-1 text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">Subscription</span>
                 </div>
               </div>
             </Card>

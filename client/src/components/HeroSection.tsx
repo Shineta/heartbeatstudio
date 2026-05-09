@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { useLocation } from "wouter";
 import heroImage from "@assets/generated_images/african_american_multi-occasion_celebration.png";
 
 export default function HeroSection() {
+  const [, setLocation] = useLocation();
+
   return (
     <section className="relative w-full overflow-hidden">
       <div 
@@ -13,16 +16,6 @@ export default function HeroSection() {
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 md:py-32 text-center">
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex flex-col items-center gap-1 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-6 py-3">
-            <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground heartbeat" />
-              <span className="text-sm font-semibold text-primary-foreground">Heartbeat Studio</span>
-            </div>
-            <span className="text-xs text-primary-foreground/80">by Horton's Tech Innovations</span>
-          </div>
-        </div>
-        
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ fontFamily: 'Fredoka, sans-serif' }}>
           Create magic for the<br />people you love—instantly.
         </h1>
@@ -36,7 +29,7 @@ export default function HeroSection() {
             size="lg" 
             className="text-base px-8 rounded-full"
             data-testid="button-start-creating"
-            onClick={() => console.log('Start creating clicked')}
+            onClick={() => setLocation('/auth')}
           >
             <Sparkles className="w-5 h-5 mr-2" />
             Start Creating Free
@@ -46,7 +39,7 @@ export default function HeroSection() {
             variant="outline" 
             className="text-base px-8 rounded-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20"
             data-testid="button-see-how-it-works"
-            onClick={() => console.log('See how it works clicked')}
+            onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
           >
             See How It Works
           </Button>

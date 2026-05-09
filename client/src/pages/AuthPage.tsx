@@ -38,6 +38,15 @@ type RegisterForm = z.infer<typeof registerSchema>;
 type LoginForm = z.infer<typeof loginSchema>;
 type MagicLinkForm = z.infer<typeof magicLinkSchema>;
 
+const getRedirectTarget = (): string => {
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get('returnTo');
+  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') && returnTo !== '/auth') {
+    return returnTo;
+  }
+  return '/dashboard';
+};
+
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register' | 'magic'>('login');
   const [loginSuccess, setLoginSuccess] = useState(false);
@@ -46,11 +55,11 @@ export default function AuthPage() {
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Redirect to dashboard when user becomes authenticated
+  // Redirect to intended destination when user becomes authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      console.log('[AuthPage] User is authenticated, redirecting to dashboard');
-      window.location.href = '/dashboard';
+      console.log('[AuthPage] User is authenticated, redirecting');
+      window.location.href = getRedirectTarget();
     }
   }, [isAuthenticated, isLoading]);
 
@@ -59,7 +68,7 @@ export default function AuthPage() {
     if (loginSuccess) {
       console.log('[AuthPage] Login success state detected, forcing redirect');
       const timer = setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = getRedirectTarget();
       }, 500);
       return () => clearTimeout(timer);
     }

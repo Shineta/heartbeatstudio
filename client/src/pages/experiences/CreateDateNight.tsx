@@ -94,7 +94,7 @@ export default function CreateDateNight() {
   };
 
   if (!isAuthenticated) {
-    setLocation('/auth');
+    setLocation('/auth?returnTo=/experience/date-night/create');
     return null;
   }
 

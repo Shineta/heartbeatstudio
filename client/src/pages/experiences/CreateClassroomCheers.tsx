@@ -89,7 +89,7 @@ export default function CreateClassroomCheers() {
   };
 
   if (!isAuthenticated) {
-    setLocation('/auth');
+    setLocation('/auth?returnTo=/experience/classroom-cheers/create');
     return null;
   }
 

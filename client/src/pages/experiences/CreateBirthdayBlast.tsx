@@ -96,7 +96,7 @@ export default function CreateBirthdayBlast() {
   };
 
   if (!isAuthenticated) {
-    setLocation('/auth');
+    setLocation('/auth?returnTo=/experience/birthday-blast/create');
     return null;
   }
 

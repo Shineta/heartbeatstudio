@@ -181,7 +181,7 @@ export default function CreateSungPrayer() {
   };
 
   if (!isAuthenticated) {
-    setLocation('/auth');
+    setLocation('/auth?returnTo=/experience/sung-prayer/create');
     return null;
   }
 

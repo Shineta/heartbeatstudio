@@ -35,7 +35,7 @@ export default function ClassroomCheersExperience() {
         title: "Sign in required",
         description: "Please sign in to purchase this experience.",
       });
-      setLocation('/auth');
+      setLocation('/auth?returnTo=/experience/classroom-cheers');
       return;
     }
 

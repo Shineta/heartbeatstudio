@@ -200,7 +200,7 @@ export default function CreateGospelGreeting() {
   };
 
   if (!isAuthenticated) {
-    setLocation('/auth');
+    setLocation('/auth?returnTo=/experience/gospel-greeting/create');
     return null;
   }
 

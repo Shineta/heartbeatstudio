@@ -35,7 +35,7 @@ export default function GospelGreetingExperience() {
         title: "Sign in required",
         description: "Please sign in to purchase this experience.",
       });
-      setLocation('/auth');
+      setLocation('/auth?returnTo=/experience/gospel-greeting');
       return;
     }
 
