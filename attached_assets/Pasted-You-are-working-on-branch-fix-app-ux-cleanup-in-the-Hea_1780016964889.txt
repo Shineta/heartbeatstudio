@@ -1,0 +1,56 @@
+You are working on branch fix/app-ux-cleanup in the Heartbeat Studio codebase.
+Fix these four issues in order. Keep each change minimal.
+
+---
+ISSUE #11 — Dashboard song cards missing expand lyrics, Try Again, Change Genre
+
+File: client/src/pages/RealDashboard.tsx
+These features were never added to the Replit version of the dashboard.
+
+Fix:
+1. Add state: const [expandedLyrics, setExpandedLyrics] = useState<Set<string>>(new Set())
+2. For song cards, replace <p className="line-clamp-3"> with a togglable version:
+   when expandedLyrics.has(creation.id) remove line-clamp-3. Add "See full lyrics" /
+   "Show less" button below lyrics. Only show when creation.content length > 120 chars.
+3. In the song card action buttons, add for songs only:
+   - "Try Again" → onClick: window.location.href = '/create?type=song'
+   - "Change Genre" → onClick: window.location.href = `/create?type=song&genre=change&from=${creation.id}`
+
+---
+ISSUE #68 — Zero credits shows generic error inside experience pages
+
+In ALL experience create pages (CreateGospelGreeting, CreateBirthdayBlast,
+CreateSungPrayer, CreateClassroomCheers, CreateDateNight), the POST /api/creations
+endpoint returns HTTP 403 with { creditRequired: true } when user has 0 credits.
+Pages show generic error instead of a helpful message.
+
+Fix: In each experience page's mutation onError handler, check if response status
+is 403 and body contains creditRequired: true. If so show:
+"You need credits to create this. Go to Pricing to get more." with a link to /pricing.
+Otherwise fall back to the generic error.
+Do not touch credit deduction or backend logic.
+
+---
+ISSUE #9 (birthday NaN only) — Birthday displays NaN instead of actual day
+
+File: client/src/pages/RealDashboard.tsx
+Root cause: parseInt(month) - 1 with no guard. If birthday is empty/undefined/malformed,
+parseInt returns NaN.
+
+Fix: Add guard before parseInt. If birthday is falsy or lacks '-', return 'Birthday not set'.
+If parseInt of either part is NaN, return 'Invalid date'.
+
+---
+ISSUE #71 — Admin user search causes page reload/crash
+
+File: client/src/pages/AdminPage.tsx (or whichever admin component has user search)
+Aitya: "As I was typing in the name, the search interaction ended. Had to reload page
+to get back. Tested 3 times. Failed."
+
+Investigate first: find the user search input handler. Is there an unhandled exception
+on keystroke? Is there a form submission being triggered on input? Is there a navigation
+side effect? Report what you find, then apply the smallest fix.
+
+---
+After all fixes: run npm run check. Report files changed and any TypeScript errors.
+Do not touch server files, Stripe, AI generation, or unrelated dashboard logic.

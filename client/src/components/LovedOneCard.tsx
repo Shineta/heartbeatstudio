@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Music, Mail, Film, Calendar } from "lucide-react";
+import { Music, Mail, Film, Calendar, Pencil, Trash2 } from "lucide-react";
 
 interface LovedOneCardProps {
   id: string;
@@ -16,6 +16,8 @@ interface LovedOneCardProps {
   onCreateCard?: () => void;
   onCreateAnimation?: () => void;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export default function LovedOneCard({ 
@@ -29,7 +31,9 @@ export default function LovedOneCard({
   onCreateSong,
   onCreateCard,
   onCreateAnimation,
-  onClick
+  onClick,
+  onEdit,
+  onDelete,
 }: LovedOneCardProps) {
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
 
@@ -40,19 +44,41 @@ export default function LovedOneCard({
       data-testid={`card-loved-one-${id}`}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="w-12 h-12 shrink-0">
               <AvatarImage src={avatarUrl} alt={name} />
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="font-semibold text-lg leading-none mb-1" style={{ fontFamily: 'Fredoka, sans-serif' }}>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-lg leading-none mb-1 truncate" style={{ fontFamily: 'Fredoka, sans-serif' }}>
                 {name}
                 {nickname && <span className="text-muted-foreground ml-1">"{nickname}"</span>}
               </h3>
               <Badge variant="secondary" className="text-xs">{relationship}</Badge>
             </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            {onEdit && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                data-testid={`button-edit-loved-one-${id}`}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                data-testid={`button-delete-loved-one-${id}`}
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>

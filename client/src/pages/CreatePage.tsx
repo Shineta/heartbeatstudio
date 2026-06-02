@@ -603,14 +603,28 @@ export default function CreatePage() {
         }, 500);
         return;
       }
-      let description = "Failed to create card. Please try again.";
+      let description: React.ReactNode = "Failed to create card. Please try again.";
+      let isCreditError = false;
       try {
         const jsonPart = error.message.replace(/^\d+:\s*/, "");
         const parsed = JSON.parse(jsonPart);
-        if (parsed?.message) description = parsed.message;
+        if (parsed?.creditRequired === true) {
+          isCreditError = true;
+        } else if (parsed?.message) {
+          description = parsed.message;
+        }
       } catch { /* use default */ }
+      if (isCreditError) {
+        description = (
+          <span>
+            You need credits to create this.{" "}
+            <a href="/pricing" className="underline font-medium">Go to Pricing</a>
+            {" "}to get more.
+          </span>
+        );
+      }
       toast({
-        title: "Error",
+        title: isCreditError ? "Credits Required" : "Error",
         description,
         variant: "destructive",
       });

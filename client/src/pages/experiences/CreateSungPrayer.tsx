@@ -274,11 +274,32 @@ The song should flow naturally through all three parts, creating a complete pray
       });
     } catch (error: any) {
       console.error('Generation error:', error);
-      toast({
-        title: "Generation Failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      let isCreditError = false;
+      if (error.message?.startsWith('403:')) {
+        try {
+          const body = JSON.parse(error.message.slice(4).trim());
+          isCreditError = body?.creditRequired === true;
+        } catch {}
+      }
+      if (isCreditError) {
+        toast({
+          title: "Credits Required",
+          description: (
+            <span>
+              You need credits to create this.{" "}
+              <a href="/pricing" className="underline font-medium">Go to Pricing</a>
+              {" "}to get more.
+            </span>
+          ) as any,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Generation Failed",
+          description: error.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
       setCurrentStep(0);
     } finally {
       setGenerating(false);

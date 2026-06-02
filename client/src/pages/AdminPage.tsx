@@ -75,7 +75,7 @@ export default function AdminPage() {
 
   const filteredUsers = users?.filter(u => {
     const matchesSearch = !searchQuery || 
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (u.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (u.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (u.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (u.phoneNumber?.includes(searchQuery));

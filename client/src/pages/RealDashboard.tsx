@@ -63,6 +63,10 @@ export default function RealDashboard() {
   const [selectedLovedOne, setSelectedLovedOne] = useState<LovedOne | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingCreation, setSchedulingCreation] = useState<Creation | null>(null);
+  const [editLovedOneDialogOpen, setEditLovedOneDialogOpen] = useState(false);
+  const [editingLovedOne, setEditingLovedOne] = useState<LovedOne | null>(null);
+  const [deleteLovedOneDialogOpen, setDeleteLovedOneDialogOpen] = useState(false);
+  const [deletingLovedOne, setDeletingLovedOne] = useState<LovedOne | null>(null);
   const [claimedPreview, setClaimedPreview] = useState<SongPreview | null>(null);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [unlockingPreview, setUnlockingPreview] = useState<SongPreview | null>(null);
@@ -184,6 +188,71 @@ export default function RealDashboard() {
 
   const onSubmit = (data: z.infer<typeof lovedOneFormSchema>) => {
     createMutation.mutate(data);
+  };
+
+  const editLovedOneForm = useForm<z.infer<typeof lovedOneFormSchema>>({
+    resolver: zodResolver(lovedOneFormSchema),
+    defaultValues: {
+      name: "",
+      nickname: "",
+      relationship: "",
+      birthday: "",
+      interests: "",
+      insideJokes: "",
+    },
+  });
+
+  const updateLovedOneMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof lovedOneFormSchema>) => {
+      return await apiRequest("PUT", `/api/loved-ones/${editingLovedOne!.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/loved-ones'] });
+      toast({ title: "Updated", description: "Profile updated successfully!" });
+      setEditLovedOneDialogOpen(false);
+      setEditingLovedOne(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLovedOneMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/loved-ones/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/loved-ones'] });
+      toast({ title: "Removed", description: "Loved one removed." });
+      setDeleteLovedOneDialogOpen(false);
+      setDeletingLovedOne(null);
+      setProfileDialogOpen(false);
+      setSelectedLovedOne(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openEditLovedOne = (lovedOne: LovedOne) => {
+    editLovedOneForm.reset({
+      name: lovedOne.name,
+      nickname: lovedOne.nickname ?? "",
+      relationship: lovedOne.relationship,
+      birthday: lovedOne.birthday ?? "",
+      interests: lovedOne.interests ?? "",
+      insideJokes: lovedOne.insideJokes ?? "",
+    });
+    setEditingLovedOne(lovedOne);
+    setEditLovedOneDialogOpen(true);
   };
 
   const mixtapeForm = useForm<z.infer<typeof mixtapeFormSchema>>({
@@ -370,6 +439,7 @@ export default function RealDashboard() {
     },
   });
 
+  const [expandedLyrics, setExpandedLyrics] = useState<Set<string>>(new Set());
   const [deletingCreation, setDeletingCreation] = useState<Creation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -782,6 +852,11 @@ export default function RealDashboard() {
                       setSelectedLovedOne(lovedOne);
                       setProfileDialogOpen(true);
                     }}
+                    onEdit={() => openEditLovedOne(lovedOne)}
+                    onDelete={() => {
+                      setDeletingLovedOne(lovedOne);
+                      setDeleteLovedOneDialogOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -868,7 +943,33 @@ export default function RealDashboard() {
                         <p className="text-sm text-muted-foreground mb-2">
                           {creation.type === 'song' ? 'Song' : creation.type === 'animation' ? 'Animation' : 'Card'} • {creation.tone}
                         </p>
-                        <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
+                        {creation.type === 'song' && creation.content && creation.content.length > 120 ? (
+                          <div className="mb-4">
+                            <p className={`text-sm ${expandedLyrics.has(creation.id) ? '' : 'line-clamp-3'}`}>
+                              {creation.content}
+                            </p>
+                            <button
+                              className="text-xs text-primary mt-1 hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedLyrics(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(creation.id)) {
+                                    next.delete(creation.id);
+                                  } else {
+                                    next.add(creation.id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                              data-testid={`button-toggle-lyrics-${creation.id}`}
+                            >
+                              {expandedLyrics.has(creation.id) ? 'Show less' : 'See full lyrics'}
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm line-clamp-3 mb-4">{creation.content}</p>
+                        )}
                         
                         {creation.type === 'song' && creation.mediaUrl && (
                           <div className="mb-4">
@@ -993,6 +1094,34 @@ export default function RealDashboard() {
                                 )}
                                 <span className="ml-1">New Cover</span>
                               </Button>
+                            )}
+                            {creation.type === 'song' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = '/create?type=song';
+                                  }}
+                                  data-testid={`button-try-again-${creation.id}`}
+                                >
+                                  <RefreshCw className="w-4 h-4" />
+                                  <span className="ml-1">Try Again</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = `/create?type=song&genre=change&from=${creation.id}`;
+                                  }}
+                                  data-testid={`button-change-genre-${creation.id}`}
+                                >
+                                  <Music className="w-4 h-4" />
+                                  <span className="ml-1">Change Genre</span>
+                                </Button>
+                              </>
                             )}
                             <Button
                               size="sm"
@@ -1457,22 +1586,25 @@ export default function RealDashboard() {
 
               {/* Details Section */}
               <div className="space-y-4">
-                {selectedLovedOne.birthday && (
-                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-                    <Cake className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium text-sm">Birthday</p>
-                      <p className="text-muted-foreground">
-                        {(() => {
-                          const [month, day] = selectedLovedOne.birthday!.split('-');
-                          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                                            'July', 'August', 'September', 'October', 'November', 'December'];
-                          return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}`;
-                        })()}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                  <Cake className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-sm">Birthday</p>
+                    <p className="text-muted-foreground">
+                      {(() => {
+                        const birthday = selectedLovedOne.birthday;
+                        if (!birthday || !birthday.includes('-')) return 'Birthday not set';
+                        const [month, day] = birthday.split('-');
+                        const m = parseInt(month);
+                        const d = parseInt(day);
+                        if (isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) return 'Invalid date';
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        return `${monthNames[m - 1]} ${d}`;
+                      })()}
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {selectedLovedOne.interests && (
                   <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
@@ -1539,10 +1671,194 @@ export default function RealDashboard() {
                   <span className="text-xs">Animation</span>
                 </Button>
               </div>
+
+              {/* Edit / Delete */}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    openEditLovedOne(selectedLovedOne);
+                  }}
+                  data-testid="button-profile-edit-loved-one"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 text-destructive"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    setDeletingLovedOne(selectedLovedOne);
+                    setDeleteLovedOneDialogOpen(true);
+                  }}
+                  data-testid="button-profile-delete-loved-one"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Remove
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Loved One Dialog */}
+      <Dialog open={editLovedOneDialogOpen} onOpenChange={setEditLovedOneDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-edit-loved-one">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <Form {...editLovedOneForm}>
+            <form onSubmit={editLovedOneForm.handleSubmit((data) => updateLovedOneMutation.mutate(data))} className="space-y-4">
+              <FormField
+                control={editLovedOneForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Full name" {...field} data-testid="input-edit-loved-one-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editLovedOneForm.control}
+                name="nickname"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nickname (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Babe, Dad, Bestie" {...field} data-testid="input-edit-loved-one-nickname" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editLovedOneForm.control}
+                name="relationship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relationship</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Partner, Best friend, Mom" {...field} data-testid="input-edit-loved-one-relationship" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editLovedOneForm.control}
+                name="birthday"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Birthday (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="MM-DD (e.g. 06-15)" {...field} data-testid="input-edit-loved-one-birthday" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editLovedOneForm.control}
+                name="interests"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Interests (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="e.g. hiking, jazz, cooking..."
+                        className="resize-none min-h-[70px]"
+                        {...field}
+                        data-testid="input-edit-loved-one-interests"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editLovedOneForm.control}
+                name="insideJokes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Inside Jokes & Special Memories (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Shared memories, phrases, or jokes..."
+                        className="resize-none min-h-[70px]"
+                        {...field}
+                        data-testid="input-edit-loved-one-inside-jokes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setEditLovedOneDialogOpen(false)}
+                  data-testid="button-edit-loved-one-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={updateLovedOneMutation.isPending}
+                  data-testid="button-edit-loved-one-save"
+                >
+                  {updateLovedOneMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Loved One Confirmation */}
+      <AlertDialog open={deleteLovedOneDialogOpen} onOpenChange={setDeleteLovedOneDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-loved-one">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {deletingLovedOne?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove <strong>{deletingLovedOne?.name}</strong>? This will not delete any creations you've made for them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deleteLovedOneMutation.isPending}
+              data-testid="button-delete-loved-one-cancel"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingLovedOne && deleteLovedOneMutation.mutate(deletingLovedOne.id)}
+              disabled={deleteLovedOneMutation.isPending}
+              data-testid="button-delete-loved-one-confirm"
+            >
+              {deleteLovedOneMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Removing...</>
+              ) : (
+                "Remove"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Unlock Preview Confirmation Dialog */}
       <AlertDialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
