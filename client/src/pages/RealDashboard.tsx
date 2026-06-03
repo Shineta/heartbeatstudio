@@ -937,6 +937,10 @@ export default function RealDashboard() {
                             <p className="text-sm text-muted-foreground">Generating song...</p>
                           </div>
                         </div>
+                      ) : creation.type === 'card' ? (
+                        <div className="w-full h-24 bg-muted/40 flex items-center justify-center" data-testid={`placeholder-no-cover-${creation.id}`}>
+                          <p className="text-sm text-muted-foreground">No cover image</p>
+                        </div>
                       ) : null}
                       <div className="p-4">
                         <h3 className="font-semibold mb-2">{creation.title}</h3>

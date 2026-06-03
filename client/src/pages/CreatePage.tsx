@@ -2682,6 +2682,9 @@ export default function CreatePage() {
                             placeholder="Enter your message..."
                             data-testid="textarea-edit-card-message"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Note: editing the message does not regenerate the card image.
+                          </p>
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -2691,7 +2694,8 @@ export default function CreatePage() {
                                     content: editedCardMessage
                                   });
                                   setCreatedCard({ ...createdCard, content: editedCardMessage });
-                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                  await queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                  await queryClient.refetchQueries({ queryKey: ['/api/creations'] });
                                   setIsEditingCardMessage(false);
                                   toast({ title: "Saved!", description: "Message updated" });
                                 } catch {
@@ -2809,6 +2813,13 @@ export default function CreatePage() {
                       setSelectedVariationIndex(0);
                     }} variant="outline">
                       Create Another
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => { window.location.href = "/dashboard"; }}
+                      data-testid="button-view-dashboard"
+                    >
+                      View on Dashboard
                     </Button>
                     <Button onClick={() => {
                       const shareLink = createdCard.shareableLink?.startsWith('/share/')
