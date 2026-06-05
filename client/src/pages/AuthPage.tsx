@@ -21,6 +21,7 @@ const registerSchema = z.object({
   phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  smsConsent: z.boolean().optional().default(false),
   marketingConsent: z.boolean().optional().default(false),
   termsAccepted: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms of Service' }),
 });
@@ -76,7 +77,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', marketingConsent: false },
+    defaultValues: { email: '', password: '', phoneNumber: '', firstName: '', lastName: '', smsConsent: false, marketingConsent: false },
   });
 
   const loginForm = useForm<LoginForm>({
@@ -341,6 +342,27 @@ export default function AuthPage() {
                           {' '}and understand how my content will be used
                         </FormLabel>
                         <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="smsConsent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-sms-consent"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          I agree to receive SMS messages from Heartbeat Studio for account verification and password resets. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help.
+                        </FormLabel>
                       </div>
                     </FormItem>
                   )}

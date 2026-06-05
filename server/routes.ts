@@ -189,11 +189,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits').regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
+        smsConsent: z.boolean().optional().default(false),
         marketingConsent: z.boolean().optional().default(false),
         termsAccepted: z.boolean().refine((val) => val === true, { message: 'You must agree to the Terms of Service' }),
       });
-      
-      const { email, password, phoneNumber, firstName, lastName, marketingConsent, termsAccepted } = schema.parse(req.body);
+
+      const { email, password, phoneNumber, firstName, lastName, smsConsent, marketingConsent, termsAccepted } = schema.parse(req.body);
       
       // Normalize phone number by removing all non-digit characters except +
       const normalizedPhone = phoneNumber.replace(/[^\d+]/g, '');
@@ -218,6 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         isAdmin,
+        smsConsent,
         marketingConsent,
         termsAcceptedAt: new Date(),
         songsRemaining: isAdmin ? 9999 : 3,
@@ -383,9 +385,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send password reset via email
       await sendPasswordResetEmail(email, resetLink);
       
-      // Also send via SMS if user has a phone number and Twilio is configured
+      // Also send via SMS if user has a phone number, opted in to SMS, and Twilio is configured.
+      // A2P 10DLC compliance: never send SMS without explicit consent. Email above is the always-on fallback.
       let smsSent = false;
-      if (user.phoneNumber && isTwilioConfigured()) {
+      if (user.phoneNumber && user.smsConsent && isTwilioConfigured()) {
         smsSent = await sendPasswordResetSMS(user.phoneNumber, resetLink);
       }
       
@@ -428,10 +431,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const resetLink = `${BASE_URL}/auth/reset-password?token=${token}`;
-      
+
+      // A2P 10DLC compliance: only send SMS to users who explicitly opted in.
+      // If they have not consented, fall back to emailing the reset link instead of failing silently.
+      if (!user.smsConsent) {
+        await sendPasswordResetEmail(user.email, resetLink);
+        return res.json({ message: 'For your security, we sent the password reset link to your email instead.' });
+      }
+
       // Send password reset via SMS only
       const smsSent = await sendPasswordResetSMS(phoneNumber, resetLink);
-      
+
       if (smsSent) {
         res.json({ message: 'Password reset link sent to your phone via SMS.' });
       } else {
