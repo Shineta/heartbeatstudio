@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").notNull().default(false), // Admin accounts bypass payment requirements
   marketingConsent: boolean("marketing_consent").notNull().default(false), // User consent to receive promotional emails/SMS
   smsConsent: boolean("sms_consent").notNull().default(false), // Explicit opt-in to transactional SMS — verification & password resets (A2P 10DLC compliance)
+  smsOptedIn: boolean("sms_opted_in").default(false), // LEGACY column (nullable). Declared here only so drizzle does not drop it + its 47 rows of data. Not referenced by app code. Cleanup tracked as a separate DB-hygiene task.
   termsAcceptedAt: timestamp("terms_accepted_at"), // Timestamp when user agreed to Terms of Service
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
