@@ -1354,7 +1354,7 @@ export default function RealDashboard() {
                     <FormControl>
                       <Input
                         type="datetime-local"
-                        min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                        min={new Date(Date.now() + 60000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                         {...field}
                         data-testid="input-schedule-datetime"
                       />
