@@ -834,6 +834,10 @@ export async function generateFestiveTransform(params: {
   if (scene === 'blast-from-past' && blastFromPastSceneOverrides[style]) {
     // For blast-from-past, the style defines the scene
     sceneDesc = blastFromPastSceneOverrides[style];
+  } else if (scene === 'gaming' && sceneDescriptions[style]) {
+    // Gaming is a parent category in Festive Transform; the selected style
+    // carries the actual game scene. Do not fall back to Christmas here.
+    sceneDesc = sceneDescriptions[style];
   } else {
     sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
   }
