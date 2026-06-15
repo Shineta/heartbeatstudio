@@ -794,7 +794,13 @@ ${photoInstruction}
 
 ${params.message ? `Card message context: "${params.message}"` : ''}
 
-IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.`;
+IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.
+
+COMPOSITION SAFETY:
+- Keep every name, title, rating, rank, team, and stat fully inside the image boundaries.
+- Leave generous safe margins around the top, bottom, left, and right edges so no text, hands, shoes, heads, or stats are cropped.
+- If the requested text is long, reduce text size or stack fields instead of letting anything run off-canvas.
+- Show the full card/screen from top to bottom, including all stat rows and labels.`;
 
   console.log(`[GamingCard] Generating ${params.style} style gaming card for ${params.recipientName}${params.photoUrl ? ' (with photo)' : ''}`);
   console.log(`[GamingCard] Prompt preview: ${prompt.substring(0, 300)}...`);
