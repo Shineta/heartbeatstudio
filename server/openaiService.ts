@@ -794,7 +794,13 @@ ${photoInstruction}
 
 ${params.message ? `Card message context: "${params.message}"` : ''}
 
-IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.`;
+IMPORTANT: This must look like an authentic game UI screen/card that someone would see in the actual game. Make it professional, exciting, and visually stunning. The design should feel like it belongs in the actual game. Include all text elements clearly and legibly. Use vibrant colors and dramatic lighting. The overall composition should be a greeting card that any gamer would love to receive.
+
+COMPOSITION SAFETY:
+- Keep every name, title, rating, rank, team, and stat fully inside the image boundaries.
+- Leave generous safe margins around the top, bottom, left, and right edges so no text, hands, shoes, heads, or stats are cropped.
+- If the requested text is long, reduce text size or stack fields instead of letting anything run off-canvas.
+- Show the full card/screen from top to bottom, including all stat rows and labels.`;
 
   console.log(`[GamingCard] Generating ${params.style} style gaming card for ${params.recipientName}${params.photoUrl ? ' (with photo)' : ''}`);
   console.log(`[GamingCard] Prompt preview: ${prompt.substring(0, 300)}...`);
@@ -1283,7 +1289,7 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'achievement-class': 'honor class achievement setting with gold star decorations, achievement banners, recognition ribbons, proud moment celebration, excellence atmosphere',
     'school-identity': 'school-branded setting with school colors prominently displayed, school crest or mascot visible, institutional pride, academic tradition atmosphere',
     'fun-friendly': 'bright fun elementary classroom with colorful decorations, friendly shapes on walls, rainbow elements, happy learning atmosphere, child-friendly environment',
-    'minimal-portrait': 'clean minimal school portrait studio with simple white or soft gray backdrop, distraction-free, professional neutral lighting, gallery-ready quality',
+    'minimal-portrait': 'a tasteful, minimal school portrait setting featuring a simple painted studio backdrop in soft white or gray tones, gentle ambient classroom light, a few understated decor accents (a small plant, a framed school crest on the wall), clean and uncluttered composition',
     // Gaming scenes and styles
     'gaming-moments': 'an epic gaming moment scene with action and excitement, dramatic lighting, game controller elements, vibrant neon glow, competitive energy, esports atmosphere',
     'esports-celebration': 'an electrifying esports celebration scene with championship stage, LED screens, confetti, trophy, team victory moment, professional gaming arena, dramatic spotlights',
@@ -1357,6 +1363,16 @@ export function buildFamilyPortraitPrompt(params: FamilyPortraitParams): string 
     'oil-painting': 'classic oil painting style with rich textures and warm tones',
     'digital-art': 'modern digital art style with clean lines and vivid colors',
     'vintage': 'nostalgic vintage photograph style with warm sepia tones',
+    // Minimal Portrait (class portrait) styles — without these keys every style
+    // silently fell back to 'studio-photo' and rendered identically
+    'clean-white': 'crisp clean white studio backdrop with soft even lighting',
+    'soft-gray': 'soft neutral gray studio backdrop with gentle diffused lighting',
+    'natural-tones': 'warm natural-toned backdrop with soft window-style lighting',
+    'simple-focus': 'simple uncluttered composition with sharp focus on the group and a softly blurred backdrop',
+    'calm-composition': 'calm, balanced composition with gentle symmetrical arrangement and relaxed lighting',
+    'distraction-free': 'distraction-free backdrop with minimal elements, soft directional lighting',
+    'professional-neutral': 'professional neutral-toned studio setting with formal, even lighting',
+    'gallery-ready': 'polished, exhibition-quality portrait lighting and framing suitable for display',
   };
 
   // Determine the actual scene description
@@ -1429,7 +1445,12 @@ High quality, photorealistic result with detailed background, professional light
 Suitable for printing and framing.`;
 
   if (keepOutfits) {
-    prompt += `\n- Keep each person's original clothing and outfits from their source photos`;
+    prompt += `
+
+ORIGINAL CLOTHING - MANDATORY:
+- Do NOT change, restyle, or replace anyone's clothing - this is a strict requirement.
+- For each person, reproduce their exact original outfit from their reference photo: same garments, same colors, same patterns, same style (e.g., if they are wearing a plain t-shirt, keep it a plain t-shirt - do not add prints, florals, or different garments).
+- Only the background/scene, lighting, and overall composition should change - clothing must remain identical to the source photo.`;
   } else {
     // Scene-specific outfit recommendations
     const outfitSuggestions: Record<string, string> = {

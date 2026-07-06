@@ -414,9 +414,13 @@ export default function RealDashboard() {
 
   const onScheduleSubmit = (data: z.infer<typeof scheduleFormSchema>) => {
     if (!schedulingCreation) return;
+    // datetime-local gives a local-time string with no timezone (e.g. "2026-06-15T14:30").
+    // new Date() parses that as local time, then toISOString() converts to UTC ISO so the
+    // server stores the correct moment regardless of server timezone (UTC on Replit).
+    const scheduledAtUtc = new Date(data.scheduledAt).toISOString();
     scheduleMutation.mutate({
       creationId: schedulingCreation.id,
-      scheduledAt: data.scheduledAt,
+      scheduledAt: scheduledAtUtc,
       recipientEmail: data.recipientEmail,
       recipientPhone: data.recipientPhone,
     });
@@ -1348,9 +1352,10 @@ export default function RealDashboard() {
                   <FormItem>
                     <FormLabel>Date & Time</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field} 
+                      <Input
+                        type="datetime-local"
+                        min={new Date(Date.now() + 60000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                        {...field}
                         data-testid="input-schedule-datetime"
                       />
                     </FormControl>

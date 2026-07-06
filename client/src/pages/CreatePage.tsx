@@ -429,7 +429,7 @@ export default function CreatePage() {
             songPollingRef.current.interval = null;
           }
           toast({ title: "Success", description: "Your song is ready!" });
-          queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
         } else if (updatedSong.status === 'failed' && !songPollingRef.current.toastShown) {
           console.log('[SongPoll] Song failed! Updating state...');
           songPollingRef.current.toastShown = true;
@@ -563,7 +563,7 @@ export default function CreatePage() {
       return await res.json() as Creation & { portraitVariations?: string[] };
     },
     onSuccess: (data: Creation & { portraitVariations?: string[] }) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       setCreatedCard(data);
       
       // Capture portrait variations if available
@@ -747,7 +747,7 @@ export default function CreatePage() {
 
       const { creation } = await res.json();
       setCreatedPortrait(creation);
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       toast({ title: "Portrait created!", description: "Your family portrait is ready" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to generate portrait", variant: "destructive" });
@@ -1751,7 +1751,7 @@ export default function CreatePage() {
       const res = await apiRequest("POST", "/api/generate/card", cardData);
       const newCard = await res.json() as Creation & { portraitVariations?: string[] };
       
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       setCreatedCard(newCard);
       
       // Capture portrait variations if available
@@ -1799,7 +1799,7 @@ export default function CreatePage() {
       return await res.json() as Creation;
     },
     onSuccess: (data: Creation) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       setCreatedAnimation(data);
       toast({ title: "Success", description: "Your animation has been created!" });
     },
@@ -1896,7 +1896,7 @@ export default function CreatePage() {
       return await res.json() as Creation;
     },
     onSuccess: (data: Creation) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       setCreatedSong(data);
       setLyricsPreview(null);
       setSongGenerationTime(0);
@@ -1995,7 +1995,7 @@ export default function CreatePage() {
       return await res.json() as Creation;
     },
     onSuccess: (data: Creation) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
       setCreatedSong(data);
       setPendingSongData(null);
       setSongGenerationTime(0);
@@ -2690,12 +2690,14 @@ export default function CreatePage() {
                               size="sm"
                               onClick={async () => {
                                 try {
-                                  await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
+                                  const res = await apiRequest("PATCH", `/api/creations/${createdCard.id}`, {
                                     content: editedCardMessage
                                   });
-                                  setCreatedCard({ ...createdCard, content: editedCardMessage });
-                                  await queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
-                                  await queryClient.refetchQueries({ queryKey: ['/api/creations'] });
+                                  const updated = await res.json();
+                                  setCreatedCard({ ...createdCard, ...updated });
+                                  // refetchType 'all' forces the inactive dashboard query to refetch;
+                                  // the default ('active') leaves it stale forever under staleTime: Infinity
+                                  queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
                                   setIsEditingCardMessage(false);
                                   toast({ title: "Saved!", description: "Message updated" });
                                 } catch {
@@ -2751,7 +2753,7 @@ export default function CreatePage() {
                                 });
                                 const data = await res.json();
                                 setCreatedCard({ ...createdCard, content: data.message });
-                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
                                 toast({ title: "Regenerated!", description: "New message created" });
                               } catch {
                                 toast({ title: "Error", description: "Failed to regenerate message", variant: "destructive" });
@@ -2841,7 +2843,7 @@ export default function CreatePage() {
                                 imageUrl: selectedUrl
                               });
                               setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                              queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
                               toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
                             } catch {
                               toast({ title: "Error", description: "Failed to save selection", variant: "destructive" });
@@ -6631,7 +6633,7 @@ export default function CreatePage() {
                                 const selectedUrl = portraitVariations[selectedVariationIndex];
                                 await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
                                 setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
                                 toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
                               }} data-testid="button-save-business-variation">
                                 Save This Variation
@@ -8192,7 +8194,7 @@ export default function CreatePage() {
                                 const selectedUrl = portraitVariations[selectedVariationIndex];
                                 await apiRequest("PATCH", `/api/creations/${createdCard.id}`, { imageUrl: selectedUrl });
                                 setCreatedCard({ ...createdCard, imageUrl: selectedUrl });
-                                queryClient.invalidateQueries({ queryKey: ['/api/creations'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/creations'], refetchType: 'all' });
                                 toast({ title: "Saved!", description: `Variation ${selectedVariationIndex + 1} is now your card's cover image.` });
                               }} data-testid="button-save-education-variation">
                                 Save This Variation

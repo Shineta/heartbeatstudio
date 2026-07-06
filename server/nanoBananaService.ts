@@ -834,6 +834,10 @@ export async function generateFestiveTransform(params: {
   if (scene === 'blast-from-past' && blastFromPastSceneOverrides[style]) {
     // For blast-from-past, the style defines the scene
     sceneDesc = blastFromPastSceneOverrides[style];
+  } else if (scene === 'gaming' && sceneDescriptions[style]) {
+    // Gaming is a parent category in Festive Transform; the selected style
+    // carries the actual game scene. Do not fall back to Christmas here.
+    sceneDesc = sceneDescriptions[style];
   } else {
     sceneDesc = sceneDescriptions[scene] || sceneDescriptions['christmas'];
   }
@@ -1022,7 +1026,16 @@ export async function generateYearbookHeadshot(params: {
   } else if (removeBraces) {
     removalInstr = ' Remove any dental braces from the person, giving them a natural smile.';
   }
-  
+
+  // Preserve features that were NOT requested to change — without this the model
+  // "beautifies" by default (auto-removing braces, restyling hair)
+  const preserveParts: string[] = [];
+  if (!removeBraces) {
+    preserveParts.push('dental braces (if visible) must remain exactly as they appear in the original photo - do not remove or alter them');
+  }
+  preserveParts.push("the person's exact original hairstyle, hair length, hair color, and hair texture - do not restyle, trim, straighten, or change their hair in any way");
+  const preserveInstr = ` Preserve unchanged: ${preserveParts.join('; ')}.`;
+
   const prompt = `Transform this photo into a professional yearbook headshot portrait. This must be a COMPLETE TRANSFORMATION — not just a background swap.
 
 BACKGROUND: ${bgDesc}.
@@ -1034,7 +1047,7 @@ CRITICAL REQUIREMENTS:
 - CHANGE their clothing to the described professional attire (do NOT keep their original clothes, hat, or accessories).
 - Remove any hats, caps, or head coverings — show their natural hair.
 - Frame as a head-and-shoulders portrait, centered, cropped from mid-chest up.
-- Apply professional portrait retouching: smooth skin, even lighting, polished yearbook-ready appearance.${removalInstr}
+- Apply only light, natural professional lighting and color correction - do NOT alter facial structure, teeth, dental appliances, or hairstyle.${removalInstr}${preserveInstr}
 - Professional school portrait photography quality, sharp focus on face, slight soft-focus on shoulders.
 - Photorealistic, high quality result suitable for an official yearbook or school directory.`;
 

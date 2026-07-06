@@ -2804,7 +2804,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const { scheduledAt, recipientEmail, recipientPhone } = schema.parse(req.body);
-      
+
+      // Reject past-dated schedules. Client sends UTC ISO string; compare directly to now.
+      const scheduledDate = new Date(scheduledAt);
+      if (isNaN(scheduledDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      if (scheduledDate <= new Date()) {
+        return res.status(400).json({ message: "Scheduled time must be in the future" });
+      }
+
       // Verify the creation belongs to this user
       const creation = await storage.getCreationById(creationId);
       if (!creation) {
